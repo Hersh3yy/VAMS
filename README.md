@@ -1,62 +1,4 @@
-# Work-It-Out API
-
-An intelligent workout companion API that transforms natural language workout descriptions into structured data. Simply describe your workout in plain text (e.g., "Did 3 sets of bench press: 100kg for 5 reps, 110kg for 3, 120kg for 1"), and let our AI-powered system handle the parsing and storage.
-
-## Project Progress
-
-### Iteration 1 (Current)
-- [x] Docker environment setup with PostgreSQL
-- [x] Basic Laravel installation
-- [x] Core models and migrations
-  - [x] Workouts
-  - [x] Exercises
-  - [x] Exercise Sets
-- [x] OpenAI integration
-  - [x] Workout text parsing service
-  - [x] Structured data transformation
-- [x] API Endpoints
-  - [x] Routes configuration
-  - [x] Controller implementation
-  - [x] Testing endpoints
-- [x] Basic test suite 
-  - [x] Model factories
-  - [x] Database seeders
-  - [x] API endpoint tests
-- [x] API documentation with Scramble
-
-### Iteration 2 (Planned)
-- [ ] User authentication and relations
-- [ ] Input validation
-  - [ ] Workout description sanitization
-  - [ ] Non-workout prompt filtering
-- [ ] API Enhancements
-  - [x] Pagination
-  - [ ] Rate limiting
-  - [ ] Error handling improvements
-- [ ] User profiles and preferences
-- [ ] AI Features
-  - [ ] Multiple trainer personalities
-  - [ ] Workout suggestions
-  - [ ] Evolving AI generated user profile
-- [ ] Analytics
-  - [ ] Progress tracking
-  - [ ] Performance metrics
-  - [ ] Training history analysis
-
-### Iteration 3 (Conceptual)
-- WhatsApp / SMS integration
-- Google Docs integration
-
-Note: All weight measurements are assumed to be in kilograms (kg) for now.
-
-## Features (Iteration 1)
-
-- Natural language workout logging
-- AI-powered workout parsing
-- Structured exercise and set data storage
-- RESTful API endpoints
-- Auto-generated API documentation
-- Comprehensive test coverage
+# VAMS - Visual Album Management System
 
 ## Tech Stack
 
@@ -121,52 +63,12 @@ docker compose run --rm api php artisan migrate:fresh --seed
 - `GET /docs/api` - API Documentation UI
 - `GET /telescope` - Development debugging dashboard
 
-### Example Usage
-
-Create a workout:
-```bash
-curl -X POST http://localhost:8000/api/workouts \
-  -H "Content-Type: application/json" \
-  -d '{"description": "Did 3 sets of bench press: 100kg for 5 reps, 110kg for 3, 120kg for 1"}'
-```
-
-Get all workouts:
-```bash
-curl http://localhost:8000/api/workouts
-```
-
 ## Testing
 
 Run the test suite:
 ```bash
 docker compose exec api php artisan test
 ```
-
-## OpenAI API Setup
-
-1. Get your API key:
-   - Visit [OpenAI's platform](https://platform.openai.com/api-keys)
-   - Sign up or log in to your OpenAI account
-   - Create a new API key
-   - Copy the key (it will only be shown once)
-
-2. Add to environment:
-   ```bash
-   # In src/.env
-   OPENAI_API_KEY=your_api_key_here
-   OPENAI_ORGANIZATION=org-... # Optional
-   ```
-
-3. Verify installation:
-   ```bash
-   # Create a workout to test OpenAI integration
-   curl -X POST http://localhost:8000/api/workouts \
-     -H "Content-Type: application/json" \
-     -d '{"description": "3 sets bench press: 60kg 5 reps"}'
-   ```
-
-Note: The free tier of OpenAI API has rate limits and usage quotas. Monitor your usage on the OpenAI dashboard to avoid unexpected charges.
-
 
 ## API Documentation
 
