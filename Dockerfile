@@ -1,4 +1,3 @@
-# Dockerfile
 FROM php:8.3-fpm
 
 # Install system dependencies
@@ -10,7 +9,10 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libpq-dev \
     zip \
-    unzip
+    unzip \
+    gnupg \
+    nodejs \
+    npm
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -18,6 +20,13 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install PHP extensions including PostgreSQL support
 RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 RUN pecl install redis && docker-php-ext-enable redis
+
+# Install Node.js and Yarn
+# Install Node.js using n version manager for better version control
+RUN npm install -g n
+RUN n lts
+# Install Yarn through npm
+RUN npm install -g yarn
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -29,4 +38,11 @@ RUN mkdir -p /home/dev/.composer && \
 
 # Set working directory
 WORKDIR /var/www
+
+# Switch to non-root user
 USER dev
+
+# Verify installations
+RUN node --version && \
+    npm --version && \
+    yarn --version
