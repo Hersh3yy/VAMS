@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function albums()
+    {
+        return $this->hasMany(Album::class)->orderBy('order');
+    }
 }
