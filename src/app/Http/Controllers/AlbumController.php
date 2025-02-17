@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Album;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
 class AlbumController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -34,6 +37,8 @@ class AlbumController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info($request->all());
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -43,6 +48,8 @@ class AlbumController extends Controller
         if ($request->hasFile('cover_image')) {
             $path = $request->file('cover_image')->store('album-covers', 'spaces');
             $validated['cover_image_path'] = Storage::disk('spaces')->url($path);
+        } else {
+            $validated['cover_image_path'] = null;
         }
 
         $album = auth()->user()->albums()->create($validated);

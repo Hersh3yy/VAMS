@@ -27,7 +27,7 @@ const submit = () => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <form @submit.prevent="submit" class="space-y-6">
+                        <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Title</label>
                                 <input 
@@ -56,7 +56,7 @@ const submit = () => {
                                 <label class="block text-sm font-medium text-gray-700">Cover Image</label>
                                 <input 
                                     type="file" 
-                                    @input="form.cover_image = $event.target.files[0]"
+                                    @input="(e) => { form.cover_image = e.target.files[0]; console.log(e.target.files[0]); }"
                                     class="mt-1 block w-full"
                                     accept="image/*"
                                 >

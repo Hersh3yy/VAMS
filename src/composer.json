@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/telescope": "^5.4",
         "laravel/tinker": "^2.9",
+        "league/flysystem-aws-s3-v3": "^3.29",
         "openai-php/laravel": "^0.10.2",
         "tightenco/ziggy": "^2.0",
         "tymon/jwt-auth": "^2.1"
