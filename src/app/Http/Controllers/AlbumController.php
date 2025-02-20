@@ -65,7 +65,8 @@ class AlbumController extends Controller
         $this->authorize('view', $album);
         
         return Inertia::render('Albums/Show', [
-            'album' => $album->load('images')
+            'album' => $album,
+            'images' => $album->images()->orderBy('order')->get()
         ]);
     }
 

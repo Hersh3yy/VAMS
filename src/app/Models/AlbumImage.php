@@ -12,7 +12,8 @@ class AlbumImage extends Model
     protected $fillable = [
         'path',
         'title',
-        'description',
+        'caption',
+        'author',
         'order',
     ];
 

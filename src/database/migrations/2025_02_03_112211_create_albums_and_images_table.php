@@ -23,7 +23,8 @@ return new class extends Migration
             $table->foreignId('album_id')->constrained()->onDelete('cascade');
             $table->string('path');
             $table->string('title')->nullable();
-            $table->text('description')->nullable();
+            $table->text('caption')->nullable();
+            $table->text('author')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
         });
