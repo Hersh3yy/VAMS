@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->json('theme_settings')->nullable(); // Store color preferences, fonts, etc
+            $table->json('site_settings')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

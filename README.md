@@ -1,65 +1,142 @@
 # VAMS - Visual Album Management System
 
+VAMS is a headless CMS specifically designed for visual content management, offering a user-friendly interface for managing albums, landing page layouts, and visual assets. It's built to serve both as a standalone system and as a content backend for existing websites.
+
+## Core Features
+
+- **Album Management**: Create and organize image collections with rich metadata
+- **Landing Page Builder**: Visual drag-and-drop mosaic builder with desktop/mobile layouts
+- **API-First Design**: Built to serve content to any frontend
+- **Theme Customization**: Per-user theming and branding options
+- **Responsive Layouts**: Separate desktop and mobile layout management
+
 ## Tech Stack
 
 - PHP 8.3
 - Laravel 11
 - PostgreSQL
 - Docker & Docker Compose
-- OpenAI GPT
+- Vue.js 3 (Admin Interface)
 - PHPUnit for testing
 - Scramble for API documentation
+
+## API Integration
+
+### Getting Landing Page Content
+
+```typescript
+// Example response from GET /api/v1/sites/{site_id}/landing
+{
+  data: {
+    id: "uuid",
+    title: "Homepage",
+    theme: {
+      logo: "https://assets.vams.com/logos/site-logo.png",
+      colors: {
+        primary: "#FF0000",
+        secondary: "#00FF00"
+        // ... other theme settings
+      }
+    },
+    mosaic: {
+      desktop: [
+        {
+          id: "uuid",
+          type: "image", // or "album"
+          position: { x: 0, y: 0, width: 2, height: 2 },
+          content: {
+            image_url: "https://assets.vams.com/images/hero.jpg",
+            title: "Welcome",
+            description: "Our latest collection",
+            link: "/collections/latest"
+          }
+        }
+        // ... more items
+      ],
+      mobile: [
+        // Mobile-specific layout
+      ]
+    },
+    meta: {
+      last_updated: "2024-03-10T15:30:00Z",
+      version: 1
+    }
+  },
+  cache: {
+    ttl: 3600,
+    etag: "abc123"
+  }
+}
+```
+
+### Implementation Guide
+
+1. **Cache Integration**:
+   ```javascript
+   // Example client implementation
+   async function getLandingContent(siteId) {
+     const response = await fetch(`/api/v1/sites/${siteId}/landing`, {
+       headers: {
+         'If-None-Match': localStorage.getItem('landing-etag')
+       }
+     });
+     
+     if (response.status === 304) {
+       return JSON.parse(localStorage.getItem('landing-content'));
+     }
+     
+     const data = await response.json();
+     localStorage.setItem('landing-etag', data.cache.etag);
+     localStorage.setItem('landing-content', JSON.stringify(data));
+     return data;
+   }
+   ```
+
+## Development Setup
 
 ## Run Locally with Docker
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/work-it-out
-cd work-it-out
-```
+   ```bash
+   git clone https://github.com/yourusername/work-it-out
+   cd work-it-out
+   ```
 
 2. Create environment files:
-```bash
-# Laravel directory
-cp src/.env.example src/.env
-```
+   ```bash
+   # Laravel directory
+   cp src/.env.example src/.env
+   ```
 
 3. Update src/.env with required settings:
-```env
+   ```env
 
-OPENAI_API_KEY=your_api_key_here
-OPENAI_ORGANIZATION-your-organization # optional
-```
+   OPENAI_API_KEY=your_api_key_here
+   OPENAI_ORGANIZATION-your-organization # optional
+   ```
 
 4. Install dependencies and build:
-```bash
-docker compose run --rm api composer install
-docker compose build
-```
+   ```bash
+   docker compose run --rm api composer install
+   docker compose build
+   ```
 
 5. Setup application:
-```bash
-docker compose run --rm api php artisan key:generate
-```
+   ```bash
+   docker compose run --rm api php artisan key:generate
+   ```
 
 6. Start the application:
-```bash
-docker compose up -d
-```
+   ```bash
+   docker compose up -d
+   ```
 
 7. Setup database with seed data (optional):
-```bash
-docker compose run --rm api php artisan migrate:fresh --seed
-```
+   ```bash
+   docker compose run --rm api php artisan migrate:fresh --seed
+   ```
 
 ## API Endpoints
-
-### Core Endpoints
-- `GET /api/workouts` - List all workouts
-- `POST /api/workouts` - Create a new workout
-- `GET /api/workouts/{id}` - Get a specific workout
-- `DELETE /api/workouts/{id}` - Delete a workout
-
 - `GET /docs/api` - API Documentation UI
 - `GET /telescope` - Development debugging dashboard
 
@@ -77,42 +154,3 @@ Access the auto-generated API documentation:
 - OpenAPI Spec: http://localhost:8000/docs/api.json
 
 Development Tools: http://localhost:8000/telescope
-
-
-## Example Response Format
-
-```json
-{
-    "workout": {
-        "id": 1,
-        "raw_input": "Did 3 sets of bench press: 100kg for 5 reps, 110kg for 3, 120kg for 1",
-        "parsed_data": {
-            "exercises": [
-                {
-                    "name": "Bench Press",
-                    "sets": [
-                        {
-                            "reps": 5,
-                            "weight": 100
-                        },
-                        {
-                            "reps": 3,
-                            "weight": 110
-                        },
-                        {
-                            "reps": 1,
-                            "weight": 120
-                        }
-                    ]
-                }
-            ]
-        },
-        "performed_at": "2024-02-03T21:00:00.000000Z",
-        "created_at": "2024-02-03T21:00:00.000000Z",
-        "updated_at": "2024-02-03T21:00:00.000000Z"
-    }
-}
-```
-
-
-![planned ERD (could chnage slightly)](https://github.com/Hersh3yy/work-it-out/blob/main/work-it-out.drawio.png?raw=true)
