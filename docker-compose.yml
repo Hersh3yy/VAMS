@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./src:/var/www
+      - ./:/var/www
     networks:
       - vams-api
     depends_on:
