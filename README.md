@@ -105,33 +105,26 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 2. Create environment files:
    ```bash
    # Laravel directory
-   cp src/.env.example src/.env
+   cp .env.example .env
    ```
 
-3. Update src/.env with required settings:
-   ```env
-
-   OPENAI_API_KEY=your_api_key_here
-   OPENAI_ORGANIZATION-your-organization # optional
-   ```
-
-4. Install dependencies and build:
+3. Install dependencies and build:
    ```bash
    docker compose run --rm api composer install
    docker compose build
    ```
 
-5. Setup application:
+4. Setup application:
    ```bash
    docker compose run --rm api php artisan key:generate
    ```
 
-6. Start the application:
+5. Start the application:
    ```bash
    docker compose up -d
    ```
 
-7. Setup database with seed data (optional):
+6. Setup database with seed data (optional):
    ```bash
    docker compose run --rm api php artisan migrate:fresh --seed
    ```

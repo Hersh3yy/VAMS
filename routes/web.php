@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\AlbumImageController;
 use App\Http\Controllers\MosaicController;
+use App\Http\Controllers\MosaicItemController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/album-images/{albumImage}', [AlbumImageController::class, 'update'])->name('album-images.update');
 
     Route::resource('mosaics', MosaicController::class);
+    Route::resource('mosaic-items', MosaicItemController::class);
 });
 
 require __DIR__.'/auth.php';

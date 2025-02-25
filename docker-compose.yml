@@ -17,7 +17,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./src:/var/www
+      - ./:/var/www
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - vams-api
