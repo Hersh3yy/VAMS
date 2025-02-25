@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/album-images', [AlbumImageController::class, 'store'])->name('album-images.store');
     Route::post('/album-images/reorder', [AlbumImageController::class, 'reorder'])->name('album-images.reorder');
+    Route::put('/album-images/{albumImage}', [AlbumImageController::class, 'update'])->name('album-images.update');
 
     Route::resource('mosaics', MosaicController::class);
 });

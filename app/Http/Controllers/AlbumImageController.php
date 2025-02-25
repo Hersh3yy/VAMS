@@ -102,8 +102,16 @@ class AlbumImageController extends Controller
             'title' => 'nullable|string|max:255',
             'caption' => 'nullable|string',
             'author' => 'nullable|string|max:255',
+            'image' => 'nullable|image|max:5120', // 5MB max
         ]);
 
+        if ($request->hasFile('image')) {
+            // Store the new image
+            $path = $request->file('image')->store('album-images', 'spaces');
+            $validated['path'] = Storage::disk('spaces')->url($path);
+        }
+
+        // Update the album image record with the new data
         $albumImage->update($validated);
 
         return back()->with('message', 'Image updated successfully');
@@ -114,7 +122,15 @@ class AlbumImageController extends Controller
      */
     public function destroy(AlbumImage $albumImage)
     {
-        //
+        $this->authorize('delete', $albumImage->album);
+        
+        // Delete the image from storage
+        Storage::disk('spaces')->delete($albumImage->path);
+        
+        // Delete the image record from the database
+        $albumImage->delete();
+
+        return back()->with('message', 'Image deleted successfully');
     }
 
     public function reorder(Request $request)
