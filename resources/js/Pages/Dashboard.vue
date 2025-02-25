@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="VAMS - Visual Album Management System" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -22,6 +22,9 @@ import { Head } from '@inertiajs/vue3';
                 >
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         You're logged in!
+                    </div>
+                    <div class="p-6 text-gray-600 dark:text-gray-400">
+                        Welcome to your dashboard! Here you can manage your albums, create new mosaics, and customize your visual content.
                     </div>
                 </div>
             </div>
