@@ -15,6 +15,13 @@ const user = usePage().props.auth.user;
 const form = useForm({
     name: user.name,
     email: user.email,
+    album_display_settings: user.album_display_settings || {
+        caption: true,
+        altText: false,
+        dateCreated: false,
+        location: false,
+        tags: false,
+    },
 });
 </script>
 
@@ -63,6 +70,69 @@ const form = useForm({
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div class="mt-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                    Album Image Display Settings
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input
+                            id="caption"
+                            type="checkbox"
+                            v-model="form.album_display_settings.caption"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="caption" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Caption
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="altText"
+                            type="checkbox"
+                            v-model="form.album_display_settings.altText"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="altText" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Alt Text
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="dateCreated"
+                            type="checkbox"
+                            v-model="form.album_display_settings.dateCreated"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="dateCreated" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Date Created
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="location"
+                            type="checkbox"
+                            v-model="form.album_display_settings.location"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="location" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Location
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="tags"
+                            type="checkbox"
+                            v-model="form.album_display_settings.tags"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="tags" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Tags
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">

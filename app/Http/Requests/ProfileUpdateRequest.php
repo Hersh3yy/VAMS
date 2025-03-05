@@ -25,6 +25,12 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'album_display_settings' => ['nullable', 'array'],
+            'album_display_settings.caption' => ['boolean'],
+            'album_display_settings.altText' => ['boolean'],
+            'album_display_settings.dateCreated' => ['boolean'],
+            'album_display_settings.location' => ['boolean'],
+            'album_display_settings.tags' => ['boolean'],
         ];
     }
 }

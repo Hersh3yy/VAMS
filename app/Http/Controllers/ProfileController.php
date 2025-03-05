@@ -29,7 +29,19 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+        
+        $request->user()->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'album_display_settings' => $validated['album_display_settings'] ?? [
+                'caption' => true,
+                'altText' => false,
+                'dateCreated' => false,
+                'location' => false,
+                'tags' => false,
+            ],
+        ]);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

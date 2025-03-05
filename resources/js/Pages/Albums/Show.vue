@@ -49,7 +49,13 @@
         </div>
 
         <!-- Image Modal -->
-        <ImageModal :show="showModal" :image="selectedImage" @close="closeModal" @update="handleImageUpdate" />
+        <ImageModal 
+            :show="showModal" 
+            :image="selectedImage" 
+            :display-settings="auth.user.album_display_settings"
+            @close="closeModal" 
+            @update="handleImageUpdate" 
+        />
     </AuthenticatedLayout>
 </template>
 
@@ -61,7 +67,8 @@ import { ref, onMounted } from 'vue';
 
 const props = defineProps({
     album: Object,
-    images: Array
+    images: Array,
+    auth: Object,
 });
 
 const isDragging = ref(false);

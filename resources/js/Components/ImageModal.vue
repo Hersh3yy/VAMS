@@ -23,9 +23,25 @@
                             <label class="block text-sm font-medium text-gray-700">Title</label>
                             <input type="text" v-model="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div>
+                        <div v-if="displaySettings.altText">
+                            <label class="block text-sm font-medium text-gray-700">Alt Text</label>
+                            <input type="text" v-model="formData.altText" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div v-if="displaySettings.caption">
                             <label class="block text-sm font-medium text-gray-700">Caption</label>
                             <textarea v-model="formData.caption" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                        </div>
+                        <div v-if="displaySettings.dateCreated">
+                            <label class="block text-sm font-medium text-gray-700">Date Created</label>
+                            <input type="datetime-local" v-model="formData.dateCreated" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div v-if="displaySettings.location">
+                            <label class="block text-sm font-medium text-gray-700">Location</label>
+                            <input type="text" v-model="formData.location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div v-if="displaySettings.tags">
+                            <label class="block text-sm font-medium text-gray-700">Tags</label>
+                            <input type="text" v-model="formData.tags" placeholder="Separate tags with commas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Author</label>
@@ -54,6 +70,16 @@ const props = defineProps({
     image: {
         type: Object,
         required: true
+    },
+    displaySettings: {
+        type: Object,
+        default: () => ({
+            caption: true,
+            altText: false,
+            dateCreated: false,
+            location: false,
+            tags: false,
+        })
     }
 });
 
@@ -61,16 +87,22 @@ const emit = defineEmits(['close', 'update']);
 
 const formData = ref({
     title: '',
+    altText: '',
     caption: '',
-    author: ''
+    dateCreated: '',
+    location: '',
+    tags: '',
 });
 
 watch(() => props.image, (newImage) => {
     if (newImage) {
         formData.value = {
             title: newImage.title || '',
+            altText: newImage.altText || '',
             caption: newImage.caption || '',
-            author: newImage.author || ''
+            dateCreated: newImage.dateCreated || '',
+            location: newImage.location || '',
+            tags: newImage.tags || '',
         };
     }
 }, { immediate: true });

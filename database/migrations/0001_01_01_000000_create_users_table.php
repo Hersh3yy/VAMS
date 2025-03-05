@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->json('theme_settings')->nullable(); // Store color preferences, fonts, etc
             $table->json('site_settings')->nullable();
+            $table->json('album_display_settings')->nullable(); // Store which fields to display for album images
             $table->rememberToken();
             $table->timestamps();
         });

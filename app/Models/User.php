@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'album_display_settings',
     ];
 
     /**
@@ -45,6 +46,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'theme_settings' => 'array',
+            'site_settings' => 'array',
+            'album_display_settings' => 'array',
         ];
     }
 
