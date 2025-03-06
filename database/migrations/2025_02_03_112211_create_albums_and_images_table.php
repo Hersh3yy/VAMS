@@ -25,8 +25,12 @@ return new class extends Migration
             $table->foreignUuid('album_id')->constrained()->onDelete('cascade');
             $table->string('path');
             $table->string('title')->nullable();
+            $table->string('altText')->nullable();
             $table->text('caption')->nullable();
             $table->text('author')->nullable();
+            $table->timestamp('dateCreated')->nullable();
+            $table->string('location')->nullable();
+            $table->string('tags')->nullable();
             $table->integer('order')->default(0);
             $table->json('properties')->nullable(); // For custom properties
             $table->timestamps();

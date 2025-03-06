@@ -21,6 +21,13 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'album_display_settings' => $request->user()->album_display_settings ?? [
+                'caption' => true,
+                'altText' => true,
+                'dateCreated' => true,
+                'location' => true,
+                'tags' => true,
+            ],
         ]);
     }
 
@@ -36,10 +43,10 @@ class ProfileController extends Controller
             'email' => $validated['email'],
             'album_display_settings' => $validated['album_display_settings'] ?? [
                 'caption' => true,
-                'altText' => false,
-                'dateCreated' => false,
-                'location' => false,
-                'tags' => false,
+                'altText' => true,
+                'dateCreated' => true,
+                'location' => true,
+                'tags' => true,
             ],
         ]);
 

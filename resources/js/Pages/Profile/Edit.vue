@@ -8,6 +8,13 @@ import { Head } from '@inertiajs/vue3';
 defineProps<{
     mustVerifyEmail?: boolean;
     status?: string;
+    album_display_settings: {
+        caption: boolean;
+        altText: boolean;
+        dateCreated: boolean;
+        location: boolean;
+        tags: boolean;
+    };
 }>();
 </script>
 
@@ -31,6 +38,7 @@ defineProps<{
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
+                        :album-display-settings="album_display_settings"
                         class="max-w-xl"
                     />
                 </div>

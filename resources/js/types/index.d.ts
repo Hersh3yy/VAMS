@@ -5,6 +5,7 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string;
+    album_display_settings?: any
 }
 
 export type PageProps<

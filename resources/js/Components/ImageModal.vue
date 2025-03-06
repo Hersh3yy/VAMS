@@ -23,23 +23,23 @@
                             <label class="block text-sm font-medium text-gray-700">Title</label>
                             <input type="text" v-model="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div v-if="displaySettings.altText">
+                        <div v-if="displaySettings?.altText !== false">
                             <label class="block text-sm font-medium text-gray-700">Alt Text</label>
                             <input type="text" v-model="formData.altText" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div v-if="displaySettings.caption">
+                        <div v-if="displaySettings?.caption !== false">
                             <label class="block text-sm font-medium text-gray-700">Caption</label>
                             <textarea v-model="formData.caption" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                         </div>
-                        <div v-if="displaySettings.dateCreated">
+                        <div v-if="displaySettings?.dateCreated !== false">
                             <label class="block text-sm font-medium text-gray-700">Date Created</label>
                             <input type="datetime-local" v-model="formData.dateCreated" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div v-if="displaySettings.location">
+                        <div v-if="displaySettings?.location !== false">
                             <label class="block text-sm font-medium text-gray-700">Location</label>
                             <input type="text" v-model="formData.location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div v-if="displaySettings.tags">
+                        <div v-if="displaySettings?.tags !== false">
                             <label class="block text-sm font-medium text-gray-700">Tags</label>
                             <input type="text" v-model="formData.tags" placeholder="Separate tags with commas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
@@ -75,10 +75,10 @@ const props = defineProps({
         type: Object,
         default: () => ({
             caption: true,
-            altText: false,
-            dateCreated: false,
-            location: false,
-            tags: false,
+            altText: true,
+            dateCreated: true,
+            location: true,
+            tags: true,
         })
     }
 });

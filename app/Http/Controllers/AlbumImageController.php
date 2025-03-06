@@ -100,18 +100,20 @@ class AlbumImageController extends Controller
 
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
+            'altText' => 'nullable|string|max:255',
             'caption' => 'nullable|string',
             'author' => 'nullable|string|max:255',
+            'dateCreated' => 'nullable|date',
+            'location' => 'nullable|string|max:255',
+            'tags' => 'nullable|string',
             'image' => 'nullable|image|max:5120', // 5MB max
         ]);
 
         if ($request->hasFile('image')) {
-            // Store the new image
             $path = $request->file('image')->store('album-images', 'spaces');
             $validated['path'] = Storage::disk('spaces')->url($path);
         }
 
-        // Update the album image record with the new data
         $albumImage->update($validated);
 
         return back()->with('message', 'Image updated successfully');
