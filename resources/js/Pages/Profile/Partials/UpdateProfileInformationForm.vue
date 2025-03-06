@@ -17,10 +17,10 @@ const form = useForm({
     email: user.email,
     album_display_settings: user.album_display_settings || {
         caption: true,
-        altText: false,
-        dateCreated: false,
-        location: false,
-        tags: false,
+        altText: true,
+        dateCreated: true,
+        location: true,
+        tags: true,
     },
 });
 </script>
@@ -92,7 +92,7 @@ const form = useForm({
                         <input
                             id="altText"
                             type="checkbox"
-                            v-model="form.album_display_settings?.altText"
+                            v-model="form.album_display_settings.altText"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                         />
                         <label for="altText" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
