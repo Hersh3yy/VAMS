@@ -27,6 +27,8 @@ class ProfileController extends Controller
                 'dateCreated' => true,
                 'location' => true,
                 'tags' => true,
+                'title' => true,
+                'author' => true,
             ],
         ]);
     }
@@ -47,6 +49,8 @@ class ProfileController extends Controller
                 'dateCreated' => true,
                 'location' => true,
                 'tags' => true,
+                'title' => true,
+                'author' => true,
             ],
         ]);
 

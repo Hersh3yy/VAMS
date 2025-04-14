@@ -3,35 +3,35 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <div class="header-container">
+                <h2 class="header-title">
                     {{ mosaic.title }}
                 </h2>
-                <div class="flex gap-4">
-                    <button @click="saveMosaic" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                <div class="action-buttons">
+                    <button @click="saveMosaic" class="save-button">
                         Save Layout
                     </button>
-                    <button @click="showAlbumSelector = true" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    <button @click="showAlbumSelector = true" class="add-images-button">
                         Add Images
                     </button>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="content-wrapper">
+            <div class="editor-container">
                 <!-- Grid Layout Editor -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="grid grid-cols-12 gap-4 min-h-[600px] relative">
+                <div class="editor-card">
+                    <div class="editor-grid">
                         <div v-for="item in items" 
                              :key="item.id"
-                             class="absolute"
+                             class="grid-item"
                              :style="getItemStyle(item)"
                              v-draggable="draggableOptions"
                              v-resizable="resizableOptions">
                             <img :src="item.image_path" 
                                  :alt="item.title"
-                                 class="w-full h-full object-cover">
+                                 class="item-image">
                         </div>
                     </div>
                 </div>
@@ -40,9 +40,9 @@
 
         <!-- Album Selector Modal -->
         <Modal :show="showAlbumSelector" @close="showAlbumSelector = false">
-            <div class="p-6">
-                <h3 class="text-lg font-medium mb-4">Select Images</h3>
-                <div class="grid grid-cols-3 gap-4">
+            <div class="modal-content">
+                <h3 class="modal-title">Select Images</h3>
+                <div class="image-grid">
                     <!-- Album images grid here -->
                 </div>
             </div>
@@ -85,4 +85,62 @@ const saveMosaic = async () => {
 };
 
 // Add draggable and resizable directives/logic here
-</script> 
+</script>
+
+<style scoped>
+.header-container {
+    @apply flex justify-between items-center;
+}
+
+.header-title {
+    @apply font-semibold text-xl text-gray-800 leading-tight;
+}
+
+.action-buttons {
+    @apply flex gap-4;
+}
+
+.save-button {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+}
+
+.add-images-button {
+    @apply bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded;
+}
+
+.content-wrapper {
+    @apply py-12;
+}
+
+.editor-container {
+    @apply max-w-7xl mx-auto sm:px-6 lg:px-8;
+}
+
+.editor-card {
+    @apply bg-white p-6 rounded-lg shadow;
+}
+
+.editor-grid {
+    @apply grid grid-cols-12 gap-4 min-h-[600px] relative;
+}
+
+.grid-item {
+    @apply absolute;
+}
+
+.item-image {
+    @apply w-full h-full object-cover;
+}
+
+.modal-content {
+    @apply p-6;
+}
+
+.modal-title {
+    @apply text-lg font-medium mb-4;
+}
+
+.image-grid {
+    @apply grid grid-cols-3 gap-4;
+}
+</style> 

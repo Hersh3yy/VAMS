@@ -25,20 +25,24 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div v-for="image in images" :key="image.id"
-                            class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group"
+                        <div v-for="(image, index) in images" :key="image.id"
+                            class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group transition-transform duration-200"
                             :class="{
-                                'opacity-50 ring-4 ring-blue-500': isDragging && draggedImage?.id === image.id,
-                                'ring-4 ring-green-500': isDragOver && draggedImage?.id !== image.id
+                                'opacity-50 ring-4 ring-blue-500 scale-105 z-50': isDragging && draggedImage?.id === image.id,
+                                'ring-4 ring-green-500': isDragOver && draggedImage?.id !== image.id,
+                                'translate-x-full': isDragging && index < draggedIndex && index >= dragOverIndex,
+                                '-translate-x-full': isDragging && index > draggedIndex && index <= dragOverIndex,
+                                'translate-y-full': isDragging && index < draggedIndex && index >= dragOverIndex,
+                                '-translate-y-full': isDragging && index > draggedIndex && index <= dragOverIndex
                             }"
                             draggable="true"
                             @click="openModal(image)"
-                            @dragstart="handleDragStart($event, image)"
+                            @dragstart="handleDragStart($event, image, index)"
                             @dragend="handleDragEnd"
                             @dragover.prevent
-                            @dragenter.prevent="handleDragEnter($event, image)"
+                            @dragenter.prevent="handleDragEnter($event, image, index)"
                             @dragleave.prevent="handleDragLeave"
-                            @drop.prevent="handleDrop($event, image)"
+                            @drop.prevent="handleDrop($event, image, index)"
                         >
                             <img :src="image.path" :alt="image.title"
                                 class="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105">
@@ -79,6 +83,8 @@ const uploading = ref(false);
 const uploadProgress = ref(0);
 const showModal = ref(false);
 const selectedImage = ref(null);
+const draggedIndex = ref(-1);
+const dragOverIndex = ref(-1);
 
 const openModal = (image) => {
     selectedImage.value = image;
@@ -90,29 +96,35 @@ const closeModal = () => {
     selectedImage.value = null;
 };
 
-const handleDragStart = (event, image) => {
+const handleDragStart = (event, image, index) => {
     isDragging.value = true;
     draggedImage.value = image;
+    draggedIndex.value = index;
     event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', index.toString());
 };
 
 const handleDragEnd = () => {
     isDragging.value = false;
     draggedImage.value = null;
     isDragOver.value = false;
+    draggedIndex.value = -1;
+    dragOverIndex.value = -1;
 };
 
-const handleDragEnter = (event, image) => {
+const handleDragEnter = (event, image, index) => {
     if (draggedImage.value?.id !== image.id) {
         isDragOver.value = true;
+        dragOverIndex.value = index;
     }
 };
 
 const handleDragLeave = () => {
     isDragOver.value = false;
+    dragOverIndex.value = -1;
 };
 
-const handleDrop = async (event, targetImage) => {
+const handleDrop = async (event, targetImage, targetIndex) => {
     isDragOver.value = false;
     if (!draggedImage.value || draggedImage.value.id === targetImage.id) return;
 
@@ -186,5 +198,21 @@ const handleFileUpload = async (event) => {
 
 .group:hover {
     @apply ring-4 ring-blue-300;
+}
+
+.translate-x-full {
+    transform: translateX(100%);
+}
+
+.-translate-x-full {
+    transform: translateX(-100%);
+}
+
+.translate-y-full {
+    transform: translateY(100%);
+}
+
+.-translate-y-full {
+    transform: translateY(-100%);
 }
 </style>

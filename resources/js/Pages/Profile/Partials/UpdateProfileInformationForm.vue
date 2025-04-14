@@ -21,6 +21,8 @@ const form = useForm({
         dateCreated: true,
         location: true,
         tags: true,
+        title: true,
+        author: true,
     },
 });
 </script>
@@ -77,6 +79,28 @@ const form = useForm({
                     Album Image Display Settings
                 </h3>
                 <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input
+                            id="title"
+                            type="checkbox"
+                            v-model="form.album_display_settings.title"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="title" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Title
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="author"
+                            type="checkbox"
+                            v-model="form.album_display_settings.author"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="author" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Author
+                        </label>
+                    </div>
                     <div class="flex items-center">
                         <input
                             id="caption"
