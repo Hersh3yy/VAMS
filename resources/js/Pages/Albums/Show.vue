@@ -25,28 +25,15 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div v-for="(image, index) in images" :key="image.id"
-                            class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group transition-transform duration-200"
-                            :class="{
-                                'opacity-50 ring-4 ring-blue-500 scale-105 z-50': isDragging && draggedImage?.id === image.id,
-                                'ring-4 ring-green-500': isDragOver && draggedImage?.id !== image.id,
-                                'translate-x-full': isDragging && index < draggedIndex && index >= dragOverIndex,
-                                '-translate-x-full': isDragging && index > draggedIndex && index <= dragOverIndex,
-                                'translate-y-full': isDragging && index < draggedIndex && index >= dragOverIndex,
-                                '-translate-y-full': isDragging && index > draggedIndex && index <= dragOverIndex
-                            }"
-                            draggable="true"
-                            @click="openModal(image)"
-                            @dragstart="handleDragStart($event, image, index)"
-                            @dragend="handleDragEnd"
-                            @dragover.prevent
-                            @dragenter.prevent="handleDragEnter($event, image, index)"
-                            @dragleave.prevent="handleDragLeave"
-                            @drop.prevent="handleDrop($event, image, index)"
-                        >
-                            <img :src="image.path" :alt="image.title"
-                                class="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105">
-                        </div>
+                        <DraggableImage
+                            v-for="image in images"
+                            :key="image.id"
+                            :image="image"
+                            :is-drop-target="isDragOver && draggedImage?.id !== image.id"
+                            @drag-start="handleDragStart"
+                            @drag-end="handleDragEnd"
+                            @update-position="handleDragMove"
+                        />
                     </div>
                 </div>
             </div>
@@ -67,6 +54,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ImageModal from '@/Components/ImageModal.vue';
+import DraggableImage from '@/Components/DraggableImage.vue';
 import { ref, onMounted } from 'vue';
 
 const props = defineProps({
@@ -83,8 +71,7 @@ const uploading = ref(false);
 const uploadProgress = ref(0);
 const showModal = ref(false);
 const selectedImage = ref(null);
-const draggedIndex = ref(-1);
-const dragOverIndex = ref(-1);
+const dropTargetIndex = ref(-1);
 
 const openModal = (image) => {
     selectedImage.value = image;
@@ -96,56 +83,78 @@ const closeModal = () => {
     selectedImage.value = null;
 };
 
-const handleDragStart = (event, image, index) => {
+const handleDragStart = (image) => {
     isDragging.value = true;
     draggedImage.value = image;
-    draggedIndex.value = index;
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', index.toString());
 };
 
-const handleDragEnd = () => {
+const handleDragEnd = async () => {
+    if (!isDragging.value || !draggedImage.value) return;
+
     isDragging.value = false;
+    const draggedIdx = images.value.findIndex(img => img.id === draggedImage.value.id);
+    const targetIdx = dropTargetIndex.value;
+
+    if (targetIdx !== -1 && targetIdx !== draggedIdx) {
+        const newImages = [...images.value];
+        const [movedImage] = newImages.splice(draggedIdx, 1);
+        newImages.splice(targetIdx, 0, movedImage);
+        images.value = newImages;
+
+        try {
+            await router.post(route('album-images.reorder'), {
+                image_id: draggedImage.value.id,
+                new_order: targetIdx
+            });
+        } catch (error) {
+            console.error('Failed to reorder images:', error);
+            images.value = props.images;
+        }
+    }
+
     draggedImage.value = null;
     isDragOver.value = false;
-    draggedIndex.value = -1;
-    dragOverIndex.value = -1;
+    dropTargetIndex.value = -1;
 };
 
-const handleDragEnter = (event, image, index) => {
-    if (draggedImage.value?.id !== image.id) {
+const handleDragMove = ({ image, position }) => {
+    const imageElements = document.querySelectorAll('.aspect-square');
+    const draggedRect = imageElements[images.value.findIndex(img => img.id === draggedImage.value?.id)]?.getBoundingClientRect();
+    
+    if (!draggedRect) return;
+
+    const dragCenter = {
+        x: draggedRect.left + position.x + draggedRect.width / 2,
+        y: draggedRect.top + position.y + draggedRect.height / 2
+    };
+
+    let closestDistance = Infinity;
+    let closestIndex = -1;
+
+    imageElements.forEach((el, index) => {
+        if (images.value[index].id === draggedImage.value?.id) return;
+
+        const rect = el.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        const distance = Math.sqrt(
+            Math.pow(dragCenter.x - centerX, 2) + 
+            Math.pow(dragCenter.y - centerY, 2)
+        );
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+        }
+    });
+
+    if (closestDistance < 100) { // Threshold for considering it "close enough"
         isDragOver.value = true;
-        dragOverIndex.value = index;
-    }
-};
-
-const handleDragLeave = () => {
-    isDragOver.value = false;
-    dragOverIndex.value = -1;
-};
-
-const handleDrop = async (event, targetImage, targetIndex) => {
-    isDragOver.value = false;
-    if (!draggedImage.value || draggedImage.value.id === targetImage.id) return;
-
-    const newImages = [...images.value];
-    const draggedIdx = newImages.findIndex(img => img.id === draggedImage.value.id);
-    const targetIdx = newImages.findIndex(img => img.id === targetImage.id);
-
-    // Update local state immediately for smooth UI
-    newImages.splice(draggedIdx, 1);
-    newImages.splice(targetIdx, 0, draggedImage.value);
-    images.value = newImages;
-
-    try {
-        await router.post(route('album-images.reorder'), {
-            image_id: draggedImage.value.id,
-            new_order: targetIdx
-        });
-    } catch (error) {
-        console.error('Failed to reorder images:', error);
-        // Optionally revert the change if the server update fails
-        images.value = props.images;
+        dropTargetIndex.value = closestIndex;
+    } else {
+        isDragOver.value = false;
+        dropTargetIndex.value = -1;
     }
 };
 
