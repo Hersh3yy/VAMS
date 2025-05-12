@@ -1,31 +1,46 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { User } from '@/types';
 
 const showingNavigationDropdown = ref(false);
+
+const userThemeStyle = computed(() => {
+    const user = usePage().props.auth.user as User;
+    if (!user) return { '--primary-color': '#4F46E5', '--secondary-color': '#10B981' };
+    
+    const settings = user.album_display_settings || {};
+    const mainColor = settings.main_color || '#4F46E5'; // Default indigo
+    const secondaryColor = settings.secondary_color || '#10B981'; // Default emerald
+    
+    return {
+        '--primary-color': mainColor,
+        '--secondary-color': secondaryColor,
+    };
+});
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav
-                class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
+    <div :style="userThemeStyle">
+        <div class="min-h-screen bg-gray-100">
+            <nav class="bg-white border-b border-gray-100">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
                         <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
+                            <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200"
+                                    <img 
+                                        v-if="$page.props.auth?.user?.logo_url" 
+                                        :src="$page.props.auth.user.logo_url" 
+                                        class="block h-9 w-auto"
+                                        alt="Custom Logo"
                                     />
+                                    <ApplicationLogo v-else class="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
                             </div>
 
@@ -38,6 +53,13 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('albums.index')"
                                 >
                                     Albums
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth?.user?.is_admin"
+                                    :href="route('admin.dashboard')"
+                                    :active="route().current('admin.*')"
+                                >
+                                    Admin
                                 </NavLink>
                             </div>
                         </div>
@@ -52,7 +74,7 @@ const showingNavigationDropdown = ref(false);
                                                 type="button"
                                                 class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                                             >
-                                                {{ $page.props.auth.user.name }}
+                                                {{ $page.props.auth?.user?.name || 'User' }}
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
@@ -130,6 +152,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
                     </div>
                 </div>
+            </nav>
 
                 <!-- Responsive Navigation Menu -->
                 <div
@@ -146,6 +169,19 @@ const showingNavigationDropdown = ref(false);
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('albums.index')"
+                            :active="route().current('albums.index')"
+                        >
+                            Albums
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth?.user?.is_admin"
+                            :href="route('admin.dashboard')"
+                            :active="route().current('admin.*')"
+                        >
+                            Admin
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -156,10 +192,10 @@ const showingNavigationDropdown = ref(false);
                             <div
                                 class="text-base font-medium text-gray-800 dark:text-gray-200"
                             >
-                                {{ $page.props.auth.user.name }}
+                                {{ $page.props.auth?.user?.name || 'User' }}
                             </div>
                             <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
+                                {{ $page.props.auth?.user?.email || '' }}
                             </div>
                         </div>
 
@@ -177,7 +213,6 @@ const showingNavigationDropdown = ref(false);
                         </div>
                     </div>
                 </div>
-            </nav>
 
             <!-- Page Heading -->
             <header
@@ -196,3 +231,53 @@ const showingNavigationDropdown = ref(false);
         </div>
     </div>
 </template>
+
+<style>
+:root {
+    --primary-color: #4F46E5;
+    --secondary-color: #10B981;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+.text-secondary {
+    color: var(--secondary-color) !important;
+}
+
+.border-secondary {
+    border-color: var(--secondary-color) !important;
+}
+
+/* Override default button styling */
+.bg-blue-500 {
+    background-color: var(--primary-color) !important;
+}
+
+.hover\:bg-blue-700:hover {
+    background-color: var(--primary-color) !important;
+    filter: brightness(90%);
+}
+
+.bg-green-500 {
+    background-color: var(--secondary-color) !important;
+}
+
+.hover\:bg-green-700:hover {
+    background-color: var(--secondary-color) !important;
+    filter: brightness(90%);
+}
+</style>

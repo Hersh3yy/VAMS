@@ -15,6 +15,7 @@ class Mosaic extends Model
         'title',
         'description',
         'theme_settings',
+        'user_id',
     ];
 
     protected $casts = [

@@ -26,11 +26,15 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'album_display_settings' => ['nullable', 'array'],
-            'album_display_settings.caption' => ['boolean'],
-            'album_display_settings.altText' => ['boolean'],
-            'album_display_settings.dateCreated' => ['boolean'],
-            'album_display_settings.location' => ['boolean'],
-            'album_display_settings.tags' => ['boolean'],
+            'album_display_settings.caption' => ['nullable', 'boolean'],
+            'album_display_settings.altText' => ['nullable', 'boolean'],
+            'album_display_settings.dateCreated' => ['nullable', 'boolean'],
+            'album_display_settings.location' => ['nullable', 'boolean'],
+            'album_display_settings.tags' => ['nullable', 'boolean'],
+            'album_display_settings.title' => ['nullable', 'boolean'],
+            'album_display_settings.author' => ['nullable', 'boolean'],
+            'album_display_settings.main_color' => ['nullable', 'string'],
+            'album_display_settings.secondary_color' => ['nullable', 'string'],
         ];
     }
 }

@@ -8,22 +8,27 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
         'album_display_settings',
+        'logo_url',
+        'is_admin',
+        'is_approved',
+        'approved_at',
     ];
 
     /**
@@ -49,11 +54,19 @@ class User extends Authenticatable
             'theme_settings' => 'array',
             'site_settings' => 'array',
             'album_display_settings' => 'array',
+            'is_admin' => 'boolean',
+            'is_approved' => 'boolean',
+            'approved_at' => 'datetime',
         ];
     }
 
     public function albums()
     {
         return $this->hasMany(Album::class)->orderBy('order');
+    }
+
+    public function mosaics()
+    {
+        return $this->hasMany(Mosaic::class);
     }
 }

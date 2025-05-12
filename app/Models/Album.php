@@ -15,6 +15,7 @@ class Album extends Model
         'description',
         'order',
         'cover_image_path',
+        'user_id',
     ];
 
     public function user()

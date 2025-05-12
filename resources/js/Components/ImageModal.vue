@@ -19,7 +19,7 @@
                 <div class="bg-white p-6">
                     <img :src="image.path" :alt="image.title || 'Image'" class="w-full h-auto max-h-[60vh] object-contain">
                     <div class="mt-4 space-y-4">
-                        <div>
+                        <div v-if="displaySettings?.title !== false">
                             <label class="block text-sm font-medium text-gray-700">Title</label>
                             <input type="text" v-model="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
@@ -43,7 +43,7 @@
                             <label class="block text-sm font-medium text-gray-700">Tags</label>
                             <input type="text" v-model="formData.tags" placeholder="Separate tags with commas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div>
+                        <div v-if="displaySettings?.author !== false">
                             <label class="block text-sm font-medium text-gray-700">Author</label>
                             <input type="text" v-model="formData.author" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
@@ -74,11 +74,13 @@ const props = defineProps({
     displaySettings: {
         type: Object,
         default: () => ({
+            title: true,
             caption: true,
             altText: true,
             dateCreated: true,
             location: true,
             tags: true,
+            author: true,
         })
     }
 });
@@ -92,6 +94,7 @@ const formData = ref({
     dateCreated: '',
     location: '',
     tags: '',
+    author: '',
 });
 
 watch(() => props.image, (newImage) => {
@@ -103,6 +106,7 @@ watch(() => props.image, (newImage) => {
             dateCreated: newImage.dateCreated || '',
             location: newImage.location || '',
             tags: newImage.tags || '',
+            author: newImage.author || '',
         };
     }
 }, { immediate: true });

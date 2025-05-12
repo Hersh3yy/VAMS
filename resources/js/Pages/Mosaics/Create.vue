@@ -65,23 +65,30 @@
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const form = useForm({
     title: '',
     description: '',
-    theme_settings: {
+    theme_settings: JSON.stringify({
         background_color: '#ffffff',
         text_color: '#000000',
-    }
+    })
 });
 
 const submit = () => {
+    console.log('Submitting form with data:', form);
+    
     form.post(route('mosaics.store'), {
+        preserveScroll: true,
         onSuccess: () => {
-            // Redirect will be handled by the controller
+            // Redirect is handled by the controller
+            console.log('Form submitted successfully');
         },
+        onError: (errors) => {
+            console.error('Form submission errors:', errors);
+        }
     });
 };
 </script>
@@ -112,7 +119,7 @@ const submit = () => {
 }
 
 .form-group {
-    @apply;
+    @apply mb-4;
 }
 
 .form-label {

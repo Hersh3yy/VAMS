@@ -3,16 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\ImageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    /**
+     * The image service instance.
+     *
+     * @var \App\Services\ImageService
+     */
+    protected $imageService;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @param \App\Services\ImageService $imageService
+     * @return void
+     */
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
+
     /**
      * Display the user's profile form.
      */
@@ -29,6 +49,8 @@ class ProfileController extends Controller
                 'tags' => true,
                 'title' => true,
                 'author' => true,
+                'main_color' => '#4F46E5', // Default indigo color
+                'secondary_color' => '#10B981', // Default emerald color
             ],
         ]);
     }
@@ -51,6 +73,8 @@ class ProfileController extends Controller
                 'tags' => true,
                 'title' => true,
                 'author' => true,
+                'main_color' => '#4F46E5', // Default indigo color
+                'secondary_color' => '#10B981', // Default emerald color
             ],
         ]);
 
@@ -61,6 +85,47 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit');
+    }
+
+    /**
+     * Upload and update the user's logo.
+     */
+    public function updateLogo(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'logo' => 'required|image|max:2048', // 2MB max
+        ]);
+
+        try {
+            // Use ImageService to store the logo
+            $result = $this->imageService->storeImage(
+                $request->file('logo'), 
+                "users/{$request->user()->id}/logos"
+            );
+            
+            // Update user with logo URL
+            $request->user()->update([
+                'logo_url' => $result['url'],
+            ]);
+
+            return Redirect::route('profile.edit')->with('status', 'logo-updated');
+        } catch (\Exception $e) {
+            Log::error('Error uploading logo: ' . $e->getMessage());
+            return Redirect::route('profile.edit')->with('error', 'Failed to upload logo.');
+        }
+    }
+
+    /**
+     * Remove the user's logo.
+     */
+    public function destroyLogo(Request $request): RedirectResponse
+    {
+        // Update user to remove logo URL
+        $request->user()->update([
+            'logo_url' => null,
+        ]);
+
+        return Redirect::route('profile.edit')->with('status', 'logo-removed');
     }
 
     /**
