@@ -87,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resources
     Route::resource('mosaics', MosaicController::class);
     Route::resource('mosaic-items', MosaicItemController::class);
+    Route::post('/mosaic-items/{mosaicItem}/split', [MosaicItemController::class, 'split'])->name('mosaic-items.split');
     Route::resource('album-images', AlbumImageController::class);
 });
 

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Album;
+use App\Services\AlbumService;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,13 +20,36 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Album API endpoints
-Route::get('/albums', function () {
-    return Album::with('images')->get();
-});
-
+// Album API endpoint for fetching images - no authentication required for now
 Route::get('/albums/{album}', function (Album $album) {
-    return $album->load('images');
+    // Load the album with its images
+    $album->load('images');
+    
+    return response()->json([
+        'album' => [
+            'id' => $album->id,
+            'title' => $album->title,
+            'description' => $album->description,
+            'cover_image_path' => $album->cover_image_path,
+            'user_id' => $album->user_id,
+            'created_at' => $album->created_at,
+            'updated_at' => $album->updated_at
+        ],
+        'images' => $album->images->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'title' => $image->title,
+                'description' => $image->description,
+                'path' => $image->path,
+                'webp_path' => $image->webp_path ?? null,
+                'caption' => $image->caption,
+                'order' => $image->order,
+                'properties' => $image->properties,
+                'created_at' => $image->created_at,
+                'updated_at' => $image->updated_at
+            ];
+        })
+    ]);
 });
 
 // Album by title endpoint for Strapi compatibility

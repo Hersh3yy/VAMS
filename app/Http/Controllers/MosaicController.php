@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mosaic;
+use App\Services\AlbumService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,24 @@ use Inertia\Inertia;
 class MosaicController extends Controller
 {
     use AuthorizesRequests;
+    
+    /**
+     * The album service instance.
+     *
+     * @var \App\Services\AlbumService
+     */
+    protected $albumService;
+    
+    /**
+     * Create a new controller instance.
+     *
+     * @param \App\Services\AlbumService $albumService
+     * @return void
+     */
+    public function __construct(AlbumService $albumService)
+    {
+        $this->albumService = $albumService;
+    }
     
     /**
      * Display a listing of the resource.
@@ -40,7 +59,7 @@ class MosaicController extends Controller
         $validated = $request->validate([
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'theme_settings' => 'nullable|json',
+            'layout_settings' => 'nullable|json',
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -64,6 +83,23 @@ class MosaicController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Mosaic $mosaic)
+    {
+        $this->authorize('update', $mosaic);
+        
+        // Get user's albums for the mosaic editor
+        $albums = $this->albumService->getAllAlbums();
+        
+        return Inertia::render('Mosaics/Edit', [
+            'mosaic' => $mosaic,
+            'items' => $mosaic->items()->orderBy('order')->get(),
+            'albums' => $albums,
+        ]);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Mosaic $mosaic)
@@ -73,7 +109,7 @@ class MosaicController extends Controller
         $validated = $request->validate([
             'title' => 'nullable|string',
             'description' => 'nullable|string',
-            'theme_settings' => 'nullable|json',
+            'layout_settings' => 'nullable|json',
         ]);
 
         $mosaic->update($validated);
