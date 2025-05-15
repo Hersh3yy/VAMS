@@ -89,26 +89,53 @@
                             <!-- Image Content -->
                             <div v-if="item.type === 'image'" 
                                  class="image-container"
-                                 @mousedown="startImageDrag($event, item)">
-                                <img v-if="getImageSrc(item)" 
-                                     :src="getImageSrc(item)" 
-                                     :alt="item.title || 'Mosaic image'"
-                                     class="item-image"
-                                     :style="getImagePositionStyle(item)">
+                                 @mousedown="startImageDrag($event, item)"
+                                 @click.stop="openImagePropertiesModal(item)">
+                                
+                                <Link v-if="getImageLink(item)" :href="getImageLink(item)" class="image-link-wrapper">
+                                    <img v-if="getImageSrc(item)" 
+                                         :src="getImageSrc(item)" 
+                                         :alt="item.title || 'Mosaic image'"
+                                         class="item-image"
+                                         :style="getImagePositionStyle(item)">
+                                    <div v-if="getImageOverlayText(item)" 
+                                         class="image-overlay-text" 
+                                         :style="getImageOverlayStyle(item)">
+                                        {{ getImageOverlayText(item) }}
+                                    </div>
+                                </Link>
+                                <template v-else>
+                                    <img v-if="getImageSrc(item)" 
+                                         :src="getImageSrc(item)" 
+                                         :alt="item.title || 'Mosaic image'"
+                                         class="item-image"
+                                         :style="getImagePositionStyle(item)">
+                                    <div v-if="getImageOverlayText(item)" 
+                                         class="image-overlay-text" 
+                                         :style="getImageOverlayStyle(item)">
+                                        {{ getImageOverlayText(item) }}
+                                    </div>
+                                </template>
+                                
                                 <!-- Image Controls -->
                                 <div class="image-actions">
-                                    <button @click="assignImage(item)" class="image-action-button edit-image-button" title="Change Image">
+                                    <button @click.stop="assignImage(item)" class="image-action-button edit-image-button" title="Change Image">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="image-action-icon" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                         </svg>
                                     </button>
-                                    <button @click="removeItem(item)" class="image-action-button remove-image-button" title="Remove Image">
+                                    <button @click.stop="openImagePropertiesModal(item)" class="image-action-button properties-image-button" title="Image Properties">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="image-action-icon" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0L7.86 5.29H5.25a2.25 2.25 0 00-2.24 2.01L2.25 15A2.25 2.25 0 004.5 17.25h11A2.25 2.25 0 0017.75 15L17 7.3a2.25 2.25 0 00-2.24-2.01h-2.61l-.65-2.12zM10 14a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <button @click.stop="removeItem(item)" class="image-action-button remove-image-button" title="Remove Image">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="image-action-icon" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                                         </svg>
                                     </button>
                                 </div>
-                                <div class="drag-hint">Drag to position image</div>
+                                <div class="drag-hint">Drag to position image. Click to set properties.</div>
                             </div>
                             
                             <!-- Container Content -->
@@ -164,8 +191,17 @@
                                         </span>
                                         <span v-else>
                                             {{ item.split_direction === 'horizontal' ? 'Horizontal Split' : 'Vertical Split' }}
+                                            <span class="resize-hint">Click "Adjust" or this tile to resize</span>
                                         </span>
                                     </div>
+                                </div>
+                                
+                                <!-- Add split direction class to the clickable area -->
+                                <div 
+                                    v-if="item.split_direction && item.split_direction !== 'none'"
+                                    class="resize-clickable-area"
+                                    :class="{ 'cursor-ns-resize': item.split_direction === 'horizontal', 'cursor-ew-resize': item.split_direction === 'vertical' }"
+                                    @click="toggleSplitAdjustment(item)">
                                 </div>
                             </div>
                             
@@ -185,6 +221,9 @@
                                 :style="getSplitHandleStyle(itemToSplit)"
                                 @mousedown.prevent="handleSplitMouseDown">
                                 <div class="handle-indicator"></div>
+                                <div class="split-handle-tooltip">
+                                    {{ itemToSplit.split_direction === 'horizontal' ? 'Drag up/down to resize' : 'Drag left/right to resize' }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -349,6 +388,14 @@
                 </div>
             </div>
         </Modal>
+
+        <!-- Image Properties Modal -->
+        <ImagePropertiesModal 
+            :show="showImagePropertiesModal" 
+            :item="currentItemForProperties"
+            @close="showImagePropertiesModal = false"
+            @update:properties="handleUpdateImageProperties"
+        />
     </AuthenticatedLayout>
 </template>
 
@@ -357,6 +404,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import ImagePropertiesModal from '@/Components/ImagePropertiesModal.vue';
 import axios from 'axios';
 
 // Log that we've imported the Modal component
@@ -390,6 +438,10 @@ const adjustingSplit = ref(false);
 const isDraggingImage = ref(false);
 const draggedItem = ref(null);
 const imageOffset = ref({ x: 0, y: 0 }); // For image positioning within tile
+
+// State for Image Properties Modal
+const showImagePropertiesModal = ref(false);
+const currentItemForProperties = ref(null);
 
 // Create computed property to safely check for items
 const hasItems = computed(() => {
@@ -1198,7 +1250,7 @@ const toggleSplitAdjustment = (item) => {
     // If already adjusting this item, turn off adjustment
     if (adjustingSplit.value && itemToSplit.value && itemToSplit.value.id === item.id) {
         adjustingSplit.value = false;
-        itemToSplit.value = null;
+        itemToSplit.value = null; // Clear the item being split
         return;
     }
     
@@ -1222,6 +1274,20 @@ const toggleSplitAdjustment = (item) => {
     } else {
         splitRatio.value = 50; // Default
     }
+    
+    // Show a hint message about dragging
+    setTimeout(() => {
+        const tooltip = document.querySelector('.split-handle-tooltip');
+        if (tooltip) {
+            tooltip.style.opacity = '1';
+            // Hide tooltip after a few seconds
+            setTimeout(() => {
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                }
+            }, 3000);
+        }
+    }, 100);
 };
 
 // Handle split adjustment
@@ -1294,6 +1360,7 @@ const endSplitAdjustment = (e) => {
     // Keep the item selected but turn off active adjustment
     // This allows the user to click the handle again to continue adjusting
     adjustingSplit.value = false;
+    itemToSplit.value = null;
 };
 
 // Updated split handle style to make it more visible
@@ -1308,19 +1375,21 @@ const getSplitHandleStyle = (item) => {
             top: `${splitRatio.value}%`,
             left: '0',
             width: '100%',
-            height: '8px',
+            height: '12px', // Increase handle size
             transform: 'translateY(-50%)',
-            backgroundColor: 'rgba(59, 130, 246, 0.5)'
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.8), 0 2px 4px rgba(0, 0, 0, 0.2)' // Add more visible shadow
         };
     } else {
         // For vertical split, position at the splitRatio% from the left
         return {
             top: '0',
             left: `${splitRatio.value}%`,
-            width: '8px',
+            width: '12px', // Increase handle size
             height: '100%',
             transform: 'translateX(-50%)',
-            backgroundColor: 'rgba(59, 130, 246, 0.5)'
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.8), 0 2px 4px rgba(0, 0, 0, 0.2)' // Add more visible shadow
         };
     }
 };
@@ -1359,6 +1428,61 @@ const debugRoutes = () => {
         });
         
     alert('Route debugging information has been logged to the console.');
+};
+
+// Function to open image properties modal
+const openImagePropertiesModal = (item) => {
+    if (item.type === 'image') {
+        currentItemForProperties.value = item;
+        showImagePropertiesModal.value = true;
+    }
+};
+
+// Function to handle updates from ImagePropertiesModal
+const handleUpdateImageProperties = ({ itemId, properties }) => {
+    const index = mosaicItems.value.findIndex(item => item.id === itemId);
+    if (index !== -1) {
+        mosaicItems.value[index] = {
+            ...mosaicItems.value[index],
+            properties: JSON.stringify(properties), // Ensure properties are stored as string if needed by backend
+            isModified: true
+        };
+        hasUnsavedChanges.value = true;
+    }
+    showImagePropertiesModal.value = false; // Close modal after update
+};
+
+// Example helper (add to script setup section):
+const getParsedProperties = (item) => {
+    if (item && item.properties) {
+        try {
+            return typeof item.properties === 'string' ? JSON.parse(item.properties) : item.properties;
+        } catch (e) {
+            console.error('Error parsing item.properties:', e);
+        }
+    }
+    return {};
+};
+
+const getImageLink = (item) => {
+    const props = getParsedProperties(item);
+    return props.linkUrl || null;
+};
+
+const getImageOverlayText = (item) => {
+    const props = getParsedProperties(item);
+    return props.overlayText || null;
+};
+
+const getImageOverlayStyle = (item) => {
+    const props = getParsedProperties(item);
+    const style = {};
+    if (props.overlayConfig && props.overlayConfig.color) {
+        style.color = props.overlayConfig.color;
+    }
+    // Add more style properties from overlayConfig as needed (e.g., fontSize, textAlign)
+    // Example: style.fontSize = props.overlayConfig.fontSize || '16px';
+    return style;
 };
 </script>
 
@@ -1501,7 +1625,7 @@ const debugRoutes = () => {
 }
 
 .drag-hint {
-    @apply absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 opacity-0 transition-opacity text-sm font-medium;
+    @apply absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 opacity-0 transition-opacity text-sm font-medium pointer-events-none;
 }
 
 .image-container:hover .drag-hint {
@@ -1545,6 +1669,7 @@ const debugRoutes = () => {
 
 .adjust-button {
     @apply bg-blue-600 hover:bg-blue-700;
+    animation: pulse-blue 2s infinite;
 }
 
 .adjust-button.active {
@@ -1716,30 +1841,33 @@ const debugRoutes = () => {
     background-color: rgba(59, 130, 246, 0.3);
     border: 2px solid rgba(59, 130, 246, 0.8);
     transition: background-color 0.2s;
+    opacity: 0.8; /* Make it a bit more visible */
 }
 
 .split-handle:hover {
-    background-color: rgba(59, 130, 246, 0.6);
+    background-color: rgba(59, 130, 246, 0.8);
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
 }
 
 .split-handle.horizontal {
-    @apply w-full h-6 -mt-3;
-    cursor: ns-resize;
+    @apply w-full h-10 -mt-5; /* Increase height */
+    cursor: ns-resize; /* Make sure cursor shows resize */
 }
 
 .split-handle.vertical {
-    @apply h-full w-6 -ml-3;
-    cursor: ew-resize;
+    @apply h-full w-10 -ml-5; /* Increase width */
+    cursor: ew-resize; /* Make sure cursor shows resize */
 }
 
 .handle-indicator {
     @apply absolute bg-blue-500 rounded-full;
-    width: 12px;
-    height: 12px;
+    width: 16px; /* Larger indicator */
+    height: 16px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
 }
 
 .action-button[title="Split Tile"] {
@@ -1754,5 +1882,107 @@ const debugRoutes = () => {
 .instructions-bar {
     max-width: 800px;
     margin: 0 auto 1rem auto;
+}
+
+.image-link-wrapper {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative; /* For overlay positioning */
+}
+
+.image-overlay-text {
+    position: absolute;
+    bottom: 10px; /* Example positioning */
+    left: 10px;
+    right: 10px;
+    text-align: center;
+    color: white; /* Default, will be overridden by style binding */
+    background-color: rgba(0, 0, 0, 0.5); /* Slight background for readability */
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    pointer-events: none; /* Allow clicks to pass through to link/image actions if needed */
+}
+
+.properties-image-button { /* Style for the new button, if needed */
+    @apply text-purple-400; /* Example color */
+}
+
+// Add a help message about adjusting tile size
+.container-content:hover .container-actions {
+    opacity: 1;
+}
+
+// Add a pulsing animation for the adjust button
+@keyframes pulse-blue {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.split-handle-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 30;
+}
+
+.split-handle.horizontal .split-handle-tooltip {
+    left: 50%;
+    top: -30px;
+    transform: translateX(-50%);
+}
+
+.split-handle.vertical .split-handle-tooltip {
+    top: 50%;
+    left: -110px;
+    transform: translateY(-50%);
+}
+
+.split-handle:hover .split-handle-tooltip {
+    opacity: 1;
+}
+
+.resize-hint {
+    display: block;
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-top: 4px;
+}
+
+.resize-clickable-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: transparent;
+}
+
+.resize-clickable-area:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.cursor-ns-resize {
+    cursor: ns-resize;
+}
+
+.cursor-ew-resize {
+    cursor: ew-resize;
 }
 </style> 
