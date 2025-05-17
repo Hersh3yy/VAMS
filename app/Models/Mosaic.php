@@ -9,16 +9,19 @@ class Mosaic extends Model
 {
     use HasUuids;
 
-    protected $table = 'landing_mosaics';
+    protected $table = 'mosaics';
 
     protected $fillable = [
         'title',
         'description',
-        'theme_settings',
+        'layout_settings',
+        'columns',
+        'user_id',
     ];
 
     protected $casts = [
-        'theme_settings' => 'json',
+        'layout_settings' => 'json',
+        'columns' => 'integer',
     ];
 
     public function user()
@@ -28,6 +31,14 @@ class Mosaic extends Model
 
     public function items()
     {
-        return $this->hasMany(MosaicItem::class, 'landing_mosaic_id')->orderBy('order');
+        return $this->hasMany(MosaicItem::class, 'mosaic_id')->orderBy('order');
+    }
+    
+    // Get root level items (those without a parent)
+    public function rootItems()
+    {
+        return $this->hasMany(MosaicItem::class, 'mosaic_id')
+            ->whereNull('parent_id')
+            ->orderBy('order');
     }
 }

@@ -21,6 +21,10 @@ const form = useForm({
         dateCreated: true,
         location: true,
         tags: true,
+        title: true,
+        author: true,
+        main_color: '#4F46E5',
+        secondary_color: '#10B981',
     },
 });
 </script>
@@ -79,6 +83,28 @@ const form = useForm({
                 <div class="space-y-4">
                     <div class="flex items-center">
                         <input
+                            id="title"
+                            type="checkbox"
+                            v-model="form.album_display_settings.title"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="title" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Title
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
+                            id="author"
+                            type="checkbox"
+                            v-model="form.album_display_settings.author"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        <label for="author" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            Show Author
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input
                             id="caption"
                             type="checkbox"
                             v-model="form.album_display_settings.caption"
@@ -131,6 +157,42 @@ const form = useForm({
                         <label for="tags" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                             Show Tags
                         </label>
+                    </div>
+                    
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <label for="main_color" class="block text-sm text-gray-600 dark:text-gray-400">
+                                Main Color
+                            </label>
+                            <div class="flex items-center mt-1">
+                                <input
+                                    id="main_color"
+                                    type="color"
+                                    v-model="form.album_display_settings.main_color"
+                                    class="h-8 w-16 rounded"
+                                />
+                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ form.album_display_settings.main_color }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="secondary_color" class="block text-sm text-gray-600 dark:text-gray-400">
+                                Secondary Color
+                            </label>
+                            <div class="flex items-center mt-1">
+                                <input
+                                    id="secondary_color"
+                                    type="color"
+                                    v-model="form.album_display_settings.secondary_color"
+                                    class="h-8 w-16 rounded"
+                                />
+                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ form.album_display_settings.secondary_color }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

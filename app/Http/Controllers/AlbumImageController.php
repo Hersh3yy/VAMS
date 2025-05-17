@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Models\AlbumImage;
+use App\Services\ImageService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,24 @@ use Illuminate\Support\Facades\Storage;
 class AlbumImageController extends Controller
 {
     use AuthorizesRequests;
+
+    /**
+     * The image service instance.
+     *
+     * @var \App\Services\ImageService
+     */
+    protected $imageService;
+    
+    /**
+     * Create a new controller instance.
+     *
+     * @param \App\Services\ImageService $imageService
+     * @return void
+     */
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
 
     /**
      * Display a listing of the resource.
@@ -53,11 +72,16 @@ class AlbumImageController extends Controller
             foreach ($request->file('images') as $image) {
                 Log::info('Processing image:', ['name' => $image->getClientOriginalName()]);
 
-                $path = $image->store('album-images', 'spaces');
-                Log::info('Image stored at path:', ['path' => $path]);
+                // Use ImageService to store the image
+                $result = $this->imageService->storeImage(
+                    $image, 
+                    "albums/{$album->id}"
+                );
+                
+                Log::info('Image stored at path:', ['path' => $result['path']]);
 
                 $uploadedImages[] = $album->images()->create([
-                    'path' => Storage::disk('spaces')->url($path),
+                    'path' => $result['url'],
                     'order' => ++$lastOrder
                 ]);
             }
@@ -109,9 +133,16 @@ class AlbumImageController extends Controller
             'image' => 'nullable|image|max:5120', // 5MB max
         ]);
 
+        // The mutators in the model will handle mapping to the appropriate columns
+        
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('album-images', 'spaces');
-            $validated['path'] = Storage::disk('spaces')->url($path);
+            // Use ImageService to store the replacement image
+            $result = $this->imageService->storeImage(
+                $request->file('image'), 
+                "albums/{$albumImage->album_id}"
+            );
+            
+            $validated['path'] = $result['url'];
         }
 
         $albumImage->update($validated);
@@ -165,5 +196,64 @@ class AlbumImageController extends Controller
 
         // Return an Inertia response instead of JSON
         return back()->with('message', 'Image order updated successfully');
+    }
+
+    /**
+     * Store a video URL as an album image
+     */
+    public function storeVideo(Request $request)
+    {
+        Log::info('Incoming video request data:', $request->all());
+
+        try {
+            $request->validate([
+                'album_id' => 'required|exists:albums,id',
+                'url' => 'required|url',
+                'title' => 'nullable|string|max:255',
+                'caption' => 'nullable|string',
+            ]);
+
+            $album = Album::findOrFail($request->album_id);
+            $this->authorize('update', $album);
+
+            $lastOrder = $album->images()->max('order') ?? -1;
+            
+            // Store video thumbnail using ImageService
+            $thumbnailResult = $this->imageService->storeVideoThumbnail(
+                $request->url, 
+                "albums/{$album->id}"
+            );
+            
+            // Create properties JSON with video metadata
+            $properties = [
+                'type' => 'video',
+                'video_url' => $request->url,
+            ];
+            
+            // Add thumbnail URL if available
+            if ($thumbnailResult) {
+                $properties['thumbnail_url'] = $thumbnailResult['url'];
+            }
+            
+            // Create the album image entry
+            $albumImage = $album->images()->create([
+                'path' => $request->url,
+                'title' => $request->title,
+                'caption' => $request->caption,
+                'properties' => json_encode($properties),
+                'order' => ++$lastOrder
+            ]);
+
+            return response()->json($albumImage);
+        } catch (\Exception $e) {
+            Log::error('Error in AlbumImageController@storeVideo:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Error adding video: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
