@@ -1909,12 +1909,10 @@ const getImageOverlayStyle = (item) => {
     @apply text-purple-400; /* Example color */
 }
 
-// Add a help message about adjusting tile size
 .container-content:hover .container-actions {
     opacity: 1;
 }
 
-// Add a pulsing animation for the adjust button
 @keyframes pulse-blue {
     0% {
         box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
