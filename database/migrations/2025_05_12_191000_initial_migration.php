@@ -69,6 +69,7 @@ return new class extends Migration
             $table->uuid('user_id');
             $table->string('title');
             $table->text('description')->nullable();
+            $table->json('theme_settings')->nullable();
             $table->json('layout_settings')->nullable(); // Settings for the overall layout
             $table->integer('columns')->default(4); // Default number of columns for the grid
             $table->timestamps();
