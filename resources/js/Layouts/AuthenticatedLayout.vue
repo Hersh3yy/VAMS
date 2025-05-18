@@ -61,12 +61,28 @@ const userThemeStyle = computed(() => {
                                 >
                                     Admin
                                 </NavLink>
+                                <NavLink
+                                    :href="route('mosaics.index')"
+                                    :active="route().current('mosaics.*')"
+                                >
+                                    Mosaics
+                                </NavLink>
                             </div>
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
+                                <div v-if="$page.props.is_impersonating" class="mb-2">
+                                    <Link
+                                        :href="route('impersonate.leave')"
+                                        method="post"
+                                        as="button"
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition ease-in-out duration-150"
+                                    >
+                                        Return to Admin
+                                    </Link>
+                                </div>
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
@@ -181,6 +197,12 @@ const userThemeStyle = computed(() => {
                             :active="route().current('admin.*')"
                         >
                             Admin
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('mosaics.index')"
+                            :active="route().current('mosaics.*')"
+                        >
+                            Mosaics
                         </ResponsiveNavLink>
                     </div>
 

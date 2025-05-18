@@ -22,9 +22,7 @@ const form = useForm({
         location: true,
         tags: true,
         title: true,
-        author: true,
-        main_color: '#4F46E5',
-        secondary_color: '#10B981',
+        author: true
     },
 });
 </script>
@@ -157,42 +155,6 @@ const form = useForm({
                         <label for="tags" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                             Show Tags
                         </label>
-                    </div>
-                    
-                    <div class="mt-6 space-y-4">
-                        <div>
-                            <label for="main_color" class="block text-sm text-gray-600 dark:text-gray-400">
-                                Main Color
-                            </label>
-                            <div class="flex items-center mt-1">
-                                <input
-                                    id="main_color"
-                                    type="color"
-                                    v-model="form.album_display_settings.main_color"
-                                    class="h-8 w-16 rounded"
-                                />
-                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                                    {{ form.album_display_settings.main_color }}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label for="secondary_color" class="block text-sm text-gray-600 dark:text-gray-400">
-                                Secondary Color
-                            </label>
-                            <div class="flex items-center mt-1">
-                                <input
-                                    id="secondary_color"
-                                    type="color"
-                                    v-model="form.album_display_settings.secondary_color"
-                                    class="h-8 w-16 rounded"
-                                />
-                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                                    {{ form.album_display_settings.secondary_color }}
-                                </span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

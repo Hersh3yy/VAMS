@@ -77,6 +77,10 @@ const themeForm = useForm({
 const updateTheme = () => {
     themeForm.patch(route('profile.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            // Force a page reload to apply theme changes
+            window.location.reload();
+        }
     });
 };
 </script>
