@@ -60,13 +60,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function albums()
-    {
-        return $this->hasMany(Album::class)->orderBy('order');
-    }
-
     public function mosaics()
     {
         return $this->hasMany(Mosaic::class);
+    }
+
+    public function albums()
+    {
+        return $this->hasMany(Album::class);
     }
 }

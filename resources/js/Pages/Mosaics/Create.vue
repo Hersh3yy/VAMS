@@ -3,92 +3,84 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="header-title">
-                Create New Mosaic
-            </h2>
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    Create New Mosaic
+                </h2>
+            </div>
         </template>
 
-        <div class="content-wrapper">
-            <div class="form-container">
-                <div class="form-card">
-                    <div class="form-body">
-                        <form @submit.prevent="submit" class="form-layout">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    Title
-                                </label>
-                                <input 
-                                    type="text"
-                                    v-model="form.title"
-                                    class="form-input"
-                                >
-                                <div v-if="form.errors.title" class="form-error">
-                                    {{ form.errors.title }}
-                                </div>
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <form @submit.prevent="createMosaic" class="p-6">
+                        <div class="mb-6">
+                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                                Title
+                            </label>
+                            <input
+                                id="title"
+                                v-model="form.title"
+                                type="text"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required
+                            />
+                            <div v-if="form.errors.title" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.title }}
                             </div>
+                        </div>
 
-                            <div class="form-group">
-                                <label class="form-label">
-                                    Description
-                                </label>
-                                <textarea
-                                    v-model="form.description"
-                                    rows="3"
-                                    class="form-textarea"
-                                ></textarea>
-                                <div v-if="form.errors.description" class="form-error">
-                                    {{ form.errors.description }}
-                                </div>
+                        <div class="mb-6">
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                Description (Optional)
+                            </label>
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                rows="3"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            ></textarea>
+                            <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.description }}
                             </div>
+                        </div>
 
-                            <div class="form-actions">
-                                <Link
-                                    :href="route('mosaics.index')"
-                                    class="cancel-button"
-                                >
-                                    Cancel
-                                </Link>
-                                <button
-                                    type="submit"
-                                    class="submit-button"
-                                    :disabled="form.processing"
-                                >
-                                    Create Mosaic
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="flex justify-end gap-4">
+                            <Link
+                                :href="route('mosaics.index')"
+                                class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                :disabled="form.processing"
+                            >
+                                Create Mosaic
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
 
-<script setup>
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+<script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const form = useForm({
     title: '',
     description: '',
-    theme_settings: JSON.stringify({
-        background_color: '#ffffff',
-        text_color: '#000000',
-    })
 });
 
-const submit = () => {
-    console.log('Submitting form with data:', form);
-    
+const createMosaic = () => {
     form.post(route('mosaics.store'), {
-        preserveScroll: true,
         onSuccess: () => {
-            // Redirect is handled by the controller
-            console.log('Form submitted successfully');
+            // Redirect to edit page will be handled by the controller
         },
-        onError: (errors) => {
-            console.error('Form submission errors:', errors);
-        }
     });
 };
 </script>

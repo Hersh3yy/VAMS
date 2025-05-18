@@ -2,21 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Mosaic extends Model
 {
-    use HasUuids;
+    use HasFactory, HasUuids;
 
     protected $table = 'mosaics';
 
     protected $fillable = [
+        'id',
+        'user_id',
         'title',
         'description',
         'layout_settings',
         'columns',
-        'user_id',
     ];
 
     protected $casts = [
@@ -31,7 +33,7 @@ class Mosaic extends Model
 
     public function items()
     {
-        return $this->hasMany(MosaicItem::class, 'mosaic_id')->orderBy('order');
+        return $this->hasMany(MosaicItem::class);
     }
     
     // Get root level items (those without a parent)

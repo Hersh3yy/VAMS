@@ -21,14 +21,14 @@ class StrapiImport extends Command
      *
      * @var string
      */
-    protected $signature = 'strapi:import {album} {user_id} {base_url=https://bg-strapi-h3d4k.ondigitalocean.app}';
+    protected $signature = 'strapi:import {albums*} {--user=} {--base-url=https://bg-strapi-h3d4k.ondigitalocean.app} {--chunk=5}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Import album data from Strapi CMS';
+    protected $description = 'Import multiple albums from Strapi CMS with chunking';
 
     /**
      * The image service instance.
@@ -54,134 +54,128 @@ class StrapiImport extends Command
      */
     public function handle()
     {
-        $baseUrl = $this->argument('base_url');
-        $album = $this->argument('album');
-        $userId = $this->argument('user_id');
+        $baseUrl = $this->option('base-url');
+        $albums = $this->argument('albums');
+        $userId = $this->option('user');
+        $chunkSize = $this->option('chunk');
         
-        // Add debug information
         $this->info("Import parameters:");
         $this->info("- Base URL: {$baseUrl}");
-        $this->info("- Album: {$album}");
-        $this->info("- User ID: {$userId}");
+        $this->info("- Albums: " . implode(', ', $albums));
+        $this->info("- User ID/Email: {$userId}");
+        $this->info("- Chunk size: {$chunkSize}");
         $this->info("----------------------------");
         
-        // Check if user ID is UUID format; if not, try to find by email or name
-        $this->info("Attempting to find user with ID: {$userId}");
-        $user = null;
-        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $userId)) {
-            $this->info("Looking up user by UUID");
-        $user = User::find($userId);
-        } else {
-            // Try to find by email if it looks like an email
-            if (filter_var($userId, FILTER_VALIDATE_EMAIL)) {
-                $this->info("Looking up user by email");
-                $user = User::where('email', $userId)->first();
-            } else {
-                // Otherwise look for first user (for development/testing only)
-                $this->warn("User ID is not a UUID or email. Attempting to get the first user.");
-                $user = User::first();
+        // Find user
+        $user = $this->findUser($userId);
+        if (!$user) {
+            return 1;
+        }
+
+        // Process albums in chunks
+        $chunks = array_chunk($albums, $chunkSize);
+        foreach ($chunks as $index => $albumChunk) {
+            $this->info("\nProcessing chunk " . ($index + 1) . " of " . count($chunks));
+            
+            foreach ($albumChunk as $albumName) {
+                $this->info("\nImporting album: {$albumName}");
                 
-                if ($user) {
-                    $this->info("Using first user in database: {$user->name} (ID: {$user->id})");
+                try {
+                    $this->processAlbum($baseUrl, $albumName, $user);
+                } catch (\Exception $e) {
+                    $this->error("Failed to import album {$albumName}: {$e->getMessage()}");
+                    continue;
                 }
+                
+                // Clear some memory
+                gc_collect_cycles();
             }
+            
+            if ($index < count($chunks) - 1) {
+                $this->info("\nWaiting 5 seconds before next chunk...");
+                sleep(5);
+            }
+        }
+
+        return 0;
+    }
+
+    protected function findUser($userId)
+    {
+        $this->info("Attempting to find user with ID/Email: {$userId}");
+        
+        if (filter_var($userId, FILTER_VALIDATE_EMAIL)) {
+            $this->info("Looking up user by email");
+            $user = User::where('email', $userId)->first();
+        } else {
+            $this->info("Looking up user by ID");
+            $user = User::find($userId);
         }
         
         if (!$user) {
-            $this->error("User not found with identifier: {$userId}");
+            $this->error("User not found");
             $this->info("Available users:");
-            $users = User::all(['id', 'name', 'email']);
-            foreach ($users as $availableUser) {
-                $this->info("ID: {$availableUser->id}, Name: {$availableUser->name}, Email: {$availableUser->email}");
-            }
-            return 1;
+            User::all(['id', 'name', 'email'])->each(function ($user) {
+                $this->info("ID: {$user->id}, Name: {$user->name}, Email: {$user->email}");
+            });
+            return null;
         }
         
-        // Get the album data from Strapi after user is found
-        $url = "{$baseUrl}/{$album}";
-        $this->info("Importing album '{$album}' from {$url} for user {$user->name}");
+        $this->info("Found user: {$user->name} (ID: {$user->id})");
+        return $user;
+    }
+
+    protected function processAlbum($baseUrl, $albumName, $user)
+    {
+        $url = "{$baseUrl}/{$albumName}";
+        $this->info("Fetching from: {$url}");
         
-        try {
-            $response = Http::get($url);
-            
-            if (!$response->successful()) {
-                $this->error("Failed to get album data from {$url}. Status code: {$response->status()}");
-                $this->info("Response: " . $response->body());
-                return 1;
-            }
-            
-            $data = $response->json();
-            
-            if (empty($data)) {
-                $this->error("No data returned from {$url}");
-                return 1;
-            }
-            
-            $this->info("Received " . count($data) . " items from Strapi endpoint");
-            
-            // Sample of first item structure for debugging
-            if (count($data) > 0) {
-                $this->info("Sample data structure of first item:");
-                $this->info(json_encode(array_slice($data, 0, 1), JSON_PRETTY_PRINT));
-            }
-            
-            // Create the album if it doesn't exist
-            $albumModel = Album::firstOrCreate(
-                ['user_id' => $user->id, 'title' => $album],
+        $response = Http::get($url);
+        if (!$response->successful()) {
+            throw new \Exception("Failed to get album data. Status: {$response->status()}");
+        }
+        
+        $data = $response->json();
+        if (empty($data)) {
+            throw new \Exception("No data returned from API");
+        }
+        
+        // Create or update album
+        $album = Album::firstOrCreate(
+            ['user_id' => $user->id, 'title' => $albumName],
             [
-                    'description' => "Imported from {$url}",
-                    'cover_image' => '',
-                    'id' => (string) Str::uuid(),
+                'description' => "Imported from {$url}",
+                'id' => (string) Str::uuid(),
             ]
         );
         
-            $this->info("Processing album: {$album} (ID: {$albumModel->id}) for user: {$user->name}");
-            
-            // Create directory for album images if it doesn't exist
-            $albumDirectory = "albums/{$albumModel->id}";
-            
-            // Counter for successfully imported media
-            $mediaCount = 0;
-            $firstImageObject = null;
+        $this->info("Processing album: {$albumName} (ID: {$album->id})");
+        $albumDirectory = "albums/{$album->id}";
         
-            // Process each media item
+        // Process media items
+        $mediaCount = 0;
+        $firstImageObject = null;
+        
         foreach ($data as $item) {
-                try {
-                    // Extract all links from the item recursively
-                    $mediaLinks = $this->extractMediaLinks($item);
-                    
-                    if (!empty($mediaLinks)) {
-                        foreach ($mediaLinks as $media) {
-                            $this->processMediaItem($albumModel, $media, $albumDirectory, $mediaCount, $firstImageObject);
-                            $mediaCount++;
-                        }
-                    } else {
-                        $this->warn("No media links found for item: " . json_encode($item));
-                    }
-                } catch (\Exception $e) {
-                    $this->error("Error processing item: {$e->getMessage()}");
+            try {
+                $mediaLinks = $this->extractMediaLinks($item);
+                foreach ($mediaLinks as $media) {
+                    $this->processMediaItem($album, $media, $albumDirectory, $mediaCount, $firstImageObject);
+                    $mediaCount++;
                 }
+            } catch (\Exception $e) {
+                $this->warn("Error processing item in {$albumName}: {$e->getMessage()}");
+                continue;
             }
-            
-            // Set the album cover image if found
-            if ($firstImageObject) {
-                $albumModel->cover_image_path = $firstImageObject['url'];
-                $albumModel->save();
-                $this->info("Updated album cover image to: {$albumModel->cover_image_path}");
-                $this->info("Verified saved cover path: {$albumModel->cover_image_path}");
-            } else {
-                $this->warn("No suitable cover image found for album");
-            }
-            
-            $this->info("Imported {$mediaCount} media items into album '{$album}'");
-            $this->info("Import completed successfully");
-            
-            return 0;
-        } catch (\Exception $e) {
-            $this->error("Error: {$e->getMessage()}");
-            $this->error($e->getTraceAsString());
-            return 1;
         }
+        
+        // Update album cover if needed
+        if ($firstImageObject && !$album->cover_image_path) {
+            $album->cover_image_path = $firstImageObject['url'];
+            $album->save();
+        }
+        
+        $this->info("Imported {$mediaCount} items into '{$albumName}'");
     }
 
     /**

@@ -3,25 +3,25 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = withDefaults(
     defineProps<{
-        show?: boolean;
+        modelValue: boolean;
         maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
         closeable?: boolean;
     }>(),
     {
-        show: false,
+        modelValue: false,
         maxWidth: '2xl',
         closeable: true,
     },
 );
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['update:modelValue', 'close']);
 const dialog = ref();
-const showSlot = ref(props.show);
+const showSlot = ref(props.modelValue);
 
 watch(
-    () => props.show,
+    () => props.modelValue,
     () => {
-        if (props.show) {
+        if (props.modelValue) {
             document.body.style.overflow = 'hidden';
             showSlot.value = true;
 
@@ -47,7 +47,7 @@ const closeOnEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
         e.preventDefault();
 
-        if (props.show) {
+        if (props.modelValue) {
             close();
         }
     }
@@ -73,49 +73,101 @@ const maxWidthClass = computed(() => {
 </script>
 
 <template>
-    <dialog
-        class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-transparent"
-        ref="dialog"
-    >
-        <div
-            class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0"
-            scroll-region
-        >
-            <Transition
-                enter-active-class="ease-out duration-300"
-                enter-from-class="opacity-0"
-                enter-to-class="opacity-100"
-                leave-active-class="ease-in duration-200"
-                leave-from-class="opacity-100"
-                leave-to-class="opacity-0"
-            >
-                <div
-                    v-show="show"
-                    class="fixed inset-0 transform transition-all"
-                    @click="close"
-                >
-                    <div
-                        class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-900"
-                    />
+    <Transition name="modal">
+        <div v-if="modelValue" class="modal-backdrop" @click="$emit('update:modelValue', false)">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h3 class="modal-title">
+                        <slot name="title"></slot>
+                    </h3>
+                    <button 
+                        @click="$emit('update:modelValue', false)"
+                        class="close-button"
+                    >
+                        ×
+                    </button>
                 </div>
-            </Transition>
-
-            <Transition
-                enter-active-class="ease-out duration-300"
-                enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-                leave-active-class="ease-in duration-200"
-                leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-                leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-                <div
-                    v-show="show"
-                    class="mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full dark:bg-gray-800"
-                    :class="maxWidthClass"
-                >
-                    <slot v-if="showSlot" />
+                <div class="modal-body">
+                    <slot></slot>
                 </div>
-            </Transition>
+                <div class="modal-footer" v-if="$slots.footer">
+                    <slot name="footer"></slot>
+                </div>
+            </div>
         </div>
-    </dialog>
+    </Transition>
 </template>
+
+<style scoped>
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.close-button:hover {
+    color: #111827;
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Transition animations */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+</style>
