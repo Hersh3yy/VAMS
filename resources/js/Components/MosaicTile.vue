@@ -73,6 +73,9 @@ const isAdjusting = ref(false);
 const isDragging = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
 
+// Add default values for image position
+const defaultImagePosition = { x: 0, y: 0, scale: 1 };
+
 const tileStyle = computed(() => ({
     left: `${props.position.x}%`,
     top: `${props.position.y}%`,
@@ -81,9 +84,9 @@ const tileStyle = computed(() => ({
 }));
 
 const imageStyle = computed(() => {
-    if (!props.imagePosition) return {};
+    const position = props.imagePosition || defaultImagePosition;
     return {
-        transform: `translate(${props.imagePosition.x}%, ${props.imagePosition.y}%) scale(${props.imagePosition.scale})`
+        transform: `translate(${position.x}%, ${position.y}%) scale(${position.scale})`
     };
 });
 

@@ -121,12 +121,30 @@ const createInitialTile = () => {
     const newItem: MosaicItem = {
         id: uuidv4(),
         type: 'container',
-        position: { x: 0, y: 0, width: 100, height: 100 }
+        position: { x: 0, y: 0, width: 100, height: 100 },
+        image: {
+            src: '',
+            alt: '',
+            position: { x: 0, y: 0, scale: 1 }
+        }
     };
     items.value = [newItem];
+    emit('update:modelValue', items.value);
 };
 
 const handleSplit = (item: MosaicItem) => {
+    if (item.type === 'image') {
+        // Convert image to container before splitting
+        const index = items.value.findIndex(i => i.id === item.id);
+        if (index !== -1) {
+            items.value[index] = {
+                ...items.value[index],
+                type: 'container',
+                image: undefined
+            };
+            emit('update:modelValue', items.value);
+        }
+    }
     selectedItemId.value = item.id;
     showSplitModal.value = true;
 };
@@ -173,7 +191,22 @@ const handleSplitConfirm = (direction: 'horizontal' | 'vertical') => {
 };
 
 const handleImage = (item: MosaicItem) => {
-    // Emit event to parent to handle image selection
+    if (item.type === 'container') {
+        // Convert container to image tile
+        const index = items.value.findIndex(i => i.id === item.id);
+        if (index !== -1) {
+            items.value[index] = {
+                ...items.value[index],
+                type: 'image',
+                image: {
+                    src: '',
+                    alt: '',
+                    position: { x: 0, y: 0, scale: 1 }
+                }
+            };
+            emit('update:modelValue', items.value);
+        }
+    }
     emit('image-select', item.id);
 };
 
