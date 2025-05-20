@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import type { Config } from '@inertiajs/core';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -8,10 +9,19 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { User } from '@/types';
 
+interface PageProps {
+    auth: {
+        user: User;
+    };
+    is_impersonating?: boolean;
+    ziggy: Config & { location: string };
+}
+
+const page = usePage<PageProps>();
 const showingNavigationDropdown = ref(false);
 
 const userThemeStyle = computed(() => {
-    const user = usePage().props.auth.user as User;
+    const user = page.props.auth?.user as User;
     if (!user) return { '--primary-color': '#4F46E5', '--secondary-color': '#10B981' };
     
     const settings = user.album_display_settings || {};

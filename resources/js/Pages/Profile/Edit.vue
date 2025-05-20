@@ -62,7 +62,7 @@ const removeLogo = () => {
 };
 
 // Theme settings
-const user = usePage().props.auth.user as User;
+const user = usePage().props.auth?.user as User;
 const defaultMainColor = '#4F46E5'; // Default indigo color
 const defaultSecondaryColor = '#10B981'; // Default emerald color
 
@@ -113,8 +113,8 @@ const updateTheme = () => {
                             <div class="flex items-start space-x-6">
                                 <div class="shrink-0">
                                     <img 
-                                        v-if="$page.props.auth.user.logo_url" 
-                                        :src="$page.props.auth.user.logo_url" 
+                                        v-if="user.logo_url" 
+                                        :src="user.logo_url" 
                                         class="h-16 w-auto object-contain" 
                                         alt="Current logo" 
                                     />
@@ -150,7 +150,7 @@ const updateTheme = () => {
                                             Upload
                                         </PrimaryButton>
                                         <DangerButton
-                                            v-if="$page.props.auth.user.logo_url"
+                                            v-if="user.logo_url"
                                             type="button"
                                             @click="removeLogo"
                                             class="mt-2"

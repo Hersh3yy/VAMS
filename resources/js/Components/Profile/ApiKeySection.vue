@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { usePage, router } from '@inertiajs/vue3';
+import { User } from '@/types';
 
-const user = usePage().props.auth.user;
+const user = usePage().props.auth?.user as User;
 
 const regenerateApiKey = () => {
     if (confirm('Are you sure you want to regenerate your API key? This will invalidate your current key.')) {

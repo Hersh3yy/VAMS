@@ -23,9 +23,14 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <MosaicEditor
-                    v-model="mosaicItems"
-                    @save="saveMosaic"
-                    @image-select="openImageSelector"
+                    :mosaic="{
+                        ...mosaic,
+                        items: mosaicItems
+                    }"
+                    :onUpdate="(updatedMosaic: Mosaic) => {
+                        mosaicItems.value = updatedMosaic.items;
+                        hasChanges.value = true;
+                    }"
                 />
             </div>
         </div>
@@ -68,12 +73,29 @@ import MosaicEditor from '@/Components/MosaicEditor.vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
 
-const props = defineProps<{
-    mosaic: {
-        id: string;
-        title: string;
-        items: any[];
+interface MosaicItem {
+    id: string;
+    type: 'image' | 'text';
+    column_index: number;
+    order: number;
+    content?: string;
+    properties?: {
+        src?: string;
+        alt?: string;
+        caption?: string;
+        size?: 'fill' | 'cover' | 'contain';
     };
+}
+
+interface Mosaic {
+    id: string;
+    title: string;
+    columns: number;
+    items: MosaicItem[];
+}
+
+const props = defineProps<{
+    mosaic: Mosaic;
     albums: {
         id: string;
         title: string;
@@ -86,7 +108,7 @@ const props = defineProps<{
     }[];
 }>();
 
-const mosaicItems = ref(props.mosaic.items || []);
+const mosaicItems = ref<MosaicItem[]>(props.mosaic.items || []);
 const showImageModal = ref(false);
 const selectedItemId = ref<string | null>(null);
 const hasChanges = ref(false);
@@ -112,10 +134,10 @@ const selectImage = (image: any) => {
     mosaicItems.value[itemIndex] = {
         ...mosaicItems.value[itemIndex],
         type: 'image',
-        image: {
+        properties: {
             src: imageUrl,
             alt: image.title || '',
-            position: { x: 0, y: 0, scale: 1 }
+            size: 'cover' as const
         }
     };
 

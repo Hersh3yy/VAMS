@@ -6,13 +6,14 @@ import TextInput from '@/Components/TextInput.vue';
 import ApiKeySection from '@/Components/Profile/ApiKeySection.vue';
 import AlbumDisplaySettings from '@/Components/Profile/AlbumDisplaySettings.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { User } from '@/types';
 
 defineProps<{
     mustVerifyEmail?: Boolean;
     status?: String;
 }>();
 
-const user = usePage().props.auth.user;
+const user = usePage().props.auth?.user as User;
 
 const form = useForm({
     name: user.name,
