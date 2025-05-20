@@ -2,8 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AlbumController;
+use App\Http\Controllers\Api\MosaicController;
 use App\Models\Album;
-use App\Services\AlbumService;
+use App\Models\Mosaic;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +22,17 @@ use App\Services\AlbumService;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Album API endpoints
+Route::get('/albums/{album}', [AlbumController::class, 'show']);
+Route::get('/albums/title/{title}', [AlbumController::class, 'showByTitle']);
+Route::get('/albums/{title}', [AlbumController::class, 'showByTitleWithApiKey']);
+Route::get('/{albumName}', [AlbumController::class, 'showStrapiFormat']);
+
+// Mosaic API endpoints
+Route::get('/mosaics/{mosaic}', [MosaicController::class, 'show']);
+Route::get('/mosaics/title/{title}', [MosaicController::class, 'showByTitle']);
+Route::get('/mosaics/{title}', [MosaicController::class, 'showByTitleWithApiKey']);
 
 // Album API endpoint for fetching images - no authentication required for now
 Route::get('/albums/{album}', function (Album $album) {
@@ -141,7 +155,7 @@ Route::get('/{albumName}', function ($albumName) {
 });
 
 // Mosaic API Endpoints
-Route::get('/mosaics/{mosaic}', function (App\Models\Mosaic $mosaic) {
+Route::get('/mosaics/{mosaic}', function (Mosaic $mosaic) {
     // Load the mosaic with its items
     $mosaic->load('items');
     
@@ -337,5 +351,49 @@ Route::get('/mosaics/title/{title}', function ($title) {
                 'image' => $imageData
             ];
         })
+    ]);
+});
+
+// Helper function to validate API key
+function validateApiKey($request) {
+    $apiKey = $request->header('X-API-Key');
+    if (!$apiKey) {
+        return response()->json(['error' => 'API key is required'], 401);
+    }
+
+    $user = User::where('api_key', $apiKey)->first();
+    if (!$user) {
+        return response()->json(['error' => 'Invalid API key'], 401);
+    }
+
+    return $user;
+}
+
+// Album by title endpoint
+Route::get('/albums/{title}', function ($title, Request $request) {
+    $user = validateApiKey($request);
+    if ($user instanceof \Illuminate\Http\JsonResponse) {
+        return $user;
+    }
+    
+    return $user->albums()->where('title', $title)->with('images')->first();
+});
+
+// Mosaic by title endpoint
+Route::get('/mosaics/{title}', function ($title, Request $request) {
+    $user = validateApiKey($request);
+    if ($user instanceof \Illuminate\Http\JsonResponse) {
+        return $user;
+    }
+    
+    $mosaic = $user->mosaics()->where('title', $title)->first();
+    if (!$mosaic) {
+        return response()->json(['error' => 'Mosaic not found'], 404);
+    }
+    
+    $mosaic->load('items');
+    return response()->json([
+        'mosaic' => $mosaic,
+        'items' => $mosaic->items
     ]);
 });

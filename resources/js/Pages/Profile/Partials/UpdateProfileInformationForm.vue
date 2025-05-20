@@ -3,6 +3,8 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import ApiKeySection from '@/Components/Profile/ApiKeySection.vue';
+import AlbumDisplaySettings from '@/Components/Profile/AlbumDisplaySettings.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps<{
@@ -15,14 +17,14 @@ const user = usePage().props.auth.user;
 const form = useForm({
     name: user.name,
     email: user.email,
-    album_display_settings: user.album_display_settings || {
-        caption: true,
-        altText: true,
-        dateCreated: true,
-        location: true,
-        tags: true,
-        title: true,
-        author: true
+    album_display_settings: {
+        caption: user.album_display_settings?.caption ?? true,
+        altText: user.album_display_settings?.altText ?? true,
+        dateCreated: user.album_display_settings?.dateCreated ?? true,
+        location: user.album_display_settings?.location ?? true,
+        tags: user.album_display_settings?.tags ?? true,
+        title: user.album_display_settings?.title ?? true,
+        author: user.album_display_settings?.author ?? true
     },
 });
 </script>
@@ -74,90 +76,7 @@ const form = useForm({
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                    Album Image Display Settings
-                </h3>
-                <div class="space-y-4">
-                    <div class="flex items-center">
-                        <input
-                            id="title"
-                            type="checkbox"
-                            v-model="form.album_display_settings.title"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="title" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Title
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="author"
-                            type="checkbox"
-                            v-model="form.album_display_settings.author"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="author" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Author
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="caption"
-                            type="checkbox"
-                            v-model="form.album_display_settings.caption"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="caption" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Caption
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="altText"
-                            type="checkbox"
-                            v-model="form.album_display_settings.altText"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="altText" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Alt Text
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="dateCreated"
-                            type="checkbox"
-                            v-model="form.album_display_settings.dateCreated"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="dateCreated" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Date Created
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="location"
-                            type="checkbox"
-                            v-model="form.album_display_settings.location"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="location" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Location
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                            id="tags"
-                            type="checkbox"
-                            v-model="form.album_display_settings.tags"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <label for="tags" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                            Show Tags
-                        </label>
-                    </div>
-                </div>
-            </div>
+            <AlbumDisplaySettings v-model="form.album_display_settings" />
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
                 <p class="mt-2 text-sm text-gray-800 dark:text-gray-200">
@@ -179,6 +98,8 @@ const form = useForm({
                     A new verification link has been sent to your email address.
                 </div>
             </div>
+
+            <ApiKeySection />
 
             <div class="flex items-center gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>

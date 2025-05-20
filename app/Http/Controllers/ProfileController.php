@@ -60,26 +60,15 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        
-        $request->user()->fill([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'album_display_settings' => $validated['album_display_settings'] ?? [
-                'caption' => true,
-                'altText' => true,
-                'dateCreated' => true,
-                'location' => true,
-                'tags' => true,
-                'title' => true,
-                'author' => true,
-                'main_color' => '#4F46E5', // Default indigo color
-                'secondary_color' => '#10B981', // Default emerald color
-            ],
-        ]);
+        $request->user()->fill($request->validated());
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
+        }
+
+        // Handle API key regeneration
+        if ($request->boolean('regenerate_api_key')) {
+            $request->user()->regenerateApiKey();
         }
 
         $request->user()->save();

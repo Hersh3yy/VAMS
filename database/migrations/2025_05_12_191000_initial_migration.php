@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('logo_url')->nullable();
             $table->json('theme_settings')->nullable();
             $table->json('site_settings')->nullable();
+            $table->string('api_key', 64)->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
         });

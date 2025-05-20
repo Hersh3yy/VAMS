@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'is_admin',
         'is_approved',
         'approved_at',
+        'api_key',
     ];
 
     /**
@@ -60,6 +62,17 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($user) {
+            if (!$user->api_key) {
+                $user->api_key = Str::random(32);
+            }
+        });
+    }
+
     public function mosaics()
     {
         return $this->hasMany(Mosaic::class);
@@ -68,5 +81,19 @@ class User extends Authenticatable
     public function albums()
     {
         return $this->hasMany(Album::class);
+    }
+
+    public function generateNewApiKey()
+    {
+        $this->api_key = Str::random(32);
+        $this->save();
+        return $this->api_key;
+    }
+
+    public function regenerateApiKey()
+    {
+        $this->api_key = Str::random(32);
+        $this->save();
+        return $this->api_key;
     }
 }

@@ -74,6 +74,34 @@ class AlbumService
     }
     
     /**
+     * Format image data for API response
+     *
+     * @param \App\Models\AlbumImage $image
+     * @return array
+     */
+    public function formatImageForApi($image)
+    {
+        $properties = is_string($image->properties) ? 
+            json_decode($image->properties, true) : 
+            ($image->properties ?? []);
+            
+        return [
+            'id' => $image->id,
+            'title' => $image->title,
+            'description' => $image->description,
+            'path' => $image->path,
+            'webp_path' => $image->webp_path ?? null,
+            'thumbnail_url' => $properties['thumbnail_url'] ?? $image->path,
+            'webp_url' => $properties['webp_url'] ?? null,
+            'caption' => $image->caption,
+            'order' => $image->order,
+            'properties' => $image->properties,
+            'created_at' => $image->created_at,
+            'updated_at' => $image->updated_at
+        ];
+    }
+    
+    /**
      * Format album with images for API response
      *
      * @param Album $album
@@ -83,19 +111,41 @@ class AlbumService
     {
         return [
             'album' => $this->formatAlbumForApi($album),
-            'images' => $album->images->map(function ($image) {
-                return [
-                    'id' => $image->id,
-                    'title' => $image->title,
-                    'description' => $image->description,
-                    'path' => $image->path,
-                    'webp_path' => $image->webp_path ?? null,
-                    'order' => $image->order,
-                    'properties' => $image->properties,
-                    'created_at' => $image->created_at,
-                    'updated_at' => $image->updated_at
-                ];
-            })
+            'images' => $album->images->map(fn($image) => $this->formatImageForApi($image))
         ];
+    }
+
+    /**
+     * Format album for Strapi compatibility
+     *
+     * @param Album $album
+     * @return array
+     */
+    public function formatAlbumForStrapi(Album $album)
+    {
+        return $album->images()->orderBy('order')->get()->map(function ($image) {
+            $properties = is_string($image->properties) ? 
+                json_decode($image->properties, true) : 
+                $image->properties;
+                
+            return [
+                'id' => $image->id,
+                'created_at' => $image->created_at,
+                'updated_at' => $image->updated_at,
+                'Name' => $image->title ?? 'Untitled',
+                'Order' => $image->order ?? 0,
+                'Caption' => $image->caption ?? '',
+                'Year' => $properties['year'] ?? null,
+                'Image' => [
+                    'id' => $image->id,
+                    'url' => $image->path,
+                    'formats' => [
+                        'thumbnail' => [
+                            'url' => $image->path
+                        ]
+                    ]
+                ]
+            ];
+        })->toArray();
     }
 } 
