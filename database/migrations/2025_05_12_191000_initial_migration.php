@@ -81,29 +81,17 @@ return new class extends Migration
         Schema::create('mosaic_items', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('mosaic_id');
-            $table->uuid('parent_id')->nullable(); // For tracking parent-child relationships for split tiles
-            $table->enum('split_direction', ['horizontal', 'vertical', 'none'])->default('none'); // How this tile is split
-            $table->enum('type', ['album', 'image', 'video', 'text', 'container'])->default('container'); // Type of content
-            $table->uuid('reference_id')->nullable(); // Reference to album, image, etc.
+            $table->integer('column_index')->default(0); // Which column this item belongs to
+            $table->enum('type', ['image', 'text'])->default('image'); // Simplified types
             $table->string('content')->nullable(); // Text content if type is text
-            $table->json('properties')->nullable(); // Additional properties
-            $table->string('link_url')->nullable(); // Link URL when the tile is clicked
-            $table->string('link_target')->nullable(); // Target for the link (_blank, _self, etc.)
-            $table->json('desktop_position')->nullable(); // Position and size for desktop
-            $table->json('tablet_position')->nullable();  // Position and size for tablet
-            $table->json('mobile_position')->nullable();  // Position and size for mobile
-            $table->integer('order')->default(0);
+            $table->json('properties')->nullable(); // Additional properties like image position, caption
+            $table->integer('order')->default(0); // Position within column
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             
             $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
         });
         
-        // Add parent_id foreign key after the table is created
-        Schema::table('mosaic_items', function (Blueprint $table) {
-            $table->foreign('parent_id')->references('id')->on('mosaic_items')->onDelete('cascade');
-        });
-
         // Jobs table for queues
         Schema::create('jobs', function (Blueprint $table) {
             $table->bigIncrements('id');

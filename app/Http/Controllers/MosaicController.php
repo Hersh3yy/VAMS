@@ -13,7 +13,10 @@ class MosaicController extends Controller
     public function index()
     {
         $mosaics = Auth::user()->mosaics()
-            ->with('items')
+            ->with(['items' => function ($query) {
+                $query->orderBy('column_index')
+                      ->orderBy('order');
+            }])
             ->latest()
             ->get();
 
@@ -32,12 +35,14 @@ class MosaicController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'columns' => 'required|integer|min:2|max:5',
         ]);
 
         $mosaic = Auth::user()->mosaics()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'],
+            'columns' => $validated['columns'],
         ]);
 
         return redirect()->route('mosaics.edit', $mosaic);
@@ -50,13 +55,14 @@ class MosaicController extends Controller
             abort(403);
         }
 
-        // Load the mosaic with its items and user's albums with images
-        $mosaic->load('items');
-        $albums = Auth::user()->albums()->with('images')->get();
+        // Load the mosaic with its items ordered by column and position
+        $mosaic->load(['items' => function ($query) {
+            $query->orderBy('column_index')
+                  ->orderBy('order');
+        }]);
 
         return Inertia::render('Mosaics/Edit', [
-            'mosaic' => $mosaic,
-            'albums' => $albums,
+            'mosaic' => $mosaic
         ]);
     }
 
@@ -68,20 +74,23 @@ class MosaicController extends Controller
         }
 
         $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'columns' => 'required|integer|min:2|max:5',
             'items' => 'required|array',
             'items.*.id' => 'required|string',
-            'items.*.type' => 'required|string|in:container,image',
-            'items.*.split_direction' => 'nullable|string|in:horizontal,vertical,none',
-            'items.*.desktop_position' => 'required|string',
+            'items.*.column_index' => 'required|integer|min:0',
+            'items.*.type' => 'required|string|in:image,text',
+            'items.*.content' => 'nullable|string',
+            'items.*.properties' => 'nullable|array',
             'items.*.order' => 'required|integer',
-            'items.*.parent_id' => 'nullable|string',
-            'items.*.image' => 'nullable|array',
-            'items.*.image.src' => 'nullable|string',
-            'items.*.image.alt' => 'nullable|string',
-            'items.*.image.position' => 'nullable|array',
-            'items.*.image.position.x' => 'nullable|numeric',
-            'items.*.image.position.y' => 'nullable|numeric',
-            'items.*.image.position.scale' => 'nullable|numeric',
+        ]);
+
+        // Update mosaic basic info
+        $mosaic->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'columns' => $validated['columns'],
         ]);
 
         // Update items
@@ -89,12 +98,11 @@ class MosaicController extends Controller
         foreach ($validated['items'] as $item) {
             $mosaic->items()->create([
                 'id' => $item['id'],
+                'column_index' => $item['column_index'],
                 'type' => $item['type'],
-                'split_direction' => $item['split_direction'] ?? null,
-                'desktop_position' => $item['desktop_position'],
+                'content' => $item['content'] ?? null,
+                'properties' => $item['properties'] ?? null,
                 'order' => $item['order'],
-                'parent_id' => $item['parent_id'] ?? null,
-                'properties' => isset($item['image']) ? json_encode($item['image']) : null,
             ]);
         }
 

@@ -8,35 +8,29 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class MosaicItem extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
+    use HasUuids;
 
     protected $fillable = [
         'id',
         'mosaic_id',
+        'column_index',
         'type',
-        'split_direction',
-        'desktop_position',
-        'order',
-        'parent_id',
+        'content',
         'properties',
+        'order',
+        'is_active'
     ];
 
     protected $casts = [
         'properties' => 'array',
+        'is_active' => 'boolean',
+        'column_index' => 'integer',
+        'order' => 'integer'
     ];
 
     public function mosaic()
     {
         return $this->belongsTo(Mosaic::class);
-    }
-
-    public function parent()
-    {
-        return $this->belongsTo(MosaicItem::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(MosaicItem::class, 'parent_id');
     }
 }

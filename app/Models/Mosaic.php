@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Mosaic extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
+    use HasUuids;
 
     protected $table = 'mosaics';
 
@@ -17,12 +18,10 @@ class Mosaic extends Model
         'user_id',
         'title',
         'description',
-        'layout_settings',
         'columns',
     ];
 
     protected $casts = [
-        'layout_settings' => 'json',
         'columns' => 'integer',
     ];
 
@@ -33,14 +32,16 @@ class Mosaic extends Model
 
     public function items()
     {
-        return $this->hasMany(MosaicItem::class);
+        return $this->hasMany(MosaicItem::class)
+            ->orderBy('column_index')
+            ->orderBy('order');
     }
-    
-    // Get root level items (those without a parent)
-    public function rootItems()
+
+    // Get items for a specific column
+    public function itemsInColumn($columnIndex)
     {
-        return $this->hasMany(MosaicItem::class, 'mosaic_id')
-            ->whereNull('parent_id')
+        return $this->hasMany(MosaicItem::class)
+            ->where('column_index', $columnIndex)
             ->orderBy('order');
     }
 }

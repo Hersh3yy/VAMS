@@ -1,316 +1,389 @@
 <template>
     <div class="mosaic-editor">
-        <!-- Orientation Tabs -->
-        <div class="flex gap-2 mb-4">
-            <button 
-                @click="orientation = 'landscape'"
-                class="px-4 py-2 rounded-lg"
-                :class="orientation === 'landscape' ? 'bg-blue-500 text-white' : 'bg-gray-100'"
+        <!-- Column Count Selector -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700">Number of Columns</label>
+            <select 
+                v-model="columnCount" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                @change="updateColumnCount"
             >
-                Landscape
-            </button>
-            <button 
-                @click="orientation = 'portrait'"
-                class="px-4 py-2 rounded-lg"
-                :class="orientation === 'portrait' ? 'bg-blue-500 text-white' : 'bg-gray-100'"
-            >
-                Portrait
-            </button>
+                <option v-for="n in 4" :key="n" :value="n + 1">{{ n + 1 }} Columns</option>
+            </select>
         </div>
 
-        <!-- Editor Area -->
-        <div 
-            class="mosaic-container relative bg-white rounded-lg shadow-lg"
-            :class="orientation"
-            :style="containerStyle"
-        >
-            <template v-if="items.length">
-                <MosaicTile
-                    v-for="item in items"
+        <!-- Masonry Grid -->
+        <div class="grid gap-4" :style="{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }">
+            <div 
+                v-for="columnIndex in columnCount" 
+                :key="columnIndex"
+                class="mosaic-column"
+                @dragover.prevent
+                @drop="handleDrop($event, columnIndex - 1)"
+            >
+                <div 
+                    v-for="item in itemsInColumn(columnIndex - 1)" 
                     :key="item.id"
-                    :type="item.type"
-                    :position="item.position"
-                    :image-src="item.image?.src"
-                    :image-alt="item.image?.alt"
-                    :image-position="item.image?.position"
-                    :image-overlay="item.image?.overlay"
-                    :split-direction="item.split_direction"
-                    :split-ratio="item.split_ratio"
-                    @split="handleSplit(item)"
-                    @image="handleImage(item)"
-                    @delete="handleDelete(item)"
-                    @update:position="updatePosition(item, $event)"
-                    @update:image-position="updateImagePosition(item, $event)"
-                    @update:split-ratio="updateSplitRatio(item, $event)"
-                />
-            </template>
-            <div v-else class="empty-state">
-                <button @click="createInitialTile" class="create-button">
-                    Create First Tile
+                    class="mosaic-item mb-4"
+                    draggable="true"
+                    @dragstart="handleDragStart($event, item)"
+                    @click="openItemEditor(item)"
+                >
+                    <!-- Image Item -->
+                    <div v-if="item.type === 'image'" class="relative group">
+                        <img 
+                            :src="item.properties?.src" 
+                            :alt="item.properties?.alt || ''"
+                            class="w-full h-auto rounded-lg shadow-md"
+                            :style="getImageStyle(item)"
+                        />
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <p class="text-sm truncate">{{ item.properties?.caption || 'Add caption' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Item -->
+                    <div v-else-if="item.type === 'text'" class="p-4 bg-white rounded-lg shadow-md">
+                        <p class="text-gray-800">{{ item.content }}</p>
+                    </div>
+                </div>
+
+                <!-- Add Item Button -->
+                <button 
+                    @click="openAddItemModal(columnIndex - 1)"
+                    class="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-500 hover:text-indigo-500 transition-colors duration-200"
+                >
+                    <span class="flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Item
+                    </span>
                 </button>
             </div>
         </div>
 
-        <!-- Split Modal -->
-        <MosaicSplitModal
-            v-model="showSplitModal"
-            @split="handleSplitConfirm"
-        />
+        <!-- Item Editor Modal -->
+        <Modal 
+            :modelValue="showItemEditor" 
+            @update:modelValue="showItemEditor = $event"
+            @close="closeItemEditor"
+        >
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Item</h3>
+                
+                <!-- Image Properties -->
+                <div v-if="editingItem?.type === 'image'" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Caption</label>
+                        <input 
+                            type="text" 
+                            v-model="editingItem.properties!.caption"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Image Size</label>
+                        <select 
+                            v-model="editingItem.properties!.size"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="cover">Cover</option>
+                            <option value="contain">Contain</option>
+                            <option value="fill">Fill</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Text Properties -->
+                <div v-else-if="editingItem?.type === 'text'" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Content</label>
+                        <textarea 
+                            v-model="editingItem.content"
+                            rows="4"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button 
+                        @click="deleteItem"
+                        class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+                    >
+                        Delete
+                    </button>
+                    <button 
+                        @click="saveItem"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                    >
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Add Item Modal -->
+        <Modal 
+            :modelValue="showAddItemModal" 
+            @update:modelValue="showAddItemModal = $event"
+            @close="closeAddItemModal"
+        >
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Item</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Item Type</label>
+                        <select 
+                            v-model="newItemType"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="image">Image</option>
+                            <option value="text">Text</option>
+                        </select>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div v-if="newItemType === 'image'">
+                        <label class="block text-sm font-medium text-gray-700">Upload Image</label>
+                        <input 
+                            type="file" 
+                            @change="handleImageUpload"
+                            accept="image/*"
+                            class="mt-1 block w-full"
+                        />
+                    </div>
+
+                    <!-- Text Input -->
+                    <div v-else-if="newItemType === 'text'">
+                        <label class="block text-sm font-medium text-gray-700">Content</label>
+                        <textarea 
+                            v-model="newItemContent"
+                            rows="4"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button 
+                        @click="addItem"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                    >
+                        Add Item
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { v4 as uuidv4 } from 'uuid';
-import MosaicTile from './MosaicTile.vue';
-import MosaicSplitModal from './MosaicSplitModal.vue';
-
-interface Position {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
-interface ImageData {
-    src: string;
-    alt: string;
-    position: {
-        x: number;
-        y: number;
-        scale: number;
-    };
-    overlay?: string;
-}
+import { ref, computed } from 'vue'
+import Modal from '@/Components/Modal.vue'
+import { useForm } from '@inertiajs/vue3'
+import { v4 as uuidv4 } from 'uuid'
 
 interface MosaicItem {
     id: string;
-    type: 'container' | 'image';
-    position: Position;
-    image?: ImageData;
-    split_direction?: 'horizontal' | 'vertical' | null;
-    split_ratio?: number;
-    parent_id?: string | null;
+    type: 'image' | 'text';
+    column_index: number;
+    order: number;
+    content?: string;
+    properties?: {
+        src?: string;
+        alt?: string;
+        caption?: string;
+        size?: 'cover' | 'contain' | 'fill';
+    };
+}
+
+interface Mosaic {
+    columns: number;
+    items: MosaicItem[];
 }
 
 const props = defineProps<{
-    modelValue: MosaicItem[];
+    mosaic: Mosaic;
 }>();
 
 const emit = defineEmits<{
-    'update:modelValue': [items: MosaicItem[]];
-    'save': [items: MosaicItem[]];
-    'image-select': [itemId: string];
+    'update': [mosaic: Mosaic];
 }>();
 
-const orientation = ref<'landscape' | 'portrait'>('landscape');
-const showSplitModal = ref(false);
-const selectedItemId = ref<string | null>(null);
+// State
+const columnCount = ref(props.mosaic.columns || 3);
+const showItemEditor = ref(false);
+const showAddItemModal = ref(false);
+const editingItem = ref<MosaicItem | null>(null);
+const newItemType = ref<'image' | 'text'>('image');
+const newItemContent = ref('');
+const selectedColumn = ref(0);
+const draggedItem = ref<MosaicItem | null>(null);
 
-const items = computed({
-    get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
-});
+// Computed
+const itemsInColumn = (columnIndex: number) => {
+    return props.mosaic.items.filter(item => item.column_index === columnIndex)
+        .sort((a, b) => a.order - b.order);
+};
 
-const containerStyle = computed(() => ({
-    aspectRatio: orientation.value === 'landscape' ? '16/9' : '9/16'
-}));
+// Methods
+const updateColumnCount = () => {
+    emit('update', {
+        ...props.mosaic,
+        columns: columnCount.value
+    });
+};
 
-// Item Management
-const createInitialTile = () => {
+const handleDragStart = (event: DragEvent, item: MosaicItem) => {
+    if (!event.dataTransfer) return;
+    draggedItem.value = item;
+    event.dataTransfer.effectAllowed = 'move';
+};
+
+const handleDrop = (event: DragEvent, columnIndex: number) => {
+    if (!draggedItem.value) return;
+
+    const items = [...props.mosaic.items];
+    const itemIndex = items.findIndex(item => item.id === draggedItem.value?.id);
+    
+    if (itemIndex !== -1) {
+        items[itemIndex] = {
+            ...items[itemIndex],
+            column_index: columnIndex,
+            order: items.filter(item => item.column_index === columnIndex).length
+        };
+        
+        emit('update', {
+            ...props.mosaic,
+            items
+        });
+    }
+    
+    draggedItem.value = null;
+};
+
+const openItemEditor = (item: MosaicItem) => {
+    editingItem.value = { ...item };
+    showItemEditor.value = true;
+};
+
+const closeItemEditor = () => {
+    editingItem.value = null;
+    showItemEditor.value = false;
+};
+
+const openAddItemModal = (columnIndex: number) => {
+    selectedColumn.value = columnIndex;
+    showAddItemModal.value = true;
+};
+
+const closeAddItemModal = () => {
+    newItemType.value = 'image';
+    newItemContent.value = '';
+    showAddItemModal.value = false;
+};
+
+const handleImageUpload = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+
+    const form = useForm({
+        image: file
+    });
+
+    try {
+        const response = await form.post(route('api.upload-image'));
+        // Handle the response and update the new item
+    } catch (error) {
+        console.error('Upload failed:', error);
+    }
+};
+
+const addItem = () => {
     const newItem: MosaicItem = {
         id: uuidv4(),
-        type: 'container',
-        position: { x: 0, y: 0, width: 100, height: 100 },
-        image: {
-            src: '',
+        type: newItemType.value,
+        column_index: selectedColumn.value,
+        order: itemsInColumn(selectedColumn.value).length,
+        content: newItemType.value === 'text' ? newItemContent.value : undefined,
+        properties: newItemType.value === 'image' ? {
+            src: '', // Set this after upload
             alt: '',
-            position: { x: 0, y: 0, scale: 1 }
-        }
+            caption: '',
+            size: 'cover'
+        } : undefined
     };
-    items.value = [newItem];
-    emit('update:modelValue', items.value);
-};
 
-const handleSplit = (item: MosaicItem) => {
-    if (item.type === 'image') {
-        // Convert image to container before splitting
-        const index = items.value.findIndex(i => i.id === item.id);
-        if (index !== -1) {
-            items.value[index] = {
-                ...items.value[index],
-                type: 'container',
-                image: undefined
-            };
-            emit('update:modelValue', items.value);
-        }
-    }
-    selectedItemId.value = item.id;
-    showSplitModal.value = true;
-};
-
-const handleSplitConfirm = (direction: 'horizontal' | 'vertical') => {
-    if (!selectedItemId.value) return;
-    
-    const item = items.value.find(i => i.id === selectedItemId.value);
-    if (!item) return;
-
-    const position = item.position;
-    const ratio = 0.5;
-
-    const newItems: MosaicItem[] = [
-        {
-            id: uuidv4(),
-            type: 'container',
-            parent_id: item.id,
-            position: {
-                x: position.x,
-                y: position.y,
-                width: direction === 'vertical' ? position.width * ratio : position.width,
-                height: direction === 'horizontal' ? position.height * ratio : position.height
-            }
-        },
-        {
-            id: uuidv4(),
-            type: 'container',
-            parent_id: item.id,
-            position: {
-                x: direction === 'vertical' ? position.x + (position.width * ratio) : position.x,
-                y: direction === 'horizontal' ? position.y + (position.height * ratio) : position.y,
-                width: direction === 'vertical' ? position.width * (1 - ratio) : position.width,
-                height: direction === 'horizontal' ? position.height * (1 - ratio) : position.height
-            }
-        }
-    ];
-
-    item.split_direction = direction;
-    item.split_ratio = ratio;
-
-    items.value = [...items.value, ...newItems];
-    showSplitModal.value = false;
-};
-
-const handleImage = (item: MosaicItem) => {
-    if (item.type === 'container') {
-        // Convert container to image tile
-        const index = items.value.findIndex(i => i.id === item.id);
-        if (index !== -1) {
-            items.value[index] = {
-                ...items.value[index],
-                type: 'image',
-                image: {
-                    src: '',
-                    alt: '',
-                    position: { x: 0, y: 0, scale: 1 }
-                }
-            };
-            emit('update:modelValue', items.value);
-        }
-    }
-    emit('image-select', item.id);
-};
-
-const handleDelete = (item: MosaicItem) => {
-    // Remove item and its children
-    const itemsToRemove = new Set([item.id]);
-    items.value.forEach(i => {
-        if (i.parent_id && itemsToRemove.has(i.parent_id)) {
-            itemsToRemove.add(i.id);
-        }
+    const items = [...props.mosaic.items, newItem];
+    emit('update', {
+        ...props.mosaic,
+        items
     });
+
+    closeAddItemModal();
+};
+
+const saveItem = () => {
+    if (!editingItem.value) return;
     
-    items.value = items.value.filter(i => !itemsToRemove.has(i.id));
+    const items = props.mosaic.items.map(item => 
+        item.id === editingItem.value?.id ? editingItem.value : item
+    );
+
+    emit('update', {
+        ...props.mosaic,
+        items
+    });
+
+    closeItemEditor();
 };
 
-const updatePosition = (item: MosaicItem, position: Position) => {
-    const index = items.value.findIndex(i => i.id === item.id);
-    if (index === -1) return;
+const deleteItem = () => {
+    if (!editingItem.value) return;
+    
+    const items = props.mosaic.items.filter(item => item.id !== editingItem.value?.id);
+    
+    emit('update', {
+        ...props.mosaic,
+        items
+    });
 
-    items.value[index] = { ...items.value[index], position };
+    closeItemEditor();
 };
 
-const updateImagePosition = (item: MosaicItem, position: { x: number; y: number; scale: number }) => {
-    const index = items.value.findIndex(i => i.id === item.id);
-    if (index === -1 || !items.value[index].image) return;
-
-    items.value[index] = {
-        ...items.value[index],
-        image: {
-            ...items.value[index].image!,
-            position
-        }
+const getImageStyle = (item: MosaicItem) => {
+    const size = item.properties?.size || 'cover';
+    return {
+        objectFit: size
     };
-};
-
-const updateSplitRatio = (item: MosaicItem, ratio: number) => {
-    const index = items.value.findIndex(i => i.id === item.id);
-    if (index === -1) return;
-
-    const children = items.value.filter(i => i.parent_id === item.id);
-    if (children.length !== 2) return;
-
-    const direction = items.value[index].split_direction;
-    if (!direction) return;
-
-    // Update parent's split ratio
-    items.value[index] = { ...items.value[index], split_ratio: ratio };
-
-    // Update children positions
-    const position = items.value[index].position;
-    children.forEach((child, i) => {
-        const childIndex = items.value.findIndex(item => item.id === child.id);
-        if (childIndex === -1) return;
-
-        items.value[childIndex] = {
-            ...items.value[childIndex],
-            position: {
-                x: direction === 'vertical' ? position.x + (i === 1 ? position.width * ratio : 0) : position.x,
-                y: direction === 'horizontal' ? position.y + (i === 1 ? position.height * ratio : 0) : position.y,
-                width: direction === 'vertical' ? position.width * (i === 1 ? 1 - ratio : ratio) : position.width,
-                height: direction === 'horizontal' ? position.height * (i === 1 ? 1 - ratio : ratio) : position.height
-            }
-        };
-    });
 };
 </script>
 
 <style scoped>
 .mosaic-editor {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    @apply p-4;
 }
 
-.mosaic-container {
-    width: 100%;
-    height: 0;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    position: relative;
-    background: white;
+.mosaic-column {
+    @apply min-h-[200px] p-2;
 }
 
-.mosaic-container.portrait {
-    padding-bottom: 177.78%; /* 9:16 aspect ratio */
+.mosaic-item {
+    @apply cursor-move;
 }
 
-.empty-state {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.mosaic-item img {
+    @apply transition-transform duration-200;
 }
 
-.create-button {
-    padding: 0.75rem 1.5rem;
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.create-button:hover {
-    filter: brightness(110%);
+.mosaic-item:hover img {
+    @apply transform scale-[1.02];
 }
 </style> 
