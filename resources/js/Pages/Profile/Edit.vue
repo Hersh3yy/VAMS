@@ -10,7 +10,23 @@ import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import { ref, reactive, computed } from 'vue';
-import { User } from '@/types';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    logo_url?: string;
+    album_display_settings?: {
+        main_color?: string;
+        secondary_color?: string;
+        caption?: boolean;
+        altText?: boolean;
+        dateCreated?: boolean;
+        location?: boolean;
+        tags?: boolean;
+    };
+}
 
 defineProps<{
     mustVerifyEmail?: boolean;
@@ -62,7 +78,7 @@ const removeLogo = () => {
 };
 
 // Theme settings
-const user = usePage().props.auth?.user as User;
+const user = usePage().props.auth?.user as unknown as User;
 const defaultMainColor = '#4F46E5'; // Default indigo color
 const defaultSecondaryColor = '#10B981'; // Default emerald color
 

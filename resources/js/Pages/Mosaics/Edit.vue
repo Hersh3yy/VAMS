@@ -27,10 +27,7 @@
                         ...mosaic,
                         items: mosaicItems
                     }"
-                    :onUpdate="(updatedMosaic: Mosaic) => {
-                        mosaicItems.value = updatedMosaic.items;
-                        hasChanges.value = true;
-                    }"
+                    :onUpdate="handleMosaicUpdate"
                 />
             </div>
         </div>
@@ -116,6 +113,11 @@ const hasChanges = ref(false);
 const availableImages = computed(() => {
     return props.albums.flatMap(album => album.images);
 });
+
+const handleMosaicUpdate = (updatedMosaic: { columns: number; items: MosaicItem[] }) => {
+    mosaicItems.value = updatedMosaic.items;
+    hasChanges.value = true;
+};
 
 const openImageSelector = (itemId: string) => {
     selectedItemId.value = itemId;
