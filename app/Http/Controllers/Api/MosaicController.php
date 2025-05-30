@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
+use App\Http\Controllers\Api\Traits\HandlesApiOperations;
+use App\Http\Controllers\Api\Traits\ValidatesApiKey;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MosaicController extends Controller
 {
+    use HandlesApiOperations, ValidatesApiKey;
+
     protected $mosaicService;
 
     public function __construct(MosaicService $mosaicService)
@@ -20,25 +24,27 @@ class MosaicController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $this->validateApiKey($request);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
+        
         $mosaics = $this->mosaicService->getAllMosaics(true);
         
-        return response()->json([
+        return $this->handleSuccess([
             'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
-        ], 200, [], JSON_UNESCAPED_UNICODE);
+        ]);
     }
 
     public function show(Request $request, Mosaic $mosaic): JsonResponse
     {
         $mosaic = $this->mosaicService->getMosaic($mosaic, true);
         if (!$mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
+            return $this->handleNotFound('Mosaic not found');
         }
         
-        return response()->json(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic), 
-            200, 
-            [], 
-            JSON_UNESCAPED_UNICODE
+        return $this->handleSuccess(
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
         );
     }
 
@@ -47,7 +53,7 @@ class MosaicController extends Controller
         $mosaic = Mosaic::where('title', $title)->first();
         
         if (!$mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404);
+            return $this->handleNotFound('Mosaic not found');
         }
         
         return $this->show(request(), $mosaic);
@@ -55,11 +61,14 @@ class MosaicController extends Controller
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->validateApiKey($request);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
         
         $mosaic = $user->mosaics()->where('title', $title)->first();
         if (!$mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404);
+            return $this->handleNotFound('Mosaic not found');
         }
         
         return $this->show($request, $mosaic);
@@ -67,16 +76,19 @@ class MosaicController extends Controller
 
     public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->validateApiKey($request);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
         
-        if ($mosaicItem->mosaic->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        $ownership = $this->validateOwnership($mosaicItem->mosaic, $user);
+        if ($ownership instanceof JsonResponse) {
+            return $ownership;
         }
 
         $newItem = $this->mosaicService->splitItem($mosaicItem);
 
-        return response()->json([
-            'success' => true,
+        return $this->handleSuccess([
             'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
         ]);
     }

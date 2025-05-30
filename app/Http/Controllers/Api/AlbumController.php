@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Services\AlbumService;
+use App\Http\Controllers\Api\Traits\HandlesApiOperations;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Api\Traits\ValidatesApiKey;
 
 class AlbumController extends Controller
 {
-    use ValidatesApiKey;
+    use HandlesApiOperations;
     
     protected $albumService;
     
@@ -25,23 +25,27 @@ class AlbumController extends Controller
         // Get album with images
         $album = $this->albumService->getAlbum($album, true);
         if (!$album) {
-            return response()->json(['error' => 'Album not found'], 404, [], JSON_UNESCAPED_UNICODE);
+            return $this->handleNotFound('Album not found');
         }
         
         // Format response
-        return response()->json($this->albumService->formatAlbumWithImagesForApi($album), 200, [], JSON_UNESCAPED_UNICODE);
+        return $this->handleSuccess(
+            $this->albumService->formatAlbumWithImagesForApi($album)
+        );
     }
 
     public function index(Request $request): JsonResponse
     {
-        // User is already authenticated via middleware
-        $user = $request->user();
+        $user = $this->validateApiKey($request);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
         
         $albums = $user->albums()->with('images')->get();
         
-        return response()->json([
+        return $this->handleSuccess([
             'albums' => $albums->map(fn($album) => $this->albumService->formatAlbumForApi($album))
-        ], 200, [], JSON_UNESCAPED_UNICODE);
+        ]);
     }
 
     public function showByTitle(string $title): JsonResponse
@@ -49,7 +53,7 @@ class AlbumController extends Controller
         $album = Album::where('title', $title)->first();
         
         if (!$album) {
-            return response()->json(['error' => 'Album not found'], 404);
+            return $this->handleNotFound('Album not found');
         }
         
         return $this->show(request(), $album);
@@ -57,12 +61,14 @@ class AlbumController extends Controller
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        // User is already authenticated via middleware
-        $user = $request->user();
+        $user = $this->validateApiKey($request);
+        if ($user instanceof JsonResponse) {
+            return $user;
+        }
         
         $album = $user->albums()->where('title', $title)->with('images')->first();
         if (!$album) {
-            return response()->json(['error' => 'Album not found'], 404);
+            return $this->handleNotFound('Album not found');
         }
         
         return $this->show($request, $album);
@@ -72,9 +78,11 @@ class AlbumController extends Controller
     {
         $album = Album::where('title', $albumName)->first();
         if (!$album) {
-            return response()->json(['error' => 'Album not found'], 404);
+            return $this->handleNotFound('Album not found');
         }
         
-        return response()->json($this->albumService->formatAlbumForStrapi($album));
+        return $this->handleSuccess(
+            $this->albumService->formatAlbumForStrapi($album)
+        );
     }
 } 

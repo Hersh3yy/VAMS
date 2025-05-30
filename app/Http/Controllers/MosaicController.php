@@ -6,6 +6,7 @@ use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Models\User;
 use App\Services\MosaicService;
+use App\Http\Controllers\Api\Traits\HandlesMosaicOperations;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -14,6 +15,8 @@ use Illuminate\Http\JsonResponse;
 
 class MosaicController extends Controller
 {
+    use HandlesMosaicOperations;
+
     protected $mosaicService;
 
     public function __construct(MosaicService $mosaicService)
@@ -63,10 +66,29 @@ class MosaicController extends Controller
         }
 
         // Get mosaic with items using service
-        $mosaic = $this->mosaicService->getMosaic($mosaic, false);
+        $mosaic = $this->getMosaicWithItems($mosaic, false);
 
-        // Get user's albums
-        $albums = Auth::user()->albums()->with('images')->get();
+        // Get user's albums with their images
+        $albums = Auth::user()->albums()
+            ->with(['images' => function($query) {
+                $query->orderBy('order');
+            }])
+            ->get()
+            ->map(function($album) {
+                return [
+                    'id' => $album->id,
+                    'title' => $album->title,
+                    'cover_image_path' => $album->cover_image_path,
+                    'images_count' => $album->images->count(),
+                    'images' => $album->images->map(function($image) {
+                        return [
+                            'id' => $image->id,
+                            'path' => $image->path,
+                            'order' => $image->order
+                        ];
+                    })
+                ];
+            });
 
         return Inertia::render('Mosaics/Edit', [
             'mosaic' => $mosaic,
@@ -183,17 +205,6 @@ class MosaicController extends Controller
 
     public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
     {
-        $user = $request->user();
-        
-        if ($mosaicItem->mosaic->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $newItem = $this->mosaicService->splitItem($mosaicItem);
-
-        return response()->json([
-            'success' => true,
-            'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
-        ]);
+        return $this->handleMosaicSplit($mosaicItem, $request);
     }
 }

@@ -21,28 +21,27 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// All API routes require API key authentication
+// Protected routes that require both Sanctum and API key
 Route::middleware(['auth:sanctum', 'api.key'])->group(function () {
-    // Album endpoints
-    Route::prefix('albums')->group(function () {
-        Route::get('/', [AlbumController::class, 'index']);
-        Route::get('/{album}', [AlbumController::class, 'show']);
-        Route::get('/title/{title}', [AlbumController::class, 'showByTitle']);
-        Route::get('/title/{title}/with-key', [AlbumController::class, 'showByTitleWithApiKey']);
-    });
-    
-    // Mosaic endpoints
-    Route::prefix('mosaics')->group(function () {
-        Route::get('/', [MosaicController::class, 'index']);
-        Route::get('/{mosaic}', [MosaicController::class, 'show']);
-        Route::get('/title/{title}', [MosaicController::class, 'showByTitle']);
-        Route::get('/title/{title}/with-key', [MosaicController::class, 'showByTitleWithApiKey']);
-        Route::post('/items/{mosaicItem}/split', [MosaicController::class, 'split']);
-    });
+    // Album routes
+    Route::get('/albums', [AlbumController::class, 'index']);
+    Route::get('/albums/{id}', [AlbumController::class, 'show']);
+    Route::get('/albums/title/{title}', [AlbumController::class, 'showByTitle']);
+    Route::get('/albums/title/{title}/with-key', [AlbumController::class, 'showByTitleWithApiKey']);
 
-    // Legacy Strapi-compatible endpoint
-    Route::get('/{albumName}', [AlbumController::class, 'showStrapiFormat']);
-
-    // Media upload route
-    Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
+    // Mosaic routes
+    Route::get('/mosaics', [MosaicController::class, 'index']);
+    Route::get('/mosaics/{id}', [MosaicController::class, 'show']);
+    Route::get('/mosaics/title/{title}', [MosaicController::class, 'showByTitle']);
+    Route::get('/mosaics/title/{title}/with-key', [MosaicController::class, 'showByTitleWithApiKey']);
+    Route::post('/mosaics/{mosaicItem}/split', [MosaicController::class, 'split']);
 });
+
+// User-specific routes (only require Sanctum)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user/albums', [AlbumController::class, 'userAlbums']);
+    Route::get('/user/mosaics', [MosaicController::class, 'userMosaics']);
+});
+
+// Media upload route
+Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
