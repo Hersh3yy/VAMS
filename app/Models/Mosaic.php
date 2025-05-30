@@ -28,7 +28,7 @@ class Mosaic extends Model
         'display_settings',
     ];
 
-    protected array $casts = [
+    protected $casts = [
         'columns' => 'integer',
         'display_settings' => 'array',
         'created_at' => 'datetime',
