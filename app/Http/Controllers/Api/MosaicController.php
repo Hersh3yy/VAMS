@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
 use App\Http\Controllers\Api\Traits\HandlesApiOperations;
 use App\Http\Controllers\Api\Traits\ValidatesApiKey;
+use App\Http\Requests\StoreMosaicRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class MosaicController extends Controller
+class MosaicController extends BaseApiController
 {
     use HandlesApiOperations, ValidatesApiKey;
 
-    protected $mosaicService;
+    private readonly MosaicService $mosaicService;
 
     public function __construct(MosaicService $mosaicService)
     {
@@ -31,7 +33,7 @@ class MosaicController extends Controller
         
         $mosaics = $this->mosaicService->getAllMosaics(true);
         
-        return $this->handleSuccess([
+        return $this->success([
             'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
         ]);
     }
@@ -40,10 +42,10 @@ class MosaicController extends Controller
     {
         $mosaic = $this->mosaicService->getMosaic($mosaic, true);
         if (!$mosaic) {
-            return $this->handleNotFound('Mosaic not found');
+            return $this->notFound('Mosaic not found');
         }
         
-        return $this->handleSuccess(
+        return $this->success(
             $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
         );
     }
@@ -53,7 +55,7 @@ class MosaicController extends Controller
         $mosaic = Mosaic::where('title', $title)->first();
         
         if (!$mosaic) {
-            return $this->handleNotFound('Mosaic not found');
+            return $this->notFound('Mosaic not found');
         }
         
         return $this->show(request(), $mosaic);
@@ -68,10 +70,31 @@ class MosaicController extends Controller
         
         $mosaic = $user->mosaics()->where('title', $title)->first();
         if (!$mosaic) {
-            return $this->handleNotFound('Mosaic not found');
+            return $this->notFound('Mosaic not found');
         }
         
         return $this->show($request, $mosaic);
+    }
+
+    public function store(StoreMosaicRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $mosaic = $this->mosaicService->createMosaic($validated);
+        
+        return $this->success(
+            $this->mosaicService->formatMosaicForApi($mosaic),
+            201
+        );
+    }
+
+    public function update(StoreMosaicRequest $request, Mosaic $mosaic): JsonResponse
+    {
+        $validated = $request->validated();
+        $mosaic = $this->mosaicService->updateMosaic($mosaic, $validated);
+        
+        return $this->success(
+            $this->mosaicService->formatMosaicForApi($mosaic)
+        );
     }
 
     public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
@@ -88,8 +111,14 @@ class MosaicController extends Controller
 
         $newItem = $this->mosaicService->splitItem($mosaicItem);
 
-        return $this->handleSuccess([
+        return $this->success([
             'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
         ]);
+    }
+
+    public function destroy(Mosaic $mosaic): JsonResponse
+    {
+        $this->mosaicService->deleteMosaic($mosaic);
+        return $this->success(null, 204);
     }
 } 

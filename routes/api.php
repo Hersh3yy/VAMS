@@ -17,31 +17,41 @@ use App\Http\Controllers\Api\MediaController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
 // Protected routes that require both Sanctum and API key
-Route::middleware(['auth:sanctum', 'api.key'])->group(function () {
+Route::middleware(['auth:sanctum', 'api.key', 'throttle:60,1'])->group(function () {
     // Album routes
-    Route::get('/albums', [AlbumController::class, 'index']);
-    Route::get('/albums/{id}', [AlbumController::class, 'show']);
-    Route::get('/albums/title/{title}', [AlbumController::class, 'showByTitle']);
-    Route::get('/albums/title/{title}/with-key', [AlbumController::class, 'showByTitleWithApiKey']);
+    Route::prefix('albums')->group(function () {
+        Route::get('/', [AlbumController::class, 'index']);
+        Route::get('/{id}', [AlbumController::class, 'show']);
+        Route::get('/by-title/{title}', [AlbumController::class, 'showByTitle']);
+        Route::get('/by-title/{title}/with-key', [AlbumController::class, 'showByTitleWithApiKey']);
+    });
 
     // Mosaic routes
-    Route::get('/mosaics', [MosaicController::class, 'index']);
-    Route::get('/mosaics/{id}', [MosaicController::class, 'show']);
-    Route::get('/mosaics/title/{title}', [MosaicController::class, 'showByTitle']);
-    Route::get('/mosaics/title/{title}/with-key', [MosaicController::class, 'showByTitleWithApiKey']);
-    Route::post('/mosaics/{mosaicItem}/split', [MosaicController::class, 'split']);
+    Route::prefix('mosaics')->group(function () {
+        Route::get('/', [MosaicController::class, 'index']);
+        Route::get('/{id}', [MosaicController::class, 'show']);
+        Route::get('/by-title/{title}', [MosaicController::class, 'showByTitle']);
+        Route::get('/by-title/{title}/with-key', [MosaicController::class, 'showByTitleWithApiKey']);
+        Route::post('/{mosaicItem}/split', [MosaicController::class, 'split']);
+    });
 });
 
 // User-specific routes (only require Sanctum)
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user/albums', [AlbumController::class, 'userAlbums']);
-    Route::get('/user/mosaics', [MosaicController::class, 'userMosaics']);
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+    Route::prefix('user')->group(function () {
+        Route::get('/albums', [AlbumController::class, 'userAlbums']);
+        Route::get('/mosaics', [MosaicController::class, 'userMosaics']);
+    });
 });
 
-// Media upload route
-Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
+// Media upload route with specific rate limiting and file size checks
+Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
+    Route::post('/media/upload', [MediaController::class, 'upload'])
+        ->middleware('file.size:10240') // 10MB limit
+        ->name('media.upload');
+});

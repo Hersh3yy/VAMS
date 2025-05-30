@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Mosaic;
@@ -9,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class MosaicService
 {
@@ -18,7 +21,7 @@ class MosaicService
      * @param bool $forApi Whether this is for API (true) or web (false)
      * @return \Illuminate\Database\Eloquent\Collection|Collection
      */
-    public function getAllMosaics($forApi = false)
+    public function getAllMosaics(bool $forApi = false): EloquentCollection|Collection
     {
         if ($forApi) {
             // For API, we return all published mosaics
@@ -39,7 +42,7 @@ class MosaicService
      * @param bool $forApi Whether this is for API (true) or web (false)
      * @return Mosaic|null
      */
-    public function getMosaic($mosaic, $forApi = false)
+    public function getMosaic(Mosaic $mosaic, bool $forApi = false): ?Mosaic
     {
         if (is_numeric($mosaic)) {
             $mosaic = Mosaic::findOrFail($mosaic);
@@ -56,30 +59,61 @@ class MosaicService
     }
     
     /**
+     * Create a new mosaic
+     */
+    public function createMosaic(array $data): Mosaic
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        return $user->mosaics()->create([
+            'id' => Str::uuid(),
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'columns' => $data['columns'] ?? 3,
+            'display_settings' => $data['display_settings'] ?? null,
+        ]);
+    }
+    
+    /**
+     * Update an existing mosaic
+     */
+    public function updateMosaic(Mosaic $mosaic, array $data): Mosaic
+    {
+        $mosaic->update([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? $mosaic->description,
+            'columns' => $data['columns'] ?? $mosaic->columns,
+            'display_settings' => $data['display_settings'] ?? $mosaic->display_settings,
+        ]);
+        
+        return $mosaic->fresh();
+    }
+    
+    /**
+     * Delete a mosaic and its items
+     */
+    public function deleteMosaic(Mosaic $mosaic): void
+    {
+        $mosaic->items()->delete();
+        $mosaic->delete();
+    }
+    
+    /**
      * Format mosaic data for API response
      *
      * @param Mosaic $mosaic
      * @return array
      */
-    public function formatMosaicForApi(Mosaic $mosaic)
+    public function formatMosaicForApi(Mosaic $mosaic): array
     {
-        $layoutSettings = [];
-        if ($mosaic->layout_settings) {
-            try {
-                $layoutSettings = is_string($mosaic->layout_settings) ? 
-                    json_decode($mosaic->layout_settings, true) : 
-                    $mosaic->layout_settings;
-            } catch (\Exception $e) {
-                $layoutSettings = [];
-            }
-        }
-        
         return [
             'id' => $mosaic->id,
             'title' => $mosaic->title,
             'description' => $mosaic->description,
+            'columns' => $mosaic->columns,
+            'display_settings' => $mosaic->display_settings,
             'user_id' => $mosaic->user_id,
-            'layout_settings' => $layoutSettings,
             'created_at' => $mosaic->created_at,
             'updated_at' => $mosaic->updated_at
         ];
@@ -91,7 +125,7 @@ class MosaicService
      * @param MosaicItem $item
      * @return array
      */
-    public function formatMosaicItemForApi(MosaicItem $item)
+    public function formatMosaicItemForApi(MosaicItem $item): array
     {
         $properties = null;
         if ($item->properties) {
@@ -164,12 +198,15 @@ class MosaicService
         return [
             'id' => $item->id,
             'mosaic_id' => $item->mosaic_id,
-            'type' => $item->type,
             'column_index' => $item->column_index,
+            'type' => $item->type,
             'content' => $item->content,
             'album_id' => $item->album_id,
             'properties' => $properties,
             'order' => $item->order,
+            'is_active' => $item->is_active,
+            'created_at' => $item->created_at,
+            'updated_at' => $item->updated_at,
             'images' => $images
         ];
     }
@@ -180,7 +217,7 @@ class MosaicService
      * @param Mosaic $mosaic
      * @return array
      */
-    public function formatMosaicWithItemsForApi(Mosaic $mosaic)
+    public function formatMosaicWithItemsForApi(Mosaic $mosaic): array
     {
         return [
             'mosaic' => $this->formatMosaicForApi($mosaic),
