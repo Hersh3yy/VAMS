@@ -4,102 +4,42 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mosaic;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\MosaicItem;
+use App\Services\MosaicService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class MosaicController extends Controller
 {
-    public function show(Mosaic $mosaic): JsonResponse
+    protected $mosaicService;
+
+    public function __construct(MosaicService $mosaicService)
     {
-        $mosaic->load('items');
-        
-        $layoutSettings = [];
-        if ($mosaic->layout_settings) {
-            try {
-                $layoutSettings = is_string($mosaic->layout_settings) ? 
-                    json_decode($mosaic->layout_settings, true) : 
-                    $mosaic->layout_settings;
-            } catch (\Exception $e) {
-                $layoutSettings = [];
-            }
-        }
+        $this->mosaicService = $mosaicService;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $mosaics = $this->mosaicService->getAllMosaics(true);
         
         return response()->json([
-            'mosaic' => [
-                'id' => $mosaic->id,
-                'title' => $mosaic->title,
-                'description' => $mosaic->description,
-                'user_id' => $mosaic->user_id,
-                'layout_settings' => $layoutSettings,
-                'created_at' => $mosaic->created_at,
-                'updated_at' => $mosaic->updated_at
-            ],
-            'items' => $mosaic->items->map(function ($item) {
-                $position = null;
-                if ($item->desktop_position) {
-                    try {
-                        $position = is_string($item->desktop_position) ? 
-                            json_decode($item->desktop_position, true) : 
-                            $item->desktop_position;
-                    } catch (\Exception $e) {
-                        $position = null;
-                    }
-                }
-                
-                $properties = null;
-                if ($item->properties) {
-                    try {
-                        $properties = is_string($item->properties) ? 
-                            json_decode($item->properties, true) : 
-                            $item->properties;
-                    } catch (\Exception $e) {
-                        $properties = null;
-                    }
-                }
-                
-                $imageData = null;
-                if ($item->type === 'image' && $item->reference_id) {
-                    $image = \App\Models\AlbumImage::find($item->reference_id);
-                    if ($image) {
-                        $imageProperties = [];
-                        if ($image->properties) {
-                            try {
-                                $imageProperties = is_string($image->properties) ? 
-                                    json_decode($image->properties, true) : 
-                                    $image->properties;
-                            } catch (\Exception $e) {
-                                $imageProperties = [];
-                            }
-                        }
-                        
-                        $imageData = [
-                            'id' => $image->id,
-                            'path' => $image->path,
-                            'webp_path' => $image->webp_path,
-                            'thumbnail_url' => $imageProperties['thumbnail_url'] ?? $image->path,
-                            'webp_url' => $imageProperties['webp_url'] ?? null,
-                            'title' => $image->title,
-                            'caption' => $image->caption,
-                            'alt_text' => $image->alt_text
-                        ];
-                    }
-                }
-                
-                return [
-                    'id' => $item->id,
-                    'mosaic_id' => $item->mosaic_id,
-                    'parent_id' => $item->parent_id,
-                    'type' => $item->type,
-                    'reference_id' => $item->reference_id,
-                    'split_direction' => $item->split_direction,
-                    'position' => $position,
-                    'properties' => $properties,
-                    'order' => $item->order,
-                    'image' => $imageData
-                ];
-            })
-        ]);
+            'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function show(Request $request, Mosaic $mosaic): JsonResponse
+    {
+        $mosaic = $this->mosaicService->getMosaic($mosaic, true);
+        if (!$mosaic) {
+            return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        
+        return response()->json(
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic), 
+            200, 
+            [], 
+            JSON_UNESCAPED_UNICODE
+        );
     }
 
     public function showByTitle(string $title): JsonResponse
@@ -110,36 +50,34 @@ class MosaicController extends Controller
             return response()->json(['error' => 'Mosaic not found'], 404);
         }
         
-        return $this->show($mosaic);
+        return $this->show(request(), $mosaic);
     }
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        $user = $request->user();
         
         $mosaic = $user->mosaics()->where('title', $title)->first();
         if (!$mosaic) {
             return response()->json(['error' => 'Mosaic not found'], 404);
         }
         
-        return $this->show($mosaic);
+        return $this->show($request, $mosaic);
     }
 
-    private function validateApiKey(Request $request): User|JsonResponse
+    public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
     {
-        $apiKey = $request->header('X-API-Key');
-        if (!$apiKey) {
-            return response()->json(['error' => 'API key is required'], 401);
+        $user = $request->user();
+        
+        if ($mosaicItem->mosaic->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $user = User::where('api_key', $apiKey)->first();
-        if (!$user) {
-            return response()->json(['error' => 'Invalid API key'], 401);
-        }
+        $newItem = $this->mosaicService->splitItem($mosaicItem);
 
-        return $user;
+        return response()->json([
+            'success' => true,
+            'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
+        ]);
     }
 } 

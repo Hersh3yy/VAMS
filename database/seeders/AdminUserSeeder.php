@@ -45,6 +45,7 @@ class AdminUserSeeder extends Seeder
                     'main_color' => '#4F46E5', // Default indigo color
                     'secondary_color' => '#10B981', // Default emerald color
                 ],
+                'api_key' => Str::random(64),
             ]);
             
             $this->command->info("Admin user '{$adminName}' created with email: {$adminEmail}");

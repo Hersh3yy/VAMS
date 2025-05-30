@@ -157,13 +157,39 @@ class AlbumImageController extends Controller
     {
         $this->authorize('delete', $albumImage->album);
         
-        // Delete the image from storage
-        Storage::disk('spaces')->delete($albumImage->path);
-        
-        // Delete the image record from the database
-        $albumImage->delete();
+        try {
+            // Delete the image from storage if it's a local file
+            if (!$this->isVideoLink($albumImage->path) && strpos($albumImage->path, '/storage/') !== false) {
+                // Extract the path relative to the storage directory
+                $path = str_replace('/storage/', '', parse_url($albumImage->path, PHP_URL_PATH));
+                if ($path) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+            
+            // Delete the image record from the database
+            $albumImage->delete();
 
-        return back()->with('message', 'Image deleted successfully');
+            return response()->json(['message' => 'Image deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete image: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to delete image: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Check if a URL is a video link (YouTube, Vimeo, etc.)
+     *
+     * @param string $url
+     * @return bool
+     */
+    private function isVideoLink(string $url): bool
+    {
+        return (
+            strpos($url, 'youtube.com') !== false || 
+            strpos($url, 'youtu.be') !== false || 
+            strpos($url, 'vimeo.com') !== false
+        );
     }
 
     public function reorder(Request $request)

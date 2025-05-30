@@ -72,15 +72,25 @@ import axios from 'axios';
 
 interface MosaicItem {
     id: string;
-    type: 'image' | 'text';
+    type: 'image' | 'text' | 'album';
     column_index: number;
     order: number;
-    content?: string;
+    content?: string | string[];
+    album_id?: string;
+    album?: any;
+    images?: any[];
     properties?: {
         src?: string;
         alt?: string;
         caption?: string;
         size?: 'fill' | 'cover' | 'contain';
+        text?: {
+            content: string;
+            color: string;
+        };
+        link?: {
+            url: string;
+        };
     };
 }
 

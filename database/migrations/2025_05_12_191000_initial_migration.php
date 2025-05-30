@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('logo_url')->nullable();
             $table->json('theme_settings')->nullable();
             $table->json('site_settings')->nullable();
-            $table->string('api_key', 64)->nullable()->unique();
+            $table->string('api_key', 64)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -33,16 +33,12 @@ return new class extends Migration
         // Albums table
         Schema::create('albums', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('cover_image_path')->nullable();
             $table->integer('order')->default(0);
-            $table->json('metadata')->nullable();
-            $table->boolean('is_public')->default(true);
             $table->timestamps();
-            
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         // Album images table
@@ -67,30 +63,24 @@ return new class extends Migration
         // Mosaics table
         Schema::create('mosaics', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
-            $table->json('theme_settings')->nullable();
-            $table->json('layout_settings')->nullable(); // Settings for the overall layout
-            $table->integer('columns')->default(4); // Default number of columns for the grid
+            $table->integer('columns')->default(3);
+            $table->json('display_settings')->nullable();
             $table->timestamps();
-            
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         // Mosaic items table
         Schema::create('mosaic_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('mosaic_id');
-            $table->integer('column_index')->default(0); // Which column this item belongs to
-            $table->enum('type', ['image', 'text'])->default('image'); // Simplified types
-            $table->string('content')->nullable(); // Text content if type is text
-            $table->json('properties')->nullable(); // Additional properties like image position, caption
-            $table->integer('order')->default(0); // Position within column
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-            
             $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
+            $table->string('type');
+            $table->json('properties');
+            $table->integer('column_index')->default(0);
+            $table->integer('order')->default(0);
+            $table->timestamps();
         });
         
         // Jobs table for queues
@@ -118,23 +108,6 @@ return new class extends Migration
             $table->integer('finished_at')->nullable();
         });
 
-        // Sessions table
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignUuid('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
-
-        // Password reset tokens table
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
         // Failed jobs table
         Schema::create('failed_jobs', function (Blueprint $table) {
             $table->id();
@@ -158,6 +131,23 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Password reset tokens table
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        // Sessions table
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignUuid('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+
         // Cache table
         Schema::create('cache', function (Blueprint $table) {
             $table->string('key')->primary();
@@ -170,6 +160,44 @@ return new class extends Migration
             $table->string('owner');
             $table->integer('expiration');
         });
+
+        Schema::create('media', function (Blueprint $table) {
+            $table->id();
+            $table->string('type');
+            $table->string('path');
+            $table->string('mime_type');
+            $table->unsignedBigInteger('size');
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('album_media', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('album_id');
+            $table->foreign('album_id')->references('id')->on('albums')->onDelete('cascade');
+            $table->foreignId('media_id')->constrained()->onDelete('cascade');
+            $table->integer('order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('mosaic_media', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('mosaic_id');
+            $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
+            $table->foreignId('media_id')->constrained()->onDelete('cascade');
+            $table->integer('order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('activities', function (Blueprint $table) {
+            $table->id();
+            $table->string('type');
+            $table->text('description');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
+            $table->morphs('subject');
+            $table->json('properties')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -177,17 +205,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cache_locks');
-        Schema::dropIfExists('cache');
+        Schema::dropIfExists('activities');
+        Schema::dropIfExists('mosaic_media');
+        Schema::dropIfExists('album_media');
+        Schema::dropIfExists('media');
         Schema::dropIfExists('mosaic_items');
         Schema::dropIfExists('mosaics');
-        Schema::dropIfExists('album_images');
         Schema::dropIfExists('albums');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('cache_locks');
+        Schema::dropIfExists('cache');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('job_batches');
         Schema::dropIfExists('jobs');
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('failed_jobs');
         Schema::dropIfExists('personal_access_tokens');
     }

@@ -45,6 +45,31 @@
                             <InputError class="mt-2" :message="form.errors.description" />
                         </div>
 
+                        <div>
+                            <InputLabel for="cover_image" value="Cover Image" />
+                            <div class="mt-1 flex items-center space-x-4">
+                                <img 
+                                    v-if="album.cover_image_path" 
+                                    :src="album.cover_image_path" 
+                                    class="h-32 w-32 object-cover rounded-lg"
+                                    alt="Current cover"
+                                />
+                                <input 
+                                    type="file" 
+                                    id="cover_image"
+                                    @input="form.cover_image = $event.target.files[0]"
+                                    class="mt-1 block w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-blue-50 file:text-blue-700
+                                        hover:file:bg-blue-100"
+                                    accept="image/*"
+                                />
+                            </div>
+                            <InputError class="mt-2" :message="form.errors.cover_image" />
+                        </div>
+
                         <div class="flex items-center justify-end mt-4">
                             <PrimaryButton class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                                 Update Album
@@ -72,9 +97,15 @@ const props = defineProps({
 const form = useForm({
     title: props.album.title,
     description: props.album.description || '',
+    cover_image: null,
 });
 
 const submit = () => {
-    form.put(route('albums.update', props.album.id));
+    form.put(route('albums.update', props.album.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            form.cover_image = null;
+        },
+    });
 };
 </script> 

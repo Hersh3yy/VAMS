@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Mosaic extends Model
 {
-    use HasFactory;
-    use HasUuids;
+    use HasFactory, HasUuids, LogsActivity;
 
     protected $table = 'mosaics';
 
@@ -19,10 +19,12 @@ class Mosaic extends Model
         'title',
         'description',
         'columns',
+        'display_settings',
     ];
 
     protected $casts = [
         'columns' => 'integer',
+        'display_settings' => 'array',
     ];
 
     public function user()
@@ -43,5 +45,12 @@ class Mosaic extends Model
         return $this->hasMany(MosaicItem::class)
             ->where('column_index', $columnIndex)
             ->orderBy('order');
+    }
+
+    public function media()
+    {
+        return $this->belongsToMany(Media::class)
+            ->withPivot('order')
+            ->orderBy('pivot_order');
     }
 }

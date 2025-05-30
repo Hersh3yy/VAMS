@@ -3,22 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mosaic;
+use App\Models\MosaicItem;
+use App\Models\User;
+use App\Services\MosaicService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class MosaicController extends Controller
 {
+    protected $mosaicService;
+
+    public function __construct(MosaicService $mosaicService)
+    {
+        $this->mosaicService = $mosaicService;
+    }
+
+    // Web Routes
     public function index()
     {
-        $mosaics = Auth::user()->mosaics()
-            ->with(['items' => function ($query) {
-                $query->orderBy('column_index')
-                      ->orderBy('order');
-            }])
-            ->latest()
-            ->get();
+        $mosaics = $this->mosaicService->getAllMosaics(false);
 
         return Inertia::render('Mosaics/Index', [
             'mosaics' => $mosaics
@@ -38,7 +44,8 @@ class MosaicController extends Controller
             'columns' => 'required|integer|min:2|max:5',
         ]);
 
-        $mosaic = Auth::user()->mosaics()->create([
+        $user = Auth::user();
+        $mosaic = $user->mosaics()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -55,14 +62,15 @@ class MosaicController extends Controller
             abort(403);
         }
 
-        // Load the mosaic with its items ordered by column and position
-        $mosaic->load(['items' => function ($query) {
-            $query->orderBy('column_index')
-                  ->orderBy('order');
-        }]);
+        // Get mosaic with items using service
+        $mosaic = $this->mosaicService->getMosaic($mosaic, false);
+
+        // Get user's albums
+        $albums = Auth::user()->albums()->with('images')->get();
 
         return Inertia::render('Mosaics/Edit', [
-            'mosaic' => $mosaic
+            'mosaic' => $mosaic,
+            'albums' => $albums
         ]);
     }
 
@@ -80,8 +88,9 @@ class MosaicController extends Controller
             'items' => 'required|array',
             'items.*.id' => 'required|string',
             'items.*.column_index' => 'required|integer|min:0',
-            'items.*.type' => 'required|string|in:image,text',
-            'items.*.content' => 'nullable|string',
+            'items.*.type' => 'required|string|in:image,text,album',
+            'items.*.content' => 'nullable|array',
+            'items.*.album_id' => 'nullable|uuid|exists:albums,id',
             'items.*.properties' => 'nullable|array',
             'items.*.order' => 'required|integer',
         ]);
@@ -101,6 +110,7 @@ class MosaicController extends Controller
                 'column_index' => $item['column_index'],
                 'type' => $item['type'],
                 'content' => $item['content'] ?? null,
+                'album_id' => $item['album_id'] ?? null,
                 'properties' => $item['properties'] ?? null,
                 'order' => $item['order'],
             ]);
@@ -120,5 +130,70 @@ class MosaicController extends Controller
         $mosaic->delete();
 
         return redirect()->route('mosaics.index');
+    }
+
+    // API Routes
+    public function showApi(Request $request, Mosaic $mosaic): JsonResponse
+    {
+        $mosaic = $this->mosaicService->getMosaic($mosaic, true);
+        if (!$mosaic) {
+            return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        
+        return response()->json(
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic), 
+            200, 
+            [], 
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    public function showByTitle(string $title): JsonResponse
+    {
+        $mosaic = Mosaic::where('title', $title)->first();
+        
+        if (!$mosaic) {
+            return response()->json(['error' => 'Mosaic not found'], 404);
+        }
+        
+        return $this->showApi(request(), $mosaic);
+    }
+
+    public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $mosaic = $user->mosaics()->where('title', $title)->first();
+        if (!$mosaic) {
+            return response()->json(['error' => 'Mosaic not found'], 404);
+        }
+        
+        return $this->showApi($request, $mosaic);
+    }
+
+    public function indexApi(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $mosaics = $user->mosaics()->with('items')->get();
+        
+        return response()->json([
+            'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if ($mosaicItem->mosaic->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $newItem = $this->mosaicService->splitItem($mosaicItem);
+
+        return response()->json([
+            'success' => true,
+            'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
+        ]);
     }
 }

@@ -31,15 +31,37 @@
                 >
                     <!-- Image Item -->
                     <div v-if="item.type === 'image'" class="relative group">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div 
+                                v-for="(image, index) in item.images" 
+                                :key="index"
+                                class="relative aspect-square"
+                            >
+                                <img 
+                                    :src="image.path" 
+                                    :alt="image.alt_text || ''"
+                                    class="w-full h-full object-cover rounded-lg"
+                                />
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg">
+                                    <div class="absolute bottom-0 left-0 right-0 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <p class="text-sm truncate">{{ image.caption || 'Add caption' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Album Item -->
+                    <div v-else-if="item.type === 'album'" class="relative group">
                         <img 
-                            :src="item.properties?.src" 
-                            :alt="item.properties?.alt || ''"
+                            :src="item.album?.cover_image_path || '/placeholder.jpg'" 
+                            :alt="item.album?.title || ''"
                             class="w-full h-auto rounded-lg shadow-md"
-                            :style="getImageStyle(item)"
                         />
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg">
                             <div class="absolute bottom-0 left-0 right-0 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <p class="text-sm truncate">{{ item.properties?.caption || 'Add caption' }}</p>
+                                <p class="text-sm truncate">{{ item.album?.title || 'Album' }}</p>
+                                <p class="text-xs">{{ item.album?.images_count || 0 }} images</p>
                             </div>
                         </div>
                     </div>
@@ -66,138 +88,34 @@
         </div>
 
         <!-- Item Editor Modal -->
-        <Modal 
-            :modelValue="showItemEditor" 
+        <MosaicItemEditor
+            :show="showItemEditor"
+            :is-editing="!!editingItem"
+            :item="editingItem"
+            :albums="albums"
             @update:modelValue="showItemEditor = $event"
             @close="closeItemEditor"
-        >
-            <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Item</h3>
-                
-                <!-- Image Properties -->
-                <div v-if="editingItem?.type === 'image'" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Caption</label>
-                        <input 
-                            type="text" 
-                            v-model="editingItem.properties!.caption"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Image Size</label>
-                        <select 
-                            v-model="editingItem.properties!.size"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        >
-                            <option value="cover">Cover</option>
-                            <option value="contain">Contain</option>
-                            <option value="fill">Fill</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Text Properties -->
-                <div v-else-if="editingItem?.type === 'text'" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Content</label>
-                        <textarea 
-                            v-model="editingItem.content"
-                            rows="4"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button 
-                        @click="deleteItem"
-                        class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
-                    >
-                        Delete
-                    </button>
-                    <button 
-                        @click="saveItem"
-                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-                    >
-                        Save Changes
-                    </button>
-                </div>
-            </div>
-        </Modal>
-
-        <!-- Add Item Modal -->
-        <Modal 
-            :modelValue="showAddItemModal" 
-            @update:modelValue="showAddItemModal = $event"
-            @close="closeAddItemModal"
-        >
-            <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Item</h3>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Item Type</label>
-                        <select 
-                            v-model="newItemType"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        >
-                            <option value="image">Image</option>
-                            <option value="text">Text</option>
-                        </select>
-                    </div>
-
-                    <!-- Image Upload -->
-                    <div v-if="newItemType === 'image'">
-                        <label class="block text-sm font-medium text-gray-700">Upload Image</label>
-                        <input 
-                            type="file" 
-                            @change="handleImageUpload"
-                            accept="image/*"
-                            class="mt-1 block w-full"
-                        />
-                    </div>
-
-                    <!-- Text Input -->
-                    <div v-else-if="newItemType === 'text'">
-                        <label class="block text-sm font-medium text-gray-700">Content</label>
-                        <textarea 
-                            v-model="newItemContent"
-                            rows="4"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end">
-                    <button 
-                        @click="addItem"
-                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-                    >
-                        Add Item
-                    </button>
-                </div>
-            </div>
-        </Modal>
+            @save="saveItem"
+            @delete="deleteItem"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Modal from '@/Components/Modal.vue'
-import { useForm } from '@inertiajs/vue3'
+import MosaicItemEditor from '@/Components/MosaicItemEditor.vue'
 import { v4 as uuidv4 } from 'uuid'
 
 interface MosaicItem {
     id: string;
-    type: 'image' | 'text';
+    type: 'image' | 'text' | 'album';
     column_index: number;
     order: number;
-    content?: string;
+    content?: string | string[];
+    album_id?: string;
+    album?: any;
+    images?: any[];
     properties?: {
-        src?: string;
-        alt?: string;
         caption?: string;
         size?: 'cover' | 'contain' | 'fill';
     };
@@ -210,6 +128,7 @@ interface Mosaic {
 
 const props = defineProps<{
     mosaic: Mosaic;
+    albums?: any[];
 }>();
 
 const emit = defineEmits<{
@@ -219,10 +138,7 @@ const emit = defineEmits<{
 // State
 const columnCount = ref(props.mosaic.columns || 3);
 const showItemEditor = ref(false);
-const showAddItemModal = ref(false);
 const editingItem = ref<MosaicItem | null>(null);
-const newItemType = ref<'image' | 'text'>('image');
-const newItemContent = ref('');
 const selectedColumn = ref(0);
 const draggedItem = ref<MosaicItem | null>(null);
 
@@ -280,62 +196,31 @@ const closeItemEditor = () => {
 
 const openAddItemModal = (columnIndex: number) => {
     selectedColumn.value = columnIndex;
-    showAddItemModal.value = true;
+    editingItem.value = null;
+    showItemEditor.value = true;
 };
 
-const closeAddItemModal = () => {
-    newItemType.value = 'image';
-    newItemContent.value = '';
-    showAddItemModal.value = false;
-};
-
-const handleImageUpload = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (!file) return;
-
-    const form = useForm({
-        image: file
-    });
-
-    try {
-        const response = await form.post(route('api.upload-image'));
-        // Handle the response and update the new item
-    } catch (error) {
-        console.error('Upload failed:', error);
-    }
-};
-
-const addItem = () => {
-    const newItem: MosaicItem = {
-        id: uuidv4(),
-        type: newItemType.value,
-        column_index: selectedColumn.value,
-        order: itemsInColumn(selectedColumn.value).length,
-        content: newItemType.value === 'text' ? newItemContent.value : undefined,
-        properties: newItemType.value === 'image' ? {
-            src: '', // Set this after upload
-            alt: '',
-            caption: '',
-            size: 'cover'
-        } : undefined
-    };
-
-    const items = [...props.mosaic.items, newItem];
-    emit('update', {
-        ...props.mosaic,
-        items
-    });
-
-    closeAddItemModal();
-};
-
-const saveItem = () => {
-    if (!editingItem.value) return;
+const saveItem = (itemData: any) => {
+    const items = [...props.mosaic.items];
     
-    const items = props.mosaic.items.map(item => 
-        item.id === editingItem.value?.id ? editingItem.value : item
-    );
+    if (editingItem.value) {
+        // Update existing item
+        const index = items.findIndex(item => item.id === editingItem.value?.id);
+        if (index !== -1) {
+            items[index] = {
+                ...items[index],
+                ...itemData
+            };
+        }
+    } else {
+        // Add new item
+        items.push({
+            id: uuidv4(),
+            column_index: selectedColumn.value,
+            order: itemsInColumn(selectedColumn.value).length,
+            ...itemData
+        });
+    }
 
     emit('update', {
         ...props.mosaic,
@@ -356,13 +241,6 @@ const deleteItem = () => {
     });
 
     closeItemEditor();
-};
-
-const getImageStyle = (item: MosaicItem) => {
-    const size = item.properties?.size || 'cover';
-    return {
-        objectFit: size
-    };
 };
 </script>
 

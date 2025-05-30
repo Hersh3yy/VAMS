@@ -60,20 +60,43 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Update basic profile info
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        // Update album display settings if provided
+        if (isset($validated['album_display_settings'])) {
+            $settings = $validated['album_display_settings'];
+            $user->album_display_settings = [
+                'caption' => $settings['caption'] ?? true,
+                'altText' => $settings['altText'] ?? false,
+                'dateCreated' => $settings['dateCreated'] ?? false,
+                'location' => $settings['location'] ?? false,
+                'tags' => $settings['tags'] ?? false,
+                'title' => $settings['title'] ?? false,
+                'author' => $settings['author'] ?? false,
+                'main_color' => $settings['main_color'] ?? '#4F46E5',
+                'secondary_color' => $settings['secondary_color'] ?? '#10B981',
+            ];
+        }
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
         // Handle API key regeneration
         if ($request->boolean('regenerate_api_key')) {
-            $request->user()->regenerateApiKey();
+            $user->regenerateApiKey();
         }
 
-        $request->user()->save();
+        $user->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**

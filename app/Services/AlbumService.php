@@ -148,4 +148,26 @@ class AlbumService
             ];
         })->toArray();
     }
-} 
+
+    /**
+     * Get recent albums for the current user
+     *
+     * @param int $limit Number of albums to return
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getRecentAlbums($limit = 3)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        
+        if (!$user) {
+            return collect();
+        }
+        
+        return $user->albums()
+            ->withCount('images')
+            ->orderBy('updated_at', 'desc')
+            ->take($limit)
+            ->get();
+    }
+}

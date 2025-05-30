@@ -45,6 +45,26 @@
                             </div>
                         </div>
 
+                        <div class="mb-6">
+                            <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">
+                                Number of Columns
+                            </label>
+                            <select
+                                id="columns"
+                                v-model="form.columns"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required
+                            >
+                                <option value="2">2 Columns</option>
+                                <option value="3">3 Columns</option>
+                                <option value="4">4 Columns</option>
+                                <option value="5">5 Columns</option>
+                            </select>
+                            <div v-if="form.errors.columns" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.columns }}
+                            </div>
+                        </div>
+
                         <div class="flex justify-end gap-4">
                             <Link
                                 :href="route('mosaics.index')"
@@ -74,6 +94,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 const form = useForm({
     title: '',
     description: '',
+    columns: 3,
 });
 
 const createMosaic = () => {
