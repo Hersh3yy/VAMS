@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AlbumImageController extends Controller
 {
@@ -54,23 +55,38 @@ class AlbumImageController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info('Incoming request data:', $request->all());
+        Log::info('AlbumImageController@store - Raw request data:', $request->all());
+        Log::info('AlbumImageController@store - Request files:', $request->allFiles());
+        Log::info('AlbumImageController@store - Request headers:', $request->headers->all());
 
         try {
+            Log::info('AlbumImageController@store - Starting validation');
+            
             $request->validate([
                 'album_id' => 'required|exists:albums,id',
                 'images' => 'required|array',
-                'images.*' => 'required|image|max:5120', // 5MB max
+                'images.*' => 'required|image',
             ]);
+            
+            Log::info('AlbumImageController@store - Validation passed');
 
             $album = Album::findOrFail($request->album_id);
+            Log::info('AlbumImageController@store - Found album:', ['album_id' => $album->id, 'title' => $album->title]);
+            
             $this->authorize('update', $album);
+            Log::info('AlbumImageController@store - Authorization passed');
 
             $lastOrder = $album->images()->max('order') ?? -1;
+            Log::info('AlbumImageController@store - Last order:', ['order' => $lastOrder]);
 
             $uploadedImages = [];
-            foreach ($request->file('images') as $image) {
-                Log::info('Processing image:', ['name' => $image->getClientOriginalName()]);
+            foreach ($request->file('images') as $index => $image) {
+                Log::info('AlbumImageController@store - Processing image:', [
+                    'index' => $index,
+                    'name' => $image->getClientOriginalName(),
+                    'size' => $image->getSize(),
+                    'mime' => $image->getMimeType()
+                ]);
 
                 // Use ImageService to store the image
                 $result = $this->imageService->storeImage(
@@ -78,24 +94,37 @@ class AlbumImageController extends Controller
                     "albums/{$album->id}"
                 );
                 
-                Log::info('Image stored at path:', ['path' => $result['path']]);
+                Log::info('AlbumImageController@store - Image stored:', $result);
 
-                $uploadedImages[] = $album->images()->create([
+                $albumImage = $album->images()->create([
+                    'id' => Str::uuid(),
                     'path' => $result['url'],
                     'order' => ++$lastOrder
                 ]);
+                
+                Log::info('AlbumImageController@store - AlbumImage created:', ['id' => $albumImage->id]);
+                
+                $uploadedImages[] = $albumImage;
             }
 
-            return response()->json($uploadedImages);
-        } catch (\Exception $e) {
-            Log::error('Error in AlbumImageController@store:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            Log::info('AlbumImageController@store - All images processed successfully', [
+                'count' => count($uploadedImages)
             ]);
 
-            return response()->json([
-                'message' => 'Error uploading images: ' . $e->getMessage()
-            ], 500);
+            // Return Inertia response with updated album data
+            return back()->with([
+                'message' => 'Images uploaded successfully',
+                'images' => $uploadedImages
+            ]);
+        } catch (\Exception $e) {
+            Log::error('AlbumImageController@store - Error occurred:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return back()->with('error', 'Error uploading images: ' . $e->getMessage());
         }
     }
 
@@ -170,10 +199,12 @@ class AlbumImageController extends Controller
             // Delete the image record from the database
             $albumImage->delete();
 
-            return response()->json(['message' => 'Image deleted successfully']);
+            return back()->with('message', 'Item deleted successfully');
         } catch (\Exception $e) {
             Log::error('Failed to delete image: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to delete image: ' . $e->getMessage()], 500);
+            return back()->withErrors([
+                'message' => 'Failed to delete item: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -192,35 +223,58 @@ class AlbumImageController extends Controller
         );
     }
 
-    public function reorder(Request $request)
+    public function reorder(Request $request, Album $album = null)
     {
+        // Support both nested and non-nested routes
+        if (!$album && $request->has('album_id')) {
+            $album = Album::findOrFail($request->album_id);
+        }
+        
         $request->validate([
-            'image_id' => 'required|exists:album_images,id',
-            'new_order' => 'required|integer|min:0',
+            'from_id' => 'required|exists:album_images,id',
+            'to_id' => 'required|exists:album_images,id',
         ]);
 
-        $image = AlbumImage::findOrFail($request->image_id);
-        $oldOrder = $image->order;
-        $newOrder = $request->new_order;
+        $fromImage = AlbumImage::findOrFail($request->from_id);
+        $toImage = AlbumImage::findOrFail($request->to_id);
+        
+        // Ensure both images belong to the same album
+        if ($fromImage->album_id !== $toImage->album_id) {
+            return back()->withErrors(['message' => 'Images must belong to the same album']);
+        }
+        
+        // If album is provided via route, ensure it matches
+        if ($album && $fromImage->album_id !== $album->id) {
+            return back()->withErrors(['message' => 'Image does not belong to this album']);
+        }
 
-        DB::transaction(function () use ($image, $oldOrder, $newOrder) {
-            if ($oldOrder > $newOrder) {
-                AlbumImage::where('album_id', $image->album_id)
-                    ->where('order', '>=', $newOrder)
-                    ->where('order', '<', $oldOrder)
-                    ->increment('order');
-            } else {
-                AlbumImage::where('album_id', $image->album_id)
-                    ->where('order', '>', $oldOrder)
-                    ->where('order', '<=', $newOrder)
+        $fromOrder = $fromImage->order;
+        $toOrder = $toImage->order;
+
+        DB::transaction(function () use ($fromImage, $toImage, $fromOrder, $toOrder) {
+            if ($fromOrder < $toOrder) {
+                // Moving down: shift images between from and to positions up
+                AlbumImage::where('album_id', $fromImage->album_id)
+                    ->where('order', '>', $fromOrder)
+                    ->where('order', '<=', $toOrder)
                     ->decrement('order');
+                
+                // Place the moved image at the target position
+                $fromImage->order = $toOrder;
+            } else {
+                // Moving up: shift images between to and from positions down
+                AlbumImage::where('album_id', $fromImage->album_id)
+                    ->where('order', '>=', $toOrder)
+                    ->where('order', '<', $fromOrder)
+                    ->increment('order');
+                
+                // Place the moved image at the target position
+                $fromImage->order = $toOrder;
             }
-
-            $image->order = $newOrder;
-            $image->save();
+            
+            $fromImage->save();
         });
 
-        // Return an Inertia response instead of JSON
         return back()->with('message', 'Image order updated successfully');
     }
 
@@ -270,16 +324,16 @@ class AlbumImageController extends Controller
                 'order' => ++$lastOrder
             ]);
 
-            return response()->json($albumImage);
+            return back()->with('message', 'Video added successfully');
         } catch (\Exception $e) {
             Log::error('Error in AlbumImageController@storeVideo:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json([
+            return back()->withErrors([
                 'message' => 'Error adding video: ' . $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 }

@@ -20,6 +20,7 @@ class Activity extends Model
 
     protected $casts = [
         'properties' => 'array',
+        'user_id' => 'string',
     ];
 
     public function user()

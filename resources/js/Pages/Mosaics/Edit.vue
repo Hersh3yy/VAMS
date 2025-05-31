@@ -27,7 +27,8 @@
                         ...mosaic,
                         items: mosaicItems
                     }"
-                    :onUpdate="handleMosaicUpdate"
+                    :albums="albums"
+                    @update="handleMosaicUpdate"
                 />
             </div>
         </div>
@@ -37,18 +38,21 @@
             <template #title>Select Image</template>
             
             <div class="space-y-6">
-                <div v-for="album in props.albums" :key="album.id" class="space-y-2">
-                    <h3 class="font-medium text-gray-900">{{ album.title }} ({{ album.images.length }} images)</h3>
+                <div v-if="props.albums.length === 0" class="text-center py-4">
+                    <p class="text-gray-500">No albums available. Please create an album first.</p>
+                </div>
+                <div v-else v-for="album in props.albums" :key="album.id" class="space-y-2">
+                    <h3 class="font-medium text-gray-900">{{ album.title }} ({{ album.images?.length || 0 }} images)</h3>
                     <div class="grid grid-cols-3 gap-4">
                         <div 
-                            v-for="image in album.images" 
+                            v-for="image in album.images || []" 
                             :key="image.id"
                             class="relative aspect-square cursor-pointer group"
                             @click="selectImage(image)"
                         >
                             <img 
                                 :src="getImageUrl(image)"
-                                :alt="image.title"
+                                :alt="image.title || undefined"
                                 class="w-full h-full object-cover rounded-lg"
                             />
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
@@ -66,53 +70,16 @@
 import { ref, computed, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import MosaicEditor from '@/Components/MosaicEditor.vue';
-import Modal from '@/Components/Modal.vue';
+import MosaicEditor from '@/Components/mosaics/MosaicEditor.vue';
+import Modal from '@/Components/general/Modal.vue';
 import axios from 'axios';
-
-interface MosaicItem {
-    id: string;
-    type: 'image' | 'text' | 'album';
-    column_index: number;
-    order: number;
-    content?: string | string[];
-    album_id?: string;
-    album?: any;
-    images?: any[];
-    properties?: {
-        src?: string;
-        alt?: string;
-        caption?: string;
-        size?: 'fill' | 'cover' | 'contain';
-        text?: {
-            content: string;
-            color: string;
-        };
-        link?: {
-            url: string;
-        };
-    };
-}
-
-interface Mosaic {
-    id: string;
-    title: string;
-    columns: number;
-    items: MosaicItem[];
-}
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
+import type { Mosaic, MosaicItem, MosaicItemProperties, Album, AlbumImage } from '@/types/mosaic';
 
 const props = defineProps<{
     mosaic: Mosaic;
-    albums: {
-        id: string;
-        title: string;
-        images: {
-            id: string;
-            title: string;
-            thumbnail_url: string;
-            url: string;
-        }[];
-    }[];
+    albums: Album[];
 }>();
 
 const mosaicItems = ref<MosaicItem[]>(props.mosaic.items || []);
@@ -120,11 +87,7 @@ const showImageModal = ref(false);
 const selectedItemId = ref<string | null>(null);
 const hasChanges = ref(false);
 
-const availableImages = computed(() => {
-    return props.albums.flatMap(album => album.images);
-});
-
-const handleMosaicUpdate = (updatedMosaic: { columns: number; items: MosaicItem[] }) => {
+const handleMosaicUpdate = (updatedMosaic: Mosaic) => {
     mosaicItems.value = updatedMosaic.items;
     hasChanges.value = true;
 };
@@ -134,7 +97,7 @@ const openImageSelector = (itemId: string) => {
     showImageModal.value = true;
 };
 
-const selectImage = (image: any) => {
+const selectImage = (image: AlbumImage) => {
     if (!selectedItemId.value) return;
     
     const itemIndex = mosaicItems.value.findIndex(item => item.id === selectedItemId.value);
@@ -145,11 +108,18 @@ const selectImage = (image: any) => {
     
     mosaicItems.value[itemIndex] = {
         ...mosaicItems.value[itemIndex],
-        type: 'image',
+        type: 'media',
         properties: {
-            src: imageUrl,
-            alt: image.title || '',
-            size: 'cover' as const
+            ...mosaicItems.value[itemIndex].properties,
+            media_url: imageUrl,
+            media: {
+                type: 'image',
+                path: imageUrl
+            },
+            title: image.title || '',
+            caption: image.caption || '',
+            show_text: false,
+            has_link: false
         }
     };
 
@@ -157,7 +127,7 @@ const selectImage = (image: any) => {
     showImageModal.value = false;
 };
 
-const getImageUrl = (image: any) => {
+const getImageUrl = (image: AlbumImage) => {
     // Try to get thumbnail URL from properties
     if (image.properties) {
         const props = typeof image.properties === 'string' 
@@ -178,6 +148,22 @@ const saveMosaic = () => {
         items: mosaicItems.value
     }).then(() => {
         hasChanges.value = false;
+        toast.success('Mosaic saved successfully', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
+    }).catch((error) => {
+        console.error('Error saving mosaic:', error);
+        toast.error('Failed to save mosaic', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
     });
 };
 

@@ -77,8 +77,8 @@
 
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
+import Dropdown from '@/Components/general/Dropdown.vue';
+import DropdownLink from '@/Components/general/DropdownLink.vue';
 
 defineProps<{
     auth: {

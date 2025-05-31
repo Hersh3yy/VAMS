@@ -1,34 +1,83 @@
 export interface Album {
-    id: number;
+    id: string;
     title: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
     cover_image_path?: string;
+    images?: AlbumImage[];
+}
+
+export interface AlbumImage {
+    id: string;
+    album_id: string;
+    path: string;
+    title?: string | null;
+    caption?: string | null;
+    alt_text?: string | null;
+    author?: string | null;
+    date_created?: string | null;
+    location?: string | null;
+    tags?: string | null;
+    properties?: {
+        type?: 'video';
+        video_url?: string;
+        thumbnail_url?: string;
+        [key: string]: any;
+    } | null;
+    order: number;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Mosaic {
-    id: number;
+    id: string;
     title: string;
-    description: string;
+    description?: string;
+    columns: number;
+    display_settings?: any;
     created_at: string;
     updated_at: string;
     items: MosaicItem[];
 }
 
 export interface MosaicItem {
-    id: number;
-    type: 'album' | 'media' | 'color';
-    properties: MosaicItemProperties;
+    id: string;
+    type: 'album' | 'media' | 'color' | 'text' | 'video';
+    column_index: number;
     order: number;
-    created_at: string;
-    updated_at: string;
+    content?: string | string[];
+    album_id?: string;
+    album?: Album;
+    properties?: MosaicItemProperties;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface MosaicItemProperties {
+    // Common properties
+    aspect_ratio?: string;
+    height?: number;
+    title?: string;
+    caption?: string;
+    has_link?: boolean;
+    link_url?: string;
+
     // Album properties
-    album_id?: number | null;
+    album_id?: string | null;
     album?: {
-        id: number;
+        id: string;
         title: string;
         cover_image_path?: string;
+        images?: AlbumImage[];
+    };
+    selected_image?: {
+        id: string;
+        path: string;
+        title?: string | null;
+        caption?: string | null;
+        properties?: any;
     };
 
     // Media properties
@@ -36,24 +85,20 @@ export interface MosaicItemProperties {
     media?: {
         type: 'image' | 'video';
         path: string;
+        position?: string;
+        scale?: number;
     };
 
     // Color properties
     color?: string;
 
     // Text overlay properties
-    show_text: boolean;
+    show_text?: boolean;
     text?: {
-        enabled: boolean;
+        enabled?: boolean;
         content: string;
         color: string;
     };
-
-    // Common properties
-    title: string;
-    caption: string;
-    has_link: boolean;
-    link_url: string;
 }
 
 export interface MosaicDisplaySettings {

@@ -38,16 +38,12 @@ class MosaicService
     /**
      * Get a specific mosaic with its items
      *
-     * @param int|Mosaic $mosaic Mosaic ID or Mosaic instance
+     * @param Mosaic $mosaic Mosaic instance
      * @param bool $forApi Whether this is for API (true) or web (false)
      * @return Mosaic|null
      */
     public function getMosaic(Mosaic $mosaic, bool $forApi = false): ?Mosaic
     {
-        if (is_numeric($mosaic)) {
-            $mosaic = Mosaic::findOrFail($mosaic);
-        }
-        
         if (!$mosaic) {
             return null;
         }
@@ -248,6 +244,21 @@ class MosaicService
             ->orderBy('updated_at', 'desc')
             ->take($limit)
             ->get();
+    }
+    
+    /**
+     * Get a mosaic with its items
+     *
+     * @param Mosaic $mosaic
+     * @param bool $forApi
+     * @return Mosaic
+     */
+    public function getMosaicWithItems(Mosaic $mosaic, bool $forApi = false): Mosaic
+    {
+        return $mosaic->load(['items' => function ($query) {
+            $query->orderBy('column_index')
+                  ->orderBy('order');
+        }]);
     }
     
     /**

@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Modal from './Modal.vue';
+import Modal from '../general/Modal.vue';
 
 const props = defineProps<{
     modelValue: boolean;

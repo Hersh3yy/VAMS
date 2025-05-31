@@ -1,9 +1,13 @@
 <template>
     <div
-        class="relative aspect-square rounded-lg overflow-hidden cursor-pointer group"
+        class="relative rounded-lg overflow-hidden cursor-pointer group"
         :class="{
             'opacity-50 ring-4 ring-blue-500': isDragging && draggedItem?.id === item.id,
             'ring-4 ring-green-500': isDragOver && draggedItem?.id !== item.id
+        }"
+        :style="{
+            aspectRatio: item.properties?.aspect_ratio || '1/1',
+            height: item.properties?.height || 'auto'
         }"
         draggable="true"
         @click="$emit('click', item)"
@@ -17,26 +21,28 @@
         <!-- Album Item -->
         <template v-if="item.type === 'album'">
             <img 
-                :src="item.properties.album?.cover_image_path || '/placeholder.jpg'" 
-                :alt="item.properties.album?.title"
+                :src="item.properties?.album?.cover_image_path || '/placeholder.jpg'"
+                :alt="item.properties?.album?.title || 'Album image'"
                 class="w-full h-full object-cover"
+                :style="getImageStyle()"
             />
             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <h3 class="text-white text-lg font-medium">{{ item.properties.album?.title }}</h3>
+                <h3 class="text-white text-lg font-medium">{{ item.properties?.album?.title }}</h3>
             </div>
         </template>
 
         <!-- Media Item -->
         <template v-else-if="item.type === 'media'">
             <img 
-                v-if="item.properties.media?.type === 'image'"
-                :src="item.properties.media.path" 
-                :alt="item.properties.text?.content"
+                v-if="item.properties?.media?.type === 'image'"
+                :src="item.properties?.media?.path || ''" 
+                :alt="item.properties?.text?.content || ''"
                 class="w-full h-full object-cover"
+                :style="getImageStyle()"
             />
             <video 
                 v-else
-                :src="item.properties.media?.path"
+                :src="item.properties?.media?.path || ''"
                 class="w-full h-full object-cover"
                 controls
             />
@@ -45,18 +51,24 @@
         <!-- Color Item -->
         <template v-else-if="item.type === 'color'">
             <div 
-                class="w-full h-full"
-                :style="{ backgroundColor: item.properties.color }"
-            />
+                class="w-full h-full flex items-center justify-center"
+                :style="{ backgroundColor: item.properties?.color || '#ffffff' }"
+            >
+                <span v-if="item.properties?.text?.enabled" 
+                      class="text-lg font-medium"
+                      :style="{ color: item.properties?.text?.color || '#000000' }">
+                    {{ item.properties?.text?.content }}
+                </span>
+            </div>
         </template>
 
         <!-- Text Overlay -->
         <div 
-            v-if="item.properties.text?.enabled"
+            v-if="item.properties?.text?.enabled"
             class="absolute inset-0 flex items-center justify-center p-4"
-            :style="{ color: item.properties.text.color }"
+            :style="{ color: item.properties?.text?.color || '#000000' }"
         >
-            <p class="text-center">{{ item.properties.text.content }}</p>
+            <p class="text-center">{{ item.properties?.text?.content }}</p>
         </div>
 
         <!-- Delete Button -->
@@ -79,6 +91,13 @@ const props = defineProps<{
     isDragging: boolean;
     isDragOver: boolean;
     draggedItem: MosaicItem | null;
+    settings: {
+        grid_columns: number;
+        gap: number;
+        padding: number;
+        show_titles: boolean;
+        show_captions: boolean;
+    };
 }>();
 
 const emit = defineEmits<{
@@ -109,5 +128,16 @@ const handleDragLeave = () => {
 
 const handleDrop = (event: DragEvent) => {
     emit('drop', event, props.item);
+};
+
+const getImageStyle = () => {
+    const style: Record<string, string> = {};
+    if (props.item.properties?.media?.position) {
+        style.objectPosition = props.item.properties.media.position;
+    }
+    if (props.item.properties?.media?.scale) {
+        style.transform = `scale(${props.item.properties.media.scale})`;
+    }
+    return style;
 };
 </script> 

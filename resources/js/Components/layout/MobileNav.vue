@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import ResponsiveNavLink from '@/Components/general/ResponsiveNavLink.vue';
 </script>
 
 <template>

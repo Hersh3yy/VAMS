@@ -89,7 +89,7 @@
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <Link :href="route('media.index')" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    <Link :href="route('albums.index')" class="font-medium text-indigo-600 hover:text-indigo-500">
                         View all media
                     </Link>
                 </div>

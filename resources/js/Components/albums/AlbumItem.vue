@@ -2,14 +2,14 @@
     <div
         class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group"
         :class="{
-            'opacity-50 ring-4 ring-blue-500': isDragging && draggedItem?.id === item.id,
-            'ring-4 ring-green-500': isDragOver && draggedItem?.id !== item.id
+            'opacity-50': isDragging && draggedItem?.id === item.id,
+            'ring-2 ring-green-500': isDragOver && draggedItem?.id !== item.id
         }"
         draggable="true"
         @click="$emit('click', item)"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"
-        @dragover.prevent
+        @dragover.prevent="handleDragOver"
         @dragenter.prevent="handleDragEnter"
         @dragleave.prevent="handleDragLeave"
         @drop.prevent="handleDrop"
@@ -24,8 +24,8 @@
         
         <!-- Delete button -->
         <button 
-            @click.stop="$emit('delete', item)" 
-            class="absolute top-2 left-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            @click.stop="handleDelete" 
+            class="absolute top-2 left-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -42,38 +42,68 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { AlbumImage, AlbumVideo } from '@/types/album';
+import type { AlbumImage } from '@/types/album';
 
 const props = defineProps<{
-    item: AlbumImage | AlbumVideo;
+    item: AlbumImage;
     isDragging: boolean;
     isDragOver: boolean;
-    draggedItem: (AlbumImage | AlbumVideo) | null;
+    draggedItem: AlbumImage | null;
 }>();
 
 const emit = defineEmits<{
-    (e: 'click', item: AlbumImage | AlbumVideo): void;
-    (e: 'delete', item: AlbumImage | AlbumVideo): void;
-    (e: 'dragstart', event: DragEvent, item: AlbumImage | AlbumVideo): void;
+    (e: 'click', item: AlbumImage): void;
+    (e: 'delete', item: AlbumImage): void;
+    (e: 'dragstart', event: DragEvent, item: AlbumImage): void;
     (e: 'dragend'): void;
-    (e: 'dragenter', event: DragEvent, item: AlbumImage | AlbumVideo): void;
-    (e: 'dragleave'): void;
-    (e: 'drop', event: DragEvent, item: AlbumImage | AlbumVideo): void;
+    (e: 'dragover', event: DragEvent): void;
+    (e: 'dragenter', event: DragEvent, item: AlbumImage): void;
+    (e: 'dragleave', event: DragEvent): void;
+    (e: 'drop', event: DragEvent, item: AlbumImage): void;
 }>();
 
 const isVideo = computed(() => {
-    return 'embed_url' in props.item;
+    const item = props.item as AlbumImage;
+    return item.properties?.type === 'video' || 
+           item.path?.includes('youtube.com') || 
+           item.path?.includes('youtu.be') || 
+           item.path?.includes('vimeo.com');
 });
 
 const imageSrc = computed(() => {
-    if (isVideo.value) {
-        // For videos, we might want to show a thumbnail
-        return (props.item as AlbumVideo).path;
+    const item = props.item as AlbumImage;
+    if (isVideo.value && item.properties?.thumbnail_url) {
+        // Use thumbnail for videos if available
+        return item.properties.thumbnail_url;
     }
-    return (props.item as AlbumImage).path;
+    return item.path;
 });
 
+const handleDelete = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    emit('delete', props.item);
+};
+
 const handleDragStart = (event: DragEvent) => {
+    if (!event.dataTransfer) return;
+    
+    // Create a drag image that maintains original size
+    const target = event.currentTarget as HTMLElement;
+    const img = target?.querySelector('img') as HTMLImageElement;
+    if (img) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            canvas.width = 150; // Fixed size for consistency
+            canvas.height = 150;
+            ctx.drawImage(img, 0, 0, 150, 150);
+            
+            // Set the drag image
+            event.dataTransfer.setDragImage(canvas, 75, 75); // Center the drag image
+        }
+    }
+    
     emit('dragstart', event, props.item);
 };
 
@@ -81,15 +111,34 @@ const handleDragEnd = () => {
     emit('dragend');
 };
 
+const handleDragOver = (event: DragEvent) => {
+    emit('dragover', event);
+};
+
 const handleDragEnter = (event: DragEvent) => {
     emit('dragenter', event, props.item);
 };
 
-const handleDragLeave = () => {
-    emit('dragleave');
+const handleDragLeave = (event: DragEvent) => {
+    emit('dragleave', event);
 };
 
 const handleDrop = (event: DragEvent) => {
     emit('drop', event, props.item);
 };
-</script> 
+</script>
+
+<style scoped>
+.group {
+    transition: all 0.2s ease-in-out;
+}
+
+.group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.ring-2 {
+    transition: all 0.2s ease-in-out;
+}
+</style> 

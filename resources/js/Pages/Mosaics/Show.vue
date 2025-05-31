@@ -13,18 +13,20 @@
                 :settings="settings"
                 @item-click="handleItemClick"
                 @item-delete="handleItemDelete"
-                @item-reorder="handleItemReorder"
+                @reorder="handleItemReorder"
+                draggable="true"
             />
         </div>
 
         <!-- Item Editor Modal -->
-        <MosaicItemEditor
+        <MosaicItemWizard
             v-if="showItemEditor"
+            :show="showItemEditor"
+            :is-editing="!!selectedItem"
             :item="selectedItem"
             :albums="albums"
             @close="closeItemEditor"
             @save="handleSaveItem"
-            @delete="handleDeleteItem"
         />
 
         <!-- Edit Mosaic Modal -->
@@ -160,18 +162,15 @@
 import { ref, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import type { Mosaic, MosaicItem, MosaicDisplaySettings } from '@/types/mosaic';
+import type { Album, AlbumImage } from '@/types/album';
 import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
 import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
-import MosaicItemEditor from '@/Components/mosaics/MosaicItemEditor.vue';
+import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
 import { useMosaic } from '@/composables/mosaics/useMosaic';
 
 const props = defineProps<{
     mosaic: Mosaic;
-    albums: Array<{
-        id: number;
-        title: string;
-        cover_image_path?: string;
-    }>;
+    albums: Album[];
 }>();
 
 const {
@@ -187,7 +186,7 @@ const {
     showConfirmationDialog,
     confirmAction,
     cancelConfirmation,
-} = useMosaic(props.mosaic.id);
+} = useMosaic(String(props.mosaic.id));
 
 const showItemEditor = ref(false);
 const showEditModal = ref(false);
@@ -220,7 +219,7 @@ const handleItemDelete = (item: MosaicItem) => {
     );
 };
 
-const handleItemReorder = (fromId: number, toId: number) => {
+const handleItemReorder = (fromId: string, toId: string) => {
     reorderItems(fromId, toId);
 };
 

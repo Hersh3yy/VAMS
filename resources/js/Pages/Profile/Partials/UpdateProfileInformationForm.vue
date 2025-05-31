@@ -1,123 +1,94 @@
 <script setup lang="ts">
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import ApiKeySection from '@/Components/Profile/ApiKeySection.vue';
-import AlbumDisplaySettings from '@/Components/Profile/AlbumDisplaySettings.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { User } from '@/types';
+import { useForm } from '@inertiajs/vue3';
 
-defineProps<{
-    mustVerifyEmail?: Boolean;
-    status?: String;
+const props = defineProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
 }>();
 
-const user = usePage().props.auth?.user as User;
-
 const form = useForm({
-    name: user.name,
-    email: user.email,
-    album_display_settings: {
-        caption: user.album_display_settings?.caption ?? true,
-        altText: user.album_display_settings?.altText ?? true,
-        dateCreated: user.album_display_settings?.dateCreated ?? true,
-        location: user.album_display_settings?.location ?? true,
-        tags: user.album_display_settings?.tags ?? true,
-        title: user.album_display_settings?.title ?? true,
-        author: user.album_display_settings?.author ?? true
-    },
+    name: '',
+    email: '',
 });
+
+const updateProfileInformation = () => {
+    form.put(route('profile.update'), {
+        preserveScroll: true,
+        onSuccess: () => form.reset(),
+    });
+};
 </script>
 
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Profile Information
-            </h2>
+            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Profile Information</h2>
 
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Update your account's profile information and email address.
             </p>
         </header>
 
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
+        <form @submit.prevent="updateProfileInformation" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="name" value="Name" />
+                <label for="name" class="form-label">
+                    Name
+                </label>
 
-                <TextInput
+                <input
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="form-input"
                     v-model="form.name"
                     required
                     autofocus
                     autocomplete="name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <p v-if="form.errors.name" class="form-error">
+                    {{ form.errors.name }}
+                </p>
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <label for="email" class="form-label">
+                    Email
+                </label>
 
-                <TextInput
+                <input
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="form-input"
                     v-model="form.email"
                     required
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <p v-if="form.errors.email" class="form-error">
+                    {{ form.errors.email }}
+                </p>
             </div>
 
-            <AlbumDisplaySettings v-model="form.album_display_settings" />
-
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800 dark:text-gray-200">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
-                </p>
-
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600 dark:text-green-400"
-                >
+            <div v-if="props.mustVerifyEmail && props.status === 'verification-link-sent'">
+                <div class="mt-2 text-sm font-medium text-green-600 dark:text-green-400">
                     A new verification link has been sent to your email address.
                 </div>
             </div>
 
-            <ApiKeySection />
-
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
-
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
+                <button
+                    class="btn-primary"
+                    :disabled="form.processing"
                 >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600 dark:text-gray-400"
-                    >
-                        Saved.
-                    </p>
-                </Transition>
+                    Save
+                </button>
+
+                <div
+                    v-show="form.recentlySuccessful"
+                    class="text-sm text-gray-600 dark:text-gray-400"
+                >
+                    Saved.
+                </div>
             </div>
         </form>
     </section>

@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, provide } from 'vue';
 import Navbar from '@/Components/layout/Navbar.vue';
 import MobileNav from '@/Components/layout/MobileNav.vue';
 import ThemeStyles from '@/Components/layout/ThemeStyles.vue';
+import ErrorModal from '@/Components/albums/ErrorModal.vue';
 
 const showingNavigationDropdown = ref(false);
+const errorModal = ref<InstanceType<typeof ErrorModal> | null>(null);
+
 const toggleNavigation = () => {
     showingNavigationDropdown.value = !showingNavigationDropdown.value;
 };
+
+const showError = (message: string) => {
+    errorModal.value?.showError(message);
+};
+
+// Provide the showError function to all child components
+provide('showError', showError);
 </script>
 
 <template>
@@ -36,6 +46,9 @@ const toggleNavigation = () => {
             <main>
                 <slot />
             </main>
+
+            <!-- Error Modal -->
+            <ErrorModal ref="errorModal" />
         </div>
     </ThemeStyles>
 </template>

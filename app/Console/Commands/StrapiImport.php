@@ -146,6 +146,7 @@ class StrapiImport extends Command
             [
                 'description' => "Imported from {$url}",
                 'id' => (string) Str::uuid(),
+                'order' => 0,
             ]
         );
         
@@ -406,10 +407,15 @@ class StrapiImport extends Command
             }
             
             $albumImage = $albumModel->images()->create([
+                'id' => (string) Str::uuid(),
                 'path' => $imageUrl,
                 'title' => $media['title'] ?? null,
                 'caption' => $media['caption'] ?? null,
                 'alt_text' => $media['alt_text'] ?? null,
+                'author' => null,
+                'date_created' => null,
+                'location' => null,
+                'tags' => null,
                 'properties' => json_encode($properties),
                 'order' => $media['order'] ?? $mediaCount,
             ]);
@@ -455,13 +461,20 @@ class StrapiImport extends Command
                 }
                 
                 $albumImage = $albumModel->images()->create([
+                    'id' => (string) Str::uuid(),
                     'path' => $publicUrl,
                     'title' => $media['title'] ?? null,
                     'caption' => $media['caption'] ?? null,
                     'alt_text' => $media['alt_text'] ?? null,
+                    'author' => null,
+                    'date_created' => null,
+                    'location' => null,
+                    'tags' => null,
                     'properties' => json_encode($properties),
                     'order' => $media['order'] ?? $mediaCount,
                 ]);
+                
+                $this->info("Created image entry with ID: {$albumImage->id}");
             } catch (\Exception $e) {
                 $this->error("Failed to download image: {$e->getMessage()}");
             }

@@ -11,29 +11,37 @@
             />
         </template>
 
+        <!-- Album Cover Section -->
+        <AlbumCover :album="album" />
+
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <p class="text-gray-600 mb-6">{{ album.description }}</p>
-
                     <div v-if="uploading" class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-2">
+                            <span>Uploading...</span>
+                            <span>{{ uploadProgress }}%</span>
+                        </div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${uploadProgress}%` }"></div>
+                            <div 
+                                class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                                :style="{ width: `${uploadProgress}%` }"
+                            ></div>
                         </div>
                     </div>
 
                     <AlbumGrid
-                        :items="images"
+                        :items="album.images || []"
                         @item-click="openModal"
                         @item-delete="confirmDeleteImage"
-                        @reorder="reorderImages"
+                        @reorder="handleReorder"
                     />
                 </div>
             </div>
         </div>
 
         <!-- Image Modal -->
-        <ImageModal 
+        <ImageModal
             v-if="selectedImage"
             :show="showModal" 
             :image="selectedImage" 
@@ -97,95 +105,37 @@
         </div>
 
         <!-- Add Video Modal -->
-        <div v-if="showAddVideoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform w-full max-w-md">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 class="text-lg font-medium">Add Video</h3>
-                    <button @click="closeAddVideoModal" class="text-gray-500 hover:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="videoUrl">
-                            Video URL (YouTube or Vimeo)
-                        </label>
-                        <input 
-                            id="videoUrl" 
-                            v-model="videoUrl" 
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                            type="text" 
-                            placeholder="https://www.youtube.com/watch?v=..."
-                        >
-                        <p class="text-sm text-gray-500 mt-2">Supported formats: YouTube and Vimeo links</p>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="videoTitle">
-                            Title (optional)
-                        </label>
-                        <input 
-                            id="videoTitle" 
-                            v-model="videoTitle" 
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                            type="text" 
-                            placeholder="Video title"
-                        >
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="videoCaption">
-                            Caption (optional)
-                        </label>
-                        <textarea 
-                            id="videoCaption" 
-                            v-model="videoCaption" 
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                            rows="3"
-                            placeholder="Video description"
-                        ></textarea>
-                    </div>
-                </div>
-                <div class="p-4 border-t flex justify-end">
-                    <button @click="closeAddVideoModal" class="text-gray-600 hover:text-gray-800 mr-4">
-                        Cancel
-                    </button>
-                    <button 
-                        @click="handleAddVideo" 
-                        :disabled="!isValidVideoUrl" 
-                        :class="{'opacity-50 cursor-not-allowed': !isValidVideoUrl}" 
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Add Video
-                    </button>
-                </div>
-            </div>
-        </div>
+        <VideoWizard
+            v-if="showAddVideoModal"
+            :show="showAddVideoModal"
+            @close="closeAddVideoModal"
+            @save="handleAddVideo"
+        />
     </AuthenticatedLayout>
 </template>
 
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import ImageModal from '@/Components/ImageModal.vue';
+import ImageModal from '@/Components/albums/ImageModal.vue';
 import AlbumHeader from '@/Components/albums/AlbumHeader.vue';
 import AlbumGrid from '@/Components/albums/AlbumGrid.vue';
+import AlbumCover from '@/Components/albums/AlbumCover.vue';
+import VideoWizard from '@/Components/albums/VideoWizard.vue';
 import { ref, computed } from 'vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
-import type { AlbumImage, AlbumVideo } from '@/types/album';
+import type { Album, AlbumImage } from '@/types/album';
 
 const props = defineProps<{
-    album: {
-        id: number;
-        title: string;
-        description: string;
-        created_at: string;
-        updated_at: string;
-    };
-    images: (AlbumImage | AlbumVideo)[];
+    album: Album;
     auth: {
         user: {
-            album_display_settings: {
+            id: string;
+            name: string;
+            email: string;
+            logo_url: string | null;
+            is_admin: boolean;
+            album_display_settings?: {
                 grid_columns: number;
                 show_titles: boolean;
                 show_captions: boolean;
@@ -213,7 +163,7 @@ const {
 const showModal = ref(false);
 const selectedImage = ref<AlbumImage | null>(null);
 const showVideoModal = ref(false);
-const selectedVideo = ref<AlbumVideo | null>(null);
+const selectedVideo = ref<AlbumImage | null>(null);
 const videoUrl = ref('');
 const videoTitle = ref('');
 const videoCaption = ref('');
@@ -221,7 +171,21 @@ const showAddVideoModal = ref(false);
 
 const videoEmbedUrl = computed(() => {
     if (!selectedVideo.value) return null;
-    return selectedVideo.value.embed_url;
+    if (selectedVideo.value.properties?.type === 'video') {
+        const url = selectedVideo.value.properties.video_url || selectedVideo.value.path;
+        // Convert to embed URL for YouTube/Vimeo
+        if (url.includes('youtube.com/watch')) {
+            const videoId = url.split('v=')[1]?.split('&')[0];
+            return `https://www.youtube.com/embed/${videoId}`;
+        } else if (url.includes('youtu.be/')) {
+            const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+            return `https://www.youtube.com/embed/${videoId}`;
+        } else if (url.includes('vimeo.com/')) {
+            const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+            return `https://player.vimeo.com/video/${videoId}`;
+        }
+    }
+    return null;
 });
 
 const isValidVideoUrl = computed(() => {
@@ -229,8 +193,8 @@ const isValidVideoUrl = computed(() => {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(videoUrl.value);
 });
 
-const openModal = (image: AlbumImage | AlbumVideo) => {
-    if ('embed_url' in image) {
+const openModal = (image: AlbumImage) => {
+    if (image.properties?.type === 'video') {
         selectedVideo.value = image;
         showVideoModal.value = true;
     } else {
@@ -250,9 +214,10 @@ const closeVideoModal = () => {
 };
 
 const handleImageUpdate = (updatedImage: AlbumImage) => {
-    const index = props.images.findIndex(img => img.id === updatedImage.id);
+    if (!props.album.images) return;
+    const index = props.album.images.findIndex(img => img.id === updatedImage.id);
     if (index !== -1) {
-        props.images[index] = updatedImage;
+        props.album.images[index] = updatedImage;
     }
 };
 
@@ -264,7 +229,7 @@ const confirmDeleteAlbum = () => {
     );
 };
 
-const confirmDeleteImage = (image: AlbumImage | AlbumVideo) => {
+const confirmDeleteImage = (image: AlbumImage) => {
     showConfirmationDialog(
         'Delete Item',
         'Are you sure you want to delete this item? This action cannot be undone.',
@@ -283,10 +248,12 @@ const closeAddVideoModal = () => {
     videoCaption.value = '';
 };
 
-const handleAddVideo = async () => {
-    if (!isValidVideoUrl.value) return;
-    
-    await addVideo(videoUrl.value, videoTitle.value, videoCaption.value);
+const handleAddVideo = async (data: { url: string; title: string; caption: string }) => {
+    await addVideo(data.url, data.title, data.caption);
     closeAddVideoModal();
+};
+
+const handleReorder = (fromId: string, toId: string) => {
+    reorderImages(fromId, toId);
 };
 </script>

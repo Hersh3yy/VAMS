@@ -15,44 +15,44 @@
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <form @submit.prevent="createMosaic" class="p-6">
                         <div class="mb-6">
-                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="title" class="form-label">
                                 Title
                             </label>
                             <input
                                 id="title"
                                 v-model="form.title"
                                 type="text"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="form-input"
                                 required
                             />
-                            <div v-if="form.errors.title" class="mt-1 text-sm text-red-600">
+                            <div v-if="form.errors.title" class="form-error">
                                 {{ form.errors.title }}
                             </div>
                         </div>
 
                         <div class="mb-6">
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="description" class="form-label">
                                 Description (Optional)
                             </label>
                             <textarea
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="form-input"
                             ></textarea>
-                            <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">
+                            <div v-if="form.errors.description" class="form-error">
                                 {{ form.errors.description }}
                             </div>
                         </div>
 
                         <div class="mb-6">
-                            <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="columns" class="form-label">
                                 Number of Columns
                             </label>
                             <select
                                 id="columns"
                                 v-model="form.columns"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="form-input"
                                 required
                             >
                                 <option value="2">2 Columns</option>
@@ -60,7 +60,7 @@
                                 <option value="4">4 Columns</option>
                                 <option value="5">5 Columns</option>
                             </select>
-                            <div v-if="form.errors.columns" class="mt-1 text-sm text-red-600">
+                            <div v-if="form.errors.columns" class="form-error">
                                 {{ form.errors.columns }}
                             </div>
                         </div>
@@ -68,13 +68,13 @@
                         <div class="flex justify-end gap-4">
                             <Link
                                 :href="route('mosaics.index')"
-                                class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                class="btn-danger"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
-                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                class="btn-primary"
                                 :disabled="form.processing"
                             >
                                 Create Mosaic

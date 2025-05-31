@@ -4,12 +4,7 @@ import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import InputError from '@/Components/InputError.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import DangerButton from '@/Components/DangerButton.vue';
-import { ref, reactive, computed } from 'vue';
+import { ref } from 'vue';
 
 interface User {
     id: number;
@@ -29,7 +24,7 @@ interface User {
 }
 
 defineProps<{
-    mustVerifyEmail?: boolean;
+    mustVerifyEmail: boolean;
     status?: string;
     album_display_settings: {
         caption: boolean;
@@ -106,9 +101,7 @@ const updateTheme = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200"
-            >
+            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                 Profile
             </h2>
         </template>
@@ -149,37 +142,37 @@ const updateTheme = () => {
                                         accept="image/*"
                                     >
                                     <div class="flex space-x-3">
-                                        <PrimaryButton 
+                                        <button 
                                             type="button" 
                                             @click="logoInput?.click()"
-                                            class="mt-2"
+                                            class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                                         >
                                             Select Logo
-                                        </PrimaryButton>
-                                        <PrimaryButton 
+                                        </button>
+                                        <button 
                                             v-if="logo" 
                                             type="submit" 
-                                            class="mt-2"
-                                            :class="{ 'opacity-25': form.processing }"
+                                            class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                                             :disabled="form.processing"
                                         >
                                             Upload
-                                        </PrimaryButton>
-                                        <DangerButton
+                                        </button>
+                                        <button
                                             v-if="user.logo_url"
                                             type="button"
                                             @click="removeLogo"
-                                            class="mt-2"
-                                            :class="{ 'opacity-25': removeLogoForm.processing }"
+                                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                                             :disabled="removeLogoForm.processing"
                                         >
                                             Remove Logo
-                                        </DangerButton>
+                                        </button>
                                     </div>
                                     <div v-if="logo" class="mt-2 text-xs text-gray-500">
                                         Selected: {{ logo.name }}
                                     </div>
-                                    <InputError :message="form.errors.logo" class="mt-2" />
+                                    <p v-if="form.errors.logo" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                                        {{ form.errors.logo }}
+                                    </p>
                                 </div>
                             </div>
                         </form>
@@ -199,7 +192,9 @@ const updateTheme = () => {
                         <form @submit.prevent="updateTheme" class="mt-6 space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <InputLabel for="main_color" value="Primary Color" />
+                                    <label for="main_color" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Primary Color
+                                    </label>
                                     <div class="flex items-center space-x-3 mt-2">
                                         <input 
                                             id="main_color" 
@@ -207,17 +202,21 @@ const updateTheme = () => {
                                             type="color" 
                                             class="h-10 w-10 rounded cursor-pointer border-0"
                                         />
-                                        <TextInput
+                                        <input
                                             v-model="themeForm.album_display_settings.main_color"
                                             type="text"
-                                            class="mt-1 block w-full"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                         />
                                     </div>
-                                    <InputError :message="themeForm.errors['album_display_settings.main_color']" class="mt-2" />
+                                    <p v-if="themeForm.errors['album_display_settings.main_color']" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                                        {{ themeForm.errors['album_display_settings.main_color'] }}
+                                    </p>
                                 </div>
                                 
                                 <div>
-                                    <InputLabel for="secondary_color" value="Secondary Color" />
+                                    <label for="secondary_color" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Secondary Color
+                                    </label>
                                     <div class="flex items-center space-x-3 mt-2">
                                         <input 
                                             id="secondary_color" 
@@ -225,28 +224,31 @@ const updateTheme = () => {
                                             type="color" 
                                             class="h-10 w-10 rounded cursor-pointer border-0"
                                         />
-                                        <TextInput
+                                        <input
                                             v-model="themeForm.album_display_settings.secondary_color"
                                             type="text"
-                                            class="mt-1 block w-full"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                         />
                                     </div>
-                                    <InputError :message="themeForm.errors['album_display_settings.secondary_color']" class="mt-2" />
+                                    <p v-if="themeForm.errors['album_display_settings.secondary_color']" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                                        {{ themeForm.errors['album_display_settings.secondary_color'] }}
+                                    </p>
                                 </div>
                             </div>
 
                             <div class="mt-6 flex justify-end">
-                                <PrimaryButton :class="{ 'opacity-25': themeForm.processing }" :disabled="themeForm.processing">
+                                <button
+                                    class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                                    :disabled="themeForm.processing"
+                                >
                                     Save Theme Settings
-                                </PrimaryButton>
+                                </button>
                             </div>
                         </form>
                     </section>
                 </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800"
-                >
+                <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
@@ -255,15 +257,11 @@ const updateTheme = () => {
                     />
                 </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800"
-                >
+                <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
                     <UpdatePasswordForm class="max-w-xl" />
                 </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800"
-                >
+                <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
                     <DeleteUserForm class="max-w-xl" />
                 </div>
             </div>

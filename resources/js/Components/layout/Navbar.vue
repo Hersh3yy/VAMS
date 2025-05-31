@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import NavLink from '@/Components/NavLink.vue';
+import ApplicationLogo from '@/Components/general/ApplicationLogo.vue';
+import NavLink from '@/Components/general/NavLink.vue';
 import UserDropdown from './UserDropdown.vue';
 
 defineProps<{

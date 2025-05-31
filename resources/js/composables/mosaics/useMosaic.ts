@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import type { Mosaic, MosaicItem, MosaicUploadProgress, MosaicConfirmation } from '@/types/mosaic';
 
-export function useMosaic(mosaicId: number) {
+export function useMosaic(mosaicId: string) {
     const uploading = ref(false);
     const uploadProgress = ref(0);
     const showConfirmation = ref(false);
@@ -47,7 +47,7 @@ export function useMosaic(mosaicId: number) {
         }
     };
 
-    const deleteItem = async (itemId: number) => {
+    const deleteItem = async (itemId: string) => {
         try {
             await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]));
         } catch (error) {
@@ -55,7 +55,7 @@ export function useMosaic(mosaicId: number) {
         }
     };
 
-    const reorderItems = async (fromId: number, toId: number) => {
+    const reorderItems = async (fromId: string, toId: string) => {
         try {
             await router.put(route('mosaics.items.reorder', mosaicId), {
                 from_id: fromId,
@@ -79,7 +79,7 @@ export function useMosaic(mosaicId: number) {
         }
     };
 
-    const updateItem = async (itemId: number, updates: Partial<MosaicItem>) => {
+    const updateItem = async (itemId: string, updates: Partial<MosaicItem>) => {
         try {
             const payload = {
                 type: updates.type,

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Album;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
 class AlbumService
@@ -33,24 +34,34 @@ class AlbumService
     /**
      * Get a specific album with its images
      *
-     * @param int|Album $album Album ID or Album instance
+     * @param string|Album $album Album ID (UUID) or Album instance
      * @param bool $forApi Whether this is for API (true) or web (false)
      * @return Album|null
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getAlbum($album, $forApi = false)
     {
-        if (is_numeric($album)) {
-            $album = Album::findOrFail($album);
+        try {
+            if (is_string($album)) {
+                $album = Album::findOrFail($album);
+            }
+            
+            if (!$album) {
+                return null;
+            }
+            
+            // Load all images for this album
+            $album->load('images');
+            
+            return $album;
+        } catch (\Exception $e) {
+            Log::error('Error in AlbumService@getAlbum:', [
+                'album' => $album,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
-        
-        if (!$album) {
-            return null;
-        }
-        
-        // Load all images for this album
-        $album->load('images');
-        
-        return $album;
     }
     
     /**

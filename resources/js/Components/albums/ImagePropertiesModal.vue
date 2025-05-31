@@ -45,7 +45,7 @@
 
 <script setup>
 import { ref, watch, reactive } from 'vue';
-import Modal from '@/Components/Modal.vue'; // Assuming Modal is in this path
+import Modal from '@/Components/general/Modal.vue'; // Assuming Modal is in this path
 
 const props = defineProps({
     show: Boolean,

@@ -159,9 +159,9 @@
                     <SecondaryButton @click="deleteModal = false" class="mr-3">
                         Cancel
                     </SecondaryButton>
-                    <DangerButton @click="deleteUser">
+                    <button @click="deleteUser" class="btn-danger">
                         Delete User
-                    </DangerButton>
+                    </button>
                 </div>
             </div>
         </Modal>
@@ -171,9 +171,8 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import DangerButton from '@/Components/DangerButton.vue';
+import Modal from '@/Components/general/Modal.vue';
+import SecondaryButton from '@/Components/general/SecondaryButton.vue';
 import { ref, computed } from 'vue';
 
 const props = defineProps({

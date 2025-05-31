@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { User, PageProps } from '@/types';
 
 const page = usePage<PageProps>();
+const isLoading = ref(false);
 
 const userThemeStyle = computed(() => {
     const user = page.props.auth?.user as User;
@@ -18,10 +19,46 @@ const userThemeStyle = computed(() => {
         '--secondary-color': secondaryColor,
     };
 });
+
+// Handle dark mode
+onMounted(() => {
+    // Check for saved theme preference or use system preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+});
+
+// Watch for system theme changes
+watch(() => window.matchMedia('(prefers-color-scheme: dark)').matches, (isDark) => {
+    if (!localStorage.getItem('theme')) {
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }
+});
+
+// Watch for theme changes
+watch(() => userThemeStyle.value, () => {
+    isLoading.value = true;
+    // Small delay to allow the DOM to update
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 100);
+});
 </script>
 
 <template>
-    <div :style="userThemeStyle">
+    <div :style="userThemeStyle" class="relative">
+        <div v-if="isLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div class="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-indigo-500"></div>
+        </div>
         <slot />
     </div>
 </template>
@@ -32,6 +69,30 @@ const userThemeStyle = computed(() => {
     --secondary-color: #10B981;
 }
 
+/* Base text colors */
+.text-base {
+    @apply text-gray-900 dark:text-gray-100;
+}
+
+.text-muted {
+    @apply text-gray-600 dark:text-gray-400;
+}
+
+/* Background colors */
+.bg-base {
+    @apply bg-white dark:bg-gray-800;
+}
+
+.bg-muted {
+    @apply bg-gray-100 dark:bg-gray-900;
+}
+
+/* Border colors */
+.border-base {
+    @apply border-gray-200 dark:border-gray-700;
+}
+
+/* Component-specific colors */
 .bg-primary {
     background-color: var(--primary-color) !important;
 }

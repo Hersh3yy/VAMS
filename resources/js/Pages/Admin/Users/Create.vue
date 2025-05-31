@@ -27,60 +27,84 @@
                     <div class="p-6 text-gray-900">
                         <form @submit.prevent="form.post(route('admin.users.store'))">
                             <div class="mb-4">
-                                <InputLabel for="name" value="Name" />
-                                <TextInput
+                                <label for="name" class="form-label">Name</label>
+                                <input
                                     id="name"
                                     type="text"
                                     v-model="form.name"
                                     required
                                     autofocus
-                                    class="mt-1 block w-full"
+                                    class="form-input"
                                 />
-                                <InputError :message="form.errors.name" class="mt-2" />
+                                <div v-if="form.errors.name" class="form-error">
+                                    {{ form.errors.name }}
+                                </div>
                             </div>
 
                             <div class="mb-4">
-                                <InputLabel for="email" value="Email" />
-                                <TextInput
+                                <label for="email" class="form-label">Email</label>
+                                <input
                                     id="email"
                                     type="email"
                                     v-model="form.email"
                                     required
-                                    class="mt-1 block w-full"
+                                    class="form-input"
                                 />
-                                <InputError :message="form.errors.email" class="mt-2" />
+                                <div v-if="form.errors.email" class="form-error">
+                                    {{ form.errors.email }}
+                                </div>
                             </div>
 
                             <div class="mb-4">
-                                <InputLabel for="password" value="Password" />
-                                <TextInput
+                                <label for="password" class="form-label">Password</label>
+                                <input
                                     id="password"
                                     type="password"
                                     v-model="form.password"
                                     required
-                                    class="mt-1 block w-full"
+                                    class="form-input"
                                 />
-                                <InputError :message="form.errors.password" class="mt-2" />
+                                <div v-if="form.errors.password" class="form-error">
+                                    {{ form.errors.password }}
+                                </div>
                             </div>
 
                             <div class="mb-4 flex space-x-4">
                                 <div class="flex items-center">
-                                    <Checkbox id="is_admin" v-model:checked="form.is_admin" />
-                                    <InputLabel for="is_admin" value="Admin User" class="ml-2" />
-                                    <InputError :message="form.errors.is_admin" class="mt-2" />
+                                    <input
+                                        type="checkbox"
+                                        id="is_admin"
+                                        v-model="form.is_admin"
+                                        class="form-checkbox"
+                                    />
+                                    <label for="is_admin" class="form-label ml-2">Admin User</label>
+                                    <div v-if="form.errors.is_admin" class="form-error">
+                                        {{ form.errors.is_admin }}
+                                    </div>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <Checkbox id="is_approved" v-model:checked="form.is_approved" />
-                                    <InputLabel for="is_approved" value="Approved" class="ml-2" />
-                                    <InputError :message="form.errors.is_approved" class="mt-2" />
+                                    <input
+                                        type="checkbox"
+                                        id="is_approved"
+                                        v-model="form.is_approved"
+                                        class="form-checkbox"
+                                    />
+                                    <label for="is_approved" class="form-label ml-2">Approved</label>
+                                    <div v-if="form.errors.is_approved" class="form-error">
+                                        {{ form.errors.is_approved }}
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-end mt-4">
-                                <PrimaryButton :disabled="form.processing" class="ml-4">
+                                <button
+                                    type="submit"
+                                    class="btn-primary"
+                                    :disabled="form.processing"
+                                >
                                     Create User
-                                </PrimaryButton>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -93,11 +117,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import Checkbox from '@/Components/Checkbox.vue';
-import InputError from '@/Components/InputError.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const form = useForm({
     name: '',

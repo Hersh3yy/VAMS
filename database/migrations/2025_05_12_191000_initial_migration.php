@@ -73,13 +73,17 @@ return new class extends Migration
 
         // Mosaic items table
         Schema::create('mosaic_items', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('mosaic_id');
             $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
-            $table->string('type');
-            $table->json('properties');
             $table->integer('column_index')->default(0);
+            $table->string('type'); // 'image', 'video', 'text', 'album'
+            $table->json('content')->nullable(); // For storing image paths, video URLs, text content, etc.
+            $table->uuid('album_id')->nullable(); // Reference to album if type is 'album'
+            $table->foreign('album_id')->references('id')->on('albums')->onDelete('cascade');
+            $table->json('properties')->nullable(); // Display settings, styling, etc.
             $table->integer('order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
         
@@ -194,7 +198,7 @@ return new class extends Migration
             $table->string('type');
             $table->text('description');
             $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
-            $table->morphs('subject');
+            $table->uuidMorphs('subject');
             $table->json('properties')->nullable();
             $table->timestamps();
         });
@@ -211,15 +215,16 @@ return new class extends Migration
         Schema::dropIfExists('media');
         Schema::dropIfExists('mosaic_items');
         Schema::dropIfExists('mosaics');
+        Schema::dropIfExists('album_images');
         Schema::dropIfExists('albums');
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('cache_locks');
-        Schema::dropIfExists('cache');
+        Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('job_batches');
         Schema::dropIfExists('jobs');
         Schema::dropIfExists('failed_jobs');
-        Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('cache_locks');
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('users');
     }
 }; 

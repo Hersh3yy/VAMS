@@ -10,10 +10,16 @@ export default {
         './resources/js/**/*.vue',
     ],
 
+    darkMode: 'class',
+
     theme: {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                primary: 'var(--primary-color)',
+                secondary: 'var(--secondary-color)',
             },
         },
     },

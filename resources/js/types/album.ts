@@ -1,26 +1,41 @@
 export interface Album {
-    id: number;
+    id: string;
     title: string;
     description: string;
     created_at: string;
     updated_at: string;
+    cover_image_path?: string;
+    images?: AlbumImage[];
 }
 
 export interface AlbumImage {
-    id: number;
+    id: string;
+    album_id: string;
     path: string;
-    title?: string;
-    caption?: string;
+    title?: string | null;
+    caption?: string | null;
+    alt_text?: string | null;
+    author?: string | null;
+    date_created?: string | null;
+    location?: string | null;
+    tags?: string | null;
+    properties?: {
+        type?: 'video';
+        video_url?: string;
+        thumbnail_url?: string;
+        [key: string]: any;
+    } | null;
     order: number;
     created_at: string;
     updated_at: string;
 }
 
 export interface AlbumVideo {
-    id: number;
+    id: string;
+    album_id: string;
     path: string;
-    title?: string;
-    caption?: string;
+    title?: string | null;
+    caption?: string | null;
     embed_url: string;
     order: number;
     created_at: string;

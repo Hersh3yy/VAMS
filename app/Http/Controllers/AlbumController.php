@@ -5,21 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
-use App\Http\Controllers\Api\Traits\HandlesAlbumOperations;
+use App\Services\MediaService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AlbumController extends Controller
 {
-    use HandlesAlbumOperations;
-
     protected $albumService;
+    protected $mediaService;
 
-    public function __construct(AlbumService $albumService)
+    public function __construct(AlbumService $albumService, MediaService $mediaService)
     {
         $this->albumService = $albumService;
+        $this->mediaService = $mediaService;
     }
 
     public function index()
@@ -50,7 +52,7 @@ class AlbumController extends Controller
             'description' => $validated['description'],
         ]);
 
-        return redirect()->route('albums.edit', $album);
+        return redirect()->route('albums.show', $album)->with('message', 'Album created successfully');
     }
 
     public function edit(Album $album)
@@ -61,15 +63,32 @@ class AlbumController extends Controller
         }
 
         // Get album with images using service
-        $album = $this->getAlbumWithImages($album, false);
+        $album = $this->albumService->getAlbum($album, false);
 
         return Inertia::render('Albums/Edit', [
             'album' => $album
         ]);
     }
 
+    public function show(Album $album)
+    {
+        // Check if user owns this album
+        if ($album->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Get album with images using service
+        $album = $this->albumService->getAlbum($album, false);
+
+        return Inertia::render('Albums/Show', [
+            'album' => $album
+        ]);
+    }
+
     public function update(Request $request, Album $album)
     {
+        Log::info('AlbumController@update - Incoming request data:', $request->all());
+        
         // Check if user owns this album
         if ($album->user_id !== Auth::id()) {
             abort(403);
@@ -78,35 +97,42 @@ class AlbumController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'images' => 'required|array',
-            'images.*.id' => 'required|string',
-            'images.*.path' => 'required|string',
-            'images.*.caption' => 'nullable|string',
-            'images.*.title' => 'nullable|string',
-            'images.*.order' => 'required|integer',
-            'images.*.properties' => 'nullable|array',
+            'cover_image' => 'nullable|image|max:10240', // 10MB max
         ]);
+        
+        Log::info('AlbumController@update - Validated data:', $validated);
 
         // Update album basic info
         $album->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
         ]);
-
-        // Update images
-        $album->images()->delete(); // Remove old images
-        foreach ($validated['images'] as $image) {
-            $album->images()->create([
-                'id' => $image['id'],
-                'path' => $image['path'],
-                'caption' => $image['caption'] ?? null,
-                'title' => $image['title'] ?? null,
-                'order' => $image['order'],
-                'properties' => $image['properties'] ?? null,
+        
+        // Handle cover image upload if provided
+        if ($request->hasFile('cover_image')) {
+            Log::info('AlbumController@update - Processing cover image');
+            
+            // Delete old cover image if exists
+            if ($album->cover_image_path) {
+                $this->mediaService->deleteFile($album->cover_image_path);
+            }
+            
+            // Store new cover image
+            $result = $this->mediaService->storeFile(
+                $request->file('cover_image'),
+                'albums/' . $album->id
+            );
+            
+            $album->update([
+                'cover_image_path' => $result['path']
             ]);
+            
+            Log::info('AlbumController@update - Cover image stored:', $result);
         }
 
-        return response()->json(['success' => true]);
+        Log::info('AlbumController@update - Album updated successfully');
+        
+        return redirect()->route('albums.show', $album)->with('message', 'Album updated successfully');
     }
 
     public function destroy(Album $album)
