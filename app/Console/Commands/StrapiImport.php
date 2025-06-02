@@ -140,15 +140,18 @@ class StrapiImport extends Command
             throw new \Exception("No data returned from API");
         }
         
-        // Create or update album
-        $album = Album::firstOrCreate(
-            ['user_id' => $user->id, 'title' => $albumName],
-            [
-                'description' => "Imported from {$url}",
-                'id' => (string) Str::uuid(),
-                'order' => 0,
-            ]
-        );
+        // Create or update album without activity logging
+        // We'll use DB transaction to bypass model events temporarily
+        $album = Album::withoutEvents(function () use ($user, $albumName, $url) {
+            return Album::firstOrCreate(
+                ['user_id' => $user->id, 'title' => $albumName],
+                [
+                    'description' => "Imported from {$url}",
+                    'id' => (string) Str::uuid(),
+                    'order' => 0,
+                ]
+            );
+        });
         
         $this->info("Processing album: {$albumName} (ID: {$album->id})");
         $albumDirectory = "albums/{$album->id}";
@@ -170,10 +173,12 @@ class StrapiImport extends Command
             }
         }
         
-        // Update album cover if needed
+        // Update album cover if needed (also without events)
         if ($firstImageObject && !$album->cover_image_path) {
-            $album->cover_image_path = $firstImageObject['url'];
-            $album->save();
+            Album::withoutEvents(function () use ($album, $firstImageObject) {
+                $album->cover_image_path = $firstImageObject['url'];
+                $album->save();
+            });
         }
         
         $this->info("Imported {$mediaCount} items into '{$albumName}'");
@@ -406,19 +411,21 @@ class StrapiImport extends Command
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
             
-            $albumImage = $albumModel->images()->create([
-                'id' => (string) Str::uuid(),
-                'path' => $imageUrl,
-                'title' => $media['title'] ?? null,
-                'caption' => $media['caption'] ?? null,
-                'alt_text' => $media['alt_text'] ?? null,
-                'author' => null,
-                'date_created' => null,
-                'location' => null,
-                'tags' => null,
-                'properties' => json_encode($properties),
-                'order' => $media['order'] ?? $mediaCount,
-            ]);
+            $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $mediaCount, $properties) {
+                return $albumModel->images()->create([
+                    'id' => (string) Str::uuid(),
+                    'path' => $imageUrl,
+                    'title' => $media['title'] ?? null,
+                    'caption' => $media['caption'] ?? null,
+                    'alt_text' => $media['alt_text'] ?? null,
+                    'author' => null,
+                    'date_created' => null,
+                    'location' => null,
+                    'tags' => null,
+                    'properties' => json_encode($properties),
+                    'order' => $media['order'] ?? $mediaCount,
+                ]);
+            });
             
             $this->info("Created video entry with ID: {$albumImage->id}");
             
@@ -460,19 +467,21 @@ class StrapiImport extends Command
                     $properties['year'] = $media['year'];
                 }
                 
-                $albumImage = $albumModel->images()->create([
-                    'id' => (string) Str::uuid(),
-                    'path' => $publicUrl,
-                    'title' => $media['title'] ?? null,
-                    'caption' => $media['caption'] ?? null,
-                    'alt_text' => $media['alt_text'] ?? null,
-                    'author' => null,
-                    'date_created' => null,
-                    'location' => null,
-                    'tags' => null,
-                    'properties' => json_encode($properties),
-                    'order' => $media['order'] ?? $mediaCount,
-                ]);
+                $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $mediaCount, $properties) {
+                    return $albumModel->images()->create([
+                        'id' => (string) Str::uuid(),
+                        'path' => $publicUrl,
+                        'title' => $media['title'] ?? null,
+                        'caption' => $media['caption'] ?? null,
+                        'alt_text' => $media['alt_text'] ?? null,
+                        'author' => null,
+                        'date_created' => null,
+                        'location' => null,
+                        'tags' => null,
+                        'properties' => json_encode($properties),
+                        'order' => $media['order'] ?? $mediaCount,
+                    ]);
+                });
                 
                 $this->info("Created image entry with ID: {$albumImage->id}");
             } catch (\Exception $e) {

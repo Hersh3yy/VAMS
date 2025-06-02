@@ -27,12 +27,24 @@ trait LogsActivity
         return $this->morphMany(Activity::class, 'subject');
     }
 
-    public function logActivity(string $type, string $description, array $properties = []): Activity
+    public function logActivity(string $type, string $description, array $properties = []): ?Activity
     {
+        // Skip logging if we don't have a user context (e.g., console commands)
+        $userId = auth()->id();
+        if (!$userId) {
+            // If running in console, try to get user from model if it has user_id
+            if (isset($this->user_id) && $this->user_id) {
+                $userId = $this->user_id;
+            } else {
+                // Skip logging if no user context available
+                return null;
+            }
+        }
+
         return $this->activities()->create([
             'type' => $type,
             'description' => $description,
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'properties' => $properties,
         ]);
     }
