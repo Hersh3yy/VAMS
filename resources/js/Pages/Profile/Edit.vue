@@ -74,8 +74,8 @@ const removeLogo = () => {
 
 // Theme settings
 const user = usePage().props.auth?.user as unknown as User;
-const defaultMainColor = '#4F46E5'; // Default indigo color
-const defaultSecondaryColor = '#10B981'; // Default emerald color
+const defaultMainColor = '#000000'; // Default black color
+const defaultSecondaryColor = '#EAB308'; // Default gold color
 
 const themeForm = useForm({
     album_display_settings: {

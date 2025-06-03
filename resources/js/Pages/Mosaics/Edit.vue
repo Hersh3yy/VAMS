@@ -144,9 +144,38 @@ const getImageUrl = (image: AlbumImage) => {
 };
 
 const saveMosaic = () => {
+    // Validate items before saving
+    const validationErrors: string[] = [];
+    
+    mosaicItems.value.forEach((item, index) => {
+        if (!item.id) {
+            validationErrors.push(`Item ${index + 1}: Missing ID`);
+        }
+        if (!item.type) {
+            validationErrors.push(`Item ${index + 1}: Missing type`);
+        }
+        if (typeof item.column_index !== 'number') {
+            validationErrors.push(`Item ${index + 1}: Invalid column index`);
+        }
+        if (typeof item.order !== 'number') {
+            validationErrors.push(`Item ${index + 1}: Invalid order`);
+        }
+    });
+    
+    if (validationErrors.length > 0) {
+        toast.error(`Validation failed:\n${validationErrors.join('\n')}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
+        return;
+    }
+
     axios.patch(`/mosaics/${props.mosaic.id}`, {
         items: mosaicItems.value
-    }).then(() => {
+    }).then((response) => {
         hasChanges.value = false;
         toast.success('Mosaic saved successfully', {
             position: "top-right",
@@ -157,9 +186,25 @@ const saveMosaic = () => {
         });
     }).catch((error) => {
         console.error('Error saving mosaic:', error);
-        toast.error('Failed to save mosaic', {
+        
+        // Extract specific error messages from validation
+        let errorMessage = 'Failed to save mosaic';
+        
+        if (error.response?.data?.errors) {
+            const validationErrors = error.response.data.errors;
+            const errorDetails = Object.entries(validationErrors)
+                .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                .join('\n');
+            errorMessage += `\n\nValidation errors:\n${errorDetails}`;
+        } else if (error.response?.data?.message) {
+            errorMessage += `\n\nError: ${error.response.data.message}`;
+        } else if (error.message) {
+            errorMessage += `\n\nError: ${error.message}`;
+        }
+        
+        toast.error(errorMessage, {
             position: "top-right",
-            autoClose: 3000,
+            autoClose: 7000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,

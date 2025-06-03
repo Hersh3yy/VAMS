@@ -11,7 +11,7 @@ defineProps<{
 </script>
 
 <template>
-    <nav class="bg-white border-b border-gray-100">
+    <nav class="bg-black border-b border-yellow-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
@@ -23,7 +23,7 @@ defineProps<{
                                 class="block h-9 w-auto"
                                 alt="Custom Logo"
                             />
-                            <ApplicationLogo v-else class="block h-9 w-auto fill-current text-gray-800" />
+                            <ApplicationLogo v-else class="block h-9 w-auto fill-current text-yellow-500" />
                         </Link>
                     </div>
 
@@ -32,6 +32,7 @@ defineProps<{
                         <NavLink
                             :href="route('albums.index')"
                             :active="route().current('albums.index')"
+                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
                         >
                             Albums
                         </NavLink>
@@ -39,12 +40,14 @@ defineProps<{
                             v-if="$page.props.auth?.user?.is_admin"
                             :href="route('admin.dashboard')"
                             :active="route().current('admin.*')"
+                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
                         >
                             Admin
                         </NavLink>
                         <NavLink
                             :href="route('mosaics.index')"
                             :active="route().current('mosaics.*')"
+                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
                         >
                             Mosaics
                         </NavLink>
@@ -59,7 +62,7 @@ defineProps<{
                 <div class="-me-2 flex items-center sm:hidden">
                     <button
                         @click="toggleNavigation"
-                        class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
+                        class="inline-flex items-center justify-center rounded-md p-2 text-yellow-400 transition duration-150 ease-in-out hover:bg-gray-900 hover:text-yellow-300 focus:bg-gray-900 focus:text-yellow-300 focus:outline-none"
                     >
                         <svg
                             class="h-6 w-6"

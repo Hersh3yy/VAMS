@@ -1,14 +1,33 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
+import AlbumDisplaySettings from '@/Components/Profile/AlbumDisplaySettings.vue';
 
 const props = defineProps<{
     mustVerifyEmail: boolean;
     status?: string;
+    albumDisplaySettings?: {
+        caption: boolean;
+        altText: boolean;
+        dateCreated: boolean;
+        location: boolean;
+        tags: boolean;
+        title: boolean;
+        author: boolean;
+    };
 }>();
 
 const form = useForm({
     name: '',
     email: '',
+    album_display_settings: props.albumDisplaySettings || {
+        caption: true,
+        altText: true,
+        dateCreated: true,
+        location: true,
+        tags: true,
+        title: true,
+        author: true,
+    },
 });
 
 const updateProfileInformation = () => {
@@ -68,6 +87,11 @@ const updateProfileInformation = () => {
                     {{ form.errors.email }}
                 </p>
             </div>
+
+            <!-- Album Display Settings -->
+            <AlbumDisplaySettings 
+                v-model="form.album_display_settings"
+            />
 
             <div v-if="props.mustVerifyEmail && props.status === 'verification-link-sent'">
                 <div class="mt-2 text-sm font-medium text-green-600 dark:text-green-400">

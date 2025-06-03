@@ -17,12 +17,31 @@
                     <div v-for="album in albums" :key="album.id" class="album-card">
                         <Link :href="route('albums.show', album.id)">
                         <div class="image-container">
-                            <img :src="album.cover_image_path || '/placeholder.jpg'" :alt="album.title"
-                                class="cover-image">
+                            <img 
+                                v-if="album.cover_image_path && !imageErrors[album.id]"
+                                :src="album.cover_image_path" 
+                                :alt="album.title"
+                                class="cover-image"
+                                @error="handleImageError(album.id)"
+                            >
+                            <!-- Fallback placeholder -->
+                            <div 
+                                v-else
+                                class="cover-image bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center"
+                            >
+                                <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" stroke-width="2"/>
+                                </svg>
+                            </div>
                         </div>
                         <div class="album-details">
                             <h3 class="album-title">{{ album.title }}</h3>
-                            <p class="album-description">{{ album.description }}</p>
+                            <p class="album-description">{{ album.description || 'No description' }}</p>
+                            <div class="text-sm text-gray-500 mt-2">
+                                {{ album.images?.length || 0 }} {{ album.images?.length === 1 ? 'item' : 'items' }}
+                            </div>
                         </div>
                         </Link>
                     </div>
@@ -33,12 +52,19 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
     albums: Array
 });
+
+const imageErrors = ref({});
+
+const handleImageError = (albumId) => {
+    imageErrors.value[albumId] = true;
+};
 </script>
 
 <style scoped>
@@ -47,11 +73,11 @@ defineProps({
 }
 
 .header-title {
-    @apply font-semibold text-xl text-gray-800 leading-tight;
+    @apply font-semibold text-xl text-gray-800 leading-tight dark:text-yellow-200;
 }
 
 .create-button {
-    @apply px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700;
+    @apply px-4 py-2 bg-yellow-600 text-black rounded-md hover:bg-yellow-500 font-medium;
 }
 
 .content-wrapper {
@@ -67,7 +93,7 @@ defineProps({
 }
 
 .album-card {
-    @apply bg-white overflow-hidden shadow-sm sm:rounded-lg;
+    @apply bg-white overflow-hidden shadow-sm sm:rounded-lg dark:bg-gray-900;
     @apply transition-all duration-300 ease-in-out;
 }
 
@@ -92,10 +118,10 @@ defineProps({
 }
 
 .album-title {
-    @apply text-lg font-semibold;
+    @apply text-lg font-semibold dark:text-yellow-200;
 }
 
 .album-description {
-    @apply text-gray-600 mt-2;
+    @apply text-gray-600 mt-2 dark:text-yellow-400;
 }
 </style>
