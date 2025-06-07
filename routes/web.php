@@ -2,10 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AlbumController;
-use App\Http\Controllers\AlbumImageController;
 use App\Http\Controllers\MosaicController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\MediaController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,54 +11,28 @@ use Inertia\Inertia;
 // Redirect root to dashboard (with auth protection)
 Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
-// Authenticated routes
+// Authenticated routes - FRONTEND PAGES ONLY
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // Albums
-    Route::resource('albums', AlbumController::class);
-
-    // Album Images - nested under albums
-    Route::prefix('albums/{album}/images')->name('albums.images.')->group(function () {
-        Route::post('/', [AlbumImageController::class, 'store'])->name('store');
-        Route::put('/reorder', [AlbumImageController::class, 'reorder'])->name('reorder');
-        Route::post('/store-video', [AlbumImageController::class, 'storeVideo'])->name('store-video');
-        Route::get('/{albumImage}', [AlbumImageController::class, 'show'])->name('show');
-        Route::put('/{albumImage}', [AlbumImageController::class, 'update'])->name('update');
-        Route::delete('/{albumImage}', [AlbumImageController::class, 'destroy'])->name('destroy');
-    });
+    // Album Frontend Pages
+    Route::get('/albums', [AlbumController::class, 'index'])->name('albums.index');
+    Route::get('/albums/create', [AlbumController::class, 'create'])->name('albums.create');
+    Route::get('/albums/{album}', [AlbumController::class, 'show'])->name('albums.show');
+    Route::get('/albums/{album}/edit', [AlbumController::class, 'edit'])->name('albums.edit');
     
-    // Legacy album-images routes for backward compatibility
-    Route::prefix('album-images')->name('album-images.')->group(function () {
-        Route::post('/', [AlbumImageController::class, 'store'])->name('store');
-        Route::post('/reorder', [AlbumImageController::class, 'reorder'])->name('reorder');
-        Route::post('/store-video', [AlbumImageController::class, 'storeVideo'])->name('store-video');
-        Route::get('/{albumImage}', [AlbumImageController::class, 'show'])->name('show');
-        Route::put('/{albumImage}', [AlbumImageController::class, 'update'])->name('update');
-        Route::delete('/{albumImage}', [AlbumImageController::class, 'destroy'])->name('destroy');
-    });
-    
-    // Mosaics
-    Route::resource('mosaics', MosaicController::class);
-    Route::prefix('mosaics')->name('mosaics.')->group(function () {
-        Route::post('/{mosaic}/items', [MosaicController::class, 'storeItem'])->name('items.store');
-        Route::put('/{mosaic}/items/{item}', [MosaicController::class, 'updateItem'])->name('items.update');
-        Route::delete('/{mosaic}/items/{item}', [MosaicController::class, 'destroyItem'])->name('items.destroy');
-        Route::post('/{mosaic}/items/reorder', [MosaicController::class, 'reorderItems'])->name('items.reorder');
-        Route::post('/{mosaic}/items/{item}/split', [MosaicController::class, 'split'])->name('items.split');
-        Route::post('/{mosaic}/media', [MosaicController::class, 'storeMedia'])->name('media.store');
-        Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
-    });
+    // Mosaic Frontend Pages  
+    Route::get('/mosaics', [MosaicController::class, 'index'])->name('mosaics.index');
+    Route::get('/mosaics/create', [MosaicController::class, 'create'])->name('mosaics.create');
+    Route::get('/mosaics/{mosaic}', [MosaicController::class, 'show'])->name('mosaics.show');
+    Route::get('/mosaics/{mosaic}/edit', [MosaicController::class, 'edit'])->name('mosaics.edit');
 
-    // Profile
+    // Profile Frontend Pages
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Profile routes
+// Profile routes (these can stay as they are minimal)
 Route::middleware('auth')->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
         

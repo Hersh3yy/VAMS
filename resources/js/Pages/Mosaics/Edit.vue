@@ -22,13 +22,14 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <MosaicEditor
+                <SimpleMosaicEditor
                     :mosaic="{
                         ...mosaic,
                         items: mosaicItems
                     }"
                     :albums="albums"
                     @update="handleMosaicUpdate"
+                    @save="saveMosaic"
                 />
             </div>
         </div>
@@ -70,7 +71,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import MosaicEditor from '@/Components/mosaics/MosaicEditor.vue';
+import SimpleMosaicEditor from '@/Components/mosaics/SimpleMosaicEditor.vue';
 import Modal from '@/Components/general/Modal.vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';

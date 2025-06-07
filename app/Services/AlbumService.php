@@ -181,4 +181,77 @@ class AlbumService
             ->take($limit)
             ->get();
     }
+
+    /**
+     * Format album data with user display settings
+     *
+     * @param Album $album
+     * @param array|null $userSettings
+     * @return array
+     */
+    public function formatAlbumWithUserSettings($album, $userSettings = null)
+    {
+        $settings = $userSettings ?? [
+            'caption' => true,
+            'altText' => true,
+            'dateCreated' => true,
+            'location' => true,
+            'tags' => true,
+            'title' => true,
+            'author' => true,
+            'main_color' => '#4F46E5',
+            'secondary_color' => '#10B981',
+        ];
+
+        $images = $album->images()->orderBy('order')->get()->map(function ($image) use ($settings) {
+            $properties = is_string($image->properties) ? 
+                json_decode($image->properties, true) : 
+                $image->properties;
+
+            $formattedImage = [
+                'id' => $image->id,
+                'url' => $image->path,
+                'order' => $image->order ?? 0,
+            ];
+
+            // Add fields based on user settings
+            if ($settings['title'] ?? false) {
+                $formattedImage['title'] = $image->title ?? '';
+            }
+            if ($settings['caption'] ?? false) {
+                $formattedImage['caption'] = $image->caption ?? '';
+            }
+            if ($settings['altText'] ?? false) {
+                $formattedImage['alt_text'] = $image->title ?? $image->caption ?? '';
+            }
+            if ($settings['dateCreated'] ?? false) {
+                $formattedImage['date_created'] = $image->created_at->toISOString();
+            }
+            if ($settings['location'] ?? false) {
+                $formattedImage['location'] = $properties['location'] ?? null;
+            }
+            if ($settings['tags'] ?? false) {
+                $formattedImage['tags'] = $properties['tags'] ?? [];
+            }
+            if ($settings['author'] ?? false) {
+                $formattedImage['author'] = $properties['author'] ?? $album->user->name ?? '';
+            }
+
+            return $formattedImage;
+        });
+
+        return [
+            'id' => $album->id,
+            'title' => $album->title,
+            'description' => $album->description,
+            'created_at' => $album->created_at->toISOString(),
+            'updated_at' => $album->updated_at->toISOString(),
+            'images' => $images,
+            'images_count' => $images->count(),
+            'display_settings' => [
+                'main_color' => $settings['main_color'] ?? '#4F46E5',
+                'secondary_color' => $settings['secondary_color'] ?? '#10B981',
+            ],
+        ];
+    }
 }
