@@ -10,20 +10,11 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Public welcome page for guests
-Route::get('/welcome', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Redirect root to dashboard (with auth protection)
+Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // Authenticated routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard (homepage)
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
     // Albums
     Route::resource('albums', AlbumController::class);

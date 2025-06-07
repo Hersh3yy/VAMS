@@ -1,31 +1,30 @@
 <template>
-    <div class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform w-full max-w-4xl">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-lg font-medium">Add Video</h3>
-                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+    <div class="modal-backdrop">
+        <div class="modal-content max-w-4xl">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Video</h3>
+                <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-2">
+                    ×
                 </button>
             </div>
 
-            <div class="p-6">
+            <div class="modal-body">
                 <!-- Step 1: Video URL -->
                 <div v-if="currentStep === 1" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Video URL</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Video URL</label>
                         <input 
                             type="text"
                             v-model="videoUrl"
                             placeholder="Enter YouTube or Vimeo URL"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
+                            @input="fetchThumbnail"
                         />
-                        <p class="mt-2 text-sm text-gray-500">Supported formats: YouTube and Vimeo links</p>
+                        <p class="mt-2 text-sm text-gray-500 dark:text-yellow-400">Supported formats: YouTube and Vimeo links</p>
                     </div>
 
                     <div v-if="thumbnailUrl" class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700">Video Thumbnail</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Video Thumbnail</label>
                         <img :src="thumbnailUrl" alt="Video thumbnail" class="mt-2 w-full max-w-md rounded-lg" />
                     </div>
                 </div>
@@ -33,46 +32,46 @@
                 <!-- Step 2: Video Details -->
                 <div v-if="currentStep === 2" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Title</label>
                         <input 
                             type="text"
                             v-model="title"
                             placeholder="Enter video title"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
                         />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Caption</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Caption</label>
                         <textarea
                             v-model="caption"
                             rows="3"
                             placeholder="Enter video description"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
                         ></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- Navigation -->
-            <div class="p-4 border-t flex justify-between">
+            <div class="modal-footer">
                 <button 
                     v-if="currentStep > 1"
                     @click="previousStep"
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    class="btn-secondary"
                 >
                     Back
                 </button>
                 <div class="flex space-x-4">
                     <button 
                         @click="$emit('close')"
-                        class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                        class="btn-secondary"
                     >
                         Cancel
                     </button>
                     <button 
                         @click="nextStep"
-                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                        class="btn-primary"
                         :disabled="!canProceed"
                     >
                         {{ isLastStep ? 'Add Video' : 'Next' }}
@@ -85,7 +84,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import axios from 'axios';
 
 const props = defineProps<{
     show: boolean;
@@ -93,7 +91,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'close'): void;
-    (e: 'save', data: { url: string; title: string; caption: string }): void;
+    (e: 'save', data: { url: string; title: string; caption: string; thumbnail_url?: string }): void;
 }>();
 
 const currentStep = ref(1);
@@ -115,26 +113,45 @@ const isValidVideoUrl = (url: string): boolean => {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(url);
 };
 
-const fetchThumbnail = async () => {
-    if (!isValidVideoUrl(videoUrl.value)) return;
+const getVideoThumbnailUrl = (url: string): string | null => {
+    // YouTube patterns
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    if (youtubeMatch) {
+        return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
+    }
     
-    try {
-        const response = await axios.post('/api/video-thumbnail', { url: videoUrl.value });
-        thumbnailUrl.value = response.data.thumbnail_url;
-    } catch (error) {
-        console.error('Failed to fetch thumbnail:', error);
+    // Vimeo patterns
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+        // For Vimeo, we'll need to use their API, but for now, return a placeholder
+        // In a real implementation, you'd fetch from Vimeo's API
+        return `https://vumbnail.com/${vimeoMatch[1]}.jpg`;
+    }
+    
+    return null;
+};
+
+const fetchThumbnail = () => {
+    if (!isValidVideoUrl(videoUrl.value)) {
+        thumbnailUrl.value = '';
+        return;
+    }
+    
+    const thumbnail = getVideoThumbnailUrl(videoUrl.value);
+    if (thumbnail) {
+        thumbnailUrl.value = thumbnail;
     }
 };
 
-const nextStep = async () => {
+const nextStep = () => {
     if (currentStep.value === 1) {
-        await fetchThumbnail();
         currentStep.value = 2;
     } else {
         emit('save', {
             url: videoUrl.value,
             title: title.value,
-            caption: caption.value
+            caption: caption.value,
+            thumbnail_url: thumbnailUrl.value
         });
     }
 };

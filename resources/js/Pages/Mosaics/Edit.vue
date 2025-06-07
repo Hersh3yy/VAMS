@@ -4,13 +4,13 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">
+                <h2 class="page-title">
                     {{ mosaic.title }}
                 </h2>
                 <div class="flex gap-4">
                     <button 
                         @click="saveMosaic" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        class="btn-primary"
                         :class="{ 'opacity-50': !hasChanges }"
                         :disabled="!hasChanges"
                     >

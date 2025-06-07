@@ -164,7 +164,7 @@
                     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-x-1">
                         <button 
                             @click.stop="openItemEditor(item)" 
-                            class="bg-blue-600 text-white rounded-full p-1.5 shadow-lg hover:bg-blue-700 transition-colors"
+                            class="bg-secondary text-black rounded-full p-1.5 shadow-lg hover:brightness-90 transition-colors"
                             title="Edit item"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +186,7 @@
                 <!-- Add Item Button -->
                 <button 
                     @click="openAddItemModal(columnIndex - 1)"
-                    class="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-500 hover:text-indigo-500 hover:bg-indigo-50 transition-all duration-200 group"
+                    class="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-secondary hover:text-secondary hover:bg-secondary hover:bg-opacity-10 transition-all duration-200 group"
                 >
                     <div class="flex flex-col items-center justify-center">
                         <svg class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">

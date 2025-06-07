@@ -49,7 +49,7 @@
                         </div>
                         <div class="flex justify-end space-x-3">
                             <button @click="$emit('close')" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
-                            <button @click="saveChanges" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Save Changes</button>
+                            <button @click="saveChanges" class="btn-primary">Save Changes</button>
                         </div>
                     </div>
                 </div>

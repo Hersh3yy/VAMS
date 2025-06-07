@@ -75,14 +75,14 @@ const maxWidthClass = computed(() => {
 <template>
     <Transition name="modal">
         <div v-if="modelValue" class="modal-backdrop" @click="$emit('update:modelValue', false)">
-            <div class="modal-content" @click.stop>
+            <div :class="['modal-content', maxWidthClass]" @click.stop>
                 <div class="modal-header">
                     <h3 class="modal-title">
                         <slot name="title"></slot>
                     </h3>
                     <button 
                         @click="$emit('update:modelValue', false)"
-                        class="close-button"
+                        class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-2"
                     >
                         ×
                     </button>
@@ -160,7 +160,7 @@ const maxWidthClass = computed(() => {
     gap: 0.5rem;
 }
 
-/* Transition animations */
+/* Component-specific transition animations only */
 .modal-enter-active,
 .modal-leave-active {
     transition: opacity 0.3s ease;

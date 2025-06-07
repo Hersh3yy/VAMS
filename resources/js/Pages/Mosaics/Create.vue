@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">
+                <h2 class="page-title">
                     Create New Mosaic
                 </h2>
             </div>

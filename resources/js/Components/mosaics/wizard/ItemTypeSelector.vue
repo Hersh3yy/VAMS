@@ -10,15 +10,13 @@
         <div class="grid grid-cols-3 gap-6">
             <button
                 @click="selectType('image')"
-                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                :class="{ 'border-blue-500 bg-blue-50': selectedType === 'image' }"
+                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary transition-all duration-200"
+                :class="{ 'border-secondary bg-secondary bg-opacity-20': selectedType === 'image' }"
             >
                 <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <svg class="w-8 h-8 text-gray-600 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
-                            <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" stroke-width="2"/>
+                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-secondary group-hover:bg-opacity-20 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600 group-hover:text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <h5 class="text-lg font-medium text-gray-900 mb-2">Image</h5>
@@ -28,14 +26,13 @@
 
             <button
                 @click="selectType('video')"
-                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                :class="{ 'border-blue-500 bg-blue-50': selectedType === 'video' }"
+                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary transition-all duration-200"
+                :class="{ 'border-secondary bg-secondary bg-opacity-20': selectedType === 'video' }"
             >
                 <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <svg class="w-8 h-8 text-gray-600 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="m22 8-6 4 6 4V8Z" stroke-width="2"/>
-                            <rect x="2" y="6" width="14" height="12" rx="2" ry="2" stroke-width="2"/>
+                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-secondary group-hover:bg-opacity-20 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600 group-hover:text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <h5 class="text-lg font-medium text-gray-900 mb-2">Video</h5>
@@ -45,17 +42,13 @@
 
             <button
                 @click="selectType('text')"
-                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                :class="{ 'border-blue-500 bg-blue-50': selectedType === 'text' }"
+                class="group relative bg-white p-6 border-2 border-gray-300 rounded-lg hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary transition-all duration-200"
+                :class="{ 'border-secondary bg-secondary bg-opacity-20': selectedType === 'text' }"
             >
                 <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <svg class="w-8 h-8 text-gray-600 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2"/>
-                            <polyline points="14,2 14,8 20,8" stroke-width="2"/>
-                            <line x1="16" y1="13" x2="8" y2="13" stroke-width="2"/>
-                            <line x1="16" y1="17" x2="8" y2="17" stroke-width="2"/>
-                            <polyline points="10,9 9,9 8,9" stroke-width="2"/>
+                    <div class="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center group-hover:bg-secondary group-hover:bg-opacity-20 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600 group-hover:text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
                         </svg>
                     </div>
                     <h5 class="text-lg font-medium text-gray-900 mb-2">Text</h5>
@@ -68,7 +61,7 @@
             <button
                 v-if="selectedType"
                 @click="confirm"
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="btn-primary inline-flex items-center"
             >
                 Continue
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

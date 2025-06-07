@@ -81,7 +81,7 @@
                     <button @click="confirmDeleteImage(selectedVideo)" class="text-red-600 hover:text-red-800 mr-4">
                         Delete Video
                     </button>
-                    <button @click="closeVideoModal" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <button @click="closeVideoModal" class="btn-primary">
                         Close
                     </button>
                 </div>

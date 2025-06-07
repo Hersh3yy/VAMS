@@ -3,40 +3,40 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">
+            <div class="page-header">
+                <h2 class="page-title">
                     Mosaics
                 </h2>
                 <Link 
                     :href="route('mosaics.create')"
-                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    class="btn-primary"
                 >
                     Create New Mosaic
                 </Link>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div v-if="mosaics.length === 0" class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="content-wrapper">
+            <div class="content-container">
+                <div v-if="mosaics.length === 0" class="empty-state">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Mosaics Yet</h3>
-                    <p class="text-gray-600 mb-4">Create your first mosaic layout to get started.</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2 dark:text-yellow-200">No Mosaics Yet</h3>
+                    <p class="text-gray-600 mb-4 dark:text-yellow-400">Create your first mosaic layout to get started.</p>
                     <Link 
                         :href="route('mosaics.create')"
-                        class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        class="btn-primary"
                     >
                         Create First Mosaic
                     </Link>
                 </div>
 
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-else class="items-grid">
                     <div 
                         v-for="mosaic in mosaics" 
                         :key="mosaic.id"
-                        class="bg-white rounded-lg shadow overflow-hidden group"
+                        class="card group"
                     >
                         <div class="aspect-video bg-gray-100 relative">
                             <!-- Mosaic Preview -->
@@ -51,7 +51,7 @@
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                                 <Link 
                                     :href="route('mosaics.edit', mosaic.id)"
-                                    class="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                                    class="p-2 bg-secondary text-black rounded-full hover:brightness-90"
                                     title="Edit Mosaic"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -60,7 +60,7 @@
                                 </Link>
                                 <button 
                                     @click="deleteMosaic(mosaic)"
-                                    class="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                    class="btn-danger p-2 rounded-full"
                                     title="Delete Mosaic"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -70,9 +70,9 @@
                             </div>
                         </div>
                         
-                        <div class="p-4">
-                            <h3 class="font-medium text-gray-900">{{ mosaic.title }}</h3>
-                            <p class="text-sm text-gray-500 mt-1">{{ mosaic.description || 'No description' }}</p>
+                        <div class="card-content">
+                            <h3 class="font-medium text-gray-900 dark:text-yellow-200">{{ mosaic.title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1 dark:text-yellow-400">{{ mosaic.description || 'No description' }}</p>
                             <div class="mt-4 flex justify-between items-center">
                                 <span class="text-xs text-gray-500">
                                     Created {{ new Date(mosaic.created_at).toLocaleDateString() }}
@@ -111,75 +111,5 @@ const deleteMosaic = (mosaic: any) => {
 </script>
 
 <style scoped>
-.header-container {
-    @apply flex justify-between items-center;
-}
-
-.header-title {
-    @apply font-semibold text-xl text-gray-800 leading-tight;
-}
-
-.create-button {
-    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
-}
-
-.content-wrapper {
-    @apply py-12;
-}
-
-.mosaics-container {
-    @apply max-w-7xl mx-auto sm:px-6 lg:px-8;
-}
-
-.empty-state {
-    @apply text-center py-10 bg-white shadow-sm rounded-lg;
-}
-
-.single-mosaic {
-    @apply w-full max-w-2xl mx-auto;
-}
-
-.mosaics-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
-}
-
-.mosaic-card {
-    @apply bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-lg transition-shadow p-6;
-}
-
-.mosaic-header {
-    @apply flex justify-between items-start;
-}
-
-.mosaic-title {
-    @apply text-lg font-semibold;
-}
-
-.mosaic-description {
-    @apply text-gray-600 mt-1;
-}
-
-.action-buttons {
-    @apply flex gap-2;
-}
-
-.edit-button {
-    @apply text-blue-600 hover:text-blue-800;
-}
-
-.delete-button {
-    @apply text-red-600 hover:text-red-800;
-}
-
-.mosaic-preview {
-    @apply mt-4 grid grid-cols-3 gap-2;
-}
-
-.preview-item {
-    @apply aspect-square bg-gray-100 rounded overflow-hidden;
-}
-
-.preview-image {
-    @apply w-full h-full object-cover;
-}
+/* Component-specific styles only - mosaic preview grid styling */
 </style> 

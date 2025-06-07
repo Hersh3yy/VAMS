@@ -45,15 +45,15 @@
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Quick Actions</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Link :href="route('admin.users.create')" class="bg-green-500 hover:bg-green-600 text-white p-4 rounded text-center">
+                        <Link :href="route('admin.users.create')" class="btn-primary p-4 rounded text-center">
                             Create New User
                         </Link>
                         
-                        <Link :href="route('admin.users.index', { filter: 'unapproved' })" class="bg-orange-500 hover:bg-orange-600 text-white p-4 rounded text-center">
+                        <Link :href="route('admin.users.index', { filter: 'unapproved' })" class="btn-secondary p-4 rounded text-center">
                             View Pending Approvals
                         </Link>
                         
-                        <Link :href="route('dashboard')" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded text-center">
+                        <Link :href="route('dashboard')" class="btn-primary p-4 rounded text-center">
                             Return to User Dashboard
                         </Link>
                     </div>

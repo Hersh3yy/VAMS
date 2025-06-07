@@ -35,8 +35,8 @@
                 <button @click="closeModal" class="px-4 py-2 rounded text-white bg-gray-600 hover:bg-gray-500">
                     Cancel
                 </button>
-                <button @click="saveProperties" class="px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700" :disabled="!localItem">
-                    Save Properties
+                <button @click="saveProperties" class="btn-primary" :disabled="!localItem">
+                    Save Changes
                 </button>
             </div>
         </div>

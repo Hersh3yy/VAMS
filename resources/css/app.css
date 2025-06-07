@@ -8,29 +8,161 @@
     --secondary-color: #EAB308;
 }
 
-/* Custom utility classes using CSS variables */
-.bg-primary {
-    background-color: var(--primary-color) !important;
-}
+@layer components {
+    /* Theme-aware utility classes */
+    .bg-primary {
+        background-color: var(--primary-color);
+    }
 
-.text-primary {
-    color: var(--primary-color) !important;
-}
+    .text-primary {
+        color: var(--primary-color);
+    }
 
-.border-primary {
-    border-color: var(--primary-color) !important;
-}
+    .border-primary {
+        border-color: var(--primary-color);
+    }
 
-.bg-secondary {
-    background-color: var(--secondary-color) !important;
-}
+    .bg-secondary {
+        background-color: var(--secondary-color);
+    }
 
-.text-secondary {
-    color: var(--secondary-color) !important;
-}
+    .text-secondary {
+        color: var(--secondary-color);
+    }
 
-.border-secondary {
-    border-color: var(--secondary-color) !important;
+    .border-secondary {
+        border-color: var(--secondary-color);
+    }
+
+    /* Design System Components */
+    
+    /* Layout */
+    .page-header {
+        @apply flex justify-between items-center;
+    }
+
+    .page-title {
+        @apply font-semibold text-xl text-gray-800 leading-tight dark:text-yellow-200;
+    }
+
+    .content-wrapper {
+        @apply py-12;
+    }
+
+    .content-container {
+        @apply max-w-7xl mx-auto sm:px-6 lg:px-8;
+    }
+
+    /* Grids */
+    .items-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+    }
+
+    /* Cards */
+    .card {
+        @apply bg-white overflow-hidden shadow-sm sm:rounded-lg dark:bg-gray-900;
+        @apply transition-all duration-300 ease-in-out;
+    }
+
+    .card:hover {
+        @apply shadow-lg;
+        box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+        border: 2px solid #eab308;
+    }
+
+    .card-content {
+        @apply p-6;
+    }
+
+    /* Buttons */
+    .btn {
+        @apply px-4 py-2 rounded-md font-medium transition-colors;
+    }
+
+    .btn-primary {
+        @apply btn bg-secondary text-black hover:brightness-90;
+    }
+
+    .btn-secondary {
+        @apply btn bg-gray-600 text-white hover:bg-gray-700;
+    }
+
+    .btn-danger {
+        @apply btn bg-red-600 text-white hover:bg-red-700;
+    }
+
+    /* Image containers */
+    .image-container {
+        @apply relative;
+        aspect-ratio: 16/9;
+    }
+
+    .cover-image {
+        @apply w-full h-full object-cover;
+    }
+
+    /* Modal styles */
+    .modal-backdrop {
+        @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+    }
+
+    .modal-content {
+        @apply bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-gray-900;
+    }
+
+    .modal-header {
+        @apply p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center;
+    }
+
+    .modal-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-yellow-200;
+    }
+
+    .modal-body {
+        @apply p-6;
+    }
+
+    .modal-footer {
+        @apply p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3;
+    }
+
+    /* Empty states */
+    .empty-state {
+        @apply text-center py-10 bg-white shadow-sm rounded-lg dark:bg-gray-900;
+    }
+
+    /* Domain-specific styles */
+    
+    /* Mosaic domain */
+    .mosaic-item {
+        @apply cursor-move transition-transform duration-200;
+    }
+
+    .mosaic-item:hover {
+        @apply transform scale-[1.02];
+    }
+
+    .mosaic-column {
+        @apply min-h-[200px] p-2;
+    }
+
+    .mosaic-column:hover {
+        @apply bg-gray-50 rounded-lg dark:bg-gray-800;
+    }
+
+    /* Album domain */
+    .album-item {
+        @apply aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group transition-all duration-200;
+    }
+
+    .album-item:hover {
+        @apply transform translateY(-2px) shadow-lg;
+    }
+
+    /* Video badge */
+    .video-badge {
+        @apply absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 z-10;
+    }
 }
 
 /* Override specific color utilities to use theme colors */
