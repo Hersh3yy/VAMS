@@ -123,7 +123,7 @@ const getAlbumDisplaySettings = () => ({
 });
 
 const updateTheme = () => {
-    themeForm.patch(route('profile.update'), {
+    themeForm.patch(route('profile.theme.update'), {
         preserveScroll: true,
         onSuccess: () => {
             // Force a page reload to apply theme changes
@@ -146,11 +146,11 @@ const updateTheme = () => {
         <div class="py-12">
             <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
                 <!-- Logo Upload Section -->
-                <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <section>
                         <header>
-                            <h2 class="text-lg font-medium text-gray-900">Custom Logo</h2>
-                            <p class="mt-1 text-sm text-gray-600">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Custom Logo</h2>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 Upload your own logo to display in the navigation bar.
                             </p>
                         </header>
@@ -217,11 +217,11 @@ const updateTheme = () => {
                 </div>
 
                 <!-- Theme Settings Section -->
-                <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <section>
                         <header>
-                            <h2 class="text-lg font-medium text-gray-900">Theme Settings</h2>
-                            <p class="mt-1 text-sm text-gray-600">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Theme Settings</h2>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 Customize the colors of your albums and galleries.
                             </p>
                         </header>
@@ -273,8 +273,95 @@ const updateTheme = () => {
                                 </div>
                             </div>
 
+                            <!-- Album Display Settings -->
+                            <div class="mt-6">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                    Album Image Display Settings
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex items-center">
+                                        <input
+                                            id="title_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.title']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="title_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Title
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="author_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.author']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="author_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Author
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="caption_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.caption']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="caption_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Caption
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="altText_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.altText']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="altText_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Alt Text
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="dateCreated_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.dateCreated']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="dateCreated_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Date Created
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="location_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.location']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="location_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Location
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input
+                                            id="tags_setting"
+                                            type="checkbox"
+                                            v-model="themeForm['album_display_settings.tags']"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        />
+                                        <label for="tags_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                            Show Tags
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="mt-6 flex justify-end">
                                 <button
+                                    type="submit"
                                     class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                                     :disabled="themeForm.processing"
                                 >
@@ -289,7 +376,6 @@ const updateTheme = () => {
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
-                        :album-display-settings="getAlbumDisplaySettings()"
                         class="max-w-xl"
                     />
                 </div>

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -142,22 +143,87 @@ class MosaicController extends Controller
     {
         // Check if user owns this mosaic
         if ($mosaic->user_id !== Auth::id()) {
+            \Log::warning('Unauthorized mosaic update attempt', [
+                'user_id' => Auth::id(),
+                'mosaic_id' => $mosaic->id,
+                'mosaic_owner' => $mosaic->user_id
+            ]);
             abort(403);
         }
 
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'columns' => 'nullable|integer|min:2|max:5',
-            'items' => 'required|array',
-            'items.*.id' => 'required|string',
-            'items.*.column_index' => 'required|integer|min:0',
-            'items.*.type' => 'required|string|in:album,media,color',
-            'items.*.content' => 'nullable',
-            'items.*.album_id' => 'nullable|uuid|exists:albums,id',
-            'items.*.properties' => 'nullable|array',
-            'items.*.order' => 'required|integer',
+        \Log::info('Mosaic update started', [
+            'user_id' => Auth::id(),
+            'mosaic_id' => $mosaic->id,
+            'request_data' => $request->all()
         ]);
+
+        try {
+            $validated = $request->validate([
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'columns' => 'nullable|integer|min:2|max:5',
+                'items' => 'required|array', // Temporarily remove min:1 for debugging
+                'items.*.id' => 'required|string',
+                'items.*.column_index' => 'required|integer|min:0',
+                'items.*.type' => 'required|string|in:album,media,color,text',
+                'items.*.content' => 'nullable',
+                'items.*.album_id' => 'nullable|uuid|exists:albums,id',
+                'items.*.properties' => 'nullable|array',
+                'items.*.order' => 'required|integer|min:0',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Mosaic update validation failed', [
+                'user_id' => Auth::id(),
+                'mosaic_id' => $mosaic->id,
+                'validation_errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            
+            // Return more user-friendly error messages
+            $errors = $e->errors();
+            $userFriendlyMessages = [];
+            
+            if (isset($errors['items'])) {
+                $userFriendlyMessages['items'] = ['Please add at least one item to your mosaic before saving.'];
+            }
+            
+            if (isset($errors['items.*.type'])) {
+                $userFriendlyMessages['items.*.type'] = ['Invalid item type. Please refresh the page and try again.'];
+            }
+            
+            if (isset($errors['items.*.column_index'])) {
+                $userFriendlyMessages['items.*.column_index'] = ['Invalid column position. Please refresh the page and try again.'];
+            }
+            
+            return response()->json([
+                'message' => 'Validation failed. Please check your mosaic items and try again.',
+                'errors' => $userFriendlyMessages ?: $errors,
+                'debug_info' => [
+                    'items_count' => is_array($request->get('items')) ? count($request->get('items')) : 0,
+                    'has_items' => !empty($request->get('items'))
+                ]
+            ], 422);
+        }
+
+        \Log::info('Mosaic update validation passed', [
+            'user_id' => Auth::id(),
+            'mosaic_id' => $mosaic->id,
+            'items_count' => count($validated['items'])
+        ]);
+
+        // Check if items array is empty and handle accordingly
+        if (empty($validated['items'])) {
+            Log::warning('Mosaic update attempted with empty items array', [
+                'user_id' => Auth::id(),
+                'mosaic_id' => $mosaic->id
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'No items to save. Please add at least one item to your mosaic before saving.',
+                'items_count' => 0
+            ], 400);
+        }
 
         // Update mosaic basic info if provided
         $updateData = [];
@@ -176,19 +242,40 @@ class MosaicController extends Controller
 
         // Update items
         $mosaic->items()->delete(); // Remove old items
-        foreach ($validated['items'] as $item) {
-            $mosaic->items()->create([
-                'id' => $item['id'],
-                'column_index' => $item['column_index'],
-                'type' => $item['type'],
-                'content' => $item['content'] ?? null,
-                'album_id' => $item['album_id'] ?? null,
-                'properties' => $item['properties'] ?? null,
-                'order' => $item['order'],
-            ]);
+        foreach ($validated['items'] as $index => $item) {
+            try {
+                $mosaic->items()->create([
+                    'id' => $item['id'],
+                    'column_index' => $item['column_index'],
+                    'type' => $item['type'],
+                    'content' => $item['content'] ?? null,
+                    'album_id' => $item['album_id'] ?? null,
+                    'properties' => $item['properties'] ?? null,
+                    'order' => $item['order'],
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create mosaic item', [
+                    'user_id' => Auth::id(),
+                    'mosaic_id' => $mosaic->id,
+                    'item_index' => $index,
+                    'item_data' => $item,
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
+            }
         }
 
-        return response()->json(['success' => true]);
+        \Log::info('Mosaic update completed successfully', [
+            'user_id' => Auth::id(),
+            'mosaic_id' => $mosaic->id,
+            'items_created' => count($validated['items'])
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mosaic updated successfully',
+            'items_count' => count($validated['items'])
+        ]);
     }
 
     public function destroy(Mosaic $mosaic)
@@ -276,9 +363,9 @@ class MosaicController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:album,media,color',
+            'type' => 'required|string|in:album,media,color,text',
             'properties' => 'required|array',
-            'order' => 'required|integer',
+            'order' => 'required|integer|min:0',
             'column_index' => 'required|integer|min:0',
         ]);
 
@@ -301,9 +388,9 @@ class MosaicController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:album,media,color',
+            'type' => 'required|string|in:album,media,color,text',
             'properties' => 'required|array',
-            'order' => 'required|integer',
+            'order' => 'required|integer|min:0',
             'column_index' => 'required|integer|min:0',
         ]);
 

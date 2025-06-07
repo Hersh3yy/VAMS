@@ -30,19 +30,78 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Select Album
                 </label>
-                <select 
-                    v-model="selectedAlbumId"
-                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                    <option value="">Choose an album...</option>
-                    <option 
+                
+                <!-- Visual Album Grid -->
+                <div v-if="!selectedAlbumId" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
+                    <div 
                         v-for="album in albums" 
-                        :key="album.id" 
-                        :value="album.id"
+                        :key="album.id"
+                        @click="selectedAlbumId = album.id.toString()"
+                        class="relative group cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-500 transition-all duration-200"
                     >
-                        {{ album.title }}
-                    </option>
-                </select>
+                        <div class="aspect-square">
+                            <img 
+                                :src="album.cover_image_path || '/placeholder.jpg'"
+                                :alt="album.title"
+                                class="w-full h-full object-cover"
+                            />
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center">
+                                    <h3 class="text-white text-sm font-medium">{{ album.title }}</h3>
+                                    <p class="text-white text-xs">{{ album.images?.length || 0 }} images</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Selected Album Display -->
+                <div v-if="selectedAlbumId" class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <img 
+                                :src="selectedAlbum?.cover_image_path || '/placeholder.jpg'"
+                                :alt="selectedAlbum?.title"
+                                class="w-12 h-12 object-cover rounded"
+                            />
+                            <div>
+                                <h4 class="font-medium text-gray-900">{{ selectedAlbum?.title }}</h4>
+                                <p class="text-sm text-gray-500">{{ selectedAlbum?.images?.length || 0 }} images</p>
+                            </div>
+                        </div>
+                        <button 
+                            @click="selectedAlbumId = ''; selectedAlbum = null"
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                            Change Album
+                        </button>
+                    </div>
+                    
+                    <!-- Album Images Grid -->
+                    <div v-if="selectedAlbum?.images?.length" class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Select Image from Album</label>
+                        <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                            <div 
+                                v-for="image in selectedAlbum.images" 
+                                :key="image.id"
+                                @click="selectImage(image)"
+                                class="relative aspect-square cursor-pointer border-2 border-gray-200 rounded overflow-hidden hover:border-blue-500 transition-all duration-200"
+                                :class="{ 'border-blue-500 ring-2 ring-blue-200': selectedImageId === image.id }"
+                            >
+                                <img 
+                                    :src="getImageUrl(image)"
+                                    :alt="image.title || `Image ${image.id}`"
+                                    class="w-full h-full object-cover"
+                                />
+                                <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Media Upload -->
@@ -138,7 +197,55 @@
                     Preview
                 </label>
                 <div class="border rounded-lg p-4 bg-gray-50">
-                    <SimpleMosaicItem :item="previewItem" />
+                    <!-- Simple Preview without SimpleMosaicItem -->
+                    <div class="aspect-video bg-white rounded-lg overflow-hidden shadow-sm">
+                        <!-- Album Preview -->
+                        <template v-if="selectedType === 'album' && selectedAlbum">
+                            <img 
+                                :src="selectedImageId && selectedAlbum.images ? 
+                                    getImageUrl(selectedAlbum.images.find(img => img.id === selectedImageId)) : 
+                                    selectedAlbum.cover_image_path || '/placeholder.jpg'"
+                                :alt="selectedImageId ? 
+                                    selectedAlbum.images?.find(img => img.id === selectedImageId)?.title || 'Selected image' : 
+                                    selectedAlbum.title"
+                                class="w-full h-full object-cover"
+                            />
+                        </template>
+                        
+                        <!-- Media Preview -->
+                        <template v-else-if="selectedType === 'media' && uploadedMedia">
+                            <img 
+                                :src="uploadedMedia.preview" 
+                                alt="Preview"
+                                class="w-full h-full object-cover"
+                            />
+                        </template>
+                        
+                        <!-- Color Preview -->
+                        <template v-else-if="selectedType === 'color'">
+                            <div 
+                                class="w-full h-full flex items-center justify-center"
+                                :style="{ backgroundColor: selectedColor }"
+                            >
+                                <span 
+                                    v-if="colorText" 
+                                    class="text-sm font-medium text-center px-2"
+                                    :style="{ color: selectedColor === '#ffffff' ? '#000000' : '#ffffff' }"
+                                >
+                                    {{ colorText }}
+                                </span>
+                            </div>
+                        </template>
+                        
+                        <!-- Text Preview -->
+                        <template v-else-if="selectedType === 'text'">
+                            <div class="w-full h-full flex items-center justify-center bg-gray-50 p-4">
+                                <p class="text-sm text-gray-800 text-center">
+                                    {{ textContent || 'Text content' }}
+                                </p>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
@@ -166,7 +273,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import Modal from '@/Components/general/Modal.vue';
-import SimpleMosaicItem from './SimpleMosaicItem.vue';
 import type { MosaicItem, Album } from '@/types/mosaic';
 
 const props = defineProps<{
@@ -184,6 +290,8 @@ const emit = defineEmits<{
 // Form state
 const selectedType = ref<string>('media');
 const selectedAlbumId = ref<string>('');
+const selectedAlbum = ref<Album | null>(null);
+const selectedImageId = ref<string>('');
 const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string } | null>(null);
 const selectedColor = ref('#3B82F6');
 const colorText = ref('');
@@ -296,17 +404,82 @@ const removeMedia = () => {
     }
 };
 
+const selectImage = (image: any) => {
+    console.log('Image selected:', image);
+    selectedImageId.value = image.id;
+    console.log('Selected image ID set to:', selectedImageId.value);
+};
+
+const getImageUrl = (image: any) => {
+    // Try to get thumbnail URL from properties
+    if (image.properties) {
+        const props = typeof image.properties === 'string' 
+            ? JSON.parse(image.properties) 
+            : image.properties;
+            
+        if (props.thumbnail_url) {
+            return props.thumbnail_url;
+        }
+    }
+    
+    // Fallback to regular path
+    return image.path;
+};
+
 const handleSave = () => {
-    if (!isValid.value) return;
+    console.log('SimpleMosaicItemEditor handleSave called');
+    console.log('Form state:', {
+        selectedType: selectedType.value,
+        selectedAlbumId: selectedAlbumId.value,
+        selectedAlbum: selectedAlbum.value,
+        selectedImageId: selectedImageId.value,
+        isValid: isValid.value
+    });
+    
+    if (!isValid.value) {
+        console.warn('Form is not valid, cannot save');
+        return;
+    }
 
     const item: MosaicItem = {
         id: props.item?.id || Date.now().toString(),
         type: selectedType.value as any,
         column_index: props.item?.column_index || 0,
         order: props.item?.order || 0,
-        properties: previewItem.value.properties
+        properties: {}
     };
 
+    // Handle album selection with image
+    if (selectedType.value === 'album' && selectedAlbum.value) {
+        item.properties = {
+            album: {
+                id: selectedAlbum.value.id.toString(),
+                title: selectedAlbum.value.title,
+                cover_image_path: selectedAlbum.value.cover_image_path,
+                images: selectedAlbum.value.images
+            }
+        };
+        
+        // If a specific image is selected, include it
+        if (selectedImageId.value && selectedAlbum.value.images) {
+            const selectedImage = selectedAlbum.value.images.find(img => img.id === selectedImageId.value);
+            if (selectedImage) {
+                console.log('Including selected image in save:', selectedImage);
+                item.properties.selected_image = {
+                    id: selectedImage.id,
+                    path: selectedImage.path,
+                    title: selectedImage.title || null,
+                    caption: selectedImage.caption || null,
+                    properties: selectedImage.properties
+                };
+            }
+        }
+    } else {
+        // Use the existing preview item properties for other types
+        item.properties = previewItem.value.properties;
+    }
+
+    console.log('Final item to save:', item);
     emit('save', item);
 };
 
@@ -324,20 +497,32 @@ watch(() => props.item, (newItem) => {
             };
         } else if (newItem.type === 'color') {
             selectedColor.value = newItem.properties?.color || '#3B82F6';
-            colorText.value = (typeof newItem.properties?.text === 'string' ? newItem.properties.text : '') || '';
+            colorText.value = (typeof newItem.properties?.text === 'string' ? newItem.properties.text : newItem.properties?.text?.content || '');
         } else if (newItem.type === 'text') {
-            textContent.value = (typeof newItem.properties?.text === 'string' ? newItem.properties.text : '') || '';
+            textContent.value = (typeof newItem.properties?.text === 'string' ? newItem.properties.text : newItem.properties?.text?.content || '');
         }
     } else {
         // Reset form
         selectedType.value = 'media';
         selectedAlbumId.value = '';
+        selectedAlbum.value = null;
+        selectedImageId.value = '';
         uploadedMedia.value = null;
         selectedColor.value = '#3B82F6';
         colorText.value = '';
         textContent.value = '';
     }
 }, { immediate: true });
+
+// Watch for selectedAlbumId changes
+watch(selectedAlbumId, (newAlbumId) => {
+    if (newAlbumId) {
+        selectedAlbum.value = props.albums.find(album => album.id.toString() === newAlbumId) || null;
+    } else {
+        selectedAlbum.value = null;
+        selectedImageId.value = '';
+    }
+});
 </script>
 
 <style scoped>

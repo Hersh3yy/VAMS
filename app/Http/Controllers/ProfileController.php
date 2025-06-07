@@ -69,22 +69,6 @@ class ProfileController extends Controller
             'email' => $validated['email'],
         ]);
 
-        // Update album display settings if provided
-        if (isset($validated['album_display_settings'])) {
-            $settings = $validated['album_display_settings'];
-            $user->album_display_settings = [
-                'caption' => $settings['caption'] ?? true,
-                'altText' => $settings['altText'] ?? false,
-                'dateCreated' => $settings['dateCreated'] ?? false,
-                'location' => $settings['location'] ?? false,
-                'tags' => $settings['tags'] ?? false,
-                'title' => $settings['title'] ?? false,
-                'author' => $settings['author'] ?? false,
-                'main_color' => $settings['main_color'] ?? '#4F46E5',
-                'secondary_color' => $settings['secondary_color'] ?? '#10B981',
-            ];
-        }
-
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
@@ -97,6 +81,44 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Update the user's theme settings only.
+     */
+    public function updateTheme(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'album_display_settings' => ['required', 'array'],
+            'album_display_settings.caption' => ['nullable', 'boolean'],
+            'album_display_settings.altText' => ['nullable', 'boolean'],
+            'album_display_settings.dateCreated' => ['nullable', 'boolean'],
+            'album_display_settings.location' => ['nullable', 'boolean'],
+            'album_display_settings.tags' => ['nullable', 'boolean'],
+            'album_display_settings.title' => ['nullable', 'boolean'],
+            'album_display_settings.author' => ['nullable', 'boolean'],
+            'album_display_settings.main_color' => ['nullable', 'string'],
+            'album_display_settings.secondary_color' => ['nullable', 'string'],
+        ]);
+
+        $user = $request->user();
+        $settings = $request->input('album_display_settings');
+
+        $user->album_display_settings = [
+            'caption' => $settings['caption'] ?? true,
+            'altText' => $settings['altText'] ?? false,
+            'dateCreated' => $settings['dateCreated'] ?? false,
+            'location' => $settings['location'] ?? false,
+            'tags' => $settings['tags'] ?? false,
+            'title' => $settings['title'] ?? false,
+            'author' => $settings['author'] ?? false,
+            'main_color' => $settings['main_color'] ?? '#4F46E5',
+            'secondary_color' => $settings['secondary_color'] ?? '#10B981',
+        ];
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('status', 'theme-updated');
     }
 
     /**

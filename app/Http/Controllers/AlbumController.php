@@ -55,11 +55,18 @@ class AlbumController extends Controller
         return redirect()->route('albums.show', $album)->with('message', 'Album created successfully');
     }
 
-    public function edit(Album $album)
+    public function edit($albumId)
     {
+        // Find album or handle gracefully
+        $album = Album::find($albumId);
+        
+        if (!$album) {
+            return redirect()->route('albums.index')->with('error', 'Album not found. You have been redirected to your albums.');
+        }
+
         // Check if user owns this album
         if ($album->user_id !== Auth::id()) {
-            abort(403);
+            return redirect()->route('albums.index')->with('error', 'You do not have permission to edit this album.');
         }
 
         // Get album with images using service
@@ -70,11 +77,18 @@ class AlbumController extends Controller
         ]);
     }
 
-    public function show(Album $album)
+    public function show($albumId)
     {
+        // Find album or handle gracefully
+        $album = Album::find($albumId);
+        
+        if (!$album) {
+            return redirect()->route('albums.index')->with('error', 'Album not found. You have been redirected to your albums.');
+        }
+
         // Check if user owns this album
         if ($album->user_id !== Auth::id()) {
-            abort(403);
+            return redirect()->route('albums.index')->with('error', 'You do not have permission to view this album.');
         }
 
         // Get album with images using service

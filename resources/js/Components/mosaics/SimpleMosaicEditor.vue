@@ -176,13 +176,26 @@ const deleteItem = (item: MosaicItem) => {
 };
 
 const saveItem = (item: MosaicItem) => {
+    console.log('SaveItem called with:', item);
+    
     const existingIndex = items.value.findIndex(i => i.id === item.id);
     
     if (existingIndex !== -1) {
+        console.log('Updating existing item at index:', existingIndex);
         items.value[existingIndex] = item;
     } else {
+        console.log('Adding new item');
         items.value.push(item);
     }
+    
+    console.log('Items after save:', items.value);
+    console.log('Item column index:', item.column_index);
+    console.log('Items in column', item.column_index, ':', items.value.filter(i => i.column_index === item.column_index));
+    
+    // Force re-initialization of columns
+    initializeColumns();
+    
+    console.log('Column items after init:', columnItems.value);
     
     hasChanges.value = true;
     closeItemEditor();
@@ -195,15 +208,10 @@ const closeItemEditor = () => {
 };
 
 const emitUpdate = () => {
-    // Flatten column arrays back to items
-    items.value = columnItems.value.flatMap((columnItemList, columnIndex) => 
-        columnItemList.map((item, order) => ({
-            ...item,
-            column_index: columnIndex,
-            order
-        }))
-    );
-
+    console.log('EmitUpdate called, current items:', items.value);
+    console.log('Column items:', columnItems.value);
+    
+    // Always emit the current items without complex comparison
     emit('update', {
         ...props.mosaic,
         columns: columnCount.value,
@@ -217,9 +225,12 @@ watch(columnItems, () => {
     emitUpdate();
 }, { deep: true });
 
-// Watch for external changes
+// Watch for external changes with better handling
 watch(() => props.mosaic.items, (newItems) => {
-    items.value = [...(newItems || [])];
+    if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
+        items.value = [...(newItems || [])];
+        initializeColumns();
+    }
 }, { deep: true });
 </script>
 

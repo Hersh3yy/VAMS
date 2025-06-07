@@ -8,13 +8,13 @@
             <!-- Album Item -->
             <template v-if="item.type === 'album' && item.properties?.album">
                 <img 
-                    :src="item.properties.album.cover_image_path || '/placeholder.jpg'"
-                    :alt="item.properties.album.title || 'Album'"
-                    class="w-full h-full object-cover"
+                    :src="item.properties.selected_image?.path || item.properties.album.cover_image_path || '/placeholder.jpg'"
+                    :alt="item.properties.selected_image?.caption || item.properties.selected_image?.title ||item.properties.album.title || 'Album'"
+                    class="w-full h-full object-contain"
                 />
                 <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <h3 class="text-white text-sm font-medium text-center px-2">
-                        {{ item.properties.album.title }}
+                        {{ item.properties.selected_image?.caption || item.properties.selected_image?.title || item.properties.album.title }}
                     </h3>
                 </div>
             </template>
@@ -24,7 +24,7 @@
                 <img 
                     :src="item.properties.media_url" 
                     :alt="item.properties.title || 'Media'"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain"
                 />
             </template>
 
@@ -35,11 +35,11 @@
                     :style="{ backgroundColor: item.properties?.color || '#ffffff' }"
                 >
                     <span 
-                        v-if="item.properties?.text" 
+                        v-if="item.properties?.text?.content || item.properties?.text" 
                         class="text-sm font-medium text-center px-2"
                         :style="{ color: getContrastColor(item.properties?.color || '#ffffff') }"
                     >
-                        {{ item.properties.text }}
+                        {{ typeof item.properties.text === 'string' ? item.properties.text : item.properties.text?.content || '' }}
                     </span>
                 </div>
             </template>
@@ -48,7 +48,7 @@
             <template v-else-if="item.type === 'text'">
                 <div class="w-full h-full flex items-center justify-center bg-gray-50 p-4">
                     <p class="text-sm text-gray-800 text-center">
-                        {{ item.properties?.text || 'Text content' }}
+                        {{ typeof item.properties?.text === 'string' ? item.properties.text : item.properties?.text?.content || 'Text content' }}
                     </p>
                 </div>
             </template>

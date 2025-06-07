@@ -30,10 +30,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 });
 
+// CRUD operations (for named routes needed by frontend)
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Album CRUD operations
+    Route::post('/albums', [AlbumController::class, 'store'])->name('albums.store');
+    Route::patch('/albums/{album}', [AlbumController::class, 'update'])->name('albums.update');
+    Route::delete('/albums/{album}', [AlbumController::class, 'destroy'])->name('albums.destroy');
+    
+    // Album Images CRUD operations  
+    Route::post('/albums/{album}/images', [\App\Http\Controllers\AlbumImageController::class, 'store'])->name('albums.images.store');
+    Route::patch('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'update'])->name('albums.images.update');
+    Route::delete('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'destroy'])->name('albums.images.destroy');
+    Route::patch('/albums/{album}/reorder', [\App\Http\Controllers\AlbumImageController::class, 'reorder'])->name('albums.images.reorder');
+    
+    // Mosaic CRUD operations
+    Route::post('/mosaics', [MosaicController::class, 'store'])->name('mosaics.store');
+    Route::patch('/mosaics/{mosaic}', [MosaicController::class, 'update'])->name('mosaics.update');
+    Route::delete('/mosaics/{mosaic}', [MosaicController::class, 'destroy'])->name('mosaics.destroy');
+});
+
 // Profile routes (these can stay as they are minimal)
 Route::middleware('auth')->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::patch('/theme', [ProfileController::class, 'updateTheme'])->name('theme.update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
         
         // Logo management
