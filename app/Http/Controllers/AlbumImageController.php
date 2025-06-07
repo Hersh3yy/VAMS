@@ -231,48 +231,35 @@ class AlbumImageController extends Controller
         }
         
         $request->validate([
-            'from_id' => 'required|exists:album_images,id',
-            'to_id' => 'required|exists:album_images,id',
+            'from_index' => 'required|integer|min:0',
+            'to_index' => 'required|integer|min:0',
         ]);
 
-        $fromImage = AlbumImage::findOrFail($request->from_id);
-        $toImage = AlbumImage::findOrFail($request->to_id);
+        $fromIndex = $request->from_index;
+        $toIndex = $request->to_index;
         
-        // Ensure both images belong to the same album
-        if ($fromImage->album_id !== $toImage->album_id) {
-            return back()->withErrors(['message' => 'Images must belong to the same album']);
-        }
+        // Get the album ID from the route or request
+        $albumId = $album ? $album->id : $request->album_id;
         
-        // If album is provided via route, ensure it matches
-        if ($album && $fromImage->album_id !== $album->id) {
-            return back()->withErrors(['message' => 'Image does not belong to this album']);
-        }
-
-        $fromOrder = $fromImage->order;
-        $toOrder = $toImage->order;
-
-        DB::transaction(function () use ($fromImage, $toImage, $fromOrder, $toOrder) {
-            if ($fromOrder < $toOrder) {
-                // Moving down: shift images between from and to positions up
-                AlbumImage::where('album_id', $fromImage->album_id)
-                    ->where('order', '>', $fromOrder)
-                    ->where('order', '<=', $toOrder)
-                    ->decrement('order');
-                
-                // Place the moved image at the target position
-                $fromImage->order = $toOrder;
-            } else {
-                // Moving up: shift images between to and from positions down
-                AlbumImage::where('album_id', $fromImage->album_id)
-                    ->where('order', '>=', $toOrder)
-                    ->where('order', '<', $fromOrder)
-                    ->increment('order');
-                
-                // Place the moved image at the target position
-                $fromImage->order = $toOrder;
-            }
+        // Get all images for this album ordered by current order
+        $images = AlbumImage::where('album_id', $albumId)
+            ->orderBy('order')
+            ->get();
             
-            $fromImage->save();
+        if ($fromIndex >= $images->count() || $toIndex >= $images->count()) {
+            return back()->withErrors(['message' => 'Invalid index provided']);
+        }
+
+        // Reorder the collection
+        $item = $images->splice($fromIndex, 1)->first();
+        $images->splice($toIndex, 0, [$item]);
+        
+        // Update the order for all affected images
+        DB::transaction(function () use ($images) {
+            foreach ($images as $index => $image) {
+                $image->order = $index;
+                $image->save();
+            }
         });
 
         return back()->with('message', 'Image order updated successfully');

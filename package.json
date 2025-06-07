@@ -33,7 +33,9 @@
     "dependencies": {
         "@types/uuid": "^10.0.0",
         "@vueuse/core": "^13.1.0",
+        "sortablejs": "^1.15.6",
         "uuid": "^11.1.0",
-        "vue3-toastify": "^0.2.8"
+        "vue3-toastify": "^0.2.8",
+        "vuedraggable": "^2.24.3"
     }
 }

@@ -110,11 +110,11 @@ export function useAlbum(albumId: string) {
         }
     };
 
-    const reorderImages = async (fromId: string, toId: string) => {
+    const reorderImages = async (fromIndex: number, toIndex: number) => {
         try {
             await router.put(route('albums.images.reorder', albumId), {
-                from_id: fromId,
-                to_id: toId,
+                from_index: fromIndex,
+                to_index: toIndex,
             }, {
                 preserveScroll: true,
                 preserveState: false,

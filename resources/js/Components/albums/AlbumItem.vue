@@ -1,18 +1,7 @@
 <template>
     <div
-        class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group"
-        :class="{
-            'opacity-50': isDragging && draggedItem?.id === item.id,
-            'ring-2 ring-green-500': isDragOver && draggedItem?.id !== item.id
-        }"
-        draggable="true"
+        class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer group"
         @click="$emit('click', item)"
-        @dragstart="handleDragStart"
-        @dragend="handleDragEnd"
-        @dragover.prevent="handleDragOver"
-        @dragenter.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave"
-        @drop.prevent="handleDrop"
     >
         <!-- Video badge -->
         <div v-if="isVideo" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 z-10">
@@ -46,20 +35,11 @@ import type { AlbumImage } from '@/types/album';
 
 const props = defineProps<{
     item: AlbumImage;
-    isDragging: boolean;
-    isDragOver: boolean;
-    draggedItem: AlbumImage | null;
 }>();
 
 const emit = defineEmits<{
     (e: 'click', item: AlbumImage): void;
     (e: 'delete', item: AlbumImage): void;
-    (e: 'dragstart', event: DragEvent, item: AlbumImage): void;
-    (e: 'dragend'): void;
-    (e: 'dragover', event: DragEvent): void;
-    (e: 'dragenter', event: DragEvent, item: AlbumImage): void;
-    (e: 'dragleave', event: DragEvent): void;
-    (e: 'drop', event: DragEvent, item: AlbumImage): void;
 }>();
 
 const isVideo = computed(() => {
@@ -84,48 +64,6 @@ const handleDelete = (event: MouseEvent) => {
     event.stopPropagation();
     emit('delete', props.item);
 };
-
-const handleDragStart = (event: DragEvent) => {
-    if (!event.dataTransfer) return;
-    
-    // Create a drag image that maintains original size
-    const target = event.currentTarget as HTMLElement;
-    const img = target?.querySelector('img') as HTMLImageElement;
-    if (img) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            canvas.width = 150; // Fixed size for consistency
-            canvas.height = 150;
-            ctx.drawImage(img, 0, 0, 150, 150);
-            
-            // Set the drag image
-            event.dataTransfer.setDragImage(canvas, 75, 75); // Center the drag image
-        }
-    }
-    
-    emit('dragstart', event, props.item);
-};
-
-const handleDragEnd = () => {
-    emit('dragend');
-};
-
-const handleDragOver = (event: DragEvent) => {
-    emit('dragover', event);
-};
-
-const handleDragEnter = (event: DragEvent) => {
-    emit('dragenter', event, props.item);
-};
-
-const handleDragLeave = (event: DragEvent) => {
-    emit('dragleave', event);
-};
-
-const handleDrop = (event: DragEvent) => {
-    emit('drop', event, props.item);
-};
 </script>
 
 <style scoped>
@@ -136,9 +74,5 @@ const handleDrop = (event: DragEvent) => {
 .group:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.ring-2 {
-    transition: all 0.2s ease-in-out;
 }
 </style> 

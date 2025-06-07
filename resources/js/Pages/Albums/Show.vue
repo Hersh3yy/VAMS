@@ -253,7 +253,7 @@ const handleAddVideo = async (data: { url: string; title: string; caption: strin
     closeAddVideoModal();
 };
 
-const handleReorder = (fromId: string, toId: string) => {
-    reorderImages(fromId, toId);
+const handleReorder = (fromIndex: number, toIndex: number) => {
+    reorderImages(fromIndex, toIndex);
 };
 </script>
