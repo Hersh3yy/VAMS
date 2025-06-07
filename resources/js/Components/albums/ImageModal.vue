@@ -1,52 +1,106 @@
 <!-- components/ImageModal.vue -->
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
-            <div class="fixed inset-0 transition-opacity" @click="$emit('close')">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+    <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-lg font-medium">{{ isVideo ? 'Edit Video' : 'Edit Image' }}</h3>
+                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
-
-            <div class="relative inline-block bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-4xl w-full">
-                <div class="absolute top-0 right-0 pt-4 pr-4 z-50">
-                    <button @click="$emit('close')" class="text-gray-400 hover:text-gray-500">
-                        <span class="sr-only">Close</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
+            <div class="p-6">
                 <div class="bg-white p-6">
-                    <img :src="image.path" :alt="image.title || 'Image'" class="w-full h-auto max-h-[60vh] object-contain">
+                    <!-- Video Display -->
+                    <div v-if="isVideo" class="mb-4">
+                        <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                            <iframe
+                                v-if="videoEmbedUrl"
+                                :src="videoEmbedUrl"
+                                class="w-full h-full"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                            <div v-else class="w-full h-full flex items-center justify-center">
+                                <div class="text-center">
+                                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <p class="text-gray-500">Video Player</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Display -->
+                    <div v-else class="mb-4">
+                        <img :src="image.path" :alt="image.title || 'Image'" class="w-full h-auto max-h-[60vh] object-contain">
+                    </div>
+                    
                     <div class="mt-4 space-y-4">
-                        <div v-if="displaySettings?.title !== false">
-                            <label class="block text-sm font-medium text-gray-700">Title</label>
-                            <input type="text" v-model="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div v-if="displaySettings?.altText !== false">
-                            <label class="block text-sm font-medium text-gray-700">Alt Text</label>
-                            <input type="text" v-model="formData.altText" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div v-if="displaySettings?.caption !== false">
-                            <label class="block text-sm font-medium text-gray-700">Caption</label>
-                            <textarea v-model="formData.caption" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                        </div>
-                        <div v-if="displaySettings?.dateCreated !== false">
-                            <label class="block text-sm font-medium text-gray-700">Date Created</label>
-                            <input type="datetime-local" v-model="formData.dateCreated" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div v-if="displaySettings?.location !== false">
-                            <label class="block text-sm font-medium text-gray-700">Location</label>
-                            <input type="text" v-model="formData.location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div v-if="displaySettings?.tags !== false">
-                            <label class="block text-sm font-medium text-gray-700">Tags</label>
-                            <input type="text" v-model="formData.tags" placeholder="Separate tags with commas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div v-if="displaySettings?.author !== false">
-                            <label class="block text-sm font-medium text-gray-700">Author</label>
-                            <input type="text" v-model="formData.author" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
+                        <!-- Video-specific fields -->
+                        <template v-if="isVideo">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Video URL</label>
+                                <input 
+                                    type="url" 
+                                    v-model="formData.videoUrl" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    readonly
+                                >
+                            </div>
+                            <div v-if="displaySettings?.title !== false">
+                                <label class="block text-sm font-medium text-gray-700">Title</label>
+                                <input 
+                                    type="text" 
+                                    v-model="formData.title" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                            </div>
+                            <div v-if="displaySettings?.caption !== false">
+                                <label class="block text-sm font-medium text-gray-700">Caption</label>
+                                <textarea 
+                                    v-model="formData.caption" 
+                                    rows="3" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                ></textarea>
+                            </div>
+                        </template>
+                        
+                        <!-- Image-specific fields -->
+                        <template v-else>
+                            <div v-if="displaySettings?.title !== false">
+                                <label class="block text-sm font-medium text-gray-700">Title</label>
+                                <input type="text" v-model="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div v-if="displaySettings?.altText !== false">
+                                <label class="block text-sm font-medium text-gray-700">Alt Text</label>
+                                <input type="text" v-model="formData.altText" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div v-if="displaySettings?.caption !== false">
+                                <label class="block text-sm font-medium text-gray-700">Caption</label>
+                                <textarea v-model="formData.caption" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                            </div>
+                            <div v-if="displaySettings?.dateCreated !== false">
+                                <label class="block text-sm font-medium text-gray-700">Date Created</label>
+                                <input type="datetime-local" v-model="formData.dateCreated" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div v-if="displaySettings?.location !== false">
+                                <label class="block text-sm font-medium text-gray-700">Location</label>
+                                <input type="text" v-model="formData.location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div v-if="displaySettings?.tags !== false">
+                                <label class="block text-sm font-medium text-gray-700">Tags</label>
+                                <input type="text" v-model="formData.tags" placeholder="Separate tags with commas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div v-if="displaySettings?.author !== false">
+                                <label class="block text-sm font-medium text-gray-700">Author</label>
+                                <input type="text" v-model="formData.author" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </template>
+                        
                         <div class="flex justify-end space-x-3">
                             <button @click="$emit('close')" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
                             <button @click="saveChanges" class="btn-primary">Save Changes</button>
@@ -59,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -95,6 +149,31 @@ const formData = ref({
     location: '',
     tags: '',
     author: '',
+    videoUrl: '',
+});
+
+const isVideo = computed(() => {
+    return props.image?.properties?.type === 'video';
+});
+
+const videoEmbedUrl = computed(() => {
+    if (!isVideo.value) return null;
+    
+    const url = props.image?.properties?.video_url || props.image?.path || '';
+    
+    // Convert to embed URL for YouTube/Vimeo
+    if (url.includes('youtube.com/watch')) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('vimeo.com/')) {
+        const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+        return `https://player.vimeo.com/video/${videoId}`;
+    }
+    
+    return null;
 });
 
 watch(() => props.image, (newImage) => {
@@ -107,22 +186,36 @@ watch(() => props.image, (newImage) => {
             location: newImage.location || '',
             tags: newImage.tags || '',
             author: newImage.author || '',
+            videoUrl: newImage.properties?.video_url || newImage.path || '',
         };
     }
 }, { immediate: true });
 
 const saveChanges = async () => {
     try {
-        await router.put(route('album-images.update', props.image.id), formData.value, {
+        const updateData = isVideo.value ? {
+            title: formData.value.title,
+            caption: formData.value.caption,
+        } : {
+            title: formData.value.title,
+            altText: formData.value.altText,
+            caption: formData.value.caption,
+            dateCreated: formData.value.dateCreated,
+            location: formData.value.location,
+            tags: formData.value.tags,
+            author: formData.value.author,
+        };
+
+        await router.put(route('album-images.update', props.image.id), updateData, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                emit('update', { ...props.image, ...formData.value });
+                emit('update', { ...props.image, ...updateData });
                 emit('close');
             }
         });
     } catch (error) {
-        console.error('Failed to update image:', error);
+        console.error('Failed to update item:', error);
     }
 };
 </script>

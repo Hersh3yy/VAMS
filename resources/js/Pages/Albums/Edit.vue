@@ -108,6 +108,70 @@
                                 </div>
                             </div>
 
+                            <!-- Select from Album Images -->
+                            <div v-if="album.images && album.images.length > 0">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Or Select from Album Images
+                                </label>
+                                
+                                <!-- Selected Cover Image Display -->
+                                <div v-if="form.selected_cover_image_id" class="mb-4">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Selected as cover:</div>
+                                            <div class="image-container w-32 h-32 rounded-lg border-2 border-secondary overflow-hidden">
+                                                <img 
+                                                    :src="album.images.find(img => img.id === form.selected_cover_image_id)?.path"
+                                                    class="cover-image"
+                                                    alt="Selected cover"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button 
+                                                @click="clearSelectedCoverImage"
+                                                class="btn btn-secondary text-sm"
+                                            >
+                                                Clear Selection
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Image Selector -->
+                                <div>
+                                    <button 
+                                        @click="showImageSelector = !showImageSelector"
+                                        class="btn btn-secondary"
+                                        type="button"
+                                    >
+                                        {{ showImageSelector ? 'Hide Images' : 'Choose from Album Images' }}
+                                    </button>
+                                    
+                                    <div v-if="showImageSelector" class="mt-4 grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
+                                        <div 
+                                            v-for="image in album.images.filter(img => img.properties?.type !== 'video')" 
+                                            :key="image.id"
+                                            @click="selectCoverImage(image)"
+                                            class="cursor-pointer rounded-lg overflow-hidden hover:ring-2 hover:ring-secondary transition-all"
+                                            :class="{ 'ring-2 ring-secondary': form.selected_cover_image_id === image.id }"
+                                        >
+                                            <div class="aspect-square">
+                                                <img 
+                                                    :src="image.path" 
+                                                    :alt="image.title || 'Album image'"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                        Click on an image to select it as the album cover.
+                                    </p>
+                                </div>
+                            </div>
+
                             <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                                 <Link 
                                     :href="route('albums.show', album.id)"
@@ -151,10 +215,21 @@ const props = defineProps({
 const form = useForm({
     title: props.album.title,
     description: props.album.description || '',
-    cover_image: null
+    cover_image: null,
+    selected_cover_image_id: null
 });
 
 const coverImagePreview = ref(null);
+const showImageSelector = ref(false);
+
+const selectCoverImage = (image) => {
+    form.selected_cover_image_id = image.id;
+    showImageSelector.value = false;
+};
+
+const clearSelectedCoverImage = () => {
+    form.selected_cover_image_id = null;
+};
 
 const handleFileChange = (event) => {
     const file = event.target.files[0];

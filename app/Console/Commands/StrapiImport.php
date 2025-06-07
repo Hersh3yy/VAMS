@@ -379,6 +379,8 @@ class StrapiImport extends Command
                         $thumbnailResult = $this->imageService->storeImage($sdThumbnailUrl, $albumDirectory, true);
                     } catch (\Exception $e) {
                         $this->warn("Failed to download thumbnail for video: {$videoId}");
+                        // Use a default video placeholder thumbnail
+                        $thumbnailResult = ['url' => '/images/video-placeholder.svg'];
                     }
                 }
             } elseif ($videoType == 'vimeo') {
@@ -386,7 +388,12 @@ class StrapiImport extends Command
                     $thumbnailResult = $this->imageService->storeVideoThumbnail($imageUrl, $albumDirectory);
                 } catch (\Exception $e) {
                     $this->warn("Failed to get Vimeo thumbnail: {$e->getMessage()}");
+                    // Use a default video placeholder thumbnail
+                    $thumbnailResult = ['url' => '/images/video-placeholder.svg'];
                 }
+            } else {
+                // For other video types or when video ID extraction fails
+                $thumbnailResult = ['url' => '/images/video-placeholder.svg'];
             }
             
             // Store the video info even if thumbnail download fails

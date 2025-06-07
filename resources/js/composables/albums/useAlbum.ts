@@ -112,7 +112,7 @@ export function useAlbum(albumId: string) {
 
     const reorderImages = async (fromIndex: number, toIndex: number) => {
         try {
-            await router.put(route('albums.images.reorder', albumId), {
+            await router.patch(route('albums.images.reorder', albumId), {
                 from_index: fromIndex,
                 to_index: toIndex,
             }, {

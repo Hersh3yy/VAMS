@@ -112,6 +112,7 @@ class AlbumController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|image|max:10240', // 10MB max
+            'selected_cover_image_id' => 'nullable|exists:album_images,id',
         ]);
         
         Log::info('AlbumController@update - Validated data:', $validated);
@@ -142,6 +143,23 @@ class AlbumController extends Controller
             ]);
             
             Log::info('AlbumController@update - Cover image stored:', $result);
+        }
+        
+        // Handle selected cover image from album images
+        if ($request->filled('selected_cover_image_id')) {
+            Log::info('AlbumController@update - Processing selected cover image');
+            
+            $selectedImage = AlbumImage::find($request->selected_cover_image_id);
+            if ($selectedImage && $selectedImage->album_id === $album->id) {
+                $album->update([
+                    'cover_image_path' => $selectedImage->path
+                ]);
+                
+                Log::info('AlbumController@update - Selected cover image set:', [
+                    'image_id' => $selectedImage->id,
+                    'image_path' => $selectedImage->path
+                ]);
+            }
         }
 
         Log::info('AlbumController@update - Album updated successfully');

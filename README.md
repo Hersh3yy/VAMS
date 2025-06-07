@@ -147,3 +147,36 @@ Access the auto-generated API documentation:
 - OpenAPI Spec: http://localhost:8000/docs/api.json
 
 Development Tools: http://localhost:8000/telescope
+
+## Next Version Features Wishlist
+
+### Image Enhancement
+- **Image Resizing & Multiple Formats**: Automatic generation of responsive image sizes (thumbnail, medium, large) and modern formats (WebP, AVIF)
+- **Smart Compression**: Intelligent image optimization with quality preservation
+
+### Mosaic Builder Enhancements
+- **Image Cropping & Positioning**: Fine-grained control over image framing within mosaic tiles
+- **Zoom Controls**: Intuitive zoom and pan functionality for precise image positioning
+- **Dynamic Tile Sizing**: Flexible tile dimensions with custom aspect ratios
+- **Video Support**: Native video embedding and playback within mosaic layouts
+- **Advanced Grid System**: More sophisticated layout options with custom breakpoints
+
+### User Experience
+- **Batch Operations**: Multi-select for bulk image editing and operations
+- **Advanced Search**: Filter and search across albums by metadata, tags, and content
+- **Keyboard Shortcuts**: Power-user navigation and editing shortcuts
+- **Preview Mode**: Real-time preview of changes before publishing
+
+### Performance & Technical
+- **CDN Integration**: Built-in support for content delivery networks
+- **Progressive Loading**: Lazy loading and progressive image enhancement
+- **API Rate Limiting**: Enhanced API protection and usage analytics
+- **Export/Import**: Backup and migration tools for content and settings
+
+### Integrations
+- **Third-Party Storage**: S3, Cloudinary, and other cloud storage providers
+- **Webhook System**: Real-time notifications for content changes
+- **Social Media Sync**: Direct publishing to social platforms
+- **Analytics Integration**: Usage tracking and performance metrics
+
+*Note: This wishlist represents planned enhancements for future releases. Features will be prioritized based on user feedback and project requirements.*
