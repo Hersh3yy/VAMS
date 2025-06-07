@@ -20,6 +20,26 @@ interface User {
         dateCreated?: boolean;
         location?: boolean;
         tags?: boolean;
+        title?: boolean;
+        author?: boolean;
+    };
+}
+
+interface AlbumDisplaySettings {
+    main_color: string;
+    secondary_color: string;
+    caption: boolean;
+    altText: boolean;
+    dateCreated: boolean;
+    location: boolean;
+    tags: boolean;
+    title: boolean;
+    author: boolean;
+}
+
+type ThemeFormData = {
+    album_display_settings: {
+        [K in keyof AlbumDisplaySettings]: AlbumDisplaySettings[K];
     };
 }
 
@@ -78,11 +98,28 @@ const defaultMainColor = '#000000'; // Default black color
 const defaultSecondaryColor = '#EAB308'; // Default gold color
 
 const themeForm = useForm({
-    album_display_settings: {
-        ...(user.album_display_settings || {}),
-        main_color: user.album_display_settings?.main_color || defaultMainColor,
-        secondary_color: user.album_display_settings?.secondary_color || defaultSecondaryColor,
-    },
+    'album_display_settings.main_color': user.album_display_settings?.main_color || defaultMainColor,
+    'album_display_settings.secondary_color': user.album_display_settings?.secondary_color || defaultSecondaryColor,
+    'album_display_settings.caption': user.album_display_settings?.caption ?? true,
+    'album_display_settings.altText': user.album_display_settings?.altText ?? true,
+    'album_display_settings.dateCreated': user.album_display_settings?.dateCreated ?? true,
+    'album_display_settings.location': user.album_display_settings?.location ?? true,
+    'album_display_settings.tags': user.album_display_settings?.tags ?? true,
+    'album_display_settings.title': user.album_display_settings?.title ?? true,
+    'album_display_settings.author': user.album_display_settings?.author ?? true,
+});
+
+// Helper function to get album display settings object
+const getAlbumDisplaySettings = () => ({
+    main_color: themeForm['album_display_settings.main_color'],
+    secondary_color: themeForm['album_display_settings.secondary_color'],
+    caption: themeForm['album_display_settings.caption'],
+    altText: themeForm['album_display_settings.altText'],
+    dateCreated: themeForm['album_display_settings.dateCreated'],
+    location: themeForm['album_display_settings.location'],
+    tags: themeForm['album_display_settings.tags'],
+    title: themeForm['album_display_settings.title'],
+    author: themeForm['album_display_settings.author'],
 });
 
 const updateTheme = () => {
@@ -198,12 +235,12 @@ const updateTheme = () => {
                                     <div class="flex items-center space-x-3 mt-2">
                                         <input 
                                             id="main_color" 
-                                            v-model="themeForm.album_display_settings.main_color" 
+                                            v-model="themeForm['album_display_settings.main_color']" 
                                             type="color" 
                                             class="h-10 w-10 rounded cursor-pointer border-0"
                                         />
                                         <input
-                                            v-model="themeForm.album_display_settings.main_color"
+                                            v-model="themeForm['album_display_settings.main_color']"
                                             type="text"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                         />
@@ -220,12 +257,12 @@ const updateTheme = () => {
                                     <div class="flex items-center space-x-3 mt-2">
                                         <input 
                                             id="secondary_color" 
-                                            v-model="themeForm.album_display_settings.secondary_color" 
+                                            v-model="themeForm['album_display_settings.secondary_color']" 
                                             type="color" 
                                             class="h-10 w-10 rounded cursor-pointer border-0"
                                         />
                                         <input
-                                            v-model="themeForm.album_display_settings.secondary_color"
+                                            v-model="themeForm['album_display_settings.secondary_color']"
                                             type="text"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
                                         />
@@ -252,7 +289,7 @@ const updateTheme = () => {
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
-                        :album-display-settings="album_display_settings"
+                        :album-display-settings="getAlbumDisplaySettings()"
                         class="max-w-xl"
                     />
                 </div>
