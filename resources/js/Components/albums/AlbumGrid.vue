@@ -1,15 +1,10 @@
 <template>
-    <draggable 
+    <Draggable 
         v-model="localItems" 
-        item-key="id"
         class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
-        ghost-class="ghost-item"
-        chosen-class="chosen-item"
-        drag-class="drag-item"
-        :animation="200"
-        @end="handleReorder"
+        :transition="200"
     >
-        <template #item="{ element: item }">
+        <template v-slot:item="{ item }">
             <div class="relative group">
                 <AlbumItem
                     :item="item"
@@ -18,12 +13,13 @@
                 />
             </div>
         </template>
-    </draggable>
+    </Draggable>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import draggable from 'vuedraggable';
+// @ts-ignore
+import Draggable from 'vue3-draggable';
 import AlbumItem from './AlbumItem.vue';
 import type { AlbumImage } from '@/types/album';
 

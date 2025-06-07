@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
 {
@@ -37,7 +38,7 @@ class MediaController extends Controller
             
             $result = $this->imageService->storeImage(
                 $file,
-                "uploads/{$folder}/" . auth()->user()->id
+                "uploads/{$folder}/" . Auth::user()->id
             );
 
             return response()->json([
@@ -56,6 +57,49 @@ class MediaController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Upload failed: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Delete media file
+     */
+    public function delete(Request $request): JsonResponse
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+
+        try {
+            $path = $request->input('path');
+            
+            // Extract the actual file path from URL if needed
+            if (str_contains($path, config('filesystems.disks.spaces.endpoint'))) {
+                $bucket = config('filesystems.disks.spaces.bucket');
+                $endpoint = config('filesystems.disks.spaces.endpoint');
+                $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
+            }
+            
+            // Delete from cloud storage
+            $deleted = Storage::disk('spaces')->delete($path);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File not found or could not be deleted'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Media deletion failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Deletion failed: ' . $e->getMessage()
             ], 422);
         }
     }

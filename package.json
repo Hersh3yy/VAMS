@@ -35,7 +35,7 @@
         "@vueuse/core": "^13.1.0",
         "sortablejs": "^1.15.6",
         "uuid": "^11.1.0",
-        "vue3-toastify": "^0.2.8",
-        "vuedraggable": "^2.24.3"
+        "vue3-draggable": "^2.0.9",
+        "vue3-toastify": "^0.2.8"
     }
 }

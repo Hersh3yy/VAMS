@@ -246,11 +246,19 @@ const previewItem = computed((): MosaicItem => {
     } else if (selectedType.value === 'color') {
         baseItem.properties = {
             color: selectedColor.value,
-            text: colorText.value
+            text: {
+                enabled: true,
+                content: colorText.value || '',
+                color: '#000000'
+            }
         };
     } else if (selectedType.value === 'text') {
         baseItem.properties = {
-            text: textContent.value
+            text: {
+                enabled: true,
+                content: textContent.value || '',
+                color: '#000000'
+            }
         };
     }
 

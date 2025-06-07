@@ -299,14 +299,10 @@ class StrapiImport extends Command
         // Check for Media array
         if (isset($item['Media']) && is_array($item['Media'])) {
             foreach ($item['Media'] as $mediaItem) {
-                // Log the media item for debugging
-                Log::info("Processing Media item: " . json_encode($mediaItem));
-                
                 // Check directly for Link field in the media item
                 if (isset($mediaItem['Link']) && !empty($mediaItem['Link'])) {
                     $url = $mediaItem['Link'];
                     if (filter_var($url, FILTER_VALIDATE_URL) || $this->imageService->isVideoLink($url)) {
-                        $this->info("Found direct Link in Media item: {$url}");
                         $links[] = [
                             'url' => $url,
                             'title' => $mediaItem['Name'] ?? $mediaItem['name'] ?? $item['ProjectName'] ?? $item['Title'] ?? $item['title'] ?? null,
@@ -342,9 +338,12 @@ class StrapiImport extends Command
     {
         $imageUrl = $media['url'];
         
+        // Determine the order - use provided order or fallback to media count
+        $order = $media['order'] ?? $mediaCount;
+        
         // Check if it's a video link
         if ($this->imageService->isVideoLink($imageUrl)) {
-            $this->info("Found video link: {$imageUrl}");
+            $this->info("Processing video: {$imageUrl}");
             
             // Get video ID for YouTube/Vimeo
             $videoId = null;
@@ -364,38 +363,29 @@ class StrapiImport extends Command
                 $videoType = 'vimeo';
             }
             
-            $this->info("Video ID: {$videoId}, Type: {$videoType}");
-            
             // Try to get a thumbnail
             $thumbnailResult = null;
             
             if ($videoId && $videoType == 'youtube') {
                 // First try high-res thumbnail
                 $hdThumbnailUrl = "https://img.youtube.com/vi/{$videoId}/maxresdefault.jpg";
-                $this->info("Trying HD thumbnail URL: {$hdThumbnailUrl}");
                 
                 try {
                     $thumbnailResult = $this->imageService->storeImage($hdThumbnailUrl, $albumDirectory, true);
-                    $this->info("HD thumbnail stored successfully: " . json_encode($thumbnailResult));
                 } catch (\Exception $e) {
-                    $this->info("HD thumbnail not available, trying standard resolution...");
-                    
                     // Try standard resolution thumbnail
                     try {
                         $sdThumbnailUrl = "https://img.youtube.com/vi/{$videoId}/0.jpg";
-                        $this->info("Trying SD thumbnail URL: {$sdThumbnailUrl}");
                         $thumbnailResult = $this->imageService->storeImage($sdThumbnailUrl, $albumDirectory, true);
-                        $this->info("SD thumbnail stored successfully: " . json_encode($thumbnailResult));
                     } catch (\Exception $e) {
-                        $this->error("Failed to download any thumbnail: {$e->getMessage()}");
+                        $this->warn("Failed to download thumbnail for video: {$videoId}");
                     }
                 }
             } elseif ($videoType == 'vimeo') {
-                // Use the normal method for Vimeo
                 try {
                     $thumbnailResult = $this->imageService->storeVideoThumbnail($imageUrl, $albumDirectory);
                 } catch (\Exception $e) {
-                    $this->error("Failed to get Vimeo thumbnail: {$e->getMessage()}");
+                    $this->warn("Failed to get Vimeo thumbnail: {$e->getMessage()}");
                 }
             }
             
@@ -411,7 +401,7 @@ class StrapiImport extends Command
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
             
-            $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $mediaCount, $properties) {
+            $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $order, $properties) {
                 return $albumModel->images()->create([
                     'id' => (string) Str::uuid(),
                     'path' => $imageUrl,
@@ -423,34 +413,25 @@ class StrapiImport extends Command
                     'location' => null,
                     'tags' => null,
                     'properties' => json_encode($properties),
-                    'order' => $media['order'] ?? $mediaCount,
+                    'order' => $order,
                 ]);
             });
-            
-            $this->info("Created video entry with ID: {$albumImage->id}");
             
             // If this is our first media and we still don't have a cover image,
             // use the video thumbnail as the album cover
             if (!$firstImageObject && $thumbnailResult) {
                 $firstImageObject = $thumbnailResult;
-                $this->info("Setting video thumbnail as potential cover image: {$thumbnailResult['url']}");
             }
         } else {
             // Download and store the image
-            $this->info("Downloading image: {$imageUrl}");
-            
             try {
                 // Use WebP conversion
                 $result = $this->imageService->storeImage($imageUrl, $albumDirectory, true, true);
-                $localPath = $result['path'];
                 $publicUrl = $result['url'];
-                
-                $this->info("Saved image to: {$localPath}");
                 
                 // Keep track of the first non-video image for cover
                 if (!$firstImageObject) {
                     $firstImageObject = $result;
-                    $this->info("Setting as potential cover image: {$publicUrl}");
                 }
                 
                 // Create album image
@@ -459,7 +440,6 @@ class StrapiImport extends Command
                 // Add WebP URL if available
                 if (isset($result['webp_url'])) {
                     $properties['webp_url'] = $result['webp_url'];
-                    $this->info("Added WebP version: {$result['webp_url']}");
                 }
                 
                 // Add year if available
@@ -467,7 +447,7 @@ class StrapiImport extends Command
                     $properties['year'] = $media['year'];
                 }
                 
-                $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $mediaCount, $properties) {
+                $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $order, $properties) {
                     return $albumModel->images()->create([
                         'id' => (string) Str::uuid(),
                         'path' => $publicUrl,
@@ -479,13 +459,14 @@ class StrapiImport extends Command
                         'location' => null,
                         'tags' => null,
                         'properties' => json_encode($properties),
-                        'order' => $media['order'] ?? $mediaCount,
+                        'order' => $order,
                     ]);
                 });
                 
-                $this->info("Created image entry with ID: {$albumImage->id}");
+                $title = $media['title'] ?? 'Untitled';
+                $this->info("Processed: {$title} (order: {$order})");
             } catch (\Exception $e) {
-                $this->error("Failed to download image: {$e->getMessage()}");
+                $this->error("Failed to download image {$imageUrl}: {$e->getMessage()}");
             }
         }
     }

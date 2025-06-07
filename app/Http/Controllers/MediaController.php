@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MediaService;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MediaController extends Controller
 {
-    protected $mediaService;
+    protected $imageService;
 
-    public function __construct(MediaService $mediaService)
+    public function __construct(ImageService $imageService)
     {
-        $this->mediaService = $mediaService;
+        $this->imageService = $imageService;
     }
 
     public function upload(Request $request)
@@ -20,8 +21,21 @@ class MediaController extends Controller
             'media' => 'required|file|image|max:30720', // 30MB max
         ]);
 
-        $result = $this->mediaService->storeFile($request->file('media'));
+        try {
+            $result = $this->imageService->storeImage(
+                $request->file('media'),
+                'uploads/' . Auth::user()->id
+            );
 
-        return response()->json($result);
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: ' . $e->getMessage()
+            ], 422);
+        }
     }
 } 

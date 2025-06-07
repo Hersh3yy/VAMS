@@ -47,17 +47,12 @@
                 </div>
 
                 <!-- Items in this column -->
-                <draggable 
-                    v-model="itemsInColumn(columnIndex - 1)" 
-                    item-key="id"
+                <Draggable 
+                    v-model="columnItems[columnIndex - 1]" 
                     class="space-y-4"
-                    group="mosaic-items"
-                    ghost-class="ghost-item"
-                    chosen-class="chosen-item"
-                    :animation="200"
-                    @end="handleReorder"
+                    :transition="200"
                 >
-                    <template #item="{ element: item }">
+                    <template v-slot:item="{ item }">
                         <div class="relative group">
                             <SimpleMosaicItem
                                 :item="item"
@@ -66,7 +61,7 @@
                             />
                         </div>
                     </template>
-                </draggable>
+                </Draggable>
 
                 <!-- Add item placeholder -->
                 <div 
@@ -97,7 +92,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import draggable from 'vuedraggable';
+// @ts-ignore
+import Draggable from 'vue3-draggable';
 import SimpleMosaicItem from './SimpleMosaicItem.vue';
 import SimpleMosaicItemEditor from './SimpleMosaicItemEditor.vue';
 import type { Mosaic, MosaicItem, Album } from '@/types/mosaic';
@@ -118,12 +114,37 @@ const showItemEditor = ref(false);
 const editingItem = ref<MosaicItem | null>(null);
 const hasChanges = ref(false);
 
+// Create reactive column arrays
+const columnItems = ref<MosaicItem[][]>([]);
+
+// Initialize column arrays
+const initializeColumns = () => {
+    columnItems.value = Array.from({ length: columnCount.value }, (_, colIndex) => 
+        items.value.filter(item => item.column_index === colIndex)
+            .sort((a, b) => a.order - b.order)
+    );
+};
+
+// Watch items and columns to reinitialize
+watch([items, columnCount], () => {
+    initializeColumns();
+}, { immediate: true, deep: true });
+
 const itemsInColumn = (columnIndex: number) => {
     return items.value.filter(item => item.column_index === columnIndex)
         .sort((a, b) => a.order - b.order);
 };
 
+const getColumnItemsReactive = (columnIndex: number) => {
+    if (!columnItems.value[columnIndex]) {
+        columnItems.value[columnIndex] = [];
+    }
+    return columnItems.value[columnIndex];
+};
+
 const updateColumns = () => {
+    // Reinitialize column arrays when column count changes
+    initializeColumns();
     hasChanges.value = true;
     emitUpdate();
 };
@@ -173,30 +194,28 @@ const closeItemEditor = () => {
     editingItem.value = null;
 };
 
-const handleReorder = (event: any) => {
-    // Update orders for all items after drag
-    Object.keys(event.to.children).forEach((index) => {
-        const itemId = event.to.children[index].getAttribute('data-id');
-        const item = items.value.find(i => i.id === itemId);
-        if (item) {
-            item.order = parseInt(index);
-            // Update column_index if moved between columns
-            const targetColumn = parseInt(event.to.getAttribute('data-column') || '0');
-            item.column_index = targetColumn;
-        }
-    });
-    
-    hasChanges.value = true;
-    emitUpdate();
-};
-
 const emitUpdate = () => {
+    // Flatten column arrays back to items
+    items.value = columnItems.value.flatMap((columnItemList, columnIndex) => 
+        columnItemList.map((item, order) => ({
+            ...item,
+            column_index: columnIndex,
+            order
+        }))
+    );
+
     emit('update', {
         ...props.mosaic,
         columns: columnCount.value,
         items: items.value
     });
 };
+
+// Watch for changes in column items and sync back to main items array
+watch(columnItems, () => {
+    hasChanges.value = true;
+    emitUpdate();
+}, { deep: true });
 
 // Watch for external changes
 watch(() => props.mosaic.items, (newItems) => {

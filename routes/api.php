@@ -84,9 +84,11 @@ Route::middleware(['api.key', 'throttle:60,1'])->prefix('public')->group(functio
     });
 });
 
-// Media upload route with specific rate limiting and file size checks
+// Media routes with specific rate limiting and file size checks
 Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
     Route::post('/media/upload', [MediaController::class, 'upload'])
         ->middleware('file.size:10240') // 10MB limit
         ->name('api.media.upload');
+    Route::delete('/media', [MediaController::class, 'delete'])
+        ->name('api.media.delete');
 });
