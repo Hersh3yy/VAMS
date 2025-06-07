@@ -111,6 +111,9 @@
             }
             
             try {
+                console.log('Making request to:', `${baseUrl}/api${endpoint}`);
+                console.log('API Key:', apiKey);
+                
                 const response = await fetch(`${baseUrl}/api${endpoint}`, {
                     method: method,
                     headers: {
@@ -119,6 +122,9 @@
                         'Accept': 'application/json'
                     }
                 });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
                 
                 const data = await response.json();
                 
@@ -135,12 +141,13 @@
                     });
                 }
             } catch (error) {
+                console.error('Network error:', error);
                 showError(`Network error: ${error.message}`);
             }
         }
         
         async function testConnection() {
-            await makeApiRequest('/user');
+            await makeApiRequest('/public/test');
         }
         
         async function testGetAlbum() {

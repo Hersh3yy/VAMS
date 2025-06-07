@@ -70,7 +70,16 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 });
 
 // Public routes for API key access (for frontend websites)
-Route::middleware(['api.key', 'throttle:60,1'])->prefix('public')->group(function () {
+Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])->prefix('public')->group(function () {
+    // Test connection endpoint
+    Route::get('/test', function (Request $request) {
+        return response()->json([
+            'message' => 'API key authentication successful',
+            'user' => $request->user()->name,
+            'timestamp' => now()->toISOString()
+        ]);
+    });
+    
     // Public album access with user display settings
     Route::prefix('albums')->group(function () {
         Route::get('/by-title/{title}', [AlbumController::class, 'showByTitleWithApiKey']);

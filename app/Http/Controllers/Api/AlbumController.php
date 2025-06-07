@@ -42,10 +42,8 @@ class AlbumController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
         
         $albums = $user->albums()->with('images')->get();
         

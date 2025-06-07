@@ -8,14 +8,13 @@ use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
 use App\Http\Controllers\Api\Traits\HandlesApiOperations;
-use App\Http\Controllers\Api\Traits\ValidatesApiKey;
 use App\Http\Requests\StoreMosaicRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MosaicController extends BaseApiController
 {
-    use HandlesApiOperations, ValidatesApiKey;
+    use HandlesApiOperations;
 
     private readonly MosaicService $mosaicService;
 
