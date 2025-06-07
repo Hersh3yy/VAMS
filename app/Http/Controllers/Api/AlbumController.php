@@ -67,10 +67,8 @@ class AlbumController extends Controller
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
         
         $album = $user->albums()->where('title', $title)->with('images')->first();
         if (!$album) {
@@ -264,10 +262,8 @@ class AlbumController extends Controller
     // Public API methods with user display settings
     public function showWithApiKey(Request $request, $id): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
 
         $album = $user->albums()->with('images')->find($id);
         if (!$album) {

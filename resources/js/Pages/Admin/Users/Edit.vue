@@ -97,6 +97,51 @@
                                 </div>
                             </div>
 
+                            <!-- API Key Management -->
+                            <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-medium text-gray-900 mb-3">API Key Management</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="form-label">Current API Key</label>
+                                        <div class="flex items-center space-x-2">
+                                            <input
+                                                type="text"
+                                                :value="showApiKey ? user.api_key : '••••••••••••••••••••••••••••••••'"
+                                                readonly
+                                                class="form-input font-mono text-sm flex-1"
+                                            />
+                                            <button
+                                                type="button"
+                                                @click="showApiKey = !showApiKey"
+                                                class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded"
+                                            >
+                                                {{ showApiKey ? 'Hide' : 'Show' }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                @click="copyApiKey"
+                                                class="px-3 py-2 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded"
+                                            >
+                                                Copy
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button
+                                            type="button"
+                                            @click="regenerateApiKey"
+                                            class="px-4 py-2 bg-yellow-500 text-white hover:bg-yellow-600 rounded"
+                                            :disabled="regenerating"
+                                        >
+                                            {{ regenerating ? 'Regenerating...' : 'Regenerate API Key' }}
+                                        </button>
+                                        <p class="text-sm text-gray-600 self-center">
+                                            This will invalidate the current key. Make sure to update any integrations.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="flex items-center justify-end mt-4">
                                 <button
                                     type="submit"
@@ -117,6 +162,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { ref } from 'vue';
 
 const props = defineProps({
     user: Object,
@@ -129,4 +175,39 @@ const form = useForm({
     is_admin: props.user.is_admin,
     is_approved: props.user.is_approved,
 });
+
+// API Key Management
+const showApiKey = ref(false);
+const regenerating = ref(false);
+
+const copyApiKey = async () => {
+    try {
+        await navigator.clipboard.writeText(props.user.api_key);
+        // Show success message (you can implement toast notification if needed)
+        alert('API key copied to clipboard!');
+    } catch (err) {
+        console.error('Failed to copy API key:', err);
+        alert('Failed to copy API key to clipboard');
+    }
+};
+
+const regenerateApiKey = () => {
+    if (confirm('Are you sure you want to regenerate the API key? This will invalidate the current key and may break existing integrations.')) {
+        regenerating.value = true;
+        
+        const regenerateForm = useForm({});
+        regenerateForm.post(route('admin.users.regenerate-api-key', props.user.id), {
+            onSuccess: () => {
+                regenerating.value = false;
+                alert('API key regenerated successfully!');
+                // Reload the page to show the new key
+                window.location.reload();
+            },
+            onError: () => {
+                regenerating.value = false;
+                alert('Failed to regenerate API key');
+            }
+        });
+    }
+};
 </script> 

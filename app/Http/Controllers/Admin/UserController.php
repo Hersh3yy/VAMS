@@ -31,6 +31,7 @@ class UserController extends Controller
                     'created_at' => $user->created_at,
                     'approved_at' => $user->approved_at,
                     'albums_count' => $user->albums_count,
+                    'api_key' => $user->api_key,
                 ];
             });
         
@@ -100,6 +101,7 @@ class UserController extends Controller
                 'is_approved' => $user->is_approved,
                 'created_at' => $user->created_at,
                 'approved_at' => $user->approved_at,
+                'api_key' => $user->api_key,
             ],
         ]);
     }
@@ -211,5 +213,16 @@ class UserController extends Controller
         }
         
         return redirect()->route('dashboard');
+    }
+    
+    /**
+     * Regenerate API key for a user.
+     */
+    public function regenerateApiKey(User $user)
+    {
+        $newApiKey = $user->regenerateApiKey();
+        
+        return redirect()->back()
+            ->with('success', "API key regenerated successfully for {$user->name}.");
     }
 }

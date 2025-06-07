@@ -248,7 +248,7 @@ const handleFileChange = (event) => {
 };
 
 const submit = () => {
-    form.put(route('albums.update', props.album.id), {
+    form.patch(route('albums.update', props.album.id), {
         preserveScroll: true,
         onSuccess: () => {
             // Reset the file input and preview

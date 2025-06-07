@@ -26,10 +26,8 @@ class MosaicController extends BaseApiController
 
     public function index(Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
         
         $mosaics = $this->mosaicService->getAllMosaics(true);
         
@@ -63,10 +61,8 @@ class MosaicController extends BaseApiController
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
         
         $mosaic = $user->mosaics()->where('title', $title)->first();
         if (!$mosaic) {
@@ -74,6 +70,21 @@ class MosaicController extends BaseApiController
         }
         
         return $this->show($request, $mosaic);
+    }
+
+    public function showWithApiKey(Request $request, $id): JsonResponse
+    {
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
+
+        $mosaic = $user->mosaics()->find($id);
+        if (!$mosaic) {
+            return $this->notFound('Mosaic not found');
+        }
+
+        return $this->success(
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
+        );
     }
 
     public function store(StoreMosaicRequest $request): JsonResponse
@@ -99,10 +110,8 @@ class MosaicController extends BaseApiController
 
     public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
     {
-        $user = $this->validateApiKey($request);
-        if ($user instanceof JsonResponse) {
-            return $user;
-        }
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
         
         $ownership = $this->validateOwnership($mosaicItem->mosaic, $user);
         if ($ownership instanceof JsonResponse) {
@@ -120,5 +129,15 @@ class MosaicController extends BaseApiController
     {
         $this->mosaicService->deleteMosaic($mosaic);
         return $this->success(null, 204);
+    }
+
+    public function userMosaics(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $mosaics = $user->mosaics()->get();
+        
+        return $this->success([
+            'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
+        ]);
     }
 } 

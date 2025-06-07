@@ -17,13 +17,7 @@
                 </select>
             </div>
             
-            <button 
-                @click="$emit('save')"
-                class="btn-primary"
-                :disabled="!hasChanges"
-            >
-                {{ hasChanges ? 'Save Changes' : 'Saved' }}
-            </button>
+
         </div>
 
         <!-- Column Layout -->
@@ -49,8 +43,12 @@
                 <!-- Items in this column -->
                 <Draggable 
                     v-model="columnItems[columnIndex - 1]" 
-                    class="space-y-4"
+                    class="space-y-4 min-h-[200px]"
                     :transition="200"
+                    group="mosaic-items"
+                    :empty-insert-threshold="50"
+                    ghost-class="ghost-item"
+                    chosen-class="chosen-item"
                 >
                     <template v-slot:item="{ item }">
                         <div class="relative group">
@@ -220,9 +218,26 @@ const emitUpdate = () => {
 };
 
 // Watch for changes in column items and sync back to main items array
-watch(columnItems, () => {
-    hasChanges.value = true;
-    emitUpdate();
+watch(columnItems, (newColumnItems) => {
+    // Sync column items back to main items array
+    const newItems: MosaicItem[] = [];
+    
+    newColumnItems.forEach((columnItemList, columnIndex) => {
+        columnItemList.forEach((item, order) => {
+            newItems.push({
+                ...item,
+                column_index: columnIndex,
+                order: order
+            });
+        });
+    });
+    
+    // Only update if there's actually a change
+    if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
+        items.value = newItems;
+        hasChanges.value = true;
+        emitUpdate();
+    }
 }, { deep: true });
 
 // Watch for external changes with better handling
@@ -241,5 +256,17 @@ watch(() => props.mosaic.items, (newItems) => {
 
 .chosen-item {
     @apply ring-2 ring-blue-500 transform scale-105;
+}
+
+.drop-zone {
+    transition: all 0.2s ease;
+}
+
+.drop-zone:hover {
+    @apply border-blue-400 bg-blue-50;
+}
+
+.drop-zone.drag-over {
+    @apply border-blue-500 bg-blue-100;
 }
 </style> 

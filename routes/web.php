@@ -70,11 +70,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
     Route::post('users/{user}/approve', [App\Http\Controllers\Admin\UserController::class, 'approve'])->name('users.approve');
     Route::post('users/{user}/impersonate', [App\Http\Controllers\Admin\UserController::class, 'impersonate'])->name('users.impersonate');
+    Route::post('users/{user}/regenerate-api-key', [App\Http\Controllers\Admin\UserController::class, 'regenerateApiKey'])->name('users.regenerate-api-key');
 });
 
 // Route for stopping impersonation - accessible to anyone while impersonating
 Route::post('admin/stop-impersonating', [App\Http\Controllers\Admin\UserController::class, 'stopImpersonating'])
     ->middleware(['auth'])
     ->name('admin.stop-impersonating');
+
+// API Testing route (for development)
+Route::get('/test-api', function () {
+    return view('test-api');
+})->middleware(['auth', 'admin'])->name('test-api');
 
 require __DIR__.'/auth.php';

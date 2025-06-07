@@ -5,7 +5,10 @@
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manage Users</h2>
-                <div>
+                <div class="flex space-x-3">
+                    <Link :href="route('test-api')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                        Test API
+                    </Link>
                     <Link :href="route('admin.users.create')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                         Add New User
                     </Link>
@@ -75,6 +78,9 @@
                                             Albums
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            API Key
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Created
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -103,6 +109,21 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ user.albums_count }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <div class="flex items-center space-x-2">
+                                                <code class="text-xs bg-gray-100 px-2 py-1 rounded">
+                                                    {{ user.api_key ? user.api_key.substring(0, 8) + '...' : 'None' }}
+                                                </code>
+                                                <button
+                                                    v-if="user.api_key"
+                                                    @click="copyApiKey(user.api_key)"
+                                                    class="text-blue-600 hover:text-blue-500 text-xs"
+                                                    title="Copy API Key"
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ formatDate(user.created_at) }}
@@ -247,5 +268,16 @@ const approveUser = (userId) => {
 // Impersonate a user
 const impersonateUser = (userId) => {
     actionForm.post(route('admin.users.impersonate', userId));
+};
+
+// Copy API key to clipboard
+const copyApiKey = async (apiKey) => {
+    try {
+        await navigator.clipboard.writeText(apiKey);
+        alert('API key copied to clipboard!');
+    } catch (err) {
+        console.error('Failed to copy API key:', err);
+        alert('Failed to copy API key to clipboard');
+    }
 };
 </script> 

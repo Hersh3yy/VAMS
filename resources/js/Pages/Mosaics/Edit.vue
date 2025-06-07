@@ -13,10 +13,11 @@
                     </div>
                     <button 
                         @click="saveMosaic" 
-                        class="btn-primary"
+                        class="px-4 py-2 rounded-md font-medium transition-all duration-300 transform"
                         :class="{ 
-                            'opacity-50 cursor-not-allowed': !hasChanges || !hasItems,
-                            'bg-green-600 hover:bg-green-700': hasChanges && hasItems
+                            'opacity-50 cursor-not-allowed bg-gray-400 text-gray-600': !hasChanges || !hasItems,
+                            'bg-primary hover:bg-primary-dark text-white shadow-lg hover:shadow-xl hover:scale-105': hasChanges && hasItems,
+                            'animate-pulse': hasChanges && hasItems
                         }"
                         :disabled="!hasChanges || !hasItems"
                     >
