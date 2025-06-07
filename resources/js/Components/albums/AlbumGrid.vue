@@ -1,31 +1,35 @@
 <template>
-    <Draggable 
-        v-model="localItems" 
+    <div 
+        ref="gridContainer"
         class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
-        :transition="200"
-        item-key="id"
-        @change="handleDragChange"
-        @start="handleDragStart"
-        @end="handleDragEnd"
     >
-        <template v-slot:item="{ item }">
-            <div class="relative group">
-                <AlbumItem
-                    :item="item"
-                    @click="handleItemClick"
-                    @delete="handleItemDelete"
-                />
-            </div>
-        </template>
-    </Draggable>
+        <div 
+            v-for="(item, index) in localItems" 
+            :key="item.id"
+            :data-id="item.id"
+            :data-index="index"
+            class="relative group"
+        >
+            <AlbumItem
+                :item="item"
+                @click="handleItemClick"
+                @delete="handleItemDelete"
+            />
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 // @ts-ignore
-import Draggable from 'vue3-draggable';
+import Sortable from 'sortablejs';
 import AlbumItem from './AlbumItem.vue';
 import type { AlbumImage } from '@/types/album';
+
+interface SortableEvent {
+    oldIndex?: number;
+    newIndex?: number;
+}
 
 const props = defineProps<{
     items: AlbumImage[];
@@ -37,7 +41,9 @@ const emit = defineEmits<{
     (e: 'reorder', fromIndex: number, toIndex: number): void;
 }>();
 
+const gridContainer = ref<HTMLElement | null>(null);
 const localItems = ref([...props.items]);
+let sortableInstance: any = null;
 
 // Watch for prop changes
 watch(() => props.items, (newItems) => {
@@ -52,33 +58,41 @@ const handleItemDelete = (item: AlbumImage) => {
     emit('item-delete', item);
 };
 
-const handleReorder = (event: any) => {
-    if (event.oldIndex !== event.newIndex) {
-        emit('reorder', event.oldIndex, event.newIndex);
+onMounted(() => {
+    if (gridContainer.value) {
+        sortableInstance = Sortable.create(gridContainer.value, {
+            animation: 150,
+            ghostClass: 'ghost-item',
+            chosenClass: 'chosen-item',
+            dragClass: 'drag-item',
+            onStart: (evt: SortableEvent) => {
+                console.log('Drag start - oldIndex:', evt.oldIndex);
+            },
+            onEnd: (evt: SortableEvent) => {
+                console.log('Drag end - oldIndex:', evt.oldIndex, 'newIndex:', evt.newIndex);
+                
+                if (evt.oldIndex !== undefined && 
+                    evt.newIndex !== undefined && 
+                    evt.oldIndex !== evt.newIndex) {
+                    
+                    // Update local items array
+                    const movedItem = localItems.value[evt.oldIndex];
+                    localItems.value.splice(evt.oldIndex, 1);
+                    localItems.value.splice(evt.newIndex, 0, movedItem);
+                    
+                    console.log('Emitting reorder:', evt.oldIndex, evt.newIndex);
+                    emit('reorder', evt.oldIndex, evt.newIndex);
+                }
+            }
+        });
     }
-};
+});
 
-const handleDragChange = (event: any) => {
-    console.log('Drag change event:', event);
-    if (event.moved) {
-        const { oldIndex, newIndex } = event.moved;
-        console.log('Emitting reorder:', oldIndex, newIndex);
-        emit('reorder', oldIndex, newIndex);
+onUnmounted(() => {
+    if (sortableInstance) {
+        sortableInstance.destroy();
     }
-};
-
-const handleDragStart = (event: any) => {
-    console.log('Drag start:', event);
-};
-
-const handleDragEnd = (event: any) => {
-    console.log('Drag end:', event);
-    // Also emit reorder on end as a fallback
-    if (event.oldIndex !== undefined && event.newIndex !== undefined && event.oldIndex !== event.newIndex) {
-        console.log('Emitting reorder from end event:', event.oldIndex, event.newIndex);
-        emit('reorder', event.oldIndex, event.newIndex);
-    }
-};
+});
 </script>
 
 <style scoped>

@@ -3,7 +3,7 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
+            <div class="page-header">
                 <div class="flex items-center">
                     <Link :href="route('albums.show', album.id)" 
                         class="mr-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full inline-flex items-center transition-all duration-200">
@@ -12,109 +12,127 @@
                         </svg>
                         Back
                     </Link>
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">Edit Album</h2>
+                    <h2 class="page-title">Edit Album</h2>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div>
-                            <label for="title" class="form-label">Title *</label>
-                            <input
-                                id="title"
-                                type="text"
-                                class="form-input"
-                                v-model="form.title"
-                                required
-                                autofocus
-                                placeholder="Enter album title"
-                            />
-                            <div v-if="form.errors.title" class="form-error">
-                                {{ form.errors.title }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="description" class="form-label">Description</label>
-                            <textarea
-                                id="description"
-                                class="form-input"
-                                v-model="form.description"
-                                rows="4"
-                                placeholder="Enter album description"
-                            ></textarea>
-                            <div v-if="form.errors.description" class="form-error">
-                                {{ form.errors.description }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="cover_image" class="form-label">Cover Image</label>
-                            <div class="mt-2 space-y-4">
-                                <!-- Current and New Image Display -->
-                                <div class="flex items-start space-x-4">
-                                    <!-- Current Cover Image -->
-                                    <div v-if="album.cover_image_path && !coverImagePreview" class="flex-shrink-0">
-                                        <div class="text-sm text-gray-600 mb-2">Current cover:</div>
-                                        <img 
-                                            :src="album.cover_image_path" 
-                                            class="h-32 w-32 object-cover rounded-lg border-2 border-gray-200"
-                                            alt="Current cover"
-                                        />
-                                    </div>
-                                    
-                                    <!-- New Image Preview -->
-                                    <div v-if="coverImagePreview" class="flex-shrink-0">
-                                        <div class="text-sm text-gray-600 mb-2">New cover preview:</div>
-                                        <img 
-                                            :src="coverImagePreview" 
-                                            class="h-32 w-32 object-cover rounded-lg border-2 border-green-200"
-                                            alt="New cover preview"
-                                        />
-                                    </div>
-                                    
-                                    <!-- File Input -->
-                                    <div class="flex-1">
-                                        <input 
-                                            type="file" 
-                                            id="cover_image"
-                                            @change="handleFileChange"
-                                            class="form-input"
-                                            accept="image/*"
-                                        />
-                                        <p class="mt-1 text-sm text-gray-500">
-                                            {{ album.cover_image_path ? 'Choose a new image to replace the current cover.' : 'Choose an image for the album cover.' }}
-                                            PNG, JPG, GIF up to 10MB.
-                                        </p>
-                                    </div>
+        <div class="content-wrapper">
+            <div class="content-container">
+                <div class="card">
+                    <div class="card-content">
+                        <form @submit.prevent="submit" class="space-y-6">
+                            <div>
+                                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Title *
+                                </label>
+                                <input
+                                    id="title"
+                                    type="text"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    v-model="form.title"
+                                    required
+                                    autofocus
+                                    placeholder="Enter album title"
+                                />
+                                <div v-if="form.errors.title" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.title }}
                                 </div>
                             </div>
-                            <div v-if="form.errors.cover_image" class="form-error">
-                                {{ form.errors.cover_image }}
-                            </div>
-                        </div>
 
-                        <div class="flex items-center justify-end space-x-3 mt-6">
-                            <Link 
-                                :href="route('albums.show', album.id)"
-                                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                Cancel
-                            </Link>
-                            <button
-                                type="submit"
-                                class="btn-primary"
-                                :class="{ 'opacity-25': form.processing }"
-                                :disabled="form.processing"
-                            >
-                                <span v-if="form.processing">Updating...</span>
-                                <span v-else>Update Album</span>
-                            </button>
-                        </div>
-                    </form>
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Description
+                                </label>
+                                <textarea
+                                    id="description"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    v-model="form.description"
+                                    rows="4"
+                                    placeholder="Enter album description"
+                                ></textarea>
+                                <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.description }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="cover_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Cover Image
+                                </label>
+                                <div class="mt-2 space-y-4">
+                                    <!-- Current and New Image Display -->
+                                    <div class="flex items-start space-x-4">
+                                        <!-- Current Cover Image -->
+                                        <div v-if="album.cover_image_path && !coverImagePreview" class="flex-shrink-0">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Current cover:</div>
+                                            <div class="image-container w-32 h-32 rounded-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+                                                <img 
+                                                    :src="album.cover_image_path" 
+                                                    class="cover-image"
+                                                    alt="Current cover"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- New Image Preview -->
+                                        <div v-if="coverImagePreview" class="flex-shrink-0">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">New cover preview:</div>
+                                            <div class="image-container w-32 h-32 rounded-lg border-2 border-secondary overflow-hidden">
+                                                <img 
+                                                    :src="coverImagePreview" 
+                                                    class="cover-image"
+                                                    alt="New cover preview"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- File Input -->
+                                        <div class="flex-1">
+                                            <input 
+                                                type="file" 
+                                                id="cover_image"
+                                                @change="handleFileChange"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                accept="image/*"
+                                            />
+                                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ album.cover_image_path ? 'Choose a new image to replace the current cover.' : 'Choose an image for the album cover.' }}
+                                                PNG, JPG, GIF up to 10MB.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="form.errors.cover_image" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.cover_image }}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <Link 
+                                    :href="route('albums.show', album.id)"
+                                    class="btn btn-secondary"
+                                >
+                                    Cancel
+                                </Link>
+                                <button
+                                    type="submit"
+                                    class="btn-primary"
+                                    :class="{ 'opacity-50 cursor-not-allowed': form.processing }"
+                                    :disabled="form.processing"
+                                >
+                                    <span v-if="form.processing" class="flex items-center">
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Updating...
+                                    </span>
+                                    <span v-else>Update Album</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,8 +151,7 @@ const props = defineProps({
 const form = useForm({
     title: props.album.title,
     description: props.album.description || '',
-    cover_image: null,
-    _method: 'PUT'
+    cover_image: null
 });
 
 const coverImagePreview = ref(null);
@@ -156,7 +173,7 @@ const handleFileChange = (event) => {
 };
 
 const submit = () => {
-    form.post(route('albums.update', props.album.id), {
+    form.put(route('albums.update', props.album.id), {
         preserveScroll: true,
         onSuccess: () => {
             // Reset the file input and preview
