@@ -47,6 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/mosaics', [MosaicController::class, 'store'])->name('mosaics.store');
     Route::patch('/mosaics/{mosaic}', [MosaicController::class, 'update'])->name('mosaics.update');
     Route::delete('/mosaics/{mosaic}', [MosaicController::class, 'destroy'])->name('mosaics.destroy');
+    
+    // Mosaic Media Upload
+    Route::post('/mosaics/{mosaic}/media', [MosaicController::class, 'storeMedia'])->name('mosaics.media.upload');
 });
 
 // Profile routes (these can stay as they are minimal)

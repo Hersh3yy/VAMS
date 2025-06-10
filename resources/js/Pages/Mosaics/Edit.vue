@@ -31,10 +31,11 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <SimpleMosaicEditor
                     :mosaic="{
-                        ...mosaic,
+                        ...props.mosaic,
                         items: mosaicItems
                     }"
                     :albums="albums"
+                    :mosaic-id="props.mosaic.id"
                     @update="handleMosaicUpdate"
                     @save="saveMosaic"
                 />

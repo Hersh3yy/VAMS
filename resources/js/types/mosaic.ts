@@ -87,6 +87,10 @@ export interface MosaicItemProperties {
         path: string;
         position?: string;
         scale?: number;
+        mime_type?: string;
+        original_name?: string;
+        size?: number;
+        webp_url?: string;
     };
 
     // Color properties

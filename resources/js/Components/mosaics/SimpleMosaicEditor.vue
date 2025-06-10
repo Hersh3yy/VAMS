@@ -81,6 +81,7 @@
             :show="showItemEditor"
             :item="editingItem"
             :albums="albums"
+            :mosaicId="mosaicId"
             @close="closeItemEditor"
             @save="saveItem"
             @delete="deleteItem"
@@ -99,6 +100,7 @@ import type { Mosaic, MosaicItem, Album } from '@/types/mosaic';
 const props = defineProps<{
     mosaic: Mosaic;
     albums: Album[];
+    mosaicId?: string;
 }>();
 
 const emit = defineEmits<{

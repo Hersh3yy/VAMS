@@ -210,6 +210,7 @@
                 properties: { height: itemHeight }
             }"
             :albums="albums"
+            :mosaicId="mosaicId"
             @update:modelValue="showItemEditor = $event"
             @close="closeItemEditor"
             @save="saveItem"
@@ -232,6 +233,7 @@ interface MosaicItemWithImage extends MosaicItem {
 const props = defineProps<{
     mosaic: Mosaic;
     albums: Album[];
+    mosaicId?: string;
 }>();
 
 const emit = defineEmits<{

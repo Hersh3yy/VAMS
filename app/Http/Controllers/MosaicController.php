@@ -13,14 +13,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageService;
 
 class MosaicController extends Controller
 {
     protected $mosaicService;
+    protected $imageService;
 
-    public function __construct(MosaicService $mosaicService)
+    public function __construct(MosaicService $mosaicService, ImageService $imageService)
     {
         $this->mosaicService = $mosaicService;
+        $this->imageService = $imageService;
     }
 
     // Web Routes
@@ -443,16 +446,41 @@ class MosaicController extends Controller
         }
 
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240', // 10MB max
+            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:30720', // 30MB max like albums
         ]);
 
-        $file = $request->file('media');
-        $path = $file->store('mosaics/' . $mosaic->id, 'public');
-        $type = str_starts_with($file->getMimeType(), 'video/') ? 'video' : 'image';
+        try {
+            $file = $request->file('media');
+            
+            // Use ImageService to store the file (same as albums)
+            $result = $this->imageService->storeImage(
+                $file,
+                "mosaics/{$mosaic->id}"
+            );
+            
+            // Determine the type
+            $mime = $file->getMimeType();
+            $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
 
-        return response()->json([
-            'path' => Storage::url($path),
-            'type' => $type,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'path' => $result['url'],
+                    'type' => $type,
+                    'mime_type' => $mime,
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    // Include WebP URL if available
+                    'webp_url' => $result['webp_url'] ?? null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to upload mosaic media: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: ' . $e->getMessage()
+            ], 422);
+        }
     }
 }

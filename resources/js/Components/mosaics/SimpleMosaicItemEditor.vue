@@ -279,6 +279,7 @@ const props = defineProps<{
     show: boolean;
     item: MosaicItem | null;
     albums: Album[];
+    mosaicId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -292,7 +293,7 @@ const selectedType = ref<string>('media');
 const selectedAlbumId = ref<string>('');
 const selectedAlbum = ref<Album | null>(null);
 const selectedImageId = ref<string>('');
-const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string } | null>(null);
+const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string; serverData?: any } | null>(null);
 const selectedColor = ref('#3B82F6');
 const colorText = ref('');
 const textContent = ref('');
@@ -348,8 +349,12 @@ const previewItem = computed((): MosaicItem => {
         }
     } else if (selectedType.value === 'media' && uploadedMedia.value) {
         baseItem.properties = {
-            media_url: uploadedMedia.value.preview,
-            title: 'Uploaded Media'
+            media: {
+                type: uploadedMedia.value.type,
+                path: uploadedMedia.value.preview,
+                // Include server data for proper storage
+                ...(uploadedMedia.value.serverData || {})
+            }
         };
     } else if (selectedType.value === 'color') {
         baseItem.properties = {
@@ -374,7 +379,7 @@ const previewItem = computed((): MosaicItem => {
 });
 
 // Methods
-const handleFileUpload = (event: Event) => {
+const handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
@@ -387,14 +392,44 @@ const handleFileUpload = (event: Event) => {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    try {
+        // Upload the file to the backend using the same approach as albums
+        const formData = new FormData();
+        formData.append('media', file);
+
+        // Get CSRF token
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) {
+            throw new Error('CSRF token not found');
+        }
+
+        const response = await fetch(route('mosaics.media.upload', { mosaic: props.mosaicId }), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+
+        // Set the uploaded media with the server response
         uploadedMedia.value = {
             type: isImage ? 'image' : 'video',
-            preview: e.target?.result as string
+            preview: result.data.path,
+            serverData: result.data
         };
-    };
-    reader.readAsDataURL(file);
+
+    } catch (error) {
+        console.error('Upload failed:', error);
+        alert('Failed to upload file: ' + (error as Error).message);
+    }
 };
 
 const removeMedia = () => {

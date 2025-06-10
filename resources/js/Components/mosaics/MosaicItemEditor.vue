@@ -379,6 +379,7 @@ const props = defineProps<{
     isEditing: boolean;
     item: MosaicItemWithImage;
     albums: Album[];
+    mosaicId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -400,7 +401,7 @@ const selectedAlbum = ref<Album | null>(props.item?.properties?.album ? {
     images: props.item.properties.album.images
 } : null);
 const selectedImage = ref<AlbumImage | null>(null);
-const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string } | null>(null);
+const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string; serverData?: any } | null>(null);
 const selectedColor = ref('#ffffff');
 const itemHeight = ref(props.item?.properties?.height || 100);
 const textOverlay = ref({
@@ -463,7 +464,7 @@ const isValid = computed(() => {
 });
 
 // Methods
-const handleMediaUpload = (event: Event) => {
+const handleMediaUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
@@ -476,18 +477,49 @@ const handleMediaUpload = (event: Event) => {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    try {
+        // Upload the file to the backend using the same approach as albums
+        const formData = new FormData();
+        formData.append('media', file);
+
+        // Get CSRF token
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) {
+            throw new Error('CSRF token not found');
+        }
+
+        const response = await fetch(route('mosaics.media.upload', { mosaic: props.mosaicId }), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+
+        // Set the uploaded media with the server response
         uploadedMedia.value = {
             type: isImage ? 'image' : 'video',
-            preview: e.target?.result as string
+            preview: result.data.path,
+            serverData: result.data
         };
+
         // Reset image controls for new media
         if (isImage) {
             resetImagePosition();
         }
-    };
-    reader.readAsDataURL(file);
+
+    } catch (error) {
+        console.error('Upload failed:', error);
+        alert('Failed to upload file: ' + (error as Error).message);
+    }
 };
 
 const removeMedia = () => {
@@ -559,12 +591,16 @@ const handleSave = () => {
     if (selectedType.value === 'media' && uploadedMedia.value) {
         itemData.properties = {
             ...itemData.properties,
-            media_url: uploadedMedia.value.preview,
             media: {
                 type: uploadedMedia.value.type,
                 path: uploadedMedia.value.preview,
                 scale: imageControls.value.scale / 100,
-                position: `${imageControls.value.x}% ${imageControls.value.y}%`
+                position: `${imageControls.value.x}% ${imageControls.value.y}%`,
+                // Include server metadata
+                mime_type: uploadedMedia.value.serverData?.mime_type,
+                original_name: uploadedMedia.value.serverData?.original_name,
+                size: uploadedMedia.value.serverData?.size,
+                webp_url: uploadedMedia.value.serverData?.webp_url,
             }
         };
     }
