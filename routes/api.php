@@ -101,3 +101,15 @@ Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
     Route::delete('/media', [MediaController::class, 'delete'])
         ->name('api.media.delete');
 });
+
+// Truly public routes (no authentication required) - for testing
+Route::prefix('open')->group(function () {
+    Route::get('/albums/by-title/{title}', [AlbumController::class, 'showByTitlePublic']);
+    Route::get('/test', function () {
+        return response()->json([
+            'message' => 'Public API endpoint working',
+            'timestamp' => now()->toISOString(),
+            'cors' => 'enabled'
+        ]);
+    });
+});
