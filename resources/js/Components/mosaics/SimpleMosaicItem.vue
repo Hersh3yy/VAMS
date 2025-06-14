@@ -7,11 +7,29 @@
         <div class="aspect-video bg-gray-100">
             <!-- Album Item -->
             <template v-if="item.type === 'album' && item.properties?.album">
-                <img 
-                    :src="item.properties.selected_image?.path || item.properties.album.cover_image_path || '/placeholder.jpg'"
-                    :alt="item.properties.selected_image?.caption || item.properties.selected_image?.title ||item.properties.album.title || 'Album'"
-                    class="w-full h-full object-contain"
-                />
+                <!-- Check if selected image is a video -->
+                <template v-if="item.properties.selected_image?.path && isVideoUrl(item.properties.selected_image.path)">
+                    <div class="w-full h-full flex items-center justify-center bg-gray-800 relative">
+                        <div class="text-center text-white p-4">
+                            <svg class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <p class="text-xs">{{ item.properties.selected_image.title || 'Video' }}</p>
+                        </div>
+                        <div class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                            VIDEO
+                        </div>
+                    </div>
+                </template>
+                <!-- Regular image -->
+                <template v-else>
+                    <img 
+                        :src="item.properties.selected_image?.path || item.properties.album.cover_image_path || '/images/placeholder.svg'"
+                        :alt="item.properties.selected_image?.caption || item.properties.selected_image?.title ||item.properties.album.title || 'Album'"
+                        class="w-full h-full object-cover"
+                        @error="handleImageError"
+                    />
+                </template>
                 <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <h3 class="text-white text-sm font-medium text-center px-2">
                         {{ item.properties.selected_image?.caption || item.properties.selected_image?.title || item.properties.album.title }}
@@ -19,13 +37,14 @@
                 </div>
             </template>
 
-            <!-- Media Item -->
-            <template v-else-if="item.type === 'media' && item.properties?.media_url">
-                <img 
-                    :src="item.properties.media_url" 
-                    :alt="item.properties.title || 'Media'"
-                    class="w-full h-full object-contain"
-                />
+            <!-- Media Item (Updated to handle new structure) -->
+            <template v-else-if="item.type === 'media' && (item.properties?.media_url || item.properties?.media?.path)">
+                                    <img 
+                        :src="item.properties.media?.path || item.properties.media_url || '/images/placeholder.svg'" 
+                        :alt="item.properties.title || 'Media'"
+                        class="w-full h-full object-cover"
+                        @error="handleImageError"
+                    />
             </template>
 
             <!-- Color Item -->
@@ -114,6 +133,21 @@ const getContrastColor = (hexColor: string): string => {
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     
     return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
+// Helper function to check if a URL is a video URL
+const isVideoUrl = (url: string): boolean => {
+    return url.includes('youtube.com') || 
+           url.includes('youtu.be') || 
+           url.includes('vimeo.com') ||
+           url.includes('youtube.') ||
+           url.includes('vimeo.');
+};
+
+// Handle image loading errors
+const handleImageError = (event: Event) => {
+    const img = event.target as HTMLImageElement;
+    img.src = '/images/placeholder.svg';
 };
 </script>
 

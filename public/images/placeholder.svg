@@ -1,0 +1,11 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#f3f4f6"/>
+  <g transform="translate(200,150)">
+    <circle r="30" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/>
+    <circle r="12" fill="#9ca3af"/>
+    <path d="m-20,10 L-10,0 L0,10 L10,0 L20,10 L10,20 L-10,20 Z" fill="#d1d5db" stroke="#9ca3af" stroke-width="1"/>
+  </g>
+  <text x="200" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af">
+    Image not available
+  </text>
+</svg> 

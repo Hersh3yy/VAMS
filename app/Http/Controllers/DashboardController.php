@@ -9,6 +9,7 @@ use App\Models\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -19,22 +20,24 @@ class DashboardController extends Controller
         $stats = [
             'totalAlbums' => Album::where('user_id', $user->id)->count(),
             'totalMosaics' => Mosaic::where('user_id', $user->id)->count(),
-            'totalImages' => Album::where('user_id', $user->id)->withCount('images')->get()->sum('images_count'),
-            'totalVideos' => Album::where('user_id', $user->id)
-                ->join('album_images', 'albums.id', '=', 'album_images.album_id')
+            'totalImages' => DB::table('album_images')
+                ->join('albums', 'album_images.album_id', '=', 'albums.id')
+                ->where('albums.user_id', $user->id)
+                ->count(),
+            'totalVideos' => DB::table('album_images')
+                ->join('albums', 'album_images.album_id', '=', 'albums.id')
+                ->where('albums.user_id', $user->id)
                 ->where('album_images.properties->type', 'video')
                 ->count(),
         ];
 
         // Get recent albums
         $recentAlbums = Album::where('user_id', $user->id)
-            ->with(['images' => function ($query) {
-                $query->take(1);
-            }])
+            ->with('images')
             ->latest()
             ->take(6)
             ->get()
-            ->map(function ($album) {
+            ->map(function (Album $album) {
                 return [
                     'id' => $album->id,
                     'title' => $album->title,

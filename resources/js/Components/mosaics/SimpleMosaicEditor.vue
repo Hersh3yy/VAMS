@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 // @ts-ignore
 import Draggable from 'vue3-draggable';
 import SimpleMosaicItem from './SimpleMosaicItem.vue';
@@ -200,6 +200,12 @@ const saveItem = (item: MosaicItem) => {
     hasChanges.value = true;
     closeItemEditor();
     emitUpdate();
+    
+    // Force reactivity update
+    nextTick(() => {
+        // Trigger component re-render by updating a reactive property
+        columnItems.value = [...columnItems.value];
+    });
 };
 
 const closeItemEditor = () => {

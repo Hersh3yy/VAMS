@@ -419,10 +419,10 @@ const handleFileUpload = async (event: Event) => {
 
         const result = await response.json();
 
-        // Set the uploaded media with the server response
+        // Set the uploaded media with the server response (using server path, not base64)
         uploadedMedia.value = {
             type: isImage ? 'image' : 'video',
-            preview: result.data.path,
+            preview: result.data.url || result.data.path, // Use server URL for preview
             serverData: result.data
         };
 
@@ -490,12 +490,12 @@ const handleSave = () => {
             album: {
                 id: selectedAlbum.value.id.toString(),
                 title: selectedAlbum.value.title,
-                cover_image_path: selectedAlbum.value.cover_image_path,
-                images: selectedAlbum.value.images
+                cover_image_path: selectedAlbum.value.cover_image_path
+                // Don't include all images to reduce payload size
             }
         };
         
-        // If a specific image is selected, include it
+        // If a specific image is selected, include only that image's ID and essential data
         if (selectedImageId.value && selectedAlbum.value.images) {
             const selectedImage = selectedAlbum.value.images.find(img => img.id === selectedImageId.value);
             if (selectedImage) {
@@ -504,11 +504,23 @@ const handleSave = () => {
                     id: selectedImage.id,
                     path: selectedImage.path,
                     title: selectedImage.title || null,
-                    caption: selectedImage.caption || null,
-                    properties: selectedImage.properties
+                    caption: selectedImage.caption || null
+                    // Don't include large properties object to reduce payload
                 };
             }
         }
+    } else if (selectedType.value === 'media' && uploadedMedia.value?.serverData) {
+        // For media, only include server data (not base64 preview)
+        item.properties = {
+            media: {
+                type: uploadedMedia.value.type,
+                path: uploadedMedia.value.serverData.path || uploadedMedia.value.serverData.url,
+                mime_type: uploadedMedia.value.serverData.mime_type,
+                original_name: uploadedMedia.value.serverData.original_name,
+                size: uploadedMedia.value.serverData.size,
+                webp_url: uploadedMedia.value.serverData.webp_url
+            }
+        };
     } else {
         // Use the existing preview item properties for other types
         item.properties = previewItem.value.properties;
