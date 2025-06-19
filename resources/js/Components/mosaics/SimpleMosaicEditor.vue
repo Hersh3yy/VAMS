@@ -151,7 +151,7 @@ const updateColumns = () => {
 
 const addItem = (columnIndex: number) => {
     const newItem: MosaicItem = {
-        id: Date.now().toString(), // Simple ID generation
+        id: '', // No ID needed for creation - backend will generate
         type: 'media',
         column_index: columnIndex,
         order: itemsInColumn(columnIndex).length,

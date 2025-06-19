@@ -63,7 +63,6 @@ class MosaicService
         $user = Auth::user();
         
         return $user->mosaics()->create([
-            'id' => Str::uuid(),
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'columns' => $data['columns'] ?? 3,
@@ -283,7 +282,6 @@ class MosaicService
 
         // Create a new empty text item after the current one
         return MosaicItem::create([
-            'id' => Str::uuid(),
             'mosaic_id' => $mosaicItem->mosaic_id,
             'column_index' => $mosaicItem->column_index,
             'type' => 'text',

@@ -271,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import Modal from '@/Components/general/Modal.vue';
 import type { MosaicItem, Album } from '@/types/mosaic';
 
@@ -477,7 +477,7 @@ const handleSave = () => {
     }
 
     const item: MosaicItem = {
-        id: props.item?.id || Date.now().toString(),
+        id: '', // No ID needed for creation - backend will generate
         type: selectedType.value as any,
         column_index: props.item?.column_index || 0,
         order: props.item?.order || 0,

@@ -51,7 +51,6 @@ class MosaicController extends Controller
 
         $user = Auth::user();
         $mosaic = $user->mosaics()->create([
-            'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'],
             'columns' => $validated['columns'],
@@ -166,7 +165,6 @@ class MosaicController extends Controller
                 'description' => 'nullable|string',
                 'columns' => 'nullable|integer|min:2|max:5',
                 'items' => 'required|array', // Temporarily remove min:1 for debugging
-                'items.*.id' => 'required|string',
                 'items.*.column_index' => 'required|integer|min:0',
                 'items.*.type' => 'required|string|in:album,media,color,text',
                 'items.*.content' => 'nullable',
@@ -248,7 +246,6 @@ class MosaicController extends Controller
         foreach ($validated['items'] as $index => $item) {
             try {
                 $mosaic->items()->create([
-                    'id' => $item['id'],
                     'column_index' => $item['column_index'],
                     'type' => $item['type'],
                     'content' => $item['content'] ?? null,
@@ -373,7 +370,6 @@ class MosaicController extends Controller
         ]);
 
         $item = $mosaic->items()->create([
-            'id' => Str::uuid(),
             'type' => $validated['type'],
             'properties' => $validated['properties'],
             'order' => $validated['order'],
