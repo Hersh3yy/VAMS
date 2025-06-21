@@ -29,6 +29,7 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- MVP: SimpleMosaicEditor simplified for album images only -->
                 <SimpleMosaicEditor
                     :mosaic="{
                         ...props.mosaic,
@@ -202,8 +203,9 @@ const saveMosaic = () => {
     const validationErrors: string[] = [];
     
     mosaicItems.value.forEach((item, index) => {
-        if (!item.id) {
-            validationErrors.push(`Item ${index + 1}: Missing ID`);
+        // Allow empty IDs and temporary IDs for new items - backend will generate real IDs
+        if (item.id && !item.id.startsWith('temp_') && item.id.trim() === '') {
+            validationErrors.push(`Item ${index + 1}: Invalid ID`);
         }
         if (!item.type) {
             validationErrors.push(`Item ${index + 1}: Missing type`);
@@ -230,12 +232,18 @@ const saveMosaic = () => {
 
     console.log('Validation passed, sending request...');
     
+    // Clean up temporary IDs for new items before sending to backend
+    const itemsToSave = mosaicItems.value.map(item => ({
+        ...item,
+        id: item.id?.startsWith('temp_') ? '' : item.id
+    }));
+    
     // Add a timeout to prevent infinite waiting
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     axios.patch(`/mosaics/${props.mosaic.id}`, {
-        items: mosaicItems.value
+        items: itemsToSave
     }, {
         signal: controller.signal,
         timeout: 30000

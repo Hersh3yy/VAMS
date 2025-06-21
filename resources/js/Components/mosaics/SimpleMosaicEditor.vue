@@ -152,7 +152,7 @@ const updateColumns = () => {
 const addItem = (columnIndex: number) => {
     const newItem: MosaicItem = {
         id: '', // No ID needed for creation - backend will generate
-        type: 'media',
+        type: 'album', // MVP: Default to album type for simplified workflow
         column_index: columnIndex,
         order: itemsInColumn(columnIndex).length,
         properties: {}
@@ -178,14 +178,20 @@ const deleteItem = (item: MosaicItem) => {
 const saveItem = (item: MosaicItem) => {
     console.log('SaveItem called with:', item);
     
+    // For new items (empty ID), generate a temporary unique ID for client-side tracking
+    if (!item.id || item.id === '') {
+        item.id = `temp_${Date.now()}_${Math.random()}`;
+        console.log('Generated temporary ID for new item:', item.id);
+    }
+    
     const existingIndex = items.value.findIndex(i => i.id === item.id);
     
     if (existingIndex !== -1) {
         console.log('Updating existing item at index:', existingIndex);
-        items.value[existingIndex] = item;
+        items.value[existingIndex] = { ...item };
     } else {
         console.log('Adding new item');
-        items.value.push(item);
+        items.value.push({ ...item });
     }
     
     console.log('Items after save:', items.value);

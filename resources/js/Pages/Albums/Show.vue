@@ -52,57 +52,23 @@
         />
         
         <!-- Video Modal -->
-        <div v-if="showVideoModal && selectedVideo" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform w-full max-w-4xl">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 class="text-lg font-medium">{{ selectedVideo.title || 'Video' }}</h3>
-                    <button @click="closeVideoModal" class="text-gray-500 hover:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-4">
-                    <div class="aspect-video">
-                        <iframe
-                            v-if="videoEmbedUrl"
-                            :src="videoEmbedUrl"
-                            class="w-full h-full"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen
-                        ></iframe>
-                    </div>
-                    <div v-if="selectedVideo.caption" class="mt-4 p-4 bg-gray-100 rounded">
-                        <p>{{ selectedVideo.caption }}</p>
-                    </div>
-                </div>
-                <div class="p-4 border-t flex justify-end">
-                    <button @click="confirmDeleteImage(selectedVideo)" class="text-red-600 hover:text-red-800 mr-4">
-                        Delete Video
-                    </button>
-                    <button @click="closeVideoModal" class="btn-primary">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
+        <VideoModal
+            :show="showVideoModal"
+            :video="selectedVideo"
+            @close="closeVideoModal"
+            @delete="confirmDeleteImage"
+        />
         
         <!-- Confirmation Dialog -->
-        <div v-if="showConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 class="text-lg font-medium mb-4">{{ confirmationTitle }}</h3>
-                <p>{{ confirmationMessage }}</p>
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button @click="cancelConfirmation" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
-                        Cancel
-                    </button>
-                    <button @click="confirmAction" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
+        <ConfirmationDialog
+            :show="showConfirmation"
+            :title="confirmationTitle"
+            :message="confirmationMessage"
+            confirm-text="Delete"
+            cancel-text="Cancel"
+            @confirm="confirmAction"
+            @cancel="cancelConfirmation"
+        />
 
         <!-- Add Video Modal -->
         <VideoWizard
@@ -118,10 +84,12 @@
 import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ImageModal from '@/Components/albums/ImageModal.vue';
+import VideoModal from '@/Components/albums/VideoModal.vue';
 import AlbumHeader from '@/Components/albums/AlbumHeader.vue';
 import AlbumGrid from '@/Components/albums/AlbumGrid.vue';
 import AlbumCover from '@/Components/albums/AlbumCover.vue';
 import VideoWizard from '@/Components/albums/VideoWizard.vue';
+import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { ref, computed } from 'vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
 import type { Album, AlbumImage } from '@/types/album';
@@ -168,30 +136,6 @@ const videoUrl = ref('');
 const videoTitle = ref('');
 const videoCaption = ref('');
 const showAddVideoModal = ref(false);
-
-const videoEmbedUrl = computed(() => {
-    if (!selectedVideo.value) return null;
-    if (selectedVideo.value.properties?.type === 'video') {
-        const url = selectedVideo.value.properties.video_url || selectedVideo.value.path;
-        // Convert to embed URL for YouTube/Vimeo
-        if (url.includes('youtube.com/watch')) {
-            const videoId = url.split('v=')[1]?.split('&')[0];
-            return `https://www.youtube.com/embed/${videoId}`;
-        } else if (url.includes('youtu.be/')) {
-            const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-            return `https://www.youtube.com/embed/${videoId}`;
-        } else if (url.includes('vimeo.com/')) {
-            const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-            return `https://player.vimeo.com/video/${videoId}`;
-        }
-    }
-    return null;
-});
-
-const isValidVideoUrl = computed(() => {
-    if (!videoUrl.value) return false;
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(videoUrl.value);
-});
 
 const openModal = (image: AlbumImage) => {
     if (image.properties?.type === 'video') {

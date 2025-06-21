@@ -10,155 +10,67 @@
                 </button>
             </div>
 
-            <!-- Step 1: Layout Selection -->
+            <!-- MVP: Direct album selection for simplified workflow -->
             <div v-if="currentStep === 1" class="p-6">
-                <h4 class="text-lg font-medium mb-4">Choose Layout</h4>
-                <div class="grid grid-cols-2 gap-4">
-                    <button 
-                        @click="selectLayout(1)"
-                        class="p-4 border rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        :class="{ 'border-blue-500': selectedLayout === 1 }"
-                    >
-                        <div class="aspect-square bg-gray-100 rounded"></div>
-                        <p class="mt-2 text-center">Single Item</p>
-                    </button>
-                    <button 
-                        @click="selectLayout(2)"
-                        class="p-4 border rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        :class="{ 'border-blue-500': selectedLayout === 2 }"
-                    >
-                        <div class="aspect-square bg-gray-100 rounded grid grid-cols-2 gap-2">
-                            <div class="bg-gray-200 rounded"></div>
-                            <div class="bg-gray-200 rounded"></div>
-                        </div>
-                        <p class="mt-2 text-center">Two Items</p>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 2: Type Selection -->
-            <div v-if="currentStep === 2" class="p-6">
-                <h4 class="text-lg font-medium mb-4">Choose Type for Item {{ currentItemIndex + 1 }}</h4>
-                <div class="grid grid-cols-3 gap-4">
-                    <button 
-                        @click="selectType('media')"
-                        class="p-4 border rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        :class="{ 'border-blue-500': selectedType === 'media' }"
-                    >
-                        <div class="aspect-square bg-gray-100 rounded flex items-center justify-center">
-                            <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <p class="mt-2 text-center">Image/Video</p>
-                    </button>
-                    <button 
-                        @click="selectType('color')"
-                        class="p-4 border rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        :class="{ 'border-blue-500': selectedType === 'color' }"
-                    >
-                        <div class="aspect-square bg-gray-100 rounded flex items-center justify-center">
-                            <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                            </svg>
-                        </div>
-                        <p class="mt-2 text-center">Color Block</p>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 3: Content Selection -->
-            <div v-if="currentStep === 3" class="p-6">
-                <h4 class="text-lg font-medium mb-4">Select Content</h4>
+                <h4 class="text-lg font-medium mb-4">Select Album</h4>
                 
-                <!-- Image Selection -->
-                <div v-if="selectedType === 'media'" class="space-y-4">
-                    <div class="flex space-x-4 mb-4">
-                        <button 
-                            @click="contentSource = 'upload'"
-                            class="px-4 py-2 border rounded-lg"
-                            :class="{ 'border-blue-500 bg-blue-50': contentSource === 'upload' }"
-                        >
-                            Upload Image
-                        </button>
-                        <button 
-                            @click="contentSource = 'album'"
-                            class="px-4 py-2 border rounded-lg"
-                            :class="{ 'border-blue-500 bg-blue-50': contentSource === 'album' }"
-                        >
-                            Choose from Album
-                        </button>
-                        <button 
-                            @click="contentSource = 'video'"
-                            class="px-4 py-2 border rounded-lg"
-                            :class="{ 'border-blue-500 bg-blue-50': contentSource === 'video' }"
-                        >
-                            Add Video
-                        </button>
-                    </div>
-
-                    <!-- Upload Section -->
-                    <div v-if="contentSource === 'upload'" class="border-2 border-dashed rounded-lg p-6 text-center">
-                        <input 
-                            type="file" 
-                            ref="fileInput"
-                            class="hidden" 
-                            accept="image/*"
-                            @change="handleFileUpload"
-                        >
-                        <button 
-                            @click="fileInput?.click()"
-                            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                        >
-                            Select Image
-                        </button>
-                    </div>
-
-                    <!-- Album Selection -->
-                    <div v-if="contentSource === 'album'" class="grid grid-cols-3 gap-4">
-                        <div 
-                            v-for="album in albums" 
-                            :key="album.id"
-                            class="aspect-square cursor-pointer"
-                            @click="selectAlbum(album)"
-                        >
-                            <img 
-                                :src="album.cover_image_path || '/placeholder.jpg'"
-                                :alt="album.title"
-                                class="w-full h-full object-cover rounded-lg"
-                            />
-                            <p class="mt-2 text-center">{{ album.title }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Video Selection -->
-                    <div v-if="contentSource === 'video'" class="space-y-4">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Video URL</label>
-                            <input 
-                                type="text"
-                                v-model="videoUrl"
-                                placeholder="Enter YouTube or Vimeo URL"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
+                <!-- Album Grid -->
+                <div v-if="albums.length === 0" class="text-center py-8">
+                    <p class="text-gray-500">No albums available. Please create an album first.</p>
                 </div>
-
-                <!-- Color Selection -->
-                <div v-if="selectedType === 'color'" class="space-y-4">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Color</label>
-                        <input 
-                            type="color"
-                            v-model="selectedColor"
-                            class="mt-1 block w-full h-12 rounded-md shadow-sm"
+                <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                    <div 
+                        v-for="album in albums" 
+                        :key="album.id"
+                        class="aspect-square cursor-pointer border-2 border-gray-200 rounded-lg overflow-hidden hover:border-blue-500 transition-all duration-200"
+                        :class="{ 'border-blue-500 ring-2 ring-blue-200': selectedAlbum?.id === album.id }"
+                        @click="selectAlbum(album)"
+                    >
+                        <img 
+                            :src="album.cover_image_path || '/placeholder.jpg'"
+                            :alt="album.title"
+                            class="w-full h-full object-cover"
                         />
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+                            <div class="opacity-0 hover:opacity-100 transition-opacity duration-200 text-center">
+                                <h3 class="text-white text-sm font-medium">{{ album.title }}</h3>
+                                <p class="text-white text-xs">{{ album.images?.length || 0 }} images</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Step 4: Text and Link -->
+            <!-- Step 2: Image Selection from Selected Album -->
+            <div v-if="currentStep === 2 && selectedAlbum" class="p-6">
+                <h4 class="text-lg font-medium mb-4">Select Image from "{{ selectedAlbum.title }}"</h4>
+                
+                <div v-if="!selectedAlbum.images || selectedAlbum.images.length === 0" class="text-center py-8">
+                    <p class="text-gray-500">No images in this album.</p>
+                </div>
+                <div v-else class="grid grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
+                    <div 
+                        v-for="image in selectedAlbum.images" 
+                        :key="image.id"
+                        class="aspect-square cursor-pointer border-2 border-gray-200 rounded overflow-hidden hover:border-blue-500 transition-all duration-200"
+                        :class="{ 'border-blue-500 ring-2 ring-blue-200': selectedImageId === image.id }"
+                        @click="selectedImageId = image.id"
+                    >
+                        <img 
+                            :src="getImageUrl(image)"
+                            :alt="image.title || `Image ${image.id}`"
+                            class="w-full h-full object-cover"
+                        />
+                        <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MVP: Commenting out text and link step - simplified workflow for album images only
             <div v-if="currentStep === 4" class="p-6">
                 <h4 class="text-lg font-medium mb-4">Add Text and Link</h4>
                 
@@ -193,6 +105,7 @@
                     </div>
                 </div>
             </div>
+            -->
 
             <!-- Navigation Buttons -->
             <div class="p-4 border-t flex justify-between">
@@ -215,7 +128,7 @@
                         class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                         :disabled="!canProceed"
                     >
-                        {{ isLastStep ? 'Finish' : 'Next' }}
+                        {{ currentStep === 1 ? 'Select Images' : 'Add to Mosaic' }}
                     </button>
                 </div>
             </div>
@@ -253,6 +166,7 @@ const contentSource = ref<'upload' | 'album' | 'video' | null>(null);
 const videoUrl = ref('');
 const selectedColor = ref('#ffffff');
 const selectedAlbum = ref<Album | null>(null);
+const selectedImageId = ref<string | null>(null);
 
 // Text and link
 const textContent = ref('');
@@ -300,6 +214,7 @@ const selectType = (type: 'media' | 'color' | 'text' | 'album' | 'video') => {
 
 const selectAlbum = (album: Album) => {
     selectedAlbum.value = album;
+    selectedImageId.value = null; // Reset image selection when changing albums
 };
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -312,27 +227,28 @@ const handleFileUpload = (event: Event) => {
 
 const nextStep = () => {
     if (isLastStep.value) {
-        // Save the item
+        // Save the album image item
+        const selectedImage = selectedAlbum.value?.images?.find(img => img.id === selectedImageId.value);
+        
         const item: Partial<MosaicItem> = {
-            type: selectedType.value!,
+            type: 'album',
             properties: {
-                // Add properties based on type
+                album: {
+                    id: selectedAlbum.value!.id.toString(),
+                    title: selectedAlbum.value!.title,
+                    cover_image_path: selectedAlbum.value!.cover_image_path
+                },
+                selected_image: selectedImage ? {
+                    id: selectedImage.id,
+                    path: selectedImage.path,
+                    title: selectedImage.title ?? undefined,
+                    caption: selectedImage.caption ?? undefined
+                } : undefined
             }
         };
+        
         emit('save', item);
         emit('close');
-    } else if (currentStep.value === 4 && selectedLayout.value === 2 && currentItemIndex.value === 0) {
-        // Move to second item
-        currentItemIndex.value = 1;
-        currentStep.value = 2;
-        selectedType.value = null;
-        contentSource.value = null;
-        selectedAlbum.value = null;
-        videoUrl.value = '';
-        selectedColor.value = '#ffffff';
-        textContent.value = '';
-        textColor.value = '#000000';
-        linkUrl.value = '';
     } else {
         currentStep.value++;
     }
@@ -345,5 +261,21 @@ const previousStep = () => {
     } else {
         currentStep.value--;
     }
+};
+
+const getImageUrl = (image: AlbumImage) => {
+    // Try to get thumbnail URL from properties
+    if (image.properties) {
+        const props = typeof image.properties === 'string' 
+            ? JSON.parse(image.properties) 
+            : image.properties;
+            
+        if (props.thumbnail_url) {
+            return props.thumbnail_url;
+        }
+    }
+    
+    // Fallback to regular path
+    return image.path;
 };
 </script> 

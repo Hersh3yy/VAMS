@@ -104,7 +104,7 @@
                 </div>
             </div>
 
-            <!-- Media Upload -->
+            <!-- MVP: Commenting out Media Upload for now - only album images allowed
             <div v-if="selectedType === 'media'">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Upload Media
@@ -153,8 +153,9 @@
                     </div>
                 </div>
             </div>
+            -->
 
-            <!-- Color Selection -->
+            <!-- MVP: Commenting out Color Selection for now - only album images allowed
             <div v-if="selectedType === 'color'">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Background Color
@@ -177,8 +178,9 @@
                     />
                 </div>
             </div>
+            -->
 
-            <!-- Text Content -->
+            <!-- MVP: Commenting out Text Content for now - only album images allowed
             <div v-if="selectedType === 'text'">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Text Content
@@ -190,6 +192,7 @@
                     class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 ></textarea>
             </div>
+            -->
 
             <!-- Preview -->
             <div v-if="canPreview">
@@ -197,31 +200,40 @@
                     Preview
                 </label>
                 <div class="border rounded-lg p-4 bg-gray-50">
-                    <!-- Simple Preview without SimpleMosaicItem -->
-                    <div class="aspect-video bg-white rounded-lg overflow-hidden shadow-sm">
+                    <div class="w-full h-32 overflow-hidden rounded">
                         <!-- Album Preview -->
                         <template v-if="selectedType === 'album' && selectedAlbum">
-                            <img 
-                                :src="selectedImageId && selectedAlbum.images ? 
-                                    getImageUrl(selectedAlbum.images.find(img => img.id === selectedImageId)) : 
-                                    selectedAlbum.cover_image_path || '/placeholder.jpg'"
-                                :alt="selectedImageId ? 
-                                    selectedAlbum.images?.find(img => img.id === selectedImageId)?.title || 'Selected image' : 
-                                    selectedAlbum.title"
-                                class="w-full h-full object-cover"
-                            />
+                            <div class="w-full h-full relative">
+                                <img 
+                                    :src="selectedAlbum.cover_image_path || '/placeholder.jpg'"
+                                    :alt="selectedAlbum.title"
+                                    class="w-full h-full object-cover"
+                                />
+                                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                                    <div class="text-white text-center">
+                                        <h4 class="font-medium">{{ selectedAlbum.title }}</h4>
+                                        <p class="text-xs">{{ selectedAlbum.images?.length || 0 }} images</p>
+                                    </div>
+                                </div>
+                            </div>
                         </template>
                         
-                        <!-- Media Preview -->
+                        <!-- MVP: Commenting out other preview types for now - only album images allowed
                         <template v-else-if="selectedType === 'media' && uploadedMedia">
                             <img 
+                                v-if="uploadedMedia.type === 'image'"
                                 :src="uploadedMedia.preview" 
-                                alt="Preview"
+                                alt="Preview" 
                                 class="w-full h-full object-cover"
                             />
+                            <video 
+                                v-else 
+                                :src="uploadedMedia.preview" 
+                                class="w-full h-full object-cover" 
+                                muted
+                            ></video>
                         </template>
                         
-                        <!-- Color Preview -->
                         <template v-else-if="selectedType === 'color'">
                             <div 
                                 class="w-full h-full flex items-center justify-center"
@@ -237,7 +249,6 @@
                             </div>
                         </template>
                         
-                        <!-- Text Preview -->
                         <template v-else-if="selectedType === 'text'">
                             <div class="w-full h-full flex items-center justify-center bg-gray-50 p-4">
                                 <p class="text-sm text-gray-800 text-center">
@@ -245,6 +256,7 @@
                                 </p>
                             </div>
                         </template>
+                        -->
                     </div>
                 </div>
             </div>
@@ -289,7 +301,7 @@ const emit = defineEmits<{
 }>();
 
 // Form state
-const selectedType = ref<string>('media');
+const selectedType = ref<string>('album');
 const selectedAlbumId = ref<string>('');
 const selectedAlbum = ref<Album | null>(null);
 const selectedImageId = ref<string>('');
@@ -304,9 +316,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 // Item types
 const itemTypes = [
     { value: 'album', label: 'Album' },
-    { value: 'media', label: 'Media' },
-    { value: 'color', label: 'Color' },
-    { value: 'text', label: 'Text' }
+    // MVP: Commenting out other types for now - only album images allowed
+    // { value: 'media', label: 'Media' },
+    // { value: 'color', label: 'Color' },
+    // { value: 'text', label: 'Text' }
 ];
 
 // Computed properties
@@ -550,7 +563,7 @@ watch(() => props.item, (newItem) => {
         }
     } else {
         // Reset form
-        selectedType.value = 'media';
+        selectedType.value = 'album';
         selectedAlbumId.value = '';
         selectedAlbum.value = null;
         selectedImageId.value = '';
