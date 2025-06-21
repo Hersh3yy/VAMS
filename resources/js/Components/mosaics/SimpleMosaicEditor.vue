@@ -130,7 +130,6 @@ const initializeColumns = () => {
     
     // Force re-render by incrementing reactivity key
     reactivityKey.value++;
-    console.log('Columns initialized, reactivity key updated to:', reactivityKey.value);
 };
 
 // Watch items and columns to reinitialize
@@ -184,32 +183,21 @@ const deleteItem = (item: MosaicItem) => {
 };
 
 const saveItem = (item: MosaicItem) => {
-    console.log('SaveItem called with:', item);
-    
     // For new items (empty ID), generate a temporary unique ID for client-side tracking
     if (!item.id || item.id === '') {
         item.id = `temp_${Date.now()}_${Math.random()}`;
-        console.log('Generated temporary ID for new item:', item.id);
     }
     
     const existingIndex = items.value.findIndex(i => i.id === item.id);
     
     if (existingIndex !== -1) {
-        console.log('Updating existing item at index:', existingIndex);
         items.value[existingIndex] = { ...item };
     } else {
-        console.log('Adding new item');
         items.value.push({ ...item });
     }
     
-    console.log('Items after save:', items.value);
-    console.log('Item column index:', item.column_index);
-    console.log('Items in column', item.column_index, ':', items.value.filter(i => i.column_index === item.column_index));
-    
     // Force re-initialization of columns
     initializeColumns();
-    
-    console.log('Column items after init:', columnItems.value);
     
     hasChanges.value = true;
     closeItemEditor();
@@ -228,9 +216,6 @@ const closeItemEditor = () => {
 };
 
 const emitUpdate = () => {
-    console.log('EmitUpdate called, current items:', items.value);
-    console.log('Column items:', columnItems.value);
-    
     // Always emit the current items without complex comparison
     emit('update', {
         ...props.mosaic,
@@ -264,21 +249,17 @@ watch(columnItems, (newColumnItems) => {
 
 // Watch for external changes with better handling
 watch(() => props.mosaic.items, (newItems) => {
-    console.log('SimpleMosaicEditor: Props mosaic items changed:', newItems);
     if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
-        console.log('SimpleMosaicEditor: Updating local items with new props');
         items.value = [...(newItems || [])];
         // Force re-initialization of columns to ensure UI updates
         nextTick(() => {
             initializeColumns();
-            console.log('SimpleMosaicEditor: Columns reinitialized after props change');
         });
     }
 }, { deep: true, immediate: true });
 
 // Also watch the entire mosaic object for other changes
 watch(() => props.mosaic, (newMosaic) => {
-    console.log('SimpleMosaicEditor: Entire mosaic prop changed:', newMosaic);
     if (newMosaic.columns !== columnCount.value) {
         columnCount.value = newMosaic.columns || 3;
     }
@@ -287,7 +268,6 @@ watch(() => props.mosaic, (newMosaic) => {
         // Force re-initialization of columns to ensure UI updates
         nextTick(() => {
             initializeColumns();
-            console.log('SimpleMosaicEditor: Columns reinitialized after full mosaic change');
         });
     }
 }, { deep: true, immediate: true });

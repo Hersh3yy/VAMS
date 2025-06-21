@@ -363,8 +363,8 @@ const albumImages = computed(() => {
                     return false;
                 }
             } catch (error) {
+                const props = {};
                 // If properties can't be parsed, assume it's an image
-                console.warn('Failed to parse image properties:', error);
             }
         }
         
@@ -477,8 +477,8 @@ const handleFileUpload = async (event: Event) => {
         };
 
     } catch (error) {
-        console.error('Upload failed:', error);
-        alert('Failed to upload file: ' + (error as Error).message);
+        // Show user-friendly error message instead of console error
+        alert('Unable to upload file. Please try again or choose a different file.');
     }
 };
 
@@ -490,9 +490,7 @@ const removeMedia = () => {
 };
 
 const selectImage = (image: any) => {
-    console.log('Image selected:', image);
     selectedImageId.value = image.id;
-    console.log('Selected image ID set to:', selectedImageId.value);
 };
 
 const getImageUrl = (image: any) => {
@@ -512,17 +510,7 @@ const getImageUrl = (image: any) => {
 };
 
 const handleSave = () => {
-    console.log('SimpleMosaicItemEditor handleSave called');
-    console.log('Form state:', {
-        selectedType: selectedType.value,
-        selectedAlbumId: selectedAlbumId.value,
-        selectedAlbum: selectedAlbum.value,
-        selectedImageId: selectedImageId.value,
-        isValid: isValid.value
-    });
-    
     if (!isValid.value) {
-        console.warn('Form is not valid, cannot save');
         return;
     }
 
@@ -549,7 +537,6 @@ const handleSave = () => {
         if (selectedImageId.value && selectedAlbum.value.images) {
             const selectedImage = selectedAlbum.value.images.find(img => img.id === selectedImageId.value);
             if (selectedImage) {
-                console.log('Including selected image in save:', selectedImage);
                 item.properties.selected_image = {
                     id: selectedImage.id,
                     path: selectedImage.path,
@@ -576,7 +563,6 @@ const handleSave = () => {
         item.properties = previewItem.value.properties;
     }
 
-    console.log('Final item to save:', item);
     emit('save', item);
 };
 

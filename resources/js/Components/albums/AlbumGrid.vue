@@ -58,6 +58,16 @@ const handleItemDelete = (item: AlbumImage) => {
     emit('item-delete', item);
 };
 
+const handleStart = (evt: any) => {
+    // Track drag start
+};
+
+const handleEnd = (evt: any) => {
+    if (evt.oldIndex !== evt.newIndex) {
+        emit('reorder', evt.oldIndex, evt.newIndex);
+    }
+};
+
 onMounted(() => {
     if (gridContainer.value) {
         sortableInstance = Sortable.create(gridContainer.value, {
@@ -65,25 +75,8 @@ onMounted(() => {
             ghostClass: 'ghost-item',
             chosenClass: 'chosen-item',
             dragClass: 'drag-item',
-            onStart: (evt: SortableEvent) => {
-                console.log('Drag start - oldIndex:', evt.oldIndex);
-            },
-            onEnd: (evt: SortableEvent) => {
-                console.log('Drag end - oldIndex:', evt.oldIndex, 'newIndex:', evt.newIndex);
-                
-                if (evt.oldIndex !== undefined && 
-                    evt.newIndex !== undefined && 
-                    evt.oldIndex !== evt.newIndex) {
-                    
-                    // Update local items array
-                    const movedItem = localItems.value[evt.oldIndex];
-                    localItems.value.splice(evt.oldIndex, 1);
-                    localItems.value.splice(evt.newIndex, 0, movedItem);
-                    
-                    console.log('Emitting reorder:', evt.oldIndex, evt.newIndex);
-                    emit('reorder', evt.oldIndex, evt.newIndex);
-                }
-            }
+            onStart: handleStart,
+            onEnd: handleEnd
         });
     }
 });

@@ -71,7 +71,7 @@ watch(() => props.item, (newItem) => {
         try {
             currentProps = typeof newItem.properties === 'string' ? JSON.parse(newItem.properties) : newItem.properties;
         } catch (e) {
-            console.error("Error parsing item properties for modal:", e);
+            // Silently handle malformed properties
             currentProps = {};
         }
         editableProperties.linkUrl = currentProps.linkUrl || '';
@@ -103,7 +103,8 @@ const saveProperties = () => {
             ? JSON.parse(localItem.value.properties) 
             : (localItem.value.properties || {});
     } catch (e) {
-        console.error("Error parsing existing properties on save:", e);
+        // Silently handle malformed existing properties
+        existingProps = {};
     }
 
     const updatedProps = {

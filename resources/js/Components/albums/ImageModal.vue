@@ -212,10 +212,15 @@ const saveChanges = async () => {
             onSuccess: () => {
                 emit('update', { ...props.image, ...updateData });
                 emit('close');
+            },
+            onError: () => {
+                // Handle error with user-friendly message
+                alert('Unable to save changes. Please try again.');
             }
         });
     } catch (error) {
-        console.error('Failed to update item:', error);
+        // Show user-friendly error message
+        alert('Unable to save changes. Please try again.');
     }
 };
 </script>

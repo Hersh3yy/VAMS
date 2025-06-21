@@ -15,13 +15,13 @@
                         @click="saveMosaic" 
                         class="px-4 py-2 rounded-md font-medium transition-all duration-300 transform"
                         :class="{ 
-                            'opacity-50 cursor-not-allowed bg-gray-400 text-gray-600': !hasChanges || !hasItems,
-                            'bg-primary hover:bg-primary-dark text-white shadow-lg hover:shadow-xl hover:scale-105': hasChanges && hasItems,
-                            'animate-pulse': hasChanges && hasItems
+                            'opacity-50 cursor-not-allowed bg-gray-400 text-gray-600': !hasChanges || !hasItems || isSaving,
+                            'bg-primary hover:bg-primary-dark text-white shadow-lg hover:shadow-xl hover:scale-105': hasChanges && hasItems && !isSaving,
+                            'animate-pulse': (hasChanges && hasItems && !isSaving) || isSaving
                         }"
-                        :disabled="!hasChanges || !hasItems"
+                        :disabled="!hasChanges || !hasItems || isSaving"
                     >
-                        {{ !hasItems ? 'Add Items First' : hasChanges ? 'Save Changes' : 'Saved' }}
+                        {{ isSaving ? 'Saving...' : !hasItems ? 'Add Items First' : hasChanges ? 'Save Changes' : 'Saved' }}
                     </button>
                 </div>
             </div>
@@ -137,24 +137,17 @@ const mosaicItems = ref<MosaicItem[]>(props.mosaic.items || []);
 const showImageModal = ref(false);
 const selectedItemId = ref<string | null>(null);
 const hasChanges = ref(false);
+const isSaving = ref(false);
 
 // Watch for changes in props.mosaic and update local state
 watch(() => props.mosaic, (newMosaic) => {
-    console.log('Props mosaic changed, updating mosaicItems:', newMosaic.items);
     mosaicItems.value = newMosaic.items || [];
     hasChanges.value = false; // Reset changes flag since we're syncing with server state
 }, { deep: true, immediate: true });
 
 const handleMosaicUpdate = (updatedMosaic: Mosaic) => {
-    console.log('Mosaic update received in Edit.vue:', updatedMosaic);
-    console.log('Items in updated mosaic:', updatedMosaic.items);
-    console.log('Current mosaicItems before update:', mosaicItems.value);
-    
     mosaicItems.value = updatedMosaic.items;
     hasChanges.value = true;
-    
-    console.log('Updated mosaicItems:', mosaicItems.value);
-    console.log('hasChanges set to:', hasChanges.value);
 };
 
 const openImageSelector = (itemId: string) => {
@@ -209,7 +202,7 @@ const getImageUrl = (image: AlbumImage) => {
 };
 
 const saveMosaic = () => {
-    console.log('Starting mosaic save...', { items: mosaicItems.value });
+    if (isSaving.value) return; // Prevent double submissions
     
     // Validate items before saving
     const validationErrors: string[] = [];
@@ -231,8 +224,7 @@ const saveMosaic = () => {
     });
     
     if (validationErrors.length > 0) {
-        console.error('Validation errors:', validationErrors);
-        toast.error(`Validation failed:\n${validationErrors.join('\n')}`, {
+        toast.error('Please check your mosaic items and try again.', {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -242,7 +234,16 @@ const saveMosaic = () => {
         return;
     }
 
-    console.log('Validation passed, sending request...');
+    isSaving.value = true;
+
+    // Show saving toast
+    toast.info('Saving your mosaic...', {
+        position: "top-right",
+        autoClose: 10000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: false,
+    });
     
     // Clean up temporary IDs for new items before sending to backend
     const itemsToSave = mosaicItems.value.map(item => ({
@@ -261,11 +262,10 @@ const saveMosaic = () => {
         timeout: 30000
     }).then((response) => {
         clearTimeout(timeoutId);
-        console.log('Save successful:', response);
+        isSaving.value = false;
         
         // Update the server response includes the updated items
         if (response.data.mosaic) {
-            console.log('Updating mosaic with server data:', response.data.mosaic);
             mosaicItems.value = response.data.mosaic.items || [];
         }
         
@@ -275,11 +275,11 @@ const saveMosaic = () => {
         router.reload({
             only: ['mosaic'],
             onSuccess: () => {
-                console.log('Router reload completed, mosaic should be updated');
+                // Success handled by props watcher
             }
         });
         
-        toast.success('Mosaic saved successfully', {
+        toast.success('Your mosaic has been saved successfully!', {
             position: "top-right",
             autoClose: 3000,
             hideProgressBar: false,
@@ -288,34 +288,24 @@ const saveMosaic = () => {
         });
     }).catch((error) => {
         clearTimeout(timeoutId);
-        console.error('Error saving mosaic:', error);
+        isSaving.value = false;
         
         // Extract specific error messages from validation
-        let errorMessage = 'Failed to save mosaic';
+        let errorMessage = 'Something went wrong while saving your mosaic.';
         
         if (error.code === 'ECONNABORTED' || error.name === 'AbortError') {
-            errorMessage = 'Request timed out. The server may be overloaded. Please try again.';
+            errorMessage = 'The save is taking longer than expected. Please try again in a moment.';
         } else if (error.response?.data?.errors) {
-            const validationErrors = error.response.data.errors;
-            const errorDetails = Object.entries(validationErrors)
-                .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-                .join('\n');
-            errorMessage = `${error.response.data.message || 'Validation failed'}\n\n${errorDetails}`;
-            
-            // Show debug info if available
-            if (error.response.data.debug_info) {
-                console.log('Debug info:', error.response.data.debug_info);
-                errorMessage += `\n\nDebug: Items count: ${error.response.data.debug_info.items_count}`;
-            }
+            errorMessage = 'Please check your mosaic items and try again.';
         } else if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
+            errorMessage = 'Unable to save your mosaic. Please try again.';
         } else if (error.message) {
-            errorMessage = `Network error: ${error.message}`;
+            errorMessage = 'Connection error. Please check your internet and try again.';
         }
         
         toast.error(errorMessage, {
             position: "top-right",
-            autoClose: 10000,
+            autoClose: 8000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
@@ -328,6 +318,6 @@ const hasItems = computed(() => mosaicItems.value && mosaicItems.value.length > 
 
 // Watch mosaicItems for debugging
 watch(mosaicItems, (newItems) => {
-    console.log('mosaicItems changed:', newItems);
+    // Items updated
 }, { deep: true });
 </script>
