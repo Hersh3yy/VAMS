@@ -27,7 +27,7 @@
         >
             <div 
                 v-for="columnIndex in columnCount" 
-                :key="columnIndex"
+                :key="`column-${columnIndex}-${reactivityKey}`"
                 class="min-h-[400px] border-2 border-dashed border-gray-300 rounded-lg p-4"
             >
                 <div class="flex justify-between items-center mb-4">
@@ -43,6 +43,7 @@
                 <!-- Items in this column -->
                 <Draggable 
                     v-model="columnItems[columnIndex - 1]" 
+                    :key="`draggable-${columnIndex}-${reactivityKey}`"
                     class="space-y-4 min-h-[200px]"
                     :transition="200"
                     group="mosaic-items"
@@ -114,6 +115,9 @@ const showItemEditor = ref(false);
 const editingItem = ref<MosaicItem | null>(null);
 const hasChanges = ref(false);
 
+// Add a reactivity key to force re-renders when needed
+const reactivityKey = ref(0);
+
 // Create reactive column arrays
 const columnItems = ref<MosaicItem[][]>([]);
 
@@ -123,6 +127,10 @@ const initializeColumns = () => {
         items.value.filter(item => item.column_index === colIndex)
             .sort((a, b) => a.order - b.order)
     );
+    
+    // Force re-render by incrementing reactivity key
+    reactivityKey.value++;
+    console.log('Columns initialized, reactivity key updated to:', reactivityKey.value);
 };
 
 // Watch items and columns to reinitialize
@@ -256,11 +264,33 @@ watch(columnItems, (newColumnItems) => {
 
 // Watch for external changes with better handling
 watch(() => props.mosaic.items, (newItems) => {
+    console.log('SimpleMosaicEditor: Props mosaic items changed:', newItems);
     if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
+        console.log('SimpleMosaicEditor: Updating local items with new props');
         items.value = [...(newItems || [])];
-        initializeColumns();
+        // Force re-initialization of columns to ensure UI updates
+        nextTick(() => {
+            initializeColumns();
+            console.log('SimpleMosaicEditor: Columns reinitialized after props change');
+        });
     }
-}, { deep: true });
+}, { deep: true, immediate: true });
+
+// Also watch the entire mosaic object for other changes
+watch(() => props.mosaic, (newMosaic) => {
+    console.log('SimpleMosaicEditor: Entire mosaic prop changed:', newMosaic);
+    if (newMosaic.columns !== columnCount.value) {
+        columnCount.value = newMosaic.columns || 3;
+    }
+    if (JSON.stringify(newMosaic.items) !== JSON.stringify(items.value)) {
+        items.value = [...(newMosaic.items || [])];
+        // Force re-initialization of columns to ensure UI updates
+        nextTick(() => {
+            initializeColumns();
+            console.log('SimpleMosaicEditor: Columns reinitialized after full mosaic change');
+        });
+    }
+}, { deep: true, immediate: true });
 </script>
 
 <style scoped>

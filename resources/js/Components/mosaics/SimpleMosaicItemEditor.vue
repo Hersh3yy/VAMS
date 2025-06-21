@@ -66,7 +66,7 @@
                             />
                             <div>
                                 <h4 class="font-medium text-gray-900">{{ selectedAlbum?.title }}</h4>
-                                <p class="text-sm text-gray-500">{{ selectedAlbum?.images?.length || 0 }} images</p>
+                                <p class="text-sm text-gray-500">{{ albumImages.length }} images</p>
                             </div>
                         </div>
                         <button 
@@ -78,11 +78,11 @@
                     </div>
                     
                     <!-- Album Images Grid -->
-                    <div v-if="selectedAlbum?.images?.length" class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Select Image from Album</label>
+                    <div v-if="albumImages.length > 0" class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Select Image from Album ({{ albumImages.length }} images)</label>
                         <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                             <div 
-                                v-for="image in selectedAlbum.images" 
+                                v-for="image in albumImages" 
                                 :key="image.id"
                                 @click="selectImage(image)"
                                 class="relative aspect-square cursor-pointer border-2 border-gray-200 rounded overflow-hidden hover:border-blue-500 transition-all duration-200"
@@ -99,6 +99,16 @@
                                     </svg>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Show message if album has no images (only videos) -->
+                    <div v-else-if="selectedAlbum?.images && selectedAlbum.images.length > 0" class="text-center py-8">
+                        <div class="text-gray-500">
+                            <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p>This album contains only videos. Please select an album with images.</p>
                         </div>
                     </div>
                 </div>
@@ -334,6 +344,33 @@ const isValid = computed(() => {
         return textContent.value.trim() !== '';
     }
     return true; // Color is always valid
+});
+
+// Filter album images to exclude videos - only show image files
+const albumImages = computed(() => {
+    if (!selectedAlbum.value?.images) return [];
+    
+    return selectedAlbum.value.images.filter(image => {
+        // Check if properties field indicates this is a video
+        if (image.properties) {
+            try {
+                const props = typeof image.properties === 'string' 
+                    ? JSON.parse(image.properties) 
+                    : image.properties;
+                
+                // If type is explicitly "video", exclude it
+                if (props.type === 'video') {
+                    return false;
+                }
+            } catch (error) {
+                // If properties can't be parsed, assume it's an image
+                console.warn('Failed to parse image properties:', error);
+            }
+        }
+        
+        // Include all items that are not explicitly marked as video
+        return true;
+    });
 });
 
 const canPreview = computed(() => {

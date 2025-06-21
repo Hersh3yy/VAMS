@@ -138,11 +138,23 @@ const showImageModal = ref(false);
 const selectedItemId = ref<string | null>(null);
 const hasChanges = ref(false);
 
+// Watch for changes in props.mosaic and update local state
+watch(() => props.mosaic, (newMosaic) => {
+    console.log('Props mosaic changed, updating mosaicItems:', newMosaic.items);
+    mosaicItems.value = newMosaic.items || [];
+    hasChanges.value = false; // Reset changes flag since we're syncing with server state
+}, { deep: true, immediate: true });
+
 const handleMosaicUpdate = (updatedMosaic: Mosaic) => {
     console.log('Mosaic update received in Edit.vue:', updatedMosaic);
     console.log('Items in updated mosaic:', updatedMosaic.items);
+    console.log('Current mosaicItems before update:', mosaicItems.value);
+    
     mosaicItems.value = updatedMosaic.items;
     hasChanges.value = true;
+    
+    console.log('Updated mosaicItems:', mosaicItems.value);
+    console.log('hasChanges set to:', hasChanges.value);
 };
 
 const openImageSelector = (itemId: string) => {
@@ -250,10 +262,22 @@ const saveMosaic = () => {
     }).then((response) => {
         clearTimeout(timeoutId);
         console.log('Save successful:', response);
+        
+        // Update the server response includes the updated items
+        if (response.data.mosaic) {
+            console.log('Updating mosaic with server data:', response.data.mosaic);
+            mosaicItems.value = response.data.mosaic.items || [];
+        }
+        
         hasChanges.value = false;
         
         // Use Inertia router for reactive update instead of full page reload
-        router.reload({ only: ['mosaic'] });
+        router.reload({
+            only: ['mosaic'],
+            onSuccess: () => {
+                console.log('Router reload completed, mosaic should be updated');
+            }
+        });
         
         toast.success('Mosaic saved successfully', {
             position: "top-right",
