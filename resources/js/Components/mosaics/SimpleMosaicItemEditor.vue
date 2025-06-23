@@ -223,6 +223,7 @@
                                     <div class="text-white text-center">
                                         <h4 class="font-medium">{{ selectedAlbum.title }}</h4>
                                         <p class="text-xs">{{ selectedAlbum.images?.length || 0 }} images</p>
+                                        <p v-if="linkUrl.trim()" class="text-xs mt-1 opacity-75">🔗 Clickable</p>
                                     </div>
                                 </div>
                             </div>
@@ -269,6 +270,38 @@
                         -->
                     </div>
                 </div>
+            </div>
+
+            <!-- Link Options -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Link (Optional)
+                </label>
+                <input
+                    v-model="linkUrl"
+                    type="text"
+                    placeholder="Enter URL, album title, or path starting with '/'"
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                    Examples: "My Album" (album title), "/gallery" (internal path), "https://example.com" (external URL)
+                </p>
+            </div>
+
+            <!-- Edit Text Field -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Display Text (Optional)
+                </label>
+                <input
+                    v-model="editText"
+                    type="text"
+                    placeholder="Text to display on hover or above the item"
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                    This text will be shown when hovering over the mosaic item instead of the album name
+                </p>
             </div>
         </div>
 
@@ -319,6 +352,8 @@ const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string; serverData
 const selectedColor = ref('#3B82F6');
 const colorText = ref('');
 const textContent = ref('');
+const linkUrl = ref('');
+const editText = ref('');
 
 // File input ref
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -515,7 +550,7 @@ const handleSave = () => {
     }
 
     const item: MosaicItem = {
-        id: '', // No ID needed for creation - backend will generate
+        id: props.item?.id || '', // Preserve existing ID for updates, empty for new items
         type: selectedType.value as any,
         column_index: props.item?.column_index || 0,
         order: props.item?.order || 0,
@@ -563,6 +598,22 @@ const handleSave = () => {
         item.properties = previewItem.value.properties;
     }
 
+    // Add link property if provided
+    if (linkUrl.value.trim()) {
+        if (!item.properties) {
+            item.properties = {};
+        }
+        (item.properties as any).link = linkUrl.value.trim();
+    }
+
+    // Add edit text property if provided
+    if (editText.value.trim()) {
+        if (!item.properties) {
+            item.properties = {};
+        }
+        (item.properties as any).edit_text = editText.value.trim();
+    }
+
     emit('save', item);
 };
 
@@ -584,6 +635,10 @@ watch(() => props.item, (newItem) => {
         } else if (newItem.type === 'text') {
             textContent.value = (typeof newItem.properties?.text === 'string' ? newItem.properties.text : newItem.properties?.text?.content || '');
         }
+        
+        // Handle existing link
+        linkUrl.value = (newItem.properties as any)?.link || '';
+        editText.value = (newItem.properties as any)?.edit_text || '';
     } else {
         // Reset form
         selectedType.value = 'album';
@@ -594,6 +649,8 @@ watch(() => props.item, (newItem) => {
         selectedColor.value = '#3B82F6';
         colorText.value = '';
         textContent.value = '';
+        linkUrl.value = '';
+        editText.value = '';
     }
 }, { immediate: true });
 

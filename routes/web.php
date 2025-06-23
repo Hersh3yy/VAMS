@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Album Images CRUD operations  
     Route::post('/albums/{album}/images', [\App\Http\Controllers\AlbumImageController::class, 'store'])->name('albums.images.store');
+    Route::post('/albums/{album}/images/video', [\App\Http\Controllers\AlbumImageController::class, 'storeVideo'])->name('albums.images.store-video');
     Route::patch('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'update'])->name('albums.images.update');
     Route::delete('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'destroy'])->name('albums.images.destroy');
     Route::patch('/albums/{album}/reorder', [\App\Http\Controllers\AlbumImageController::class, 'reorder'])->name('albums.images.reorder');

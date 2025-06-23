@@ -11,6 +11,7 @@ class AlbumImage extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
+        'album_id',
         'path',
         'title',
         'caption',

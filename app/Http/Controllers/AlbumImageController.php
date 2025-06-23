@@ -53,7 +53,7 @@ class AlbumImageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Album $album)
     {
         Log::info('AlbumImageController@store - Raw request data:', $request->all());
         Log::info('AlbumImageController@store - Request files:', $request->allFiles());
@@ -63,14 +63,12 @@ class AlbumImageController extends Controller
             Log::info('AlbumImageController@store - Starting validation');
             
             $request->validate([
-                'album_id' => 'required|exists:albums,id',
                 'images' => 'required|array',
                 'images.*' => 'required|image',
             ]);
             
             Log::info('AlbumImageController@store - Validation passed');
 
-            $album = Album::findOrFail($request->album_id);
             Log::info('AlbumImageController@store - Found album:', ['album_id' => $album->id, 'title' => $album->title]);
             
             $this->authorize('update', $album);
@@ -268,19 +266,17 @@ class AlbumImageController extends Controller
     /**
      * Store a video URL as an album image
      */
-    public function storeVideo(Request $request)
+    public function storeVideo(Request $request, Album $album)
     {
         Log::info('Incoming video request data:', $request->all());
 
         try {
             $request->validate([
-                'album_id' => 'required|exists:albums,id',
                 'url' => 'required|url',
                 'title' => 'nullable|string|max:255',
                 'caption' => 'nullable|string',
             ]);
 
-            $album = Album::findOrFail($request->album_id);
             $this->authorize('update', $album);
 
             $lastOrder = $album->images()->max('order') ?? -1;

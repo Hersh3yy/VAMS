@@ -19,7 +19,6 @@ export function useAlbum(albumId: string) {
         uploadProgress.value = 0;
 
         const formData = new FormData();
-        formData.append('album_id', albumId);
         Array.from(input.files).forEach(file => {
             formData.append('images[]', file);
         });
@@ -65,7 +64,7 @@ export function useAlbum(albumId: string) {
             });
 
             // Set up the request
-            xhr.open('POST', route('album-images.store'));
+            xhr.open('POST', route('albums.images.store', albumId));
             xhr.setRequestHeader('X-CSRF-TOKEN', token);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Accept', 'application/json');
@@ -128,23 +127,14 @@ export function useAlbum(albumId: string) {
 
     const addVideo = async (url: string, title?: string, caption?: string) => {
         try {
-            await router.post(route('album-images.store-video', albumId), {
-                album_id: albumId,
+            await router.post(route('albums.images.store-video', albumId), {
                 url,
                 title,
-                caption,
+                caption
             }, {
                 preserveScroll: true,
                 preserveState: false,
-                only: ['album'],
-                onSuccess: () => {
-                    // Success handled by Inertia redirect
-                },
-                onError: (errors) => {
-                    console.error('Add video errors:', errors);
-                    const errorMessage = errors.message || errors.url || 'Error adding video';
-                    showError(errorMessage);
-                }
+                only: ['album']
             });
         } catch (error) {
             console.error('Add video failed:', error);

@@ -104,16 +104,19 @@ class ProfileController extends Controller
         $user = $request->user();
         $settings = $request->input('album_display_settings');
 
+        // Get existing settings to preserve colors when they're not being updated
+        $existingSettings = $user->album_display_settings ?? [];
+
         $user->album_display_settings = [
-            'caption' => $settings['caption'] ?? true,
-            'altText' => $settings['altText'] ?? false,
-            'dateCreated' => $settings['dateCreated'] ?? false,
-            'location' => $settings['location'] ?? false,
-            'tags' => $settings['tags'] ?? false,
-            'title' => $settings['title'] ?? false,
-            'author' => $settings['author'] ?? false,
-            'main_color' => $settings['main_color'] ?? '#4F46E5',
-            'secondary_color' => $settings['secondary_color'] ?? '#10B981',
+            'caption' => isset($settings['caption']) ? (bool)$settings['caption'] : true,
+            'altText' => isset($settings['altText']) ? (bool)$settings['altText'] : false,
+            'dateCreated' => isset($settings['dateCreated']) ? (bool)$settings['dateCreated'] : false,
+            'location' => isset($settings['location']) ? (bool)$settings['location'] : false,
+            'tags' => isset($settings['tags']) ? (bool)$settings['tags'] : false,
+            'title' => isset($settings['title']) ? (bool)$settings['title'] : false,
+            'author' => isset($settings['author']) ? (bool)$settings['author'] : false,
+            'main_color' => $settings['main_color'] ?? $existingSettings['main_color'] ?? '#4F46E5',
+            'secondary_color' => $settings['secondary_color'] ?? $existingSettings['secondary_color'] ?? '#10B981',
         ];
 
         $user->save();
