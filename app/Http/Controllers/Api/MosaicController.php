@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
+use App\Services\ImageService;
 use App\Http\Controllers\Api\Traits\HandlesApiOperations;
 use App\Http\Requests\StoreMosaicRequest;
 use Illuminate\Http\JsonResponse;
@@ -17,10 +18,12 @@ class MosaicController extends BaseApiController
     use HandlesApiOperations;
 
     private readonly MosaicService $mosaicService;
+    private readonly ImageService $imageService;
 
-    public function __construct(MosaicService $mosaicService)
+    public function __construct(MosaicService $mosaicService, ImageService $imageService)
     {
         $this->mosaicService = $mosaicService;
+        $this->imageService = $imageService;
     }
 
     public function index(Request $request): JsonResponse
@@ -138,5 +141,51 @@ class MosaicController extends BaseApiController
         return $this->success([
             'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
         ]);
+    }
+
+    /**
+     * Upload media for a mosaic
+     */
+    public function storeMedia(Request $request, string $mosaicId): JsonResponse
+    {
+        // User is automatically set by the api.key middleware
+        $user = $request->user();
+        
+        $mosaic = $user->mosaics()->find($mosaicId);
+        if (!$mosaic) {
+            return $this->notFound('Mosaic not found');
+        }
+
+        $request->validate([
+            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:30720', // 30MB max
+        ]);
+
+        try {
+            $file = $request->file('media');
+            
+            // Use ImageService to store the file (same as albums)
+            $result = $this->imageService->storeImage(
+                $file,
+                "mosaics/{$mosaic->id}"
+            );
+            
+            // Determine the type
+            $mime = $file->getMimeType();
+            $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
+
+            return $this->success([
+                'path' => $result['url'],
+                'url' => $result['url'], // For compatibility
+                'type' => $type,
+                'mime_type' => $mime,
+                'original_name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                // Include WebP URL if available
+                'webp_url' => $result['webp_url'] ?? null,
+            ], 201);
+            
+        } catch (\Exception $e) {
+            return $this->error('Upload failed: ' . $e->getMessage(), 422);
+        }
     }
 } 

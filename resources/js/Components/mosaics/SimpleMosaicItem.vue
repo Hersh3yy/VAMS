@@ -8,7 +8,32 @@
             <!-- Album Item -->
             <template v-if="item.type === 'album' && item.properties?.album">
                 <!-- Check if selected image is a video -->
-                <template v-if="item.properties.selected_image?.path && isVideoUrl(item.properties.selected_image.path)">
+                <template v-if="item.properties.selected_image?.properties?.type === 'video'">
+                    <div class="w-full h-full flex items-center justify-center bg-gray-800 relative">
+                        <!-- Use thumbnail if available, otherwise show video icon -->
+                        <img 
+                            v-if="item.properties.selected_image.properties.thumbnail_url"
+                            :src="item.properties.selected_image.properties.thumbnail_url"
+                            :alt="item.properties.selected_image.title || 'Video thumbnail'"
+                            class="w-full h-full object-cover"
+                        />
+                        <div v-else class="text-center text-white p-4">
+                            <svg class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <p class="text-xs">{{ item.properties.selected_image.title || 'Video' }}</p>
+                        </div>
+                        <!-- Video badge -->
+                        <div class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <span>VIDEO</span>
+                        </div>
+                    </div>
+                </template>
+                <!-- Check if selected image is a regular video URL (fallback) -->
+                <template v-else-if="item.properties.selected_image?.path && isVideoUrl(item.properties.selected_image.path)">
                     <div class="w-full h-full flex items-center justify-center bg-gray-800 relative">
                         <div class="text-center text-white p-4">
                             <svg class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
@@ -24,8 +49,8 @@
                 <!-- Regular image -->
                 <template v-else>
                     <img 
-                        :src="item.properties.selected_image?.path || item.properties.album.cover_image_path || '/images/placeholder.svg'"
-                        :alt="item.properties.selected_image?.caption || item.properties.selected_image?.title ||item.properties.album.title || 'Album'"
+                        :src="getImageSrc(item)"
+                        :alt="getImageAlt(item)"
                         class="w-full h-full object-cover"
                         @error="handleImageError"
                     />
@@ -135,13 +160,40 @@ const getContrastColor = (hexColor: string): string => {
     return luminance > 0.5 ? '#000000' : '#ffffff';
 };
 
-// Helper function to check if a URL is a video URL
-const isVideoUrl = (url: string): boolean => {
+// Helper function to get image source with fallbacks
+const getImageSrc = (item: MosaicItem) => {
+    if (item.properties?.selected_image) {
+        // Try thumbnail URL first (for videos with thumbnails)
+        if (item.properties.selected_image.properties?.thumbnail_url) {
+            return item.properties.selected_image.properties.thumbnail_url;
+        }
+        // Use the regular path
+        return item.properties.selected_image.path;
+    }
+    
+    // Fallback to album cover or placeholder
+    return item.properties?.album?.cover_image_path || '/images/placeholder.svg';
+};
+
+// Helper function to get appropriate alt text
+const getImageAlt = (item: MosaicItem) => {
+    if (item.properties?.selected_image) {
+        return item.properties.selected_image.caption || 
+               item.properties.selected_image.title || 
+               'Selected image';
+    }
+    
+    return item.properties?.album?.title || 'Album';
+};
+
+// Helper function to check if a URL is a video
+const isVideoUrl = (url: string) => {
     return url.includes('youtube.com') || 
            url.includes('youtu.be') || 
            url.includes('vimeo.com') ||
-           url.includes('youtube.') ||
-           url.includes('vimeo.');
+           url.includes('.mp4') ||
+           url.includes('.mov') ||
+           url.includes('.avi');
 };
 
 // Handle image loading errors

@@ -60,6 +60,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
             Route::delete('/{itemId}', [MosaicController::class, 'destroyItem']);
             Route::post('/reorder', [MosaicController::class, 'reorderItems']);
         });
+        
+        // Mosaic Media Upload
+        Route::post('/{mosaicId}/media', [MosaicController::class, 'storeMedia']);
     });
     
     // User-specific routes
