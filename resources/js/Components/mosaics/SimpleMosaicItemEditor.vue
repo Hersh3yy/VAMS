@@ -93,7 +93,7 @@
                 
                 <!-- Album Selection (when no item selected or creating new) -->
                 <div v-else-if="selectedAlbumId" class="space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="p-3 bg-blue-50 rounded-lg">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center space-x-3">
                                 <img
@@ -114,13 +114,56 @@
                                 Change Album
                             </button>
                         </div>
-                        
-                        <button 
-                            @click="openImageSelector"
-                            class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            Select Image from Album
-                        </button>
+                    </div>
+                    
+                    <!-- Album Images Grid -->
+                    <div v-if="albumImages.length > 0" class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Select Item from Album ({{ albumImages.length }} items)</label>
+                            <button 
+                                @click="openImageSelector"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                Browse All Albums
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                            <div 
+                                v-for="image in albumImages" 
+                                :key="image.id"
+                                @click="selectImage(image)"
+                                class="relative aspect-square cursor-pointer border-2 border-gray-200 rounded overflow-hidden hover:border-blue-500 transition-all duration-200"
+                                :class="{ 'border-blue-500 ring-2 ring-blue-200': selectedImageId === image.id }"
+                            >
+                                <img 
+                                    :src="getImageUrl(image)"
+                                    :alt="image.title || `Image ${image.id}`"
+                                    class="w-full h-full object-cover"
+                                />
+                                <!-- Video badge -->
+                                <div v-if="isVideoItem(image)" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 z-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Show message if album has no media items -->
+                    <div v-else-if="selectedAlbum?.images && selectedAlbum.images.length === 0" class="text-center py-8">
+                        <div class="text-gray-500">
+                            <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p>This album is empty. Please select an album with images or videos.</p>
+                        </div>
                     </div>
                 </div>
             </div>
