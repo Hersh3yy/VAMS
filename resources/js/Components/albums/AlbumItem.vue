@@ -44,17 +44,39 @@ const emit = defineEmits<{
 
 const isVideo = computed(() => {
     const item = props.item as AlbumImage;
-    return item.properties?.type === 'video' || 
-           item.path?.includes('youtube.com') || 
+    
+    // Handle both string and object properties
+    if (item.properties) {
+        const properties = typeof item.properties === 'string' 
+            ? JSON.parse(item.properties) 
+            : item.properties;
+        
+        if (properties?.type === 'video') {
+            return true;
+        }
+    }
+    
+    // Fallback check based on path
+    return item.path?.includes('youtube.com') || 
            item.path?.includes('youtu.be') || 
            item.path?.includes('vimeo.com');
 });
 
 const imageSrc = computed(() => {
     const item = props.item as AlbumImage;
-    if (isVideo.value && item.properties?.thumbnail_url) {
-        // Use thumbnail for videos if available
-        return item.properties.thumbnail_url;
+    if (isVideo.value) {
+        // For videos, try to use the thumbnail URL first
+        if (item.properties) {
+            const properties = typeof item.properties === 'string' 
+                ? JSON.parse(item.properties) 
+                : item.properties;
+            
+            if (properties?.thumbnail_url) {
+                return properties.thumbnail_url;
+            }
+        }
+        // Fallback to video placeholder if no thumbnail
+        return '/images/video-placeholder.svg';
     }
     return item.path;
 });

@@ -45,7 +45,7 @@
             v-if="selectedImage"
             :show="showModal" 
             :image="selectedImage" 
-            :display-settings="auth.user.album_display_settings"
+            :display-settings="album_display_settings"
             @close="closeModal" 
             @update="handleImageUpdate" 
             @delete="confirmDeleteImage"
@@ -93,22 +93,13 @@ import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { ref, computed } from 'vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
 import type { Album, AlbumImage } from '@/types/album';
+import type { User } from '@/types/index';
 
 const props = defineProps<{
     album: Album;
+    album_display_settings: NonNullable<User['album_display_settings']>;
     auth: {
-        user: {
-            id: string;
-            name: string;
-            email: string;
-            logo_url: string | null;
-            is_admin: boolean;
-            album_display_settings?: {
-                grid_columns: number;
-                show_titles: boolean;
-                show_captions: boolean;
-            };
-        };
+        user: User;
     };
 }>();
 

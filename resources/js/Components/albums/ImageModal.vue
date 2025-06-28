@@ -153,13 +153,25 @@ const formData = ref({
 });
 
 const isVideo = computed(() => {
-    return props.image?.properties?.type === 'video';
+    if (!props.image?.properties) return false;
+    
+    // Handle both string and object properties
+    const properties = typeof props.image.properties === 'string' 
+        ? JSON.parse(props.image.properties) 
+        : props.image.properties;
+    
+    return properties?.type === 'video';
 });
 
 const videoEmbedUrl = computed(() => {
     if (!isVideo.value) return null;
     
-    const url = props.image?.properties?.video_url || props.image?.path || '';
+    // Handle both string and object properties
+    const properties = typeof props.image.properties === 'string' 
+        ? JSON.parse(props.image.properties) 
+        : props.image.properties;
+    
+    const url = properties?.video_url || props.image?.path || '';
     
     // Convert to embed URL for YouTube/Vimeo
     if (url.includes('youtube.com/watch')) {
@@ -178,6 +190,11 @@ const videoEmbedUrl = computed(() => {
 
 watch(() => props.image, (newImage) => {
     if (newImage) {
+        // Handle both string and object properties
+        const properties = typeof newImage.properties === 'string' 
+            ? JSON.parse(newImage.properties) 
+            : newImage.properties;
+            
         formData.value = {
             title: newImage.title || '',
             altText: newImage.altText || '',
@@ -186,7 +203,7 @@ watch(() => props.image, (newImage) => {
             location: newImage.location || '',
             tags: newImage.tags || '',
             author: newImage.author || '',
-            videoUrl: newImage.properties?.video_url || newImage.path || '',
+            videoUrl: properties?.video_url || newImage.path || '',
         };
     }
 }, { immediate: true });
@@ -206,16 +223,17 @@ const saveChanges = async () => {
             author: formData.value.author,
         };
 
-        await router.put(route('album-images.update', props.image.id), updateData, {
+        await router.put(route('albums.images.update', { album: props.image.album_id, image: props.image.id }), updateData, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
                 emit('update', { ...props.image, ...updateData });
                 emit('close');
             },
-            onError: () => {
+            onError: (errors) => {
+                console.error('Album image update error:', errors);
                 // Handle error with user-friendly message
-                alert('Unable to save changes. Please try again.');
+                alert('Unable to save changes. Please check the fields and try again.');
             }
         });
     } catch (error) {

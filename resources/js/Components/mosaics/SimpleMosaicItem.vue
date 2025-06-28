@@ -8,20 +8,20 @@
             <!-- Album Item -->
             <template v-if="item.type === 'album' && item.properties?.album">
                 <!-- Check if selected image is a video -->
-                <template v-if="item.properties.selected_image?.properties?.type === 'video'">
+                <template v-if="isVideoWithProperties(item)">
                     <div class="w-full h-full flex items-center justify-center bg-gray-800 relative">
                         <!-- Use thumbnail if available, otherwise show video icon -->
                         <img 
-                            v-if="item.properties.selected_image.properties.thumbnail_url"
-                            :src="item.properties.selected_image.properties.thumbnail_url"
-                            :alt="item.properties.selected_image.title || 'Video thumbnail'"
+                            v-if="getVideoThumbnail(item)"
+                            :src="getVideoThumbnail(item)"
+                            :alt="item.properties.selected_image?.title || 'Video thumbnail'"
                             class="w-full h-full object-cover"
                         />
                         <div v-else class="text-center text-white p-4">
                             <svg class="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
-                            <p class="text-xs">{{ item.properties.selected_image.title || 'Video' }}</p>
+                            <p class="text-xs">{{ item.properties.selected_image?.title || 'Video' }}</p>
                         </div>
                         <!-- Video badge -->
                         <div class="absolute bottom-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
@@ -194,6 +194,34 @@ const isVideoUrl = (url: string) => {
            url.includes('.mp4') ||
            url.includes('.mov') ||
            url.includes('.avi');
+};
+
+// Helper function to check if item has video properties (parsing JSON string)
+const isVideoWithProperties = (item: MosaicItem) => {
+    if (!item.properties?.selected_image?.properties) return false;
+    
+    try {
+        const properties = typeof item.properties.selected_image.properties === 'string' 
+            ? JSON.parse(item.properties.selected_image.properties)
+            : item.properties.selected_image.properties;
+        return properties?.type === 'video';
+    } catch {
+        return false;
+    }
+};
+
+// Helper function to get video thumbnail URL
+const getVideoThumbnail = (item: MosaicItem) => {
+    if (!item.properties?.selected_image?.properties) return null;
+    
+    try {
+        const properties = typeof item.properties.selected_image.properties === 'string' 
+            ? JSON.parse(item.properties.selected_image.properties)
+            : item.properties.selected_image.properties;
+        return properties?.thumbnail_url || null;
+    } catch {
+        return null;
+    }
 };
 
 // Handle image loading errors
