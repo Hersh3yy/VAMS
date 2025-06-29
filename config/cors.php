@@ -25,8 +25,8 @@ return [
         'http://localhost:5173',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:5173',
-        // Add your production frontend domain when you have one
-        // 'https://yourdomain.com',
+        'https://2025-bengijzel.netlify.app',
+        '*', // Allow all origins for now - replace with specific domain
     ],
 
     'allowed_origins_patterns' => [],
@@ -37,6 +37,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ]; 
