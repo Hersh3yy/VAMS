@@ -258,6 +258,20 @@ class AlbumController extends Controller
     }
 
     // Public API methods with user display settings
+    public function indexWithApiKey(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        /** @var \App\Models\User $user */
+        $albums = $user->albums()->except(['images'])->get();
+        
+        return $this->handleSuccess([
+            'albums' => $albums->map(function($album) {
+                return $this->albumService->formatAlbumForApi($album);
+            })
+        ]);
+    }
+
     public function showWithApiKey(Request $request, $id): JsonResponse
     {
         // User is automatically set by the api.key middleware
