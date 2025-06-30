@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\AlbumImage;
+use App\Models\User;
 use App\Services\AlbumService;
 use App\Services\ImageService;
 use App\Http\Controllers\Api\Traits\HandlesApiOperations;
@@ -260,10 +261,13 @@ class AlbumController extends Controller
     // Public API methods with user display settings
     public function indexWithApiKey(Request $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
         
-        /** @var \App\Models\User $user */
-        $albums = $user->albums()->except(['images'])->get();
+        // Get albums directly by user_id to avoid potential relationship issues
+        $albums = Album::where('user_id', $user->id)
+            ->select('id', 'title', 'description', 'cover_image_path', 'user_id', 'created_at', 'updated_at')
+            ->get();
         
         return $this->handleSuccess([
             'albums' => $albums->map(function($album) {
