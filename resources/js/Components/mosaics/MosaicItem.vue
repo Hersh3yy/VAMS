@@ -48,7 +48,7 @@
                 />
             </template>
             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <h3 class="text-white text-lg font-medium">{{ item.properties?.selected_image?.caption || item.properties?.selected_image?.title || item.properties?.album?.title }}</h3>
+                <h3 class="text-white text-lg font-medium">{{ item.properties?.edit_text || item.properties?.selected_image?.caption || item.properties?.selected_image?.title || item.properties?.album?.title }}</h3>
             </div>
         </template>
 

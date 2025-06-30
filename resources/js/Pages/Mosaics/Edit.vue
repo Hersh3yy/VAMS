@@ -16,8 +16,11 @@
                         class="px-4 py-2 rounded-md font-medium transition-all duration-300 transform"
                         :class="{ 
                             'opacity-50 cursor-not-allowed bg-gray-400 text-gray-600': !hasChanges || !hasItems || isSaving,
-                            'bg-primary hover:bg-primary-dark text-white shadow-lg hover:shadow-xl hover:scale-105': hasChanges && hasItems && !isSaving,
+                            'text-white shadow-lg hover:shadow-xl hover:scale-105': hasChanges && hasItems && !isSaving,
                             'animate-pulse': (hasChanges && hasItems && !isSaving) || isSaving
+                        }"
+                        :style="{ 
+                            backgroundColor: (hasChanges && hasItems && !isSaving) ? 'var(--secondary-color)' : undefined,
                         }"
                         :disabled="!hasChanges || !hasItems || isSaving"
                     >

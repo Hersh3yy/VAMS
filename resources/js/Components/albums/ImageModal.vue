@@ -223,7 +223,7 @@ const saveChanges = async () => {
             author: formData.value.author,
         };
 
-        await router.put(route('albums.images.update', { album: props.image.album_id, image: props.image.id }), updateData, {
+                    await router.patch(route('albums.images.update', { album: props.image.album_id, image: props.image.id }), updateData, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
