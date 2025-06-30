@@ -55,10 +55,11 @@
                         @error="handleImageError"
                     />
                 </template>
-                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     <h3 class="text-white text-sm font-medium text-center px-2">
-                        {{ item.properties.selected_image?.caption || item.properties.selected_image?.title || item.properties.album.title }}
+                        {{ item.properties?.edit_text || item.properties.selected_image?.caption || item.properties.selected_image?.title || item.properties.album.title }}
                     </h3>
+
                 </div>
             </template>
 
@@ -143,6 +144,8 @@ const emit = defineEmits<{
     (e: 'click', item: MosaicItem): void;
     (e: 'delete', item: MosaicItem): void;
 }>();
+
+
 
 // Helper function to get contrasting text color
 const getContrastColor = (hexColor: string): string => {

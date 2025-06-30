@@ -145,9 +145,14 @@ class AlbumImageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AlbumImage $albumImage)
+    public function update(Request $request, Album $album, AlbumImage $image)
     {
-        $this->authorize('update', $albumImage->album);
+        // Ensure the image belongs to the album and user owns the album
+        if ($image->album_id !== $album->id) {
+            abort(404);
+        }
+        
+        $this->authorize('update', $album);
 
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
@@ -166,13 +171,13 @@ class AlbumImageController extends Controller
             // Use ImageService to store the replacement image
             $result = $this->imageService->storeImage(
                 $request->file('image'), 
-                "albums/{$albumImage->album_id}"
+                "albums/{$image->album_id}"
             );
             
             $validated['path'] = $result['url'];
         }
 
-        $albumImage->update($validated);
+        $image->update($validated);
 
         return back()->with('message', 'Image updated successfully');
     }
@@ -180,22 +185,27 @@ class AlbumImageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(AlbumImage $albumImage)
+    public function destroy(Album $album, AlbumImage $image)
     {
-        $this->authorize('delete', $albumImage->album);
+        // Ensure the image belongs to the album and user owns the album
+        if ($image->album_id !== $album->id) {
+            abort(404);
+        }
+        
+        $this->authorize('delete', $album);
         
         try {
             // Delete the image from storage if it's a local file
-            if (!$this->isVideoLink($albumImage->path) && strpos($albumImage->path, '/storage/') !== false) {
+            if (!$this->isVideoLink($image->path) && strpos($image->path, '/storage/') !== false) {
                 // Extract the path relative to the storage directory
-                $path = str_replace('/storage/', '', parse_url($albumImage->path, PHP_URL_PATH));
+                $path = str_replace('/storage/', '', parse_url($image->path, PHP_URL_PATH));
                 if ($path) {
                     Storage::disk('public')->delete($path);
                 }
             }
             
             // Delete the image record from the database
-            $albumImage->delete();
+            $image->delete();
 
             return back()->with('message', 'Item deleted successfully');
         } catch (\Exception $e) {

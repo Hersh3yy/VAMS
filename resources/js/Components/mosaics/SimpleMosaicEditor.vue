@@ -185,25 +185,18 @@ const deleteItem = (item: MosaicItem) => {
 };
 
 const saveItem = (item: MosaicItem) => {
-    console.log('SimpleMosaicEditor saveItem called with:', item);
-    
     // For new items (empty ID), generate a temporary unique ID for client-side tracking
     if (!item.id || item.id === '') {
         item.id = `temp_${Date.now()}_${Math.random()}`;
-        console.log('Generated new temp ID:', item.id);
     }
     
     const existingIndex = items.value.findIndex(i => i.id === item.id);
     
     if (existingIndex !== -1) {
-        console.log('Updating existing item at index:', existingIndex);
         items.value[existingIndex] = { ...item };
     } else {
-        console.log('Adding new item to items array');
         items.value.push({ ...item });
     }
-    
-    console.log('Total items after save:', items.value.length);
     
     // Force re-initialization of columns
     initializeColumns();
@@ -232,7 +225,6 @@ const handleOpenImageSelector = (itemId: string) => {
 
 const emitUpdate = () => {
     // Always emit the current items without complex comparison
-    console.log('SimpleMosaicEditor emitting update with', items.value.length, 'items');
     emit('update', {
         ...props.mosaic,
         columns: columnCount.value,

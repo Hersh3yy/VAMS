@@ -179,11 +179,8 @@ Development Tools: http://localhost:8000/telescope
 - **Social Media Sync**: Direct publishing to social platforms
 - **Analytics Integration**: Usage tracking and performance metrics
 
-*Note: This wishlist represents planned enhancements for future releases. Features will be prioritized based on user feedback and project requirements.*
+*Note: This wishlist represents planned enhancements for future releases. Features will be prioritized based on user feedback and project requirements.* user controlleed theme colors
 
 
 
 TODO:
-on dashboatd, all albums say they have one item, wrong
-video modal or viewing thingy still not there 
-mosaic saving error (on live)
