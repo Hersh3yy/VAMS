@@ -624,6 +624,10 @@ watch(() => props.item, (newItem) => {
         
         if (newItem.type === 'album' && newItem.properties?.album) {
             selectedAlbumId.value = newItem.properties.album.id;
+            // Also set the selected image if one exists
+            if (newItem.properties?.selected_image?.id) {
+                selectedImageId.value = newItem.properties.selected_image.id;
+            }
         } else if (newItem.type === 'media' && newItem.properties?.media_url) {
             uploadedMedia.value = {
                 type: 'image', // Default to image
@@ -655,9 +659,13 @@ watch(() => props.item, (newItem) => {
 }, { immediate: true });
 
 // Watch for selectedAlbumId changes
-watch(selectedAlbumId, (newAlbumId) => {
+watch(selectedAlbumId, (newAlbumId, oldAlbumId) => {
     if (newAlbumId) {
         selectedAlbum.value = props.albums.find(album => album.id.toString() === newAlbumId) || null;
+        // Only clear selectedImageId if we're switching to a different album
+        if (oldAlbumId && oldAlbumId !== newAlbumId) {
+            selectedImageId.value = '';
+        }
     } else {
         selectedAlbum.value = null;
         selectedImageId.value = '';
