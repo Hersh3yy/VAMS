@@ -95,7 +95,18 @@ class AlbumController extends Controller
         $album = $this->albumService->getAlbum($album, false);
 
         return Inertia::render('Albums/Show', [
-            'album' => $album
+            'album' => $album,
+            'album_display_settings' => Auth::user()->album_display_settings ?? [
+                'caption' => true,
+                'altText' => true,
+                'dateCreated' => true,
+                'location' => true,
+                'tags' => true,
+                'title' => true,
+                'author' => true,
+                'main_color' => '#4F46E5', // Default indigo color
+                'secondary_color' => '#10B981', // Default emerald color
+            ],
         ]);
     }
 

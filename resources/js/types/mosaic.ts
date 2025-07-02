@@ -63,6 +63,7 @@ export interface MosaicItemProperties {
     caption?: string;
     has_link?: boolean;
     link_url?: string;
+    edit_text?: string;
 
     // Album properties
     album_id?: string | null;

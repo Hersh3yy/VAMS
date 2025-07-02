@@ -48,38 +48,85 @@
                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
                                 <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center">
                                     <h3 class="text-white text-sm font-medium">{{ album.title }}</h3>
-                                    <p class="text-white text-xs">{{ album.images?.length || 0 }} images</p>
+                                    <p class="text-white text-xs">{{ album.images?.length || 0 }} items</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Selected Album Display -->
-                <div v-if="selectedAlbumId" class="space-y-4">
-                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <div class="flex items-center space-x-3">
+                <!-- Show Selected Image/Video if editing existing item -->
+                <div v-if="selectedAlbumId && selectedImageId" class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-medium text-gray-700">Selected Item</label>
+                            <button 
+                                @click="openImageSelector"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                Change Album Image
+                            </button>
+                        </div>
+                        
+                        <div v-if="getSelectedImage()" class="relative aspect-video bg-gray-100 rounded overflow-hidden">
                             <img 
-                                :src="selectedAlbum?.cover_image_path || '/placeholder.jpg'"
-                                :alt="selectedAlbum?.title"
-                                class="w-12 h-12 object-cover rounded"
+                                :src="getImageUrl(getSelectedImage()!)"
+                                :alt="getSelectedImage()?.title || 'Selected item'"
+                                class="w-full h-full object-cover"
                             />
-                            <div>
-                                <h4 class="font-medium text-gray-900">{{ selectedAlbum?.title }}</h4>
-                                <p class="text-sm text-gray-500">{{ albumImages.length }} images</p>
+                            <!-- Video badge -->
+                            <div v-if="isVideoItem(getSelectedImage()!)" class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                <span>VIDEO</span>
                             </div>
                         </div>
-                        <button 
-                            @click="selectedAlbumId = ''; selectedAlbum = null"
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                            Change Album
-                        </button>
+                        
+                        <div class="mt-2">
+                            <p class="text-sm font-medium text-gray-900">{{ getSelectedImage()?.title || 'Untitled' }}</p>
+                            <p v-if="getSelectedImage()?.caption" class="text-sm text-gray-500">{{ getSelectedImage()?.caption }}</p>
+                            <p class="text-xs text-gray-400 mt-1">From album: {{ selectedAlbum?.title }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Album Selection (when no item selected or creating new) -->
+                <div v-else-if="selectedAlbumId" class="space-y-4">
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img
+                                    v-if="selectedAlbum?.cover_image_path"
+                                    :src="selectedAlbum.cover_image_path"
+                                    :alt="selectedAlbum?.title"
+                                    class="w-12 h-12 object-cover rounded"
+                                />
+                                <div>
+                                    <h4 class="font-medium text-gray-900">{{ selectedAlbum?.title }}</h4>
+                                    <p class="text-sm text-gray-500">{{ albumImages.length }} items</p>
+                                </div>
+                            </div>
+                            <button 
+                                @click="selectedAlbumId = ''; selectedAlbum = null; selectedImageId = ''"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                Change Album
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Album Images Grid -->
                     <div v-if="albumImages.length > 0" class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Select Image from Album ({{ albumImages.length }} images)</label>
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Select Item from Album ({{ albumImages.length }} items)</label>
+                            <button 
+                                @click="openImageSelector"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                Browse All Albums
+                            </button>
+                        </div>
                         <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                             <div 
                                 v-for="image in albumImages" 
@@ -93,6 +140,13 @@
                                     :alt="image.title || `Image ${image.id}`"
                                     class="w-full h-full object-cover"
                                 />
+                                <!-- Video badge -->
+                                <div v-if="isVideoItem(image)" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 z-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                                 <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
                                     <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -102,13 +156,13 @@
                         </div>
                     </div>
                     
-                    <!-- Show message if album has no images (only videos) -->
-                    <div v-else-if="selectedAlbum?.images && selectedAlbum.images.length > 0" class="text-center py-8">
+                    <!-- Show message if album has no media items -->
+                    <div v-else-if="selectedAlbum?.images && selectedAlbum.images.length === 0" class="text-center py-8">
                         <div class="text-gray-500">
                             <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <p>This album contains only videos. Please select an album with images.</p>
+                            <p>This album is empty. Please select an album with images or videos.</p>
                         </div>
                     </div>
                 </div>
@@ -214,15 +268,23 @@
                         <!-- Album Preview -->
                         <template v-if="selectedType === 'album' && selectedAlbum">
                             <div class="w-full h-full relative">
+                                <!-- Show selected image/video thumbnail if available -->
                                 <img 
-                                    :src="selectedAlbum.cover_image_path || '/placeholder.jpg'"
+                                    :src="getPreviewImageSrc()"
                                     :alt="selectedAlbum.title"
                                     class="w-full h-full object-cover"
                                 />
+                                <!-- Video badge if selected item is a video -->
+                                <div v-if="selectedImageId && getSelectedImage() && isVideoItem(getSelectedImage())" class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    <span>VIDEO</span>
+                                </div>
                                 <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                                     <div class="text-white text-center">
-                                        <h4 class="font-medium">{{ selectedAlbum.title }}</h4>
-                                        <p class="text-xs">{{ selectedAlbum.images?.length || 0 }} images</p>
+                                        <h4 class="font-medium">{{ getPreviewTitle() }}</h4>
+                                        <p class="text-xs">{{ selectedAlbum.images?.length || 0 }} items</p>
                                         <p v-if="linkUrl.trim()" class="text-xs mt-1 opacity-75">🔗 Clickable</p>
                                     </div>
                                 </div>
@@ -341,6 +403,7 @@ const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'save', item: MosaicItem): void;
     (e: 'delete', item: MosaicItem): void;
+    (e: 'open-image-selector', itemId: string): void;
 }>();
 
 // Form state
@@ -381,31 +444,12 @@ const isValid = computed(() => {
     return true; // Color is always valid
 });
 
-// Filter album images to exclude videos - only show image files
+// Include all images and videos from the album
 const albumImages = computed(() => {
     if (!selectedAlbum.value?.images) return [];
     
-    return selectedAlbum.value.images.filter(image => {
-        // Check if properties field indicates this is a video
-        if (image.properties) {
-            try {
-                const props = typeof image.properties === 'string' 
-                    ? JSON.parse(image.properties) 
-                    : image.properties;
-                
-                // If type is explicitly "video", exclude it
-                if (props.type === 'video') {
-                    return false;
-                }
-            } catch (error) {
-                const props = {};
-                // If properties can't be parsed, assume it's an image
-            }
-        }
-        
-        // Include all items that are not explicitly marked as video
-        return true;
-    });
+    // Return all items (both images and videos)
+    return selectedAlbum.value.images;
 });
 
 const canPreview = computed(() => {
@@ -528,8 +572,14 @@ const selectImage = (image: any) => {
     selectedImageId.value = image.id;
 };
 
+const openImageSelector = () => {
+    if (props.item?.id) {
+        emit('open-image-selector', props.item.id);
+    }
+};
+
 const getImageUrl = (image: any) => {
-    // Try to get thumbnail URL from properties
+    // Try to get thumbnail URL from properties (for videos)
     if (image.properties) {
         const props = typeof image.properties === 'string' 
             ? JSON.parse(image.properties) 
@@ -542,6 +592,42 @@ const getImageUrl = (image: any) => {
     
     // Fallback to regular path
     return image.path;
+};
+
+const isVideoItem = (image: any) => {
+    if (image.properties) {
+        const props = typeof image.properties === 'string' 
+            ? JSON.parse(image.properties) 
+            : image.properties;
+        
+        return props.type === 'video';
+    }
+    
+    // Fallback check based on path
+    return image.path?.includes('youtube.com') || 
+           image.path?.includes('youtu.be') || 
+           image.path?.includes('vimeo.com');
+};
+
+const getSelectedImage = () => {
+    if (!selectedImageId.value || !selectedAlbum.value?.images) return null;
+    return selectedAlbum.value.images.find(img => img.id === selectedImageId.value);
+};
+
+const getPreviewImageSrc = () => {
+    const selectedImage = getSelectedImage();
+    if (selectedImage) {
+        return getImageUrl(selectedImage);
+    }
+    return selectedAlbum.value?.cover_image_path || '/placeholder.jpg';
+};
+
+const getPreviewTitle = () => {
+    const selectedImage = getSelectedImage();
+    if (selectedImage) {
+        return selectedImage.title || selectedImage.caption || selectedAlbum.value?.title || 'Selected Item';
+    }
+    return selectedAlbum.value?.title || 'Album';
 };
 
 const handleSave = () => {
@@ -576,8 +662,8 @@ const handleSave = () => {
                     id: selectedImage.id,
                     path: selectedImage.path,
                     title: selectedImage.title || null,
-                    caption: selectedImage.caption || null
-                    // Don't include large properties object to reduce payload
+                    caption: selectedImage.caption || null,
+                    properties: selectedImage.properties // Include properties for video thumbnails
                 };
             }
         }

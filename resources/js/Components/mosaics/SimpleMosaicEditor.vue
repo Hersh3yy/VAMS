@@ -86,6 +86,7 @@
             @close="closeItemEditor"
             @save="saveItem"
             @delete="deleteItem"
+            @open-image-selector="handleOpenImageSelector"
         />
     </div>
 </template>
@@ -107,6 +108,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update', mosaic: Mosaic): void;
     (e: 'save'): void;
+    (e: 'open-image-selector', itemId: string): void;
 }>();
 
 const columnCount = ref(props.mosaic.columns || 3);
@@ -215,6 +217,12 @@ const closeItemEditor = () => {
     editingItem.value = null;
 };
 
+const handleOpenImageSelector = (itemId: string) => {
+    // Close the item editor and emit the event to parent
+    closeItemEditor();
+    emit('open-image-selector', itemId);
+};
+
 const emitUpdate = () => {
     // Always emit the current items without complex comparison
     emit('update', {
@@ -247,25 +255,18 @@ watch(columnItems, (newColumnItems) => {
     }
 }, { deep: true });
 
-// Watch for external changes with better handling
-watch(() => props.mosaic.items, (newItems) => {
-    if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
-        items.value = [...(newItems || [])];
-        // Force re-initialization of columns to ensure UI updates
-        nextTick(() => {
-            initializeColumns();
-        });
-    }
-}, { deep: true, immediate: true });
-
-// Also watch the entire mosaic object for other changes
+// Watch for external changes (simplified to avoid conflicts)
 watch(() => props.mosaic, (newMosaic) => {
-    if (newMosaic.columns !== columnCount.value) {
+    // Only update if there are actual changes
+    const itemsChanged = JSON.stringify(newMosaic.items || []) !== JSON.stringify(items.value);
+    const columnsChanged = (newMosaic.columns || 3) !== columnCount.value;
+    
+    if (columnsChanged) {
         columnCount.value = newMosaic.columns || 3;
     }
-    if (JSON.stringify(newMosaic.items) !== JSON.stringify(items.value)) {
+    
+    if (itemsChanged) {
         items.value = [...(newMosaic.items || [])];
-        // Force re-initialization of columns to ensure UI updates
         nextTick(() => {
             initializeColumns();
         });

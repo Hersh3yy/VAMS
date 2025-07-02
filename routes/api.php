@@ -85,6 +85,7 @@ Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])
     
     // Public album access with user display settings
     Route::prefix('albums')->group(function () {
+        Route::get('/', [AlbumController::class, 'indexWithApiKey']);
         Route::get('/by-title/{title}', [AlbumController::class, 'showByTitleWithApiKey']);
         Route::get('/{id}', [AlbumController::class, 'showWithApiKey']);
     });
