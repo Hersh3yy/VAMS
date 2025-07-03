@@ -18,7 +18,7 @@
             />
         </div>
 
-        <!-- Item Editor Modal - MVP: Simplified for album images only -->
+        <!-- Item Editor Modal -->
         <MosaicItemWizard
             v-if="showItemEditor"
             :show="showItemEditor"

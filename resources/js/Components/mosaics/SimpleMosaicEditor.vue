@@ -16,8 +16,6 @@
                     <option value="5">5 Columns</option>
                 </select>
             </div>
-            
-
         </div>
 
         <!-- Column Layout -->
@@ -27,7 +25,7 @@
         >
             <div 
                 v-for="columnIndex in columnCount" 
-                :key="`column-${columnIndex}-${reactivityKey}`"
+                :key="`column-${columnIndex}`"
                 class="min-h-[400px] border-2 border-dashed border-gray-300 rounded-lg p-4"
             >
                 <div class="flex justify-between items-center mb-4">
@@ -43,7 +41,6 @@
                 <!-- Items in this column -->
                 <Draggable 
                     v-model="columnItems[columnIndex - 1]" 
-                    :key="`draggable-${columnIndex}-${reactivityKey}`"
                     class="space-y-4 min-h-[200px]"
                     :transition="200"
                     group="mosaic-items"
@@ -62,9 +59,9 @@
                     </template>
                 </Draggable>
 
-                <!-- Add item placeholder -->
+                <!-- Empty column placeholder -->
                 <div 
-                    v-if="itemsInColumn(columnIndex - 1).length === 0"
+                    v-if="columnItems[columnIndex - 1]?.length === 0"
                     class="flex items-center justify-center h-32 text-gray-400"
                 >
                     <div class="text-center">
@@ -86,7 +83,6 @@
             @close="closeItemEditor"
             @save="saveItem"
             @delete="deleteItem"
-            @open-image-selector="handleOpenImageSelector"
         />
     </div>
 </template>
@@ -108,62 +104,72 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update', mosaic: Mosaic): void;
     (e: 'save'): void;
-    (e: 'open-image-selector', itemId: string): void;
 }>();
 
+// State
 const columnCount = ref(props.mosaic.columns || 3);
 const items = ref<MosaicItem[]>(props.mosaic.items || []);
 const showItemEditor = ref(false);
 const editingItem = ref<MosaicItem | null>(null);
-const hasChanges = ref(false);
 
-// Add a reactivity key to force re-renders when needed
-const reactivityKey = ref(0);
-
-// Create reactive column arrays
+// Reactive column arrays for drag and drop
 const columnItems = ref<MosaicItem[][]>([]);
 
-// Initialize column arrays
+// Initialize column arrays from items
 const initializeColumns = () => {
     columnItems.value = Array.from({ length: columnCount.value }, (_, colIndex) => 
-        items.value.filter(item => item.column_index === colIndex)
+        items.value
+            .filter(item => item.column_index === colIndex)
             .sort((a, b) => a.order - b.order)
     );
+};
+
+// Initialize columns when component mounts or data changes
+watch([items, columnCount], initializeColumns, { immediate: true, deep: true });
+
+// Sync column items back to main items array when dragged
+watch(columnItems, (newColumnItems) => {
+    const newItems: MosaicItem[] = [];
     
-    // Force re-render by incrementing reactivity key
-    reactivityKey.value++;
-};
-
-// Watch items and columns to reinitialize
-watch([items, columnCount], () => {
-    initializeColumns();
-}, { immediate: true, deep: true });
-
-const itemsInColumn = (columnIndex: number) => {
-    return items.value.filter(item => item.column_index === columnIndex)
-        .sort((a, b) => a.order - b.order);
-};
-
-const getColumnItemsReactive = (columnIndex: number) => {
-    if (!columnItems.value[columnIndex]) {
-        columnItems.value[columnIndex] = [];
+    newColumnItems.forEach((columnItemList, columnIndex) => {
+        columnItemList.forEach((item, order) => {
+            newItems.push({
+                ...item,
+                column_index: columnIndex,
+                order: order
+            });
+        });
+    });
+    
+    // Only update if there's actually a change to prevent infinite loops
+    if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
+        items.value = newItems;
+        emitUpdate();
     }
-    return columnItems.value[columnIndex];
-};
+}, { deep: true });
 
+// Watch for external changes from parent
+watch(() => props.mosaic, (newMosaic) => {
+    if (newMosaic.columns !== columnCount.value) {
+        columnCount.value = newMosaic.columns || 3;
+    }
+    if (JSON.stringify(newMosaic.items) !== JSON.stringify(items.value)) {
+        items.value = [...(newMosaic.items || [])];
+    }
+}, { deep: true, immediate: true });
+
+// Methods
 const updateColumns = () => {
-    // Reinitialize column arrays when column count changes
     initializeColumns();
-    hasChanges.value = true;
     emitUpdate();
 };
 
 const addItem = (columnIndex: number) => {
     const newItem: MosaicItem = {
-        id: '', // No ID needed for creation - backend will generate
-        type: 'album', // MVP: Default to album type for simplified workflow
+        id: '',
+        type: 'album',
         column_index: columnIndex,
-        order: itemsInColumn(columnIndex).length,
+        order: columnItems.value[columnIndex]?.length || 0,
         properties: {}
     };
     
@@ -179,13 +185,12 @@ const editItem = (item: MosaicItem) => {
 const deleteItem = (item: MosaicItem) => {
     if (confirm('Are you sure you want to delete this item?')) {
         items.value = items.value.filter(i => i.id !== item.id);
-        hasChanges.value = true;
         emitUpdate();
     }
 };
 
 const saveItem = (item: MosaicItem) => {
-    // For new items (empty ID), generate a temporary unique ID for client-side tracking
+    // Generate temporary ID for new items
     if (!item.id || item.id === '') {
         item.id = `temp_${Date.now()}_${Math.random()}`;
     }
@@ -198,17 +203,12 @@ const saveItem = (item: MosaicItem) => {
         items.value.push({ ...item });
     }
     
-    // Force re-initialization of columns
-    initializeColumns();
-    
-    hasChanges.value = true;
     closeItemEditor();
     emitUpdate();
     
-    // Force reactivity update
+    // Force UI update
     nextTick(() => {
-        // Trigger component re-render by updating a reactive property
-        columnItems.value = [...columnItems.value];
+        initializeColumns();
     });
 };
 
@@ -217,61 +217,13 @@ const closeItemEditor = () => {
     editingItem.value = null;
 };
 
-const handleOpenImageSelector = (itemId: string) => {
-    // Close the item editor and emit the event to parent
-    closeItemEditor();
-    emit('open-image-selector', itemId);
-};
-
 const emitUpdate = () => {
-    // Always emit the current items without complex comparison
     emit('update', {
         ...props.mosaic,
         columns: columnCount.value,
         items: items.value
     });
 };
-
-// Watch for changes in column items and sync back to main items array
-watch(columnItems, (newColumnItems) => {
-    // Sync column items back to main items array
-    const newItems: MosaicItem[] = [];
-    
-    newColumnItems.forEach((columnItemList, columnIndex) => {
-        columnItemList.forEach((item, order) => {
-            newItems.push({
-                ...item,
-                column_index: columnIndex,
-                order: order
-            });
-        });
-    });
-    
-    // Only update if there's actually a change
-    if (JSON.stringify(newItems) !== JSON.stringify(items.value)) {
-        items.value = newItems;
-        hasChanges.value = true;
-        emitUpdate();
-    }
-}, { deep: true });
-
-// Watch for external changes (simplified to avoid conflicts)
-watch(() => props.mosaic, (newMosaic) => {
-    // Only update if there are actual changes
-    const itemsChanged = JSON.stringify(newMosaic.items || []) !== JSON.stringify(items.value);
-    const columnsChanged = (newMosaic.columns || 3) !== columnCount.value;
-    
-    if (columnsChanged) {
-        columnCount.value = newMosaic.columns || 3;
-    }
-    
-    if (itemsChanged) {
-        items.value = [...(newMosaic.items || [])];
-        nextTick(() => {
-            initializeColumns();
-        });
-    }
-}, { deep: true, immediate: true });
 </script>
 
 <style scoped>
@@ -281,17 +233,5 @@ watch(() => props.mosaic, (newMosaic) => {
 
 .chosen-item {
     @apply ring-2 ring-blue-500 transform scale-105;
-}
-
-.drop-zone {
-    transition: all 0.2s ease;
-}
-
-.drop-zone:hover {
-    @apply border-blue-400 bg-blue-50;
-}
-
-.drop-zone.drag-over {
-    @apply border-blue-500 bg-blue-100;
 }
 </style> 

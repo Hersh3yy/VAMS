@@ -10,7 +10,7 @@
                 </button>
             </div>
 
-            <!-- MVP: Direct album selection for simplified workflow -->
+            <!-- Direct album selection -->
             <div v-if="currentStep === 1" class="p-6">
                 <h4 class="text-lg font-medium mb-4">Select Album</h4>
                 
@@ -70,42 +70,7 @@
                 </div>
             </div>
 
-            <!-- MVP: Commenting out text and link step - simplified workflow for album images only
-            <div v-if="currentStep === 4" class="p-6">
-                <h4 class="text-lg font-medium mb-4">Add Text and Link</h4>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Text Overlay</label>
-                        <textarea
-                            v-model="textContent"
-                            rows="3"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter text to display over the item"
-                        ></textarea>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Text Color</label>
-                        <input 
-                            type="color"
-                            v-model="textColor"
-                            class="mt-1 block w-full h-12 rounded-md shadow-sm"
-                        />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Link URL (optional)</label>
-                        <input 
-                            type="url"
-                            v-model="linkUrl"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="https://..."
-                        />
-                    </div>
-                </div>
-            </div>
-            -->
 
             <!-- Navigation Buttons -->
             <div class="p-4 border-t flex justify-between">
