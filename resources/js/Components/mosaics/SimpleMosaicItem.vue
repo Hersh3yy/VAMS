@@ -112,7 +112,7 @@
         </div>
 
         <!-- Item Controls -->
-        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-30">
             <button 
                 @click.stop="$emit('delete', item)"
                 class="bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-colors"
