@@ -17,16 +17,16 @@ use Illuminate\Support\Facades\DB;
 class AlbumController extends Controller
 {
     use HandlesApiOperations;
-    
+
     protected $albumService;
     protected $imageService;
-    
+
     public function __construct(AlbumService $albumService, ImageService $imageService)
     {
         $this->albumService = $albumService;
         $this->imageService = $imageService;
     }
-    
+
     public function show(Request $request, Album $album): JsonResponse
     {
         // Get album with images
@@ -34,7 +34,7 @@ class AlbumController extends Controller
         if (!$album) {
             return $this->handleNotFound('Album not found');
         }
-        
+
         // Format response
         return $this->handleSuccess(
             $this->albumService->formatAlbumWithImagesForApi($album)
@@ -45,22 +45,22 @@ class AlbumController extends Controller
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
-        
+
         $albums = $user->albums()->with('images')->get();
-        
+
         return $this->handleSuccess([
-            'albums' => $albums->map(fn($album) => $this->albumService->formatAlbumForApi($album))
+            'albums' => $albums->map(fn ($album) => $this->albumService->formatAlbumForApi($album))
         ]);
     }
 
     public function showByTitle(string $title): JsonResponse
     {
         $album = Album::where('title', $title)->first();
-        
+
         if (!$album) {
             return $this->handleNotFound('Album not found');
         }
-        
+
         return $this->show(request(), $album);
     }
 
@@ -68,12 +68,12 @@ class AlbumController extends Controller
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
-        
+
         $album = $user->albums()->where('title', $title)->with('images')->first();
         if (!$album) {
             return $this->handleNotFound('Album not found');
         }
-        
+
         return $this->show($request, $album);
     }
 
@@ -83,7 +83,7 @@ class AlbumController extends Controller
         if (!$album) {
             return $this->handleNotFound('Album not found');
         }
-        
+
         return $this->handleSuccess(
             $this->albumService->formatAlbumForStrapi($album)
         );
@@ -197,7 +197,7 @@ class AlbumController extends Controller
         ]);
 
         $images = $album->images()->orderBy('order')->get();
-        
+
         if ($request->from_index >= $images->count() || $request->to_index >= $images->count()) {
             return $this->handleError('Invalid index provided', 422);
         }
@@ -205,7 +205,7 @@ class AlbumController extends Controller
         // Reorder logic
         $item = $images->splice($request->from_index, 1)->first();
         $images->splice($request->to_index, 0, [$item]);
-        
+
         DB::transaction(function () use ($images) {
             foreach ($images as $index => $image) {
                 $image->order = $index;
@@ -263,14 +263,14 @@ class AlbumController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = $request->user();
-        
+
         // Get albums directly by user_id to avoid potential relationship issues
         $albums = Album::where('user_id', $user->id)
             ->select('id', 'title', 'description', 'cover_image_path', 'user_id', 'created_at', 'updated_at')
             ->get();
-        
+
         return $this->handleSuccess([
-            'albums' => $albums->map(function($album) {
+            'albums' => $albums->map(function ($album) {
                 return $this->albumService->formatAlbumForApi($album);
             })
         ]);
@@ -287,16 +287,16 @@ class AlbumController extends Controller
         }
 
         return $this->handleSuccess(
-            $this->albumService->formatAlbumWithUserSettings($album, $user->album_display_settings)
+            $this->albumService->formatAlbumWithImagesForApi($album)
         );
     }
 
     public function userAlbums(): JsonResponse
     {
         $albums = Auth::user()->albums()->with('images')->get();
-        
+
         return $this->handleSuccess([
-            'albums' => $albums->map(fn($album) => $this->albumService->formatAlbumForApi($album))
+            'albums' => $albums->map(fn ($album) => $this->albumService->formatAlbumForApi($album))
         ]);
     }
-} 
+}
