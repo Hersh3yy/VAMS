@@ -119,12 +119,19 @@
                                     <div class="flex items-center space-x-4">
                                         <div class="flex-shrink-0">
                                             <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Selected as cover:</div>
-                                            <div class="image-container w-32 h-32 rounded-lg border-2 border-secondary overflow-hidden">
+                                            <div class="image-container w-32 h-32 rounded-lg border-2 border-secondary overflow-hidden relative">
                                                 <img 
-                                                    :src="album.images.find(img => img.id === form.selected_cover_image_id)?.path"
+                                                    :src="getImageUrl(album.images.find(img => img.id === form.selected_cover_image_id))"
                                                     class="cover-image"
                                                     alt="Selected cover"
                                                 />
+                                                <!-- Video badge for selected cover -->
+                                                <div v-if="isVideoItem(album.images.find(img => img.id === form.selected_cover_image_id))" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 z-10">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
                                         <div>
@@ -232,6 +239,10 @@ const showImageSelector = ref(false);
 const selectCoverImage = (image) => {
     form.selected_cover_image_id = image.id;
     showImageSelector.value = false;
+    
+    // Clear any uploaded cover image when selecting from album
+    form.cover_image = null;
+    coverImagePreview.value = null;
 };
 
 const clearSelectedCoverImage = () => {
@@ -270,6 +281,8 @@ const submit = () => {
 
 // Video handling functions (shared with ImageSelectionModal)
 const isVideoItem = (image) => {
+    if (!image) return false;
+    
     if (image.properties) {
         const properties = typeof image.properties === 'string' 
             ? JSON.parse(image.properties) 
@@ -285,6 +298,8 @@ const isVideoItem = (image) => {
 };
 
 const getImageUrl = (image) => {
+    if (!image) return '/images/placeholder.svg';
+    
     // Try to get thumbnail URL from properties (for videos)
     if (image.properties) {
         const properties = typeof image.properties === 'string' 
