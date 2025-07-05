@@ -83,6 +83,7 @@
             @close="closeItemEditor"
             @save="saveItem"
             @delete="deleteItem"
+            @update="handleItemUpdate"
         />
     </div>
 </template>
@@ -215,6 +216,14 @@ const saveItem = (item: MosaicItem) => {
 const closeItemEditor = () => {
     showItemEditor.value = false;
     editingItem.value = null;
+};
+
+const handleItemUpdate = () => {
+    // Force UI update and emit changes
+    nextTick(() => {
+        initializeColumns();
+        emitUpdate();
+    });
 };
 
 const emitUpdate = () => {

@@ -28,8 +28,8 @@
                                 />
                             </div>
                             <div class="mt-3 text-center">
-                                <p class="text-sm font-medium text-gray-900">{{ selectedAlbum?.title }}</p>
-                                <p class="text-xs text-gray-500">{{ getDisplayImageAlt() }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ getDisplayImageAlt() }}</p>
+                                <p class="text-xs text-gray-500">Selected Album:{{ selectedAlbum?.title }}</p>
                             </div>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
                             <!-- Album Images Grid -->
                             <div v-if="albumImages.length > 0" class="space-y-2">
                                 <label class="block text-sm font-medium text-gray-700">Select Image from Album ({{ albumImages.length }} images)</label>
-                                <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                                <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto scrollbar-visible">
                                     <div 
                                         v-for="image in albumImages" 
                                         :key="image.id"
@@ -128,7 +128,7 @@
                                             :alt="image.title || `Image ${image.id}`"
                                             class="w-full h-full object-cover"
                                         />
-                                        <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                                        <div v-if="selectedImageId === image.id" class="absolute inset-0 bg-blue-500 bg-opacity-50 flex items-center justify-center">
                                             <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                             </svg>
@@ -212,6 +212,7 @@ const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'save', item: MosaicItem): void;
     (e: 'delete', item: MosaicItem): void;
+    (e: 'update'): void;
 }>();
 
 // State
@@ -286,9 +287,8 @@ const getDisplayImageSrc = () => {
 
 const getDisplayImageAlt = () => {
     if (props.item?.properties?.selected_image) {
-        return props.item.properties.selected_image.title || 
-               props.item.properties.selected_image.caption || 
-               'Selected image';
+        return 'Selected image:' + (props.item.properties.selected_image.title || 
+               props.item.properties.selected_image.caption || '');
     }
     return selectedAlbum.value?.title || 'Album';
 };
@@ -318,7 +318,8 @@ const handleSave = () => {
                 id: selectedImage.id,
                 path: selectedImage.path,
                 title: selectedImage.title || null,
-                caption: selectedImage.caption || null
+                caption: selectedImage.caption || null,
+                properties: selectedImage.properties || null
             };
         }
     }
@@ -334,6 +335,12 @@ const handleSave = () => {
     }
 
     emit('save', item);
+    
+    // Emit update event to trigger parent reactivity
+    emit('update');
+    
+    // Close the modal after saving
+    emit('close');
 };
 
 // Watch for props changes
@@ -383,5 +390,28 @@ watch(selectedAlbumId, (newAlbumId, oldAlbumId) => {
 
 .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+.scrollbar-visible {
+    scrollbar-width: auto;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.scrollbar-visible::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style> 
