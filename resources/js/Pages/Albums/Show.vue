@@ -19,15 +19,33 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div v-if="uploading" class="mb-4">
                         <div class="flex justify-between text-sm text-gray-600 mb-2">
-                            <span>Uploading...</span>
+                            <span>
+                                <template v-if="uploadStage === 'uploading'">
+                                    Uploading images...
+                                </template>
+                                <template v-else-if="uploadStage === 'processing'">
+                                    Processing images...
+                                </template>
+                                <template v-else-if="uploadStage === 'complete'">
+                                    Upload complete!
+                                </template>
+                            </span>
                             <span>{{ uploadProgress }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
-                                class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                                class="h-2.5 rounded-full transition-all duration-300"
+                                :class="{
+                                    'bg-blue-600': uploadStage === 'uploading',
+                                    'bg-yellow-500': uploadStage === 'processing',
+                                    'bg-green-600': uploadStage === 'complete'
+                                }"
                                 :style="{ width: `${uploadProgress}%` }"
                             ></div>
                         </div>
+                        <p v-if="uploadStage === 'processing'" class="text-xs text-gray-500 mt-1">
+                            Please wait while we process your images and generate thumbnails...
+                        </p>
                     </div>
 
                     <AlbumGrid
@@ -106,6 +124,7 @@ const props = defineProps<{
 const {
     uploading,
     uploadProgress,
+    uploadStage,
     showConfirmation,
     confirmationTitle,
     confirmationMessage,
