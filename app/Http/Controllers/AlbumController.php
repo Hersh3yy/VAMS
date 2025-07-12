@@ -1,30 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
 use App\Services\MediaService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
-class AlbumController extends Controller
+class AlbumController extends BaseController
 {
-    protected $albumService;
-    protected $mediaService;
-
-    public function __construct(AlbumService $albumService, MediaService $mediaService)
-    {
-        $this->albumService = $albumService;
-        $this->mediaService = $mediaService;
+    public function __construct(
+        protected readonly AlbumService $albumService,
+        protected readonly MediaService $mediaService
+    ) {
     }
 
-    public function index()
+    public function index(): Response
     {
         $albums = $this->albumService->getAllAlbums(false);
 
@@ -33,41 +33,38 @@ class AlbumController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Albums/Create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $user = Auth::user();
-        $album = $user->albums()->create([
+        $album = $this->user()->albums()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'],
         ]);
 
-        return redirect()->route('albums.show', $album)->with('message', 'Album created successfully');
+        return $this->redirectWithSuccess('albums.show', $album, 'Album created successfully');
     }
 
-    public function edit($albumId)
+    public function edit(string $albumId): Response|RedirectResponse
     {
         // Find album or handle gracefully
         $album = Album::find($albumId);
         
         if (!$album) {
-            return redirect()->route('albums.index')->with('error', 'Album not found. You have been redirected to your albums.');
+            return $this->redirectWithError('albums.index', [], 'Album not found. You have been redirected to your albums.');
         }
 
         // Check if user owns this album
-        if ($album->user_id !== Auth::id()) {
-            return redirect()->route('albums.index')->with('error', 'You do not have permission to edit this album.');
-        }
+        $this->authorizeOwnership($album);
 
         // Get album with images using service
         $album = $this->albumService->getAlbum($album, false);
@@ -77,47 +74,45 @@ class AlbumController extends Controller
         ]);
     }
 
-    public function show($albumId)
+    public function show(string $albumId): Response|RedirectResponse
     {
         // Find album or handle gracefully
         $album = Album::find($albumId);
         
         if (!$album) {
-            return redirect()->route('albums.index')->with('error', 'Album not found. You have been redirected to your albums.');
+            return $this->redirectWithError('albums.index', [], 'Album not found. You have been redirected to your albums.');
         }
 
         // Check if user owns this album
-        if ($album->user_id !== Auth::id()) {
-            return redirect()->route('albums.index')->with('error', 'You do not have permission to view this album.');
-        }
+        $this->authorizeOwnership($album);
 
         // Get album with images using service
         $album = $this->albumService->getAlbum($album, false);
 
+        $defaultSettings = [
+            'caption' => true,
+            'altText' => true,
+            'dateCreated' => true,
+            'location' => true,
+            'tags' => true,
+            'title' => true,
+            'author' => true,
+            'main_color' => '#4F46E5', // Default indigo color
+            'secondary_color' => '#10B981', // Default emerald color
+        ];
+
         return Inertia::render('Albums/Show', [
             'album' => $album,
-            'album_display_settings' => Auth::user()->album_display_settings ?? [
-                'caption' => true,
-                'altText' => true,
-                'dateCreated' => true,
-                'location' => true,
-                'tags' => true,
-                'title' => true,
-                'author' => true,
-                'main_color' => '#4F46E5', // Default indigo color
-                'secondary_color' => '#10B981', // Default emerald color
-            ],
+            'album_display_settings' => $this->user()->album_display_settings ?? $defaultSettings,
         ]);
     }
 
-    public function update(Request $request, Album $album)
+    public function update(Request $request, Album $album): RedirectResponse
     {
         Log::info('AlbumController@update - Incoming request data:', $request->all());
         
         // Check if user owns this album
-        if ($album->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($album);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -175,19 +170,17 @@ class AlbumController extends Controller
 
         Log::info('AlbumController@update - Album updated successfully');
         
-        return redirect()->route('albums.show', $album)->with('message', 'Album updated successfully');
+        return $this->redirectWithSuccess('albums.show', $album, 'Album updated successfully');
     }
 
-    public function destroy(Album $album)
+    public function destroy(Album $album): RedirectResponse
     {
         // Check if user owns this album
-        if ($album->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($album);
 
         $album->images()->delete();
         $album->delete();
 
-        return redirect()->route('albums.index');
+        return $this->redirectWithSuccess('albums.index', [], 'Album deleted successfully');
     }
 }

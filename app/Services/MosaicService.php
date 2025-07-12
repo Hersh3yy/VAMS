@@ -9,49 +9,66 @@ use App\Models\MosaicItem;
 use App\Models\AlbumImage;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class MosaicService
 {
     /**
      * Get all mosaics for the current user or for the API
-     *
-     * @param bool $forApi Whether this is for API (true) or web (false)
-     * @return \Illuminate\Database\Eloquent\Collection|Collection
      */
-    public function getAllMosaics(bool $forApi = false): EloquentCollection|Collection
+    public function getAllMosaics(bool $forApi = false): Collection
     {
         if ($forApi) {
             // For API, we return all published mosaics
-            return Mosaic::with(['items'])
+            return Mosaic::with(['items' => function ($query) {
+                $query->orderBy('column_index')->orderBy('order');
+            }])
+                ->orderBy('updated_at', 'desc')
                 ->get();
         }
         
         // For web, we only return the user's mosaics
-        /** @var User|null $user */
         $user = Auth::user();
-        return $user ? $user->mosaics()->with('items')->get() : collect();
+        
+        if (!$user instanceof User) {
+            return new Collection();
+        }
+        
+        return $user->mosaics()
+            ->with(['items' => function ($query) {
+                $query->orderBy('column_index')->orderBy('order');
+            }])
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
     
     /**
      * Get a specific mosaic with its items
-     *
-     * @param Mosaic $mosaic Mosaic instance
-     * @param bool $forApi Whether this is for API (true) or web (false)
-     * @return Mosaic|null
      */
     public function getMosaic(Mosaic $mosaic, bool $forApi = false): ?Mosaic
     {
-        if (!$mosaic) {
-            return null;
+        try {
+            if (!$mosaic instanceof Mosaic) {
+                return null;
+            }
+            
+            // Load all items for this mosaic ordered correctly
+            $mosaic->load(['items' => function ($query) {
+                $query->orderBy('column_index')->orderBy('order');
+            }]);
+            
+            return $mosaic;
+        } catch (\Exception $e) {
+            Log::error('Error in MosaicService@getMosaic:', [
+                'mosaic_id' => $mosaic->id ?? 'unknown',
+                'for_api' => $forApi,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
-        
-        // Load all items for this mosaic
-        $mosaic->load('items');
-        
-        return $mosaic;
     }
     
     /**
@@ -59,8 +76,11 @@ class MosaicService
      */
     public function createMosaic(array $data): Mosaic
     {
-        /** @var User $user */
         $user = Auth::user();
+        
+        if (!$user instanceof User) {
+            throw new RuntimeException('User must be authenticated to create mosaic');
+        }
         
         return $user->mosaics()->create([
             'title' => $data['title'],
@@ -96,9 +116,6 @@ class MosaicService
     
     /**
      * Format mosaic data for API response
-     *
-     * @param Mosaic $mosaic
-     * @return array
      */
     public function formatMosaicForApi(Mosaic $mosaic): array
     {
@@ -109,16 +126,13 @@ class MosaicService
             'columns' => $mosaic->columns,
             'display_settings' => $mosaic->display_settings,
             'user_id' => $mosaic->user_id,
-            'created_at' => $mosaic->created_at,
-            'updated_at' => $mosaic->updated_at
+            'created_at' => $mosaic->created_at?->toISOString(),
+            'updated_at' => $mosaic->updated_at?->toISOString()
         ];
     }
     
     /**
      * Format mosaic item data for API response
-     *
-     * @param MosaicItem $item
-     * @return array
      */
     public function formatMosaicItemForApi(MosaicItem $item): array
     {
@@ -200,39 +214,32 @@ class MosaicService
             'properties' => $properties,
             'order' => $item->order,
             'is_active' => $item->is_active,
-            'created_at' => $item->created_at,
-            'updated_at' => $item->updated_at,
+            'created_at' => $item->created_at?->toISOString(),
+            'updated_at' => $item->updated_at?->toISOString(),
             'images' => $images
         ];
     }
     
     /**
      * Format mosaic with items for API response
-     *
-     * @param Mosaic $mosaic
-     * @return array
      */
     public function formatMosaicWithItemsForApi(Mosaic $mosaic): array
     {
         return [
             'mosaic' => $this->formatMosaicForApi($mosaic),
-            'items' => $mosaic->items->map(fn($item) => $this->formatMosaicItemForApi($item))
+            'items' => $mosaic->items->map(fn(MosaicItem $item) => $this->formatMosaicItemForApi($item))
         ];
     }
     
     /**
      * Get recent mosaics for the current user
-     *
-     * @param int $limit Number of mosaics to return
-     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getRecentMosaics($limit = 3)
+    public function getRecentMosaics(int $limit = 3): Collection
     {
-        /** @var User|null $user */
         $user = Auth::user();
         
-        if (!$user) {
-            return collect();
+        if (!$user instanceof User) {
+            return new Collection();
         }
         
         return $user->mosaics()
@@ -241,23 +248,16 @@ class MosaicService
                       ->orderBy('order');
             }])
             ->orderBy('updated_at', 'desc')
-            ->take($limit)
+            ->limit($limit)
             ->get();
     }
     
     /**
-     * Get a mosaic with its items
-     *
-     * @param Mosaic $mosaic
-     * @param bool $forApi
-     * @return Mosaic
+     * Get a mosaic with its items (alias for getMosaic)
      */
-    public function getMosaicWithItems(Mosaic $mosaic, bool $forApi = false): Mosaic
+    public function getMosaicWithItems(Mosaic $mosaic, bool $forApi = false): ?Mosaic
     {
-        return $mosaic->load(['items' => function ($query) {
-            $query->orderBy('column_index')
-                  ->orderBy('order');
-        }]);
+        return $this->getMosaic($mosaic, $forApi);
     }
     
     /**

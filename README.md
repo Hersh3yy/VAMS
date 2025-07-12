@@ -12,13 +12,63 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 
 ## Tech Stack
 
-- PHP 8.3
+- PHP 8.3 with strict typing
 - Laravel 11
 - PostgreSQL
 - Docker & Docker Compose
 - Vue.js 3 (Admin Interface)
 - PHPUnit for testing
 - Scramble for API documentation
+
+## Architecture
+
+### Controllers
+- **BaseController**: Common functionality for web controllers (Inertia)
+- **BaseApiController**: Standardized API responses and error handling
+- **Strict Typing**: All controllers use PHP 8+ type declarations
+- **Service Pattern**: Business logic separated into dedicated service classes
+
+### API Response Format
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": {
+    // response data
+  }
+}
+```
+
+### Error Response Format
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errors": {
+    // validation errors (optional)
+  }
+}
+```
+
+### Service Layer
+- **AlbumService**: Handles album business logic with strict typing
+- **MosaicService**: Manages mosaic operations and formatting
+- **ImageService**: Processes image uploads and transformations
+- **MediaService**: General file management utilities
+
+### Authentication & Authorization
+- **Sanctum Authentication**: For API access with tokens
+- **API Key Middleware**: For public website integration
+- **Ownership Validation**: Centralized authorization checks
+- **User Scoped Queries**: Automatic filtering by authenticated user
+
+### Key Improvements (v1.0)
+- ✅ **Strict Typing**: All methods use PHP 8+ type declarations
+- ✅ **Base Controllers**: Consistent response patterns and authorization
+- ✅ **Service Pattern**: Business logic separated from controllers
+- ✅ **API Standardization**: Unified response formats across all endpoints
+- ✅ **Error Handling**: Comprehensive error logging and user-friendly messages
+- ✅ **Code Deduplication**: Eliminated redundant patterns across controllers
 
 ## API Integration
 
@@ -130,6 +180,54 @@ VAMS is a headless CMS specifically designed for visual content management, offe
    ```
 
 ## API Endpoints
+
+### Protected API (Sanctum Token Required)
+```
+# Albums
+GET    /api/albums                    # List user's albums
+POST   /api/albums                    # Create new album
+GET    /api/albums/{id}               # Get album details
+PUT    /api/albums/{id}               # Update album
+DELETE /api/albums/{id}               # Delete album
+GET    /api/albums/by-title/{title}   # Get album by title
+
+# Album Images
+POST   /api/albums/{id}/images        # Upload image to album
+PUT    /api/albums/{id}/images/reorder # Reorder images
+PUT    /api/albums/{id}/images/{imageId} # Update image metadata
+DELETE /api/albums/{id}/images/{imageId} # Delete image
+
+# Mosaics
+GET    /api/mosaics                   # List user's mosaics
+POST   /api/mosaics                   # Create new mosaic
+GET    /api/mosaics/{id}              # Get mosaic details
+PUT    /api/mosaics/{id}              # Update mosaic
+DELETE /api/mosaics/{id}              # Delete mosaic
+GET    /api/mosaics/by-title/{title}  # Get mosaic by title
+POST   /api/mosaics/{id}/media        # Upload media to mosaic
+
+# User Resources
+GET    /api/user/albums               # Get user's albums
+GET    /api/user/mosaics              # Get user's mosaics
+```
+
+### Public API (API Key Required)
+```
+# Test Connection
+GET    /api/public/test               # Verify API key
+
+# Public Albums (with user display settings)
+GET    /api/public/albums             # List albums
+GET    /api/public/albums/{id}        # Get album
+GET    /api/public/albums/by-title/{title} # Get album by title
+
+# Public Mosaics (with user display settings)
+GET    /api/public/mosaics            # List mosaics
+GET    /api/public/mosaics/{id}       # Get mosaic
+GET    /api/public/mosaics/by-title/{title} # Get mosaic by title
+```
+
+### Development Tools
 - `GET /docs/api` - API Documentation UI
 - `GET /telescope` - Development debugging dashboard
 
@@ -151,6 +249,9 @@ Development Tools: http://localhost:8000/telescope
 ## Next Version Features Wishlist
 
 ### Image Enhancement
+- **New content types**: Blog article
+
+### Image Enhancement
 - **Image Resizing & Multiple Formats**: Automatic generation of responsive image sizes (thumbnail, medium, large) and modern formats (WebP, AVIF)
 - **Smart Compression**: Intelligent image optimization with quality preservation
 
@@ -166,6 +267,7 @@ Development Tools: http://localhost:8000/telescope
 - **Advanced Search**: Filter and search across albums by metadata, tags, and content
 - **Keyboard Shortcuts**: Power-user navigation and editing shortcuts
 - **Preview Mode**: Real-time preview of changes before publishing
+- **User controlled theme**: Real-time preview of changes before publishing
 
 ### Performance & Technical
 - **CDN Integration**: Built-in support for content delivery networks

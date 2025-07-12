@@ -1,33 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
-use App\Models\User;
 use App\Services\MosaicService;
+use App\Services\ImageService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
-use Illuminate\Support\Str;
+use Inertia\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
-use App\Services\ImageService;
 
-class MosaicController extends Controller
+class MosaicController extends BaseController
 {
-    protected $mosaicService;
-    protected $imageService;
-
-    public function __construct(MosaicService $mosaicService, ImageService $imageService)
-    {
-        $this->mosaicService = $mosaicService;
-        $this->imageService = $imageService;
+    public function __construct(
+        protected readonly MosaicService $mosaicService,
+        protected readonly ImageService $imageService
+    ) {
     }
 
     // Web Routes
-    public function index()
+    public function index(): Response
     {
         $mosaics = $this->mosaicService->getAllMosaics(false);
 
@@ -36,12 +34,12 @@ class MosaicController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Mosaics/Create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -49,28 +47,25 @@ class MosaicController extends Controller
             'columns' => 'required|integer|min:2|max:5',
         ]);
 
-        $user = Auth::user();
-        $mosaic = $user->mosaics()->create([
+        $mosaic = $this->user()->mosaics()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
             'columns' => $validated['columns'],
         ]);
 
-        return redirect()->route('mosaics.edit', $mosaic);
+        return $this->redirectWithSuccess('mosaics.edit', $mosaic, 'Mosaic created successfully');
     }
 
-    public function edit(Mosaic $mosaic)
+    public function edit(Mosaic $mosaic): Response
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         // Get mosaic with items using service
         $mosaic = $this->mosaicService->getMosaicWithItems($mosaic, false);
 
         // Get user's albums with their images
-        $albums = Auth::user()->albums()
+        $albums = $this->user()->albums()
             ->with(['images' => function($query) {
                 $query->orderBy('order');
             }])
@@ -100,18 +95,16 @@ class MosaicController extends Controller
         ]);
     }
 
-    public function show(Mosaic $mosaic)
+    public function show(Mosaic $mosaic): Response
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         // Get mosaic with items using service
         $mosaic = $this->mosaicService->getMosaicWithItems($mosaic, false);
 
         // Get user's albums with their images
-        $albums = Auth::user()->albums()
+        $albums = $this->user()->albums()
             ->with(['images' => function($query) {
                 $query->orderBy('order');
             }])
@@ -135,7 +128,7 @@ class MosaicController extends Controller
                 ];
             });
 
-        return Inertia::render('Mosaics/Edit', [
+        return Inertia::render('Mosaics/Show', [
             'mosaic' => $mosaic,
             'albums' => $albums
         ]);
@@ -278,17 +271,15 @@ class MosaicController extends Controller
         ]);
     }
 
-    public function destroy(Mosaic $mosaic)
+    public function destroy(Mosaic $mosaic): RedirectResponse
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         $mosaic->items()->delete();
         $mosaic->delete();
 
-        return redirect()->route('mosaics.index');
+        return $this->redirectWithSuccess('mosaics.index', [], 'Mosaic deleted successfully');
     }
 
     // API Routes

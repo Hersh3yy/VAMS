@@ -5,6 +5,7 @@ import type { Album, AlbumImage, AlbumVideo, AlbumUploadProgress } from '@/types
 export function useAlbum(albumId: string) {
     const uploading = ref(false);
     const uploadProgress = ref(0);
+    const uploadStage = ref('uploading'); // 'uploading' | 'processing' | 'complete'
     const showConfirmation = ref(false);
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
@@ -17,6 +18,7 @@ export function useAlbum(albumId: string) {
 
         uploading.value = true;
         uploadProgress.value = 0;
+        uploadStage.value = 'uploading';
 
         const formData = new FormData();
         Array.from(input.files).forEach(file => {
@@ -36,23 +38,35 @@ export function useAlbum(albumId: string) {
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             
-            // Track upload progress
+            // Track upload progress (limit to 90% to save room for processing stage)
             xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    uploadProgress.value = Math.round((e.loaded / e.total) * 100);
+                if (e.lengthComputable && uploadStage.value === 'uploading') {
+                    // Cap upload progress at 90% to leave room for processing stage
+                    uploadProgress.value = Math.round((e.loaded / e.total) * 90);
                 }
+            });
+
+            // When upload completes, switch to processing stage
+            xhr.upload.addEventListener('load', () => {
+                uploadStage.value = 'processing';
+                uploadProgress.value = 95;
             });
 
             // Handle response
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200 || xhr.status === 201) {
+                    uploadStage.value = 'complete';
                     uploadProgress.value = 100;
-                    // Use Inertia's visit to refresh the page with the new data
-                    router.visit(route('albums.show', albumId), {
-                        preserveScroll: true,
-                        preserveState: false, // Set to false to ensure fresh data
-                        only: ['album']
-                    });
+                    
+                    // Brief delay to show completion before refreshing
+                    setTimeout(() => {
+                        // Use Inertia's visit to refresh the page with the new data
+                        router.visit(route('albums.show', albumId), {
+                            preserveScroll: true,
+                            preserveState: false, // Set to false to ensure fresh data
+                            only: ['album']
+                        });
+                    }, 500);
                 } else {
                     const errorData = JSON.parse(xhr.responseText);
                     throw new Error(errorData?.message || 'Upload failed');
@@ -75,15 +89,27 @@ export function useAlbum(albumId: string) {
         } catch (error) {
             console.error('Upload failed:', error);
             showError('Failed to upload images. Please try again.');
+            // Reset states on error
+            uploading.value = false;
+            uploadProgress.value = 0;
+            uploadStage.value = 'uploading';
+            // Clear the file input
+            if (input) {
+                input.value = '';
+            }
         } finally {
-            setTimeout(() => {
-                uploading.value = false;
-                uploadProgress.value = 0;
-                // Clear the file input
-                if (input) {
-                    input.value = '';
-                }
-            }, 1000); // Show 100% briefly before hiding
+            // Only reset if we're at complete stage (successful upload)
+            if (uploadStage.value === 'complete') {
+                setTimeout(() => {
+                    uploading.value = false;
+                    uploadProgress.value = 0;
+                    uploadStage.value = 'uploading';
+                    // Clear the file input
+                    if (input) {
+                        input.value = '';
+                    }
+                }, 1500); // Show completion briefly before hiding
+            }
         }
     };
 
@@ -164,6 +190,7 @@ export function useAlbum(albumId: string) {
     return {
         uploading,
         uploadProgress,
+        uploadStage,
         showConfirmation,
         confirmationTitle,
         confirmationMessage,
