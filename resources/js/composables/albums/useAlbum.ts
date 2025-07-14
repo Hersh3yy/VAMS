@@ -1,7 +1,10 @@
 import { ref, inject, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import type { Album, AlbumImage, AlbumVideo, AlbumUploadProgress } from '@/types/album';
-import { useUpload, type UploadItem } from '@/composables/shared/useUpload';
+import { useUpload, type UploadItem, type UploadConfig } from '@/composables/shared/useUpload';
+
+// Re-export types for components that need them
+export type { UploadItem, UploadConfig };
 
 export function useAlbum(albumId: string) {
     const showConfirmation = ref(false);
@@ -19,7 +22,7 @@ export function useAlbum(albumId: string) {
         pendingCount,
         overallProgress,
         uploadFiles,
-        retryUpload,
+        retryUpload: retryUploadCore,
         removeFromQueue,
         clearCompletedUploads,
     } = useUpload();
@@ -122,6 +125,21 @@ export function useAlbum(albumId: string) {
     const cancelConfirmation = () => {
         showConfirmation.value = false;
         confirmationAction.value = null;
+    };
+
+    // Wrapper function for retryUpload to provide config
+    const retryUpload = (uploadItem: UploadItem) => {
+        const config: UploadConfig = {
+            endpoint: route('albums.images.store', albumId),
+            fieldName: 'images[]',
+            entityId: albumId,
+            refreshRoute: 'albums.show',
+            refreshParams: { album: albumId },
+            onError: (error) => {
+                showError(error);
+            }
+        };
+        return retryUploadCore(uploadItem, config);
     };
 
     return {
