@@ -1,62 +1,74 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Album;
+use App\Models\AlbumImage;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 
 class AlbumService
 {
     /**
      * Get all albums for the current user or for the API
-     *
-     * @param bool $forApi Whether this is for API (true) or web (false)
-     * @return \Illuminate\Database\Eloquent\Collection|Collection
      */
-    public function getAllAlbums($forApi = false)
+    public function getAllAlbums(bool $forApi = false): Collection
     {
         if ($forApi) {
             // For API, we return all published albums
-            return Album::with('coverImage')
+            return Album::with(['images' => function ($query) {
+                $query->orderBy('order');
+            }])
                 ->withCount('images')
                 ->get();
         }
         
         // For web, we only return the user's albums
-        /** @var User|null $user */
         $user = Auth::user();
-        return $user ? $user->albums()->with('images')->get() : collect();
+        
+        if (!$user instanceof User) {
+            return new Collection();
+        }
+        
+        return $user->albums()
+            ->with(['images' => function ($query) {
+                $query->orderBy('order');
+            }])
+            ->withCount('images')
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
     
     /**
      * Get a specific album with its images
-     *
-     * @param string|Album $album Album ID (UUID) or Album instance
-     * @param bool $forApi Whether this is for API (true) or web (false)
-     * @return Album|null
+     * 
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function getAlbum($album, $forApi = false)
+    public function getAlbum(string|Album $album, bool $forApi = false): ?Album
     {
         try {
             if (is_string($album)) {
                 $album = Album::findOrFail($album);
             }
             
-            if (!$album) {
+            if (!$album instanceof Album) {
                 return null;
             }
             
-            // Load all images for this album
-            $album->load('images');
+            // Load all images for this album ordered correctly
+            $album->load(['images' => function ($query) {
+                $query->orderBy('order');
+            }]);
             
             return $album;
         } catch (\Exception $e) {
             Log::error('Error in AlbumService@getAlbum:', [
-                'album' => $album,
+                'album_id' => is_string($album) ? $album : $album->id ?? 'unknown',
+                'for_api' => $forApi,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -66,11 +78,8 @@ class AlbumService
     
     /**
      * Format album data for API response
-     *
-     * @param Album $album
-     * @return array
      */
-    public function formatAlbumForApi(Album $album)
+    public function formatAlbumForApi(Album $album): array
     {
         return [
             'id' => $album->id,
@@ -79,18 +88,15 @@ class AlbumService
             'cover_image_path' => $album->cover_image_path,
             'images_count' => $album->images_count ?? $album->images->count(),
             'user_id' => $album->user_id,
-            'created_at' => $album->created_at,
-            'updated_at' => $album->updated_at
+            'created_at' => $album->created_at?->toISOString(),
+            'updated_at' => $album->updated_at?->toISOString()
         ];
     }
     
     /**
      * Format image data for API response
-     *
-     * @param \App\Models\AlbumImage $image
-     * @return array
      */
-    public function formatImageForApi($image)
+    public function formatImageForApi(AlbumImage $image): array
     {
         $properties = is_string($image->properties) ? 
             json_decode($image->properties, true) : 
@@ -106,92 +112,82 @@ class AlbumService
             'webp_url' => $properties['webp_url'] ?? null,
             'caption' => $image->caption,
             'order' => $image->order,
-            'properties' => $image->properties,
-            'created_at' => $image->created_at,
-            'updated_at' => $image->updated_at
+            'properties' => $properties,
+            'created_at' => $image->created_at?->toISOString(),
+            'updated_at' => $image->updated_at?->toISOString()
         ];
     }
     
     /**
      * Format album with images for API response
-     *
-     * @param Album $album
-     * @return array
      */
-    public function formatAlbumWithImagesForApi(Album $album)
+    public function formatAlbumWithImagesForApi(Album $album): array
     {
         return [
             'album' => $this->formatAlbumForApi($album),
-            'images' => $album->images->map(fn($image) => $this->formatImageForApi($image))
+            'images' => $album->images->map(fn(AlbumImage $image) => $this->formatImageForApi($image))
         ];
     }
 
     /**
      * Format album for Strapi compatibility
-     *
-     * @param Album $album
-     * @return array
      */
-    public function formatAlbumForStrapi(Album $album)
+    public function formatAlbumForStrapi(Album $album): array
     {
-        return $album->images()->orderBy('order')->get()->map(function ($image) {
-            $properties = is_string($image->properties) ? 
-                json_decode($image->properties, true) : 
-                $image->properties;
-                
-            return [
-                'id' => $image->id,
-                'created_at' => $image->created_at,
-                'updated_at' => $image->updated_at,
-                'Name' => $image->title ?? 'Untitled',
-                'Order' => $image->order ?? 0,
-                'Caption' => $image->caption ?? '',
-                'Year' => $properties['year'] ?? null,
-                'Image' => [
+        return $album->images()
+            ->orderBy('order')
+            ->get()
+            ->map(function (AlbumImage $image) {
+                $properties = is_string($image->properties) ? 
+                    json_decode($image->properties, true) : 
+                    ($image->properties ?? []);
+                    
+                return [
                     'id' => $image->id,
-                    'url' => $image->path,
-                    'formats' => [
-                        'thumbnail' => [
-                            'url' => $image->path
+                    'created_at' => $image->created_at?->toISOString(),
+                    'updated_at' => $image->updated_at?->toISOString(),
+                    'Name' => $image->title ?? 'Untitled',
+                    'Order' => $image->order ?? 0,
+                    'Caption' => $image->caption ?? '',
+                    'Year' => $properties['year'] ?? null,
+                    'Image' => [
+                        'id' => $image->id,
+                        'url' => $image->path,
+                        'formats' => [
+                            'thumbnail' => [
+                                'url' => $image->path
+                            ]
                         ]
                     ]
-                ]
-            ];
-        })->toArray();
+                ];
+            })
+            ->toArray();
     }
 
     /**
      * Get recent albums for the current user
-     *
-     * @param int $limit Number of albums to return
-     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getRecentAlbums($limit = 3)
+    public function getRecentAlbums(int $limit = 3): Collection
     {
-        /** @var User|null $user */
         $user = Auth::user();
         
-        if (!$user) {
-            return collect();
+        if (!$user instanceof User) {
+            return new Collection();
         }
         
         return $user->albums()
             ->withCount('images')
             ->orderBy('updated_at', 'desc')
-            ->take($limit)
+            ->limit($limit)
             ->get();
     }
 
     /**
      * Format album data with user display settings
-     *
-     * @param Album $album
-     * @param array|null $userSettings
-     * @return array
      */
-    public function formatAlbumWithUserSettings($album, $userSettings = null)
+    public function formatAlbumWithUserSettings(Album $album, ?array $userSettings = null): array
     {
-        $settings = $userSettings ?? [
+        $defaultSettings = [
             'caption' => true,
             'altText' => true,
             'dateCreated' => true,
@@ -203,50 +199,55 @@ class AlbumService
             'secondary_color' => '#10B981',
         ];
 
-        $images = $album->images()->orderBy('order')->get()->map(function ($image) use ($settings) {
-            $properties = is_string($image->properties) ? 
-                json_decode($image->properties, true) : 
-                $image->properties;
+        $settings = $userSettings ?? $defaultSettings;
 
-            $formattedImage = [
-                'id' => $image->id,
-                'url' => $image->path,
-                'order' => $image->order ?? 0,
-            ];
+        $images = $album->images()
+            ->orderBy('order')
+            ->get()
+            ->map(function (AlbumImage $image) use ($settings, $album) {
+                $properties = is_string($image->properties) ? 
+                    json_decode($image->properties, true) : 
+                    ($image->properties ?? []);
 
-            // Add fields based on user settings
-            if ($settings['title'] ?? false) {
-                $formattedImage['title'] = $image->title ?? '';
-            }
-            if ($settings['caption'] ?? false) {
-                $formattedImage['caption'] = $image->caption ?? '';
-            }
-            if ($settings['altText'] ?? false) {
-                $formattedImage['alt_text'] = $image->title ?? $image->caption ?? '';
-            }
-            if ($settings['dateCreated'] ?? false) {
-                $formattedImage['date_created'] = $image->created_at->toISOString();
-            }
-            if ($settings['location'] ?? false) {
-                $formattedImage['location'] = $properties['location'] ?? null;
-            }
-            if ($settings['tags'] ?? false) {
-                $formattedImage['tags'] = $properties['tags'] ?? [];
-            }
-            if ($settings['author'] ?? false) {
-                $formattedImage['author'] = $properties['author'] ?? $album->user->name ?? '';
-            }
+                $formattedImage = [
+                    'id' => $image->id,
+                    'url' => $image->path,
+                    'order' => $image->order ?? 0,
+                ];
 
-            return $formattedImage;
-        });
+                // Add fields based on user settings
+                if ($settings['title'] ?? false) {
+                    $formattedImage['title'] = $image->title ?? '';
+                }
+                if ($settings['caption'] ?? false) {
+                    $formattedImage['caption'] = $image->caption ?? '';
+                }
+                if ($settings['altText'] ?? false) {
+                    $formattedImage['alt_text'] = $image->title ?? $image->caption ?? '';
+                }
+                if ($settings['dateCreated'] ?? false) {
+                    $formattedImage['date_created'] = $image->created_at?->toISOString();
+                }
+                if ($settings['location'] ?? false) {
+                    $formattedImage['location'] = $properties['location'] ?? null;
+                }
+                if ($settings['tags'] ?? false) {
+                    $formattedImage['tags'] = $properties['tags'] ?? [];
+                }
+                if ($settings['author'] ?? false) {
+                    $formattedImage['author'] = $properties['author'] ?? $album->user?->name ?? '';
+                }
+
+                return $formattedImage;
+            });
 
         return [
             'id' => $album->id,
             'title' => $album->title,
             'description' => $album->description,
-            'created_at' => $album->created_at->toISOString(),
-            'updated_at' => $album->updated_at->toISOString(),
-            'images' => $images,
+            'created_at' => $album->created_at?->toISOString(),
+            'updated_at' => $album->updated_at?->toISOString(),
+            'images' => $images->toArray(),
             'images_count' => $images->count(),
             'display_settings' => [
                 'main_color' => $settings['main_color'] ?? '#4F46E5',

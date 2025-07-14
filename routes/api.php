@@ -8,72 +8,18 @@ use App\Http\Controllers\Api\MediaController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes - For External Frontends Using API Keys
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| These routes are designed for external websites/applications that need
+| to display your albums and mosaics using API key authentication.
+| They are READ-ONLY by design for security.
 |
 */
 
-Route::middleware(['auth:sanctum', 'throttle:60,1'])->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-// Protected routes that require Sanctum authentication
-Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+// API Key protected routes - READ-ONLY for external frontends
+Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])->group(function () {
     
-    // Album CRUD operations
-    Route::prefix('albums')->group(function () {
-        Route::get('/', [AlbumController::class, 'index']);
-        Route::post('/', [AlbumController::class, 'store']);
-        Route::get('/{id}', [AlbumController::class, 'show']);
-        Route::put('/{id}', [AlbumController::class, 'update']);
-        Route::delete('/{id}', [AlbumController::class, 'destroy']);
-        Route::get('/by-title/{title}', [AlbumController::class, 'showByTitle']);
-        
-        // Album Images operations
-        Route::prefix('{albumId}/images')->group(function () {
-            Route::post('/', [AlbumController::class, 'storeImage']);
-            Route::put('/reorder', [AlbumController::class, 'reorderImages']);
-            Route::post('/store-video', [AlbumController::class, 'storeVideo']);
-            Route::get('/{imageId}', [AlbumController::class, 'showImage']);
-            Route::put('/{imageId}', [AlbumController::class, 'updateImage']);
-            Route::delete('/{imageId}', [AlbumController::class, 'destroyImage']);
-        });
-    });
-
-    // Mosaic CRUD operations
-    Route::prefix('mosaics')->group(function () {
-        Route::get('/', [MosaicController::class, 'index']);
-        Route::post('/', [MosaicController::class, 'store']);
-        Route::get('/{id}', [MosaicController::class, 'show']);
-        Route::put('/{id}', [MosaicController::class, 'update']);
-        Route::delete('/{id}', [MosaicController::class, 'destroy']);
-        Route::get('/by-title/{title}', [MosaicController::class, 'showByTitle']);
-        
-        // Mosaic Items operations
-        Route::prefix('{mosaicId}/items')->group(function () {
-            Route::post('/', [MosaicController::class, 'storeItem']);
-            Route::put('/{itemId}', [MosaicController::class, 'updateItem']);
-            Route::delete('/{itemId}', [MosaicController::class, 'destroyItem']);
-            Route::post('/reorder', [MosaicController::class, 'reorderItems']);
-        });
-        
-        // Mosaic Media Upload
-        Route::post('/{mosaicId}/media', [MosaicController::class, 'storeMedia']);
-    });
-    
-    // User-specific routes
-    Route::prefix('user')->group(function () {
-        Route::get('/albums', [AlbumController::class, 'userAlbums']);
-        Route::get('/mosaics', [MosaicController::class, 'userMosaics']);
-    });
-});
-
-// Public routes for API key access (for frontend websites)
-Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])->prefix('public')->group(function () {
     // Test connection endpoint
     Route::get('/test', function (Request $request) {
         return response()->json([
@@ -83,37 +29,27 @@ Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])
         ]);
     });
     
-    // Public album access with user display settings
+    // READ-ONLY Album access with user display settings
     Route::prefix('albums')->group(function () {
         Route::get('/', [AlbumController::class, 'indexWithApiKey']);
         Route::get('/by-title/{title}', [AlbumController::class, 'showByTitleWithApiKey']);
         Route::get('/{id}', [AlbumController::class, 'showWithApiKey']);
     });
 
-    // Public mosaic access with user display settings
+    // READ-ONLY Mosaic access with user display settings  
     Route::prefix('mosaics')->group(function () {
+        Route::get('/', [MosaicController::class, 'indexWithApiKey']);
         Route::get('/by-title/{title}', [MosaicController::class, 'showByTitleWithApiKey']);
         Route::get('/{id}', [MosaicController::class, 'showWithApiKey']);
     });
 });
 
-// Media routes with specific rate limiting and file size checks
+// Internal API endpoint for media operations (used by your own frontend)
+// These require session auth since they're called by your Inertia frontend
 Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
     Route::post('/media/upload', [MediaController::class, 'upload'])
         ->middleware('file.size:10240') // 10MB limit
         ->name('api.media.upload');
     Route::delete('/media', [MediaController::class, 'delete'])
         ->name('api.media.delete');
-});
-
-// Truly public routes (no authentication required) - for testing
-Route::prefix('open')->group(function () {
-    Route::get('/albums/by-title/{title}', [AlbumController::class, 'showByTitlePublic']);
-    Route::get('/test', function () {
-        return response()->json([
-            'message' => 'Public API endpoint working',
-            'timestamp' => now()->toISOString(),
-            'cors' => 'enabled'
-        ]);
-    });
 });

@@ -109,6 +109,15 @@ class AlbumImageController extends Controller
                 'count' => count($uploadedImages)
             ]);
 
+            // Check if this is an AJAX request (for individual uploads)
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Image uploaded successfully',
+                    'images' => $uploadedImages
+                ]);
+            }
+
             // Return Inertia response with updated album data
             return back()->with([
                 'message' => 'Images uploaded successfully',
@@ -121,6 +130,14 @@ class AlbumImageController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
+
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error uploading image: ' . $e->getMessage()
+                ], 422);
+            }
 
             return back()->with('error', 'Error uploading images: ' . $e->getMessage());
         }
