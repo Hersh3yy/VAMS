@@ -1,11 +1,19 @@
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import type { Album, AlbumImage, AlbumVideo, AlbumUploadProgress } from '@/types/album';
 
+export interface UploadItem {
+    id: string;
+    file: File;
+    status: 'pending' | 'uploading' | 'processing' | 'complete' | 'error';
+    progress: number;
+    error?: string;
+    result?: AlbumImage;
+}
+
 export function useAlbum(albumId: string) {
     const uploading = ref(false);
-    const uploadProgress = ref(0);
-    const uploadStage = ref('uploading'); // 'uploading' | 'processing' | 'complete'
+    const uploadQueue = ref<UploadItem[]>([]);
     const showConfirmation = ref(false);
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
@@ -16,21 +24,44 @@ export function useAlbum(albumId: string) {
         const input = event.target as HTMLInputElement;
         if (!input.files?.length) return;
 
+        // Create upload queue for each file
+        const files = Array.from(input.files);
+        const newUploads: UploadItem[] = files.map(file => ({
+            id: `upload_${Date.now()}_${Math.random()}`,
+            file,
+            status: 'pending',
+            progress: 0
+        }));
+
+        uploadQueue.value.push(...newUploads);
         uploading.value = true;
-        uploadProgress.value = 0;
-        uploadStage.value = 'uploading';
+
+        // Process each file individually
+        for (const uploadItem of newUploads) {
+            await uploadSingleFile(uploadItem);
+        }
+
+        // Clear the file input
+        if (input) {
+            input.value = '';
+        }
+    };
+
+    const uploadSingleFile = async (uploadItem: UploadItem) => {
+        const { file } = uploadItem;
+        
+        // Update status to uploading
+        uploadItem.status = 'uploading';
+        uploadItem.progress = 0;
 
         const formData = new FormData();
-        Array.from(input.files).forEach(file => {
-            formData.append('images[]', file);
-        });
+        formData.append('images[]', file);
 
         // Get CSRF token from meta tag
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (!token) {
-            console.error('CSRF token not found');
-            showError('Security token not found. Please refresh the page and try again.');
-            uploading.value = false;
+            uploadItem.status = 'error';
+            uploadItem.error = 'Security token not found. Please refresh the page and try again.';
             return;
         }
 
@@ -38,32 +69,39 @@ export function useAlbum(albumId: string) {
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             
-            // Track upload progress (limit to 90% to save room for processing stage)
+            // Track upload progress (limit to 80% to save room for processing stage)
             xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable && uploadStage.value === 'uploading') {
-                    // Cap upload progress at 90% to leave room for processing stage
-                    uploadProgress.value = Math.round((e.loaded / e.total) * 90);
+                if (e.lengthComputable && uploadItem.status === 'uploading') {
+                    uploadItem.progress = Math.round((e.loaded / e.total) * 80);
                 }
             });
 
             // When upload completes, switch to processing stage
             xhr.upload.addEventListener('load', () => {
-                uploadStage.value = 'processing';
-                uploadProgress.value = 95;
+                uploadItem.status = 'processing';
+                uploadItem.progress = 85;
             });
 
             // Handle response
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200 || xhr.status === 201) {
-                    uploadStage.value = 'complete';
-                    uploadProgress.value = 100;
+                    uploadItem.status = 'complete';
+                    uploadItem.progress = 100;
                     
-                    // Brief delay to show completion before refreshing
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.images && response.images.length > 0) {
+                            uploadItem.result = response.images[0];
+                        }
+                    } catch (e) {
+                        console.warn('Could not parse response:', e);
+                    }
+
+                    // Refresh the page to show the new image
                     setTimeout(() => {
-                        // Use Inertia's visit to refresh the page with the new data
                         router.visit(route('albums.show', albumId), {
                             preserveScroll: true,
-                            preserveState: false, // Set to false to ensure fresh data
+                            preserveState: false,
                             only: ['album']
                         });
                     }, 500);
@@ -88,30 +126,53 @@ export function useAlbum(albumId: string) {
             
         } catch (error) {
             console.error('Upload failed:', error);
-            showError('Failed to upload images. Please try again.');
-            // Reset states on error
-            uploading.value = false;
-            uploadProgress.value = 0;
-            uploadStage.value = 'uploading';
-            // Clear the file input
-            if (input) {
-                input.value = '';
-            }
-        } finally {
-            // Only reset if we're at complete stage (successful upload)
-            if (uploadStage.value === 'complete') {
-                setTimeout(() => {
-                    uploading.value = false;
-                    uploadProgress.value = 0;
-                    uploadStage.value = 'uploading';
-                    // Clear the file input
-                    if (input) {
-                        input.value = '';
-                    }
-                }, 1500); // Show completion briefly before hiding
-            }
+            uploadItem.status = 'error';
+            uploadItem.error = error instanceof Error ? error.message : 'Upload failed';
         }
     };
+
+    const retryUpload = async (uploadItem: UploadItem) => {
+        uploadItem.error = undefined;
+        await uploadSingleFile(uploadItem);
+    };
+
+    const removeFromQueue = (uploadItem: UploadItem) => {
+        const index = uploadQueue.value.findIndex(item => item.id === uploadItem.id);
+        if (index !== -1) {
+            uploadQueue.value.splice(index, 1);
+        }
+        
+        // If no more uploads, hide the upload section
+        if (uploadQueue.value.length === 0) {
+            uploading.value = false;
+        }
+    };
+
+    const clearCompletedUploads = () => {
+        uploadQueue.value = uploadQueue.value.filter(item => item.status !== 'complete');
+        if (uploadQueue.value.length === 0) {
+            uploading.value = false;
+        }
+    };
+
+    // Computed properties for better UX
+    const completedCount = computed(() => 
+        uploadQueue.value.filter(item => item.status === 'complete').length
+    );
+
+    const errorCount = computed(() => 
+        uploadQueue.value.filter(item => item.status === 'error').length
+    );
+
+    const pendingCount = computed(() => 
+        uploadQueue.value.filter(item => item.status === 'pending' || item.status === 'uploading' || item.status === 'processing').length
+    );
+
+    const overallProgress = computed(() => {
+        if (uploadQueue.value.length === 0) return 0;
+        const totalProgress = uploadQueue.value.reduce((sum, item) => sum + item.progress, 0);
+        return Math.round(totalProgress / uploadQueue.value.length);
+    });
 
     const deleteAlbum = async () => {
         try {
@@ -139,7 +200,7 @@ export function useAlbum(albumId: string) {
         try {
             await router.patch(route('albums.images.reorder', albumId), {
                 from_index: fromIndex,
-                to_index: toIndex,
+                to_index: toIndex
             }, {
                 preserveScroll: true,
                 preserveState: false,
@@ -147,11 +208,11 @@ export function useAlbum(albumId: string) {
             });
         } catch (error) {
             console.error('Reorder failed:', error);
-            showError('Failed to reorder items. Please try again.');
+            showError('Failed to reorder images. Please try again.');
         }
     };
 
-    const addVideo = async (url: string, title?: string, caption?: string) => {
+    const addVideo = async (url: string, title: string, caption: string) => {
         try {
             await router.post(route('albums.images.store-video', albumId), {
                 url,
@@ -163,7 +224,7 @@ export function useAlbum(albumId: string) {
                 only: ['album']
             });
         } catch (error) {
-            console.error('Add video failed:', error);
+            console.error('Video upload failed:', error);
             showError('Failed to add video. Please try again.');
         }
     };
@@ -189,12 +250,18 @@ export function useAlbum(albumId: string) {
 
     return {
         uploading,
-        uploadProgress,
-        uploadStage,
+        uploadQueue,
+        completedCount,
+        errorCount,
+        pendingCount,
+        overallProgress,
         showConfirmation,
         confirmationTitle,
         confirmationMessage,
         handleFileUpload,
+        retryUpload,
+        removeFromQueue,
+        clearCompletedUploads,
         deleteAlbum,
         deleteImage,
         reorderImages,

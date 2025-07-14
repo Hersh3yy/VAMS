@@ -17,36 +17,16 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div v-if="uploading" class="mb-4">
-                        <div class="flex justify-between text-sm text-gray-600 mb-2">
-                            <span>
-                                <template v-if="uploadStage === 'uploading'">
-                                    Uploading images...
-                                </template>
-                                <template v-else-if="uploadStage === 'processing'">
-                                    Processing images...
-                                </template>
-                                <template v-else-if="uploadStage === 'complete'">
-                                    Upload complete!
-                                </template>
-                            </span>
-                            <span>{{ uploadProgress }}%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                                class="h-2.5 rounded-full transition-all duration-300"
-                                :class="{
-                                    'bg-blue-600': uploadStage === 'uploading',
-                                    'bg-yellow-500': uploadStage === 'processing',
-                                    'bg-green-600': uploadStage === 'complete'
-                                }"
-                                :style="{ width: `${uploadProgress}%` }"
-                            ></div>
-                        </div>
-                        <p v-if="uploadStage === 'processing'" class="text-xs text-gray-500 mt-1">
-                            Please wait while we process your images and generate thumbnails...
-                        </p>
-                    </div>
+                    <UploadProgress
+                        :upload-queue="uploadQueue"
+                        :completed-count="completedCount"
+                        :error-count="errorCount"
+                        :pending-count="pendingCount"
+                        :overall-progress="overallProgress"
+                        @retry="retryUpload"
+                        @remove="removeFromQueue"
+                        @clear-completed="clearCompletedUploads"
+                    />
 
                     <AlbumGrid
                         :items="album.images || []"
@@ -108,6 +88,7 @@ import AlbumGrid from '@/Components/albums/AlbumGrid.vue';
 import AlbumCover from '@/Components/albums/AlbumCover.vue';
 import VideoWizard from '@/Components/albums/VideoWizard.vue';
 import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
+import UploadProgress from '@/Components/albums/UploadProgress.vue';
 import { ref, computed } from 'vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
 import type { Album, AlbumImage } from '@/types/album';
@@ -123,12 +104,18 @@ const props = defineProps<{
 
 const {
     uploading,
-    uploadProgress,
-    uploadStage,
+    uploadQueue,
+    completedCount,
+    errorCount,
+    pendingCount,
+    overallProgress,
     showConfirmation,
     confirmationTitle,
     confirmationMessage,
     handleFileUpload,
+    retryUpload,
+    removeFromQueue,
+    clearCompletedUploads,
     deleteAlbum,
     deleteImage,
     reorderImages,
