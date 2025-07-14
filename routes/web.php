@@ -44,6 +44,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'destroy'])->name('albums.images.destroy');
     Route::patch('/albums/{album}/reorder', [\App\Http\Controllers\AlbumImageController::class, 'reorder'])->name('albums.images.reorder');
     
+    // Generic Media Upload (for future entities like blog posts, news articles, etc.)
+    Route::post('/media/upload', [\App\Http\Controllers\MediaUploadController::class, 'upload'])->name('media.upload');
+    
     // Mosaic CRUD operations
     Route::post('/mosaics', [MosaicController::class, 'store'])->name('mosaics.store');
     Route::patch('/mosaics/{mosaic}', [MosaicController::class, 'update'])->name('mosaics.update');
