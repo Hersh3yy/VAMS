@@ -11,8 +11,15 @@
         :get-item-actions="getMosaicActions"
     >
         <template #item-image="{ item }">
-            <!-- Mosaic Preview -->
-            <div class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
+            <!-- Check if mosaic has a cover image -->
+            <img 
+                v-if="getMosaicCoverImage(item)"
+                :src="getMosaicCoverImage(item)"
+                :alt="item.title"
+                class="w-full h-full object-cover"
+            />
+            <!-- Fallback to mosaic preview -->
+            <div v-else class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
                 <div class="bg-gray-200 rounded"></div>
                 <div class="bg-gray-300 rounded"></div>
                 <div class="bg-gray-300 rounded"></div>
@@ -62,4 +69,23 @@ const getMosaicActions = (mosaic: Mosaic) => [
         class: 'btn-danger p-2 rounded-full'
     }
 ];
+
+const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
+    // Find the first image in the mosaic items
+    for (const item of mosaic.items) {
+        if (item.type === 'album' && item.properties?.selected_image?.path) {
+            return item.properties.selected_image.path;
+        }
+        if (item.type === 'album' && item.properties?.album?.cover_image_path) {
+            return item.properties.album.cover_image_path;
+        }
+        if (item.type === 'media' && item.properties?.media?.path) {
+            return item.properties.media.path;
+        }
+        if (item.type === 'media' && item.properties?.media_url) {
+            return item.properties.media_url;
+        }
+    }
+    return undefined;
+};
 </script> 

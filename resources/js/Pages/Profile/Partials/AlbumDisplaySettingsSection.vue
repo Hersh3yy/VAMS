@@ -17,7 +17,7 @@
                             v-model="settingsForm['album_display_settings.title']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="title_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="title_setting" class="ml-2 text-sm text-white">
                             Show Title
                         </label>
                     </div>
@@ -28,7 +28,7 @@
                             v-model="settingsForm['album_display_settings.author']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="author_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="author_setting" class="ml-2 text-sm text-white">
                             Show Author
                         </label>
                     </div>
@@ -39,7 +39,7 @@
                             v-model="settingsForm['album_display_settings.caption']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="caption_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="caption_setting" class="ml-2 text-sm text-white">
                             Show Caption
                         </label>
                     </div>
@@ -50,7 +50,7 @@
                             v-model="settingsForm['album_display_settings.altText']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="altText_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="altText_setting" class="ml-2 text-sm text-white">
                             Show Alt Text
                         </label>
                     </div>
@@ -61,7 +61,7 @@
                             v-model="settingsForm['album_display_settings.dateCreated']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="dateCreated_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="dateCreated_setting" class="ml-2 text-sm text-white">
                             Show Date Created
                         </label>
                     </div>
@@ -72,7 +72,7 @@
                             v-model="settingsForm['album_display_settings.location']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="location_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="location_setting" class="ml-2 text-sm text-white">
                             Show Location
                         </label>
                     </div>
@@ -83,7 +83,7 @@
                             v-model="settingsForm['album_display_settings.tags']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-700"
                         />
-                        <label for="tags_setting" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                        <label for="tags_setting" class="ml-2 text-sm text-white">
                             Show Tags
                         </label>
                     </div>

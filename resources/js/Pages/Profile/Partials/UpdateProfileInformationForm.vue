@@ -31,7 +31,7 @@ const updateProfileInformation = () => {
 
         <form @submit.prevent="updateProfileInformation" class="mt-6 space-y-6">
             <div>
-                <label for="name" class="form-label">
+                <label for="name" class="block text-sm font-medium text-white">
                     Name
                 </label>
 
@@ -51,7 +51,7 @@ const updateProfileInformation = () => {
             </div>
 
             <div>
-                <label for="email" class="form-label">
+                <label for="email" class="block text-sm font-medium text-white">
                     Email
                 </label>
 

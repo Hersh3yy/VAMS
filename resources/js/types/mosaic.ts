@@ -39,6 +39,7 @@ export interface Mosaic {
     created_at: string;
     updated_at: string;
     items: MosaicItem[];
+    cover_image_path?: string; // Add cover image path
 }
 
 export interface MosaicItem {
