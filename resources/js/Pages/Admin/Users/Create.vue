@@ -3,10 +3,15 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Create New User</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Create New User
+                </h2>
                 <div>
-                    <Link :href="route('admin.users.index')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    <Link
+                        :href="route('admin.users.index')"
+                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+                    >
                         Back to Users
                     </Link>
                 </div>
@@ -14,20 +19,38 @@
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <!-- Flash Messages -->
-                <div v-if="$page.props.flash?.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ $page.props.flash.success }}</span>
+                <div
+                    v-if="$page.props.flash?.success"
+                    class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
+                    role="alert"
+                >
+                    <span class="block sm:inline">{{
+                        $page.props.flash.success
+                    }}</span>
                 </div>
-                <div v-if="$page.props.flash?.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ $page.props.flash.error }}</span>
+                <div
+                    v-if="$page.props.flash?.error"
+                    class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+                    role="alert"
+                >
+                    <span class="block sm:inline">{{
+                        $page.props.flash.error
+                    }}</span>
                 </div>
-                
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <form @submit.prevent="form.post(route('admin.users.store'))">
+                        <form
+                            @submit.prevent="
+                                form.post(route('admin.users.store'))
+                            "
+                        >
                             <div class="mb-4">
-                                <label for="name" class="form-label">Name</label>
+                                <label for="name" class="form-label"
+                                    >Name</label
+                                >
                                 <input
                                     id="name"
                                     type="text"
@@ -42,7 +65,9 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="email" class="form-label">Email</label>
+                                <label for="email" class="form-label"
+                                    >Email</label
+                                >
                                 <input
                                     id="email"
                                     type="email"
@@ -50,13 +75,18 @@
                                     required
                                     class="form-input"
                                 />
-                                <div v-if="form.errors.email" class="form-error">
+                                <div
+                                    v-if="form.errors.email"
+                                    class="form-error"
+                                >
                                     {{ form.errors.email }}
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="password" class="form-label">Password</label>
+                                <label for="password" class="form-label"
+                                    >Password</label
+                                >
                                 <input
                                     id="password"
                                     type="password"
@@ -64,7 +94,10 @@
                                     required
                                     class="form-input"
                                 />
-                                <div v-if="form.errors.password" class="form-error">
+                                <div
+                                    v-if="form.errors.password"
+                                    class="form-error"
+                                >
                                     {{ form.errors.password }}
                                 </div>
                             </div>
@@ -77,8 +110,15 @@
                                         v-model="form.is_admin"
                                         class="form-checkbox"
                                     />
-                                    <label for="is_admin" class="form-label ml-2">Admin User</label>
-                                    <div v-if="form.errors.is_admin" class="form-error">
+                                    <label
+                                        for="is_admin"
+                                        class="form-label ml-2"
+                                        >Admin User</label
+                                    >
+                                    <div
+                                        v-if="form.errors.is_admin"
+                                        class="form-error"
+                                    >
                                         {{ form.errors.is_admin }}
                                     </div>
                                 </div>
@@ -90,14 +130,21 @@
                                         v-model="form.is_approved"
                                         class="form-checkbox"
                                     />
-                                    <label for="is_approved" class="form-label ml-2">Approved</label>
-                                    <div v-if="form.errors.is_approved" class="form-error">
+                                    <label
+                                        for="is_approved"
+                                        class="form-label ml-2"
+                                        >Approved</label
+                                    >
+                                    <div
+                                        v-if="form.errors.is_approved"
+                                        class="form-error"
+                                    >
                                         {{ form.errors.is_approved }}
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
+                            <div class="mt-4 flex items-center justify-end">
                                 <button
                                     type="submit"
                                     class="btn-primary"
@@ -115,8 +162,8 @@
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     name: '',
@@ -125,4 +172,4 @@ const form = useForm({
     is_admin: false,
     is_approved: true,
 });
-</script> 
+</script>

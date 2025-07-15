@@ -12,23 +12,23 @@
     >
         <template #item-image="{ item }">
             <!-- Check if mosaic has a cover image -->
-            <img 
+            <img
                 v-if="getMosaicCoverImage(item)"
                 :src="getMosaicCoverImage(item)"
                 :alt="item.title"
-                class="w-full h-full object-cover"
+                class="h-full w-full object-cover"
             />
             <!-- Fallback to mosaic preview -->
             <div v-else class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
-                <div class="bg-gray-200 rounded"></div>
-                <div class="bg-gray-300 rounded"></div>
-                <div class="bg-gray-300 rounded"></div>
-                <div class="bg-gray-200 rounded"></div>
+                <div class="rounded bg-gray-200"></div>
+                <div class="rounded bg-gray-300"></div>
+                <div class="rounded bg-gray-300"></div>
+                <div class="rounded bg-gray-200"></div>
             </div>
         </template>
-        
+
         <template #item-footer="{ item }">
-            <div class="mt-4 flex justify-between items-center">
+            <div class="mt-4 flex items-center justify-between">
                 <span class="text-xs text-gray-500">
                     Created {{ new Date(item.created_at).toLocaleDateString() }}
                 </span>
@@ -41,9 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
 import IndexLayout from '@/Components/shared/IndexLayout.vue';
 import type { Mosaic } from '@/types/mosaic';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     mosaics: Mosaic[];
@@ -60,14 +60,14 @@ const getMosaicActions = (mosaic: Mosaic) => [
         label: 'Edit Mosaic',
         handler: () => router.visit(route('mosaics.edit', mosaic.id)),
         icon: 'svg',
-        class: 'p-2 bg-secondary text-black rounded-full hover:brightness-90'
+        class: 'p-2 bg-secondary text-black rounded-full hover:brightness-90',
     },
     {
         label: 'Delete Mosaic',
         handler: () => deleteMosaic(mosaic),
         icon: 'svg',
-        class: 'btn-danger p-2 rounded-full'
-    }
+        class: 'btn-danger p-2 rounded-full',
+    },
 ];
 
 const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
@@ -88,4 +88,4 @@ const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
     }
     return undefined;
 };
-</script> 
+</script>

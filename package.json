@@ -4,7 +4,11 @@
     "scripts": {
         "build": "vue-tsc && vite build && vite build --ssr",
         "dev": "vite",
-        "lint": "eslint resources/js --ext .js,.ts,.vue --ignore-path .gitignore --fix"
+        "lint": "eslint resources/js --ext .js,.ts,.vue --ignore-path .gitignore --fix",
+        "lint:check": "eslint resources/js --ext .js,.ts,.vue --ignore-path .gitignore",
+        "format": "prettier --write resources/js/**/*.{js,ts,vue}",
+        "format:check": "prettier --check resources/js/**/*.{js,ts,vue}",
+        "code:clean": "npm run format && npm run lint"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.14",
@@ -19,6 +23,7 @@
         "axios": "^1.10.0",
         "concurrently": "^9.2.0",
         "eslint": "^8.57.0",
+        "eslint-plugin-unused-imports": "^4.1.4",
         "eslint-plugin-vue": "^9.23.0",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.6",

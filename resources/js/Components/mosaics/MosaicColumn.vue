@@ -1,9 +1,9 @@
 <template>
     <div class="flex flex-col space-y-4" :class="columnClass">
-        <div 
-            v-for="item in items" 
+        <div
+            v-for="item in items"
             :key="item.id"
-            class="relative group transition-all duration-200"
+            class="group relative transition-all duration-200"
             :class="{ 'opacity-50': isDragging && draggedItem?.id === item.id }"
             draggable="true"
             @dragstart="handleDragStart($event, item)"
@@ -23,22 +23,34 @@
                 @delete="handleItemDelete"
                 @edit="handleItemEdit"
             />
-            
+
             <!-- Drag indicator -->
-            <div 
+            <div
                 v-if="isDragOver && dragTargetItem?.id === item.id"
-                class="absolute inset-0 border-2 border-blue-500 border-dashed rounded-lg bg-blue-50 bg-opacity-50"
+                class="absolute inset-0 rounded-lg border-2 border-dashed border-blue-500 bg-blue-50 bg-opacity-50"
             ></div>
         </div>
-        
+
         <!-- Add Item Button -->
         <button
             @click="handleAddItem"
-            class="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 group"
+            class="group w-full rounded-lg border-2 border-dashed border-gray-300 p-6 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50"
         >
-            <div class="flex flex-col items-center justify-center text-gray-500 group-hover:text-blue-600">
-                <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            <div
+                class="flex flex-col items-center justify-center text-gray-500 group-hover:text-blue-600"
+            >
+                <svg
+                    class="mb-2 h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    ></path>
                 </svg>
                 <span class="text-sm font-medium">Add Item</span>
             </div>
@@ -47,9 +59,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue';
+import type {
+    MosaicDisplaySettings,
+    MosaicItem as MosaicItemType,
+} from '@/types/mosaic';
+import { computed, inject, ref } from 'vue';
 import MosaicItem from './MosaicItem.vue';
-import type { MosaicItem as MosaicItemType, MosaicDisplaySettings } from '@/types/mosaic';
 
 const props = defineProps<{
     items: MosaicItemType[];
@@ -65,7 +80,9 @@ const emit = defineEmits<{
     (e: 'add-item', columnIndex: number): void;
 }>();
 
-const showError = inject('showError', (message: string) => console.error(message));
+const showError = inject('showError', (message: string) =>
+    console.error(message),
+);
 
 const isDragging = ref(false);
 const isDragOver = ref(false);
@@ -110,7 +127,7 @@ const handleAddItem = () => {
 
 const handleDragStart = (event: DragEvent, item: MosaicItemType) => {
     if (!event.dataTransfer) return;
-    
+
     isDragging.value = true;
     draggedItem.value = item;
     event.dataTransfer.effectAllowed = 'move';
@@ -140,7 +157,11 @@ const handleDrop = (event: DragEvent, item: MosaicItemType) => {
     event.preventDefault();
     if (draggedItem.value && draggedItem.value.id !== item.id) {
         try {
-            emit('item-reorder', draggedItem.value.id.toString(), item.id.toString());
+            emit(
+                'item-reorder',
+                draggedItem.value.id.toString(),
+                item.id.toString(),
+            );
         } catch (error) {
             showError('Failed to reorder items');
         }
@@ -154,4 +175,4 @@ const handleDrop = (event: DragEvent, item: MosaicItemType) => {
 .mosaic-column {
     min-height: 200px;
 }
-</style> 
+</style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/general/ApplicationLogo.vue';
 import NavLink from '@/Components/general/NavLink.vue';
+import { Link } from '@inertiajs/vue3';
 import UserDropdown from './UserDropdown.vue';
 
 defineProps<{
@@ -11,19 +11,22 @@ defineProps<{
 </script>
 
 <template>
-    <nav class="bg-black border-b border-yellow-500">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+    <nav class="border-b border-yellow-500 bg-black">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 justify-between">
                 <div class="flex">
-                    <div class="shrink-0 flex items-center">
+                    <div class="flex shrink-0 items-center">
                         <Link :href="route('dashboard')">
-                            <img 
-                                v-if="$page.props.auth?.user?.logo_url" 
-                                :src="$page.props.auth.user.logo_url" 
+                            <img
+                                v-if="$page.props.auth?.user?.logo_url"
+                                :src="$page.props.auth.user.logo_url"
                                 class="block h-9 w-auto"
                                 alt="Custom Logo"
                             />
-                            <ApplicationLogo v-else class="block h-9 w-auto fill-current text-yellow-500" />
+                            <ApplicationLogo
+                                v-else
+                                class="block h-9 w-auto fill-current text-yellow-500"
+                            />
                         </Link>
                     </div>
 
@@ -32,7 +35,7 @@ defineProps<{
                         <NavLink
                             :href="route('albums.index')"
                             :active="route().current('albums.index')"
-                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                            class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
                         >
                             Albums
                         </NavLink>
@@ -40,14 +43,14 @@ defineProps<{
                             v-if="$page.props.auth?.user?.is_admin"
                             :href="route('admin.dashboard')"
                             :active="route().current('admin.*')"
-                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                            class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
                         >
                             Admin
                         </NavLink>
                         <NavLink
                             :href="route('mosaics.index')"
                             :active="route().current('mosaics.*')"
-                            class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                            class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
                         >
                             Mosaics
                         </NavLink>
@@ -96,4 +99,4 @@ defineProps<{
             </div>
         </div>
     </nav>
-</template> 
+</template>

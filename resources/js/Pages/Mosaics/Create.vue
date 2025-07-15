@@ -3,16 +3,14 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="page-title">
-                    Create New Mosaic
-                </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="page-title">Create New Mosaic</h2>
             </div>
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="overflow-hidden rounded-lg bg-white shadow">
                     <form @submit.prevent="createMosaic" class="p-6">
                         <div class="mb-6">
                             <label for="title" class="form-label">
@@ -40,7 +38,10 @@
                                 rows="3"
                                 class="form-input"
                             ></textarea>
-                            <div v-if="form.errors.description" class="form-error">
+                            <div
+                                v-if="form.errors.description"
+                                class="form-error"
+                            >
                                 {{ form.errors.description }}
                             </div>
                         </div>
@@ -88,8 +89,8 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     title: '',
@@ -108,7 +109,7 @@ const createMosaic = () => {
 
 <style scoped>
 .header-title {
-    @apply font-semibold text-xl text-gray-800 leading-tight;
+    @apply text-xl font-semibold leading-tight text-gray-800;
 }
 
 .content-wrapper {
@@ -116,11 +117,11 @@ const createMosaic = () => {
 }
 
 .form-container {
-    @apply max-w-7xl mx-auto sm:px-6 lg:px-8;
+    @apply mx-auto max-w-7xl sm:px-6 lg:px-8;
 }
 
 .form-card {
-    @apply bg-white overflow-hidden shadow-sm rounded-lg;
+    @apply overflow-hidden rounded-lg bg-white shadow-sm;
 }
 
 .form-body {
@@ -148,7 +149,7 @@ const createMosaic = () => {
 }
 
 .form-error {
-    @apply text-red-500 text-sm mt-1;
+    @apply mt-1 text-sm text-red-500;
 }
 
 .form-actions {
@@ -160,6 +161,6 @@ const createMosaic = () => {
 }
 
 .submit-button {
-    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+    @apply rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700;
 }
-</style> 
+</style>

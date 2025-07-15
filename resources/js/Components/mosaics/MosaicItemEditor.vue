@@ -1,24 +1,32 @@
 <template>
-    <Modal :modelValue="show" @update:modelValue="$emit('update:modelValue', $event)" @close="$emit('close')">
+    <Modal
+        :modelValue="show"
+        @update:modelValue="$emit('update:modelValue', $event)"
+        @close="$emit('close')"
+    >
         <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ isEditing ? 'Edit Item' : 'Add New Item' }}</h3>
-            
+            <h3 class="mb-4 text-lg font-medium text-gray-900">
+                {{ isEditing ? 'Edit Item' : 'Add New Item' }}
+            </h3>
+
             <!-- Content Type Selection -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">What would you like to add?</label>
+                <label class="mb-2 block text-sm font-medium text-gray-700"
+                    >What would you like to add?</label
+                >
                 <div class="grid grid-cols-3 gap-4">
                     <button
                         v-for="type in contentTypes"
                         :key="type.value"
                         @click="selectedType = type.value"
                         :class="[
-                            'flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md',
+                            'flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
                             selectedType === type.value
                                 ? 'bg-indigo-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50'
+                                : 'bg-white text-gray-700 hover:bg-gray-50',
                         ]"
                     >
-                        <component :is="type.icon" class="w-5 h-5 mr-2" />
+                        <component :is="type.icon" class="mr-2 h-5 w-5" />
                         {{ type.label }}
                     </button>
                 </div>
@@ -27,25 +35,37 @@
             <!-- Album Selection -->
             <div v-if="selectedType === 'album'" class="space-y-4">
                 <div v-if="!item.album_id" class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Select Album</label>
-                    <div v-if="albums.length === 0" class="text-sm text-gray-500">
+                    <label class="block text-sm font-medium text-gray-700"
+                        >Select Album</label
+                    >
+                    <div
+                        v-if="albums.length === 0"
+                        class="text-sm text-gray-500"
+                    >
                         No albums available. Please create an album first.
                     </div>
                     <div v-else class="grid grid-cols-2 gap-4">
-                        <div 
-                            v-for="album in albums" 
+                        <div
+                            v-for="album in albums"
                             :key="album.id"
-                            class="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-                            :class="{ 'ring-2 ring-blue-500': selectedAlbum?.id === album.id }"
+                            class="relative aspect-square cursor-pointer overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-blue-500"
+                            :class="{
+                                'ring-2 ring-blue-500':
+                                    selectedAlbum?.id === album.id,
+                            }"
                             @click="selectAlbum(album)"
                         >
-                            <img 
-                                :src="album.cover_image_path" 
+                            <img
+                                :src="album.cover_image_path"
                                 :alt="album.title"
-                                class="object-cover w-full h-full"
+                                class="h-full w-full object-cover"
+                            />
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 transition-opacity hover:opacity-100"
                             >
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                <span class="text-white text-sm font-medium">{{ album.title }}</span>
+                                <span class="text-sm font-medium text-white">{{
+                                    album.title
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -53,24 +73,46 @@
 
                 <!-- Image Selection -->
                 <div v-if="selectedAlbum" class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Select Image</label>
+                    <label class="block text-sm font-medium text-gray-700"
+                        >Select Image</label
+                    >
                     <div class="grid grid-cols-3 gap-2">
-                        <div 
-                            v-for="image in selectedAlbum.images" 
+                        <div
+                            v-for="image in selectedAlbum.images"
                             :key="image.id"
-                            class="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-                            :class="{ 'ring-2 ring-blue-500': selectedImage?.id === image.id }"
+                            class="relative aspect-square cursor-pointer overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-blue-500"
+                            :class="{
+                                'ring-2 ring-blue-500':
+                                    selectedImage?.id === image.id,
+                            }"
                             @click="selectImage(image)"
                         >
-                            <img 
-                                :src="image.properties?.thumbnail_url || image.path" 
+                            <img
+                                :src="
+                                    image.properties?.thumbnail_url ||
+                                    image.path
+                                "
                                 :alt="image.title || 'Album image'"
-                                class="object-cover w-full h-full"
-                            >
+                                class="h-full w-full object-cover"
+                            />
                             <!-- Video badge -->
-                            <div v-if="image.properties?.type === 'video'" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <div
+                                v-if="image.properties?.type === 'video'"
+                                class="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-3 w-3"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                    />
                                 </svg>
                             </div>
                         </div>
@@ -79,74 +121,117 @@
             </div>
 
             <!-- Video Properties (when video image is selected) -->
-            <div v-if="selectedType === 'album' && selectedImage?.properties?.type === 'video'" class="mt-6 space-y-4">
-                <h4 class="text-sm font-medium text-gray-700">Video Properties</h4>
-                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+            <div
+                v-if="
+                    selectedType === 'album' &&
+                    selectedImage?.properties?.type === 'video'
+                "
+                class="mt-6 space-y-4"
+            >
+                <h4 class="text-sm font-medium text-gray-700">
+                    Video Properties
+                </h4>
+                <div class="space-y-3 rounded-lg bg-gray-50 p-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Video URL</label>
-                        <input 
-                            type="url" 
-                            :value="selectedImage.properties?.video_url || selectedImage.path"
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Video URL</label
+                        >
+                        <input
+                            type="url"
+                            :value="
+                                selectedImage.properties?.video_url ||
+                                selectedImage.path
+                            "
                             readonly
                             class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm"
                         />
                     </div>
                     <div v-if="selectedImage.properties?.thumbnail_url">
-                        <label class="block text-sm font-medium text-gray-700">Thumbnail URL</label>
-                        <input 
-                            type="url" 
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Thumbnail URL</label
+                        >
+                        <input
+                            type="url"
                             :value="selectedImage.properties.thumbnail_url"
                             readonly
                             class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm"
                         />
                     </div>
                     <div class="text-sm text-gray-600">
-                        <p><strong>Title:</strong> {{ selectedImage.title || 'No title' }}</p>
-                        <p><strong>Caption:</strong> {{ selectedImage.caption || 'No caption' }}</p>
+                        <p>
+                            <strong>Title:</strong>
+                            {{ selectedImage.title || 'No title' }}
+                        </p>
+                        <p>
+                            <strong>Caption:</strong>
+                            {{ selectedImage.caption || 'No caption' }}
+                        </p>
                     </div>
                 </div>
             </div>
 
             <!-- Media Upload -->
             <div v-if="selectedType === 'media'" class="space-y-4">
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <input 
-                        type="file" 
+                <div
+                    class="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center"
+                >
+                    <input
+                        type="file"
                         ref="fileInput"
                         @change="handleMediaUpload"
                         accept="image/*,video/*"
                         class="hidden"
                     />
                     <div v-if="!uploadedMedia" class="space-y-2">
-                        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                            class="mx-auto h-12 w-12 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                         </svg>
-                        <button 
+                        <button
                             @click="fileInput?.click()"
-                            class="text-indigo-600 hover:text-indigo-500 font-medium"
+                            class="font-medium text-indigo-600 hover:text-indigo-500"
                         >
                             Click to upload image or video
                         </button>
                         <p class="text-sm text-gray-500">or drag and drop</p>
                     </div>
                     <div v-else class="relative">
-                        <img 
+                        <img
                             v-if="uploadedMedia.type === 'image'"
-                            :src="uploadedMedia.preview" 
-                            class="w-full h-48 object-cover rounded-lg"
+                            :src="uploadedMedia.preview"
+                            class="h-48 w-full rounded-lg object-cover"
                         />
-                        <video 
+                        <video
                             v-else
                             :src="uploadedMedia.preview"
-                            class="w-full h-48 object-cover rounded-lg"
+                            class="h-48 w-full rounded-lg object-cover"
                             controls
                         />
-                        <button 
+                        <button
                             @click="removeMedia"
-                            class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                            class="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
                             </svg>
                         </button>
                     </div>
@@ -156,15 +241,15 @@
             <!-- Color Square -->
             <div v-if="selectedType === 'color'" class="space-y-4">
                 <div class="grid grid-cols-6 gap-2">
-                    <button 
-                        v-for="color in colors" 
+                    <button
+                        v-for="color in colors"
                         :key="color"
                         @click="selectedColor = color"
-                        class="w-8 h-8 rounded-full border-2 transition-transform"
+                        class="h-8 w-8 rounded-full border-2 transition-transform"
                         :class="[
-                            selectedColor === color 
-                                ? 'border-indigo-500 scale-110' 
-                                : 'border-gray-300 hover:scale-105'
+                            selectedColor === color
+                                ? 'scale-110 border-indigo-500'
+                                : 'border-gray-300 hover:scale-105',
                         ]"
                         :style="{ backgroundColor: color }"
                     />
@@ -173,18 +258,22 @@
 
             <!-- Height Control -->
             <div class="mt-6 space-y-4">
-                <label class="block text-sm font-medium text-gray-700">Item Height</label>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Item Height</label
+                >
                 <div class="flex items-center space-x-4">
-                    <input 
-                        type="range" 
-                        v-model="itemHeight" 
-                        min="50" 
-                        max="500" 
+                    <input
+                        type="range"
+                        v-model="itemHeight"
+                        min="50"
+                        max="500"
                         step="10"
                         class="w-full"
                         @input="emitLiveUpdate"
                     />
-                    <span class="text-sm text-gray-500 min-w-[60px]">{{ itemHeight }}%</span>
+                    <span class="min-w-[60px] text-sm text-gray-500"
+                        >{{ itemHeight }}%</span
+                    >
                 </div>
                 <div class="text-xs text-gray-400">
                     Height as percentage of base tile size (200px = 100%)
@@ -192,58 +281,84 @@
             </div>
 
             <!-- Image Manipulation Controls (only for images) -->
-            <div v-if="(selectedType === 'album' && selectedImage?.properties?.type !== 'video') || (selectedType === 'media' && uploadedMedia?.type === 'image')" class="mt-6 space-y-4">
-                <h4 class="text-sm font-medium text-gray-700">Image Controls</h4>
-                <div class="bg-gray-50 p-4 rounded-lg space-y-4">
+            <div
+                v-if="
+                    (selectedType === 'album' &&
+                        selectedImage?.properties?.type !== 'video') ||
+                    (selectedType === 'media' &&
+                        uploadedMedia?.type === 'image')
+                "
+                class="mt-6 space-y-4"
+            >
+                <h4 class="text-sm font-medium text-gray-700">
+                    Image Controls
+                </h4>
+                <div class="space-y-4 rounded-lg bg-gray-50 p-4">
                     <!-- Image Scale/Zoom -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Zoom</label>
+                        <label
+                            class="mb-2 block text-sm font-medium text-gray-700"
+                            >Zoom</label
+                        >
                         <div class="flex items-center space-x-4">
-                            <input 
-                                type="range" 
-                                v-model="imageControls.scale" 
-                                min="100" 
-                                max="300" 
+                            <input
+                                type="range"
+                                v-model="imageControls.scale"
+                                min="100"
+                                max="300"
                                 step="5"
                                 class="w-full"
                                 @input="emitLiveUpdate"
                             />
-                            <span class="text-sm text-gray-500 min-w-[50px]">{{ imageControls.scale }}%</span>
+                            <span class="min-w-[50px] text-sm text-gray-500"
+                                >{{ imageControls.scale }}%</span
+                            >
                         </div>
                     </div>
 
                     <!-- Image Position -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                        <label
+                            class="mb-2 block text-sm font-medium text-gray-700"
+                            >Position</label
+                        >
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs text-gray-600">Horizontal (%)</label>
-                                <input 
-                                    type="range" 
-                                    v-model="imageControls.x" 
-                                    min="-50" 
-                                    max="50" 
+                                <label class="block text-xs text-gray-600"
+                                    >Horizontal (%)</label
+                                >
+                                <input
+                                    type="range"
+                                    v-model="imageControls.x"
+                                    min="-50"
+                                    max="50"
                                     step="1"
                                     class="w-full"
                                     @input="emitLiveUpdate"
                                 />
-                                <div class="text-center text-xs text-gray-500">{{ imageControls.x }}%</div>
+                                <div class="text-center text-xs text-gray-500">
+                                    {{ imageControls.x }}%
+                                </div>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-600">Vertical (%)</label>
-                                <input 
-                                    type="range" 
-                                    v-model="imageControls.y" 
-                                    min="-50" 
-                                    max="50" 
+                                <label class="block text-xs text-gray-600"
+                                    >Vertical (%)</label
+                                >
+                                <input
+                                    type="range"
+                                    v-model="imageControls.y"
+                                    min="-50"
+                                    max="50"
                                     step="1"
                                     class="w-full"
                                     @input="emitLiveUpdate"
                                 />
-                                <div class="text-center text-xs text-gray-500">{{ imageControls.y }}%</div>
+                                <div class="text-center text-xs text-gray-500">
+                                    {{ imageControls.y }}%
+                                </div>
                             </div>
                         </div>
-                        <button 
+                        <button
                             @click="resetImagePosition"
                             class="mt-2 text-xs text-blue-600 hover:text-blue-500"
                         >
@@ -253,20 +368,24 @@
 
                     <!-- Image Preview -->
                     <div class="mt-4">
-                        <div class="relative w-full h-32 bg-gray-200 rounded-lg overflow-hidden">
-                            <img 
+                        <div
+                            class="relative h-32 w-full overflow-hidden rounded-lg bg-gray-200"
+                        >
+                            <img
                                 v-if="getImagePreviewUrl()"
-                                :src="getImagePreviewUrl() || ''" 
+                                :src="getImagePreviewUrl() || ''"
                                 alt="Preview"
-                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-200"
+                                class="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
                                 :style="{
                                     transform: `translate(${imageControls.x}%, ${imageControls.y}%) scale(${imageControls.scale / 100})`,
-                                    transformOrigin: 'center center'
+                                    transformOrigin: 'center center',
                                 }"
                             />
-                            <div class="absolute inset-0 border border-gray-300 rounded-lg pointer-events-none"></div>
+                            <div
+                                class="pointer-events-none absolute inset-0 rounded-lg border border-gray-300"
+                            ></div>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1 text-center">
+                        <div class="mt-1 text-center text-xs text-gray-500">
                             Live preview of image positioning and zoom
                         </div>
                     </div>
@@ -276,30 +395,37 @@
             <!-- Text Overlay -->
             <div class="mt-6 space-y-4">
                 <div class="flex items-center">
-                    <input 
-                        type="checkbox" 
-                        id="hasText" 
+                    <input
+                        type="checkbox"
+                        id="hasText"
                         v-model="textOverlay.enabled"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <label for="hasText" class="ml-2 block text-sm text-gray-900">
+                    <label
+                        for="hasText"
+                        class="ml-2 block text-sm text-gray-900"
+                    >
                         Add text overlay
                     </label>
                 </div>
 
                 <div v-if="textOverlay.enabled" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Text</label>
-                        <input 
-                            type="text" 
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Text</label
+                        >
+                        <input
+                            type="text"
                             v-model="textOverlay.text"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             placeholder="Enter your text here..."
                         />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Text Color</label>
-                        <select 
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Text Color</label
+                        >
+                        <select
                             v-model="textOverlay.color"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
@@ -313,22 +439,27 @@
             <!-- Link Option -->
             <div class="mt-6 space-y-4">
                 <div class="flex items-center">
-                    <input 
-                        type="checkbox" 
-                        id="hasLink" 
+                    <input
+                        type="checkbox"
+                        id="hasLink"
                         v-model="linkOptions.enabled"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <label for="hasLink" class="ml-2 block text-sm text-gray-900">
+                    <label
+                        for="hasLink"
+                        class="ml-2 block text-sm text-gray-900"
+                    >
                         Make this item clickable
                     </label>
                 </div>
 
                 <div v-if="linkOptions.enabled" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Link URL</label>
-                        <input 
-                            type="url" 
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Link URL</label
+                        >
+                        <input
+                            type="url"
                             v-model="linkOptions.url"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             placeholder="https://..."
@@ -339,22 +470,22 @@
 
             <!-- Action Buttons -->
             <div class="mt-6 flex justify-end space-x-3">
-                <button 
+                <button
                     v-if="isEditing"
                     @click="handleDelete"
                     class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-500"
                 >
                     Delete
                 </button>
-                <button 
+                <button
                     @click="$emit('close')"
                     class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500"
                 >
                     Cancel
                 </button>
-                <button 
+                <button
                     @click="handleSave"
-                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-md"
+                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
                 >
                     {{ isEditing ? 'Save Changes' : 'Add Item' }}
                 </button>
@@ -364,10 +495,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import Modal from '@/Components/general/Modal.vue'
-import type { MosaicItem, MosaicItemProperties } from '@/types/mosaic'
-import type { Album, AlbumImage } from '@/types/album'
+import Modal from '@/Components/general/Modal.vue';
+import type { Album, AlbumImage } from '@/types/album';
+import type { MosaicItem } from '@/types/mosaic';
+import { computed, ref, watch } from 'vue';
 
 interface MosaicItemWithImage extends MosaicItem {
     image_id?: string;
@@ -384,39 +515,52 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     'update:modelValue': [value: boolean];
-    'close': [];
-    'save': [item: MosaicItemWithImage];
-    'delete': [itemId: string];
+    close: [];
+    save: [item: MosaicItemWithImage];
+    delete: [itemId: string];
 }>();
 
 // State
-const selectedType = ref<'album' | 'media' | 'color' | 'text' | 'video'>(props.item?.type || 'media');
-const selectedAlbum = ref<Album | null>(props.item?.properties?.album ? {
-    id: props.item.properties.album.id,
-    title: props.item.properties.album.title,
-    description: '',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    cover_image_path: props.item.properties.album.cover_image_path ?? undefined,
-    images: props.item.properties.album.images
-} : null);
+const selectedType = ref<'album' | 'media' | 'color' | 'text' | 'video'>(
+    props.item?.type || 'media',
+);
+const selectedAlbum = ref<Album | null>(
+    props.item?.properties?.album
+        ? {
+              id: props.item.properties.album.id,
+              title: props.item.properties.album.title,
+              description: '',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              cover_image_path:
+                  props.item.properties.album.cover_image_path ?? undefined,
+              images: props.item.properties.album.images,
+          }
+        : null,
+);
 const selectedImage = ref<AlbumImage | null>(null);
-const uploadedMedia = ref<{ type: 'image' | 'video'; preview: string; serverData?: any } | null>(null);
+const uploadedMedia = ref<{
+    type: 'image' | 'video';
+    preview: string;
+    serverData?: any;
+} | null>(null);
 const selectedColor = ref('#ffffff');
 const itemHeight = ref(props.item?.properties?.height || 100);
 const textOverlay = ref({
     enabled: props.item?.properties?.show_text || false,
     text: props.item?.properties?.text?.content || '',
-    color: props.item?.properties?.text?.color || 'white'
+    color: props.item?.properties?.text?.color || 'white',
 });
 const linkOptions = ref({
     enabled: props.item?.properties?.has_link || false,
-    url: props.item?.properties?.link_url || ''
+    url: props.item?.properties?.link_url || '',
 });
 const imageControls = ref({
-    scale: props.item?.properties?.media?.scale ? props.item.properties.media.scale * 100 : 100,
+    scale: props.item?.properties?.media?.scale
+        ? props.item.properties.media.scale * 100
+        : 100,
     x: 0,
-    y: 0
+    y: 0,
 });
 
 // File input ref
@@ -427,14 +571,26 @@ const contentTypes = [
     { value: 'album' as const, label: 'Album', icon: 'AlbumIcon' },
     { value: 'media' as const, label: 'Media', icon: 'MediaIcon' },
     { value: 'color' as const, label: 'Color', icon: 'ColorIcon' },
-    { value: 'text' as const, label: 'Text', icon: 'TextIcon' }
+    { value: 'text' as const, label: 'Text', icon: 'TextIcon' },
 ];
 
 // Colors
 const colors = [
-    '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff',
-    '#ffff00', '#ff00ff', '#00ffff', '#808080', '#800000',
-    '#008000', '#000080', '#808000', '#800080', '#008080'
+    '#ffffff',
+    '#000000',
+    '#ff0000',
+    '#00ff00',
+    '#0000ff',
+    '#ffff00',
+    '#ff00ff',
+    '#00ffff',
+    '#808080',
+    '#800000',
+    '#008000',
+    '#000080',
+    '#808000',
+    '#800080',
+    '#008080',
 ];
 
 // Live update emit
@@ -443,7 +599,7 @@ const emitLiveUpdate = () => {
         const liveData = {
             id: props.item.id,
             height: itemHeight.value,
-            imageControls: imageControls.value
+            imageControls: imageControls.value,
         };
         // Future: emit live update event to parent
     }
@@ -483,19 +639,24 @@ const handleMediaUpload = async (event: Event) => {
         formData.append('media', file);
 
         // Get CSRF token
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const token = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content');
         if (!token) {
             throw new Error('CSRF token not found');
         }
 
-        const response = await fetch(route('mosaics.media.upload', { mosaic: props.mosaicId }), {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': token,
-                'Accept': 'application/json',
+        const response = await fetch(
+            route('mosaics.media.upload', { mosaic: props.mosaicId }),
+            {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    Accept: 'application/json',
+                },
+                body: formData,
             },
-            body: formData
-        });
+        );
 
         if (!response.ok) {
             const error = await response.json();
@@ -508,14 +669,13 @@ const handleMediaUpload = async (event: Event) => {
         uploadedMedia.value = {
             type: isImage ? 'image' : 'video',
             preview: result.data.path,
-            serverData: result.data
+            serverData: result.data,
         };
 
         // Reset image controls for new media
         if (isImage) {
             resetImagePosition();
         }
-
     } catch (error) {
         console.error('Upload failed:', error);
         alert('Failed to upload file: ' + (error as Error).message);
@@ -531,7 +691,10 @@ const removeMedia = () => {
 
 const getImagePreviewUrl = () => {
     if (selectedType.value === 'album' && selectedImage.value) {
-        return selectedImage.value.properties?.thumbnail_url || selectedImage.value.path;
+        return (
+            selectedImage.value.properties?.thumbnail_url ||
+            selectedImage.value.path
+        );
     }
     if (selectedType.value === 'media' && uploadedMedia.value) {
         return uploadedMedia.value.preview;
@@ -543,7 +706,7 @@ const resetImagePosition = () => {
     imageControls.value = {
         scale: 100,
         x: 0,
-        y: 0
+        y: 0,
     };
     emitLiveUpdate();
 };
@@ -555,8 +718,8 @@ const handleSave = () => {
         column_index: props.item?.column_index || 0,
         order: props.item?.order || 0,
         properties: {
-            height: itemHeight.value
-        }
+            height: itemHeight.value,
+        },
     };
 
     // Handle album selection
@@ -567,9 +730,10 @@ const handleSave = () => {
             album: {
                 id: selectedAlbum.value.id.toString(),
                 title: selectedAlbum.value.title,
-                cover_image_path: selectedAlbum.value.cover_image_path || undefined,
-                images: selectedAlbum.value.images
-            }
+                cover_image_path:
+                    selectedAlbum.value.cover_image_path || undefined,
+                images: selectedAlbum.value.images,
+            },
         };
 
         // If an image is selected, use it instead of the album cover
@@ -581,8 +745,8 @@ const handleSave = () => {
                     path: selectedImage.value.path,
                     title: selectedImage.value.title ?? undefined,
                     caption: selectedImage.value.caption ?? undefined,
-                    properties: selectedImage.value.properties
-                }
+                    properties: selectedImage.value.properties,
+                },
             };
         }
     }
@@ -601,7 +765,7 @@ const handleSave = () => {
                 original_name: uploadedMedia.value.serverData?.original_name,
                 size: uploadedMedia.value.serverData?.size,
                 webp_url: uploadedMedia.value.serverData?.webp_url,
-            }
+            },
         };
     }
 
@@ -609,7 +773,7 @@ const handleSave = () => {
     if (selectedType.value === 'color') {
         itemData.properties = {
             ...itemData.properties,
-            color: selectedColor.value
+            color: selectedColor.value,
         };
     }
 
@@ -621,8 +785,8 @@ const handleSave = () => {
             text: {
                 enabled: true,
                 content: textOverlay.value.text,
-                color: textOverlay.value.color
-            }
+                color: textOverlay.value.color,
+            },
         };
     }
 
@@ -631,7 +795,7 @@ const handleSave = () => {
         itemData.properties = {
             ...itemData.properties,
             has_link: true,
-            link_url: linkOptions.value.url
+            link_url: linkOptions.value.url,
         };
     }
 
@@ -665,48 +829,58 @@ const selectImage = (image: AlbumImage) => {
 };
 
 // Watch for changes in props.item
-watch(() => props.item, (newItem) => {
-    if (newItem) {
-        if (newItem.type) {
-            selectedType.value = newItem.type;
-        }
-        selectedAlbum.value = newItem.properties?.album ? {
-            id: newItem.properties.album.id,
-            title: newItem.properties.album.title,
-            description: '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            cover_image_path: newItem.properties.album.cover_image_path ?? undefined,
-            images: newItem.properties.album.images
-        } : null;
-        selectedImage.value = null; // Reset selected image
-        if (newItem.type === 'media' && newItem.properties?.media) {
-            uploadedMedia.value = {
-                type: newItem.properties.media.type,
-                preview: newItem.properties.media.path
+watch(
+    () => props.item,
+    (newItem) => {
+        if (newItem) {
+            if (newItem.type) {
+                selectedType.value = newItem.type;
+            }
+            selectedAlbum.value = newItem.properties?.album
+                ? {
+                      id: newItem.properties.album.id,
+                      title: newItem.properties.album.title,
+                      description: '',
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                      cover_image_path:
+                          newItem.properties.album.cover_image_path ??
+                          undefined,
+                      images: newItem.properties.album.images,
+                  }
+                : null;
+            selectedImage.value = null; // Reset selected image
+            if (newItem.type === 'media' && newItem.properties?.media) {
+                uploadedMedia.value = {
+                    type: newItem.properties.media.type,
+                    preview: newItem.properties.media.path,
+                };
+                // Load existing image controls
+                imageControls.value = {
+                    scale: newItem.properties.media.scale
+                        ? newItem.properties.media.scale * 100
+                        : 100,
+                    x: 0, // Extract from position if needed
+                    y: 0, // Extract from position if needed
+                };
+            } else {
+                uploadedMedia.value = null;
+            }
+            selectedColor.value = newItem.properties?.color || '#ffffff';
+            itemHeight.value = newItem.properties?.height || 100;
+            textOverlay.value = {
+                enabled: newItem.properties?.show_text || false,
+                text: newItem.properties?.text?.content || '',
+                color: newItem.properties?.text?.color || 'white',
             };
-            // Load existing image controls
-            imageControls.value = {
-                scale: newItem.properties.media.scale ? newItem.properties.media.scale * 100 : 100,
-                x: 0, // Extract from position if needed
-                y: 0  // Extract from position if needed
+            linkOptions.value = {
+                enabled: newItem.properties?.has_link || false,
+                url: newItem.properties?.link_url || '',
             };
-        } else {
-            uploadedMedia.value = null;
         }
-        selectedColor.value = newItem.properties?.color || '#ffffff';
-        itemHeight.value = newItem.properties?.height || 100;
-        textOverlay.value = {
-            enabled: newItem.properties?.show_text || false,
-            text: newItem.properties?.text?.content || '',
-            color: newItem.properties?.text?.color || 'white'
-        };
-        linkOptions.value = {
-            enabled: newItem.properties?.has_link || false,
-            url: newItem.properties?.link_url || ''
-        };
-    }
-}, { immediate: true });
+    },
+    { immediate: true },
+);
 </script>
 
 <style scoped>
@@ -714,15 +888,15 @@ watch(() => props.item, (newItem) => {
     @apply border-indigo-500 bg-indigo-50;
 }
 
-input[type="range"] {
-    @apply appearance-none bg-gray-200 h-2 rounded-lg;
+input[type='range'] {
+    @apply h-2 appearance-none rounded-lg bg-gray-200;
 }
 
-input[type="range"]::-webkit-slider-thumb {
-    @apply appearance-none w-4 h-4 bg-blue-600 rounded-full cursor-pointer;
+input[type='range']::-webkit-slider-thumb {
+    @apply h-4 w-4 cursor-pointer appearance-none rounded-full bg-blue-600;
 }
 
-input[type="range"]::-moz-range-thumb {
-    @apply appearance-none w-4 h-4 bg-blue-600 rounded-full cursor-pointer border-0;
+input[type='range']::-moz-range-thumb {
+    @apply h-4 w-4 cursor-pointer appearance-none rounded-full border-0 bg-blue-600;
 }
-</style> 
+</style>

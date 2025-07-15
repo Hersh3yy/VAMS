@@ -1,8 +1,14 @@
 declare module 'vue3-toastify' {
     import { Plugin } from 'vue';
-    
+
     export interface ToastOptions {
-        position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+        position?:
+            | 'top-right'
+            | 'top-center'
+            | 'top-left'
+            | 'bottom-right'
+            | 'bottom-center'
+            | 'bottom-left';
         autoClose?: number;
         hideProgressBar?: boolean;
         closeOnClick?: boolean;
@@ -18,4 +24,4 @@ declare module 'vue3-toastify' {
 
     const ToastPlugin: Plugin;
     export default ToastPlugin;
-} 
+}

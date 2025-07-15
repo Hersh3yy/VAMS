@@ -13,15 +13,23 @@ const submit = () => {
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
+    <div
+        class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
+    >
+        <div
+            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg"
+        >
             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                This is a secure area of the application. Please confirm your password before continuing.
+                This is a secure area of the application. Please confirm your
+                password before continuing.
             </div>
 
             <form @submit.prevent="submit">
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label
+                        for="password"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
                         Password
                     </label>
 
@@ -34,14 +42,17 @@ const submit = () => {
                         autocomplete="current-password"
                     />
 
-                    <p v-if="form.errors.password" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                    <p
+                        v-if="form.errors.password"
+                        class="mt-2 text-sm text-red-600 dark:text-red-400"
+                    >
                         {{ form.errors.password }}
                     </p>
                 </div>
 
-                <div class="flex items-center justify-end mt-4">
+                <div class="mt-4 flex items-center justify-end">
                     <button
-                        class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+                        class="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-white dark:focus:bg-white dark:focus:ring-offset-gray-800 dark:active:bg-gray-300"
                         :disabled="form.processing"
                     >
                         Confirm

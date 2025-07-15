@@ -74,15 +74,19 @@ const maxWidthClass = computed(() => {
 
 <template>
     <Transition name="modal">
-        <div v-if="modelValue" class="modal-backdrop" @click="$emit('update:modelValue', false)">
+        <div
+            v-if="modelValue"
+            class="modal-backdrop"
+            @click="$emit('update:modelValue', false)"
+        >
             <div :class="['modal-content', maxWidthClass]" @click.stop>
                 <div class="modal-header">
                     <h3 class="modal-title">
                         <slot name="title"></slot>
                     </h3>
-                    <button 
+                    <button
                         @click="$emit('update:modelValue', false)"
-                        class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-2"
+                        class="p-2 text-2xl font-bold leading-none text-gray-400 hover:text-gray-600"
                     >
                         ×
                     </button>

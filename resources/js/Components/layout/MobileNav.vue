@@ -3,19 +3,19 @@ import ResponsiveNavLink from '@/Components/general/ResponsiveNavLink.vue';
 </script>
 
 <template>
-    <div class="sm:hidden bg-black border-t border-yellow-500">
+    <div class="border-t border-yellow-500 bg-black sm:hidden">
         <div class="space-y-1 pb-3 pt-2">
             <ResponsiveNavLink
                 :href="route('dashboard')"
                 :active="route().current('dashboard')"
-                class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
             >
                 Dashboard
             </ResponsiveNavLink>
             <ResponsiveNavLink
                 :href="route('albums.index')"
                 :active="route().current('albums.index')"
-                class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
             >
                 Albums
             </ResponsiveNavLink>
@@ -23,14 +23,14 @@ import ResponsiveNavLink from '@/Components/general/ResponsiveNavLink.vue';
                 v-if="$page.props.auth?.user?.is_admin"
                 :href="route('admin.dashboard')"
                 :active="route().current('admin.*')"
-                class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
             >
                 Admin
             </ResponsiveNavLink>
             <ResponsiveNavLink
                 :href="route('mosaics.index')"
                 :active="route().current('mosaics.*')"
-                class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
             >
                 Mosaics
             </ResponsiveNavLink>
@@ -48,9 +48,9 @@ import ResponsiveNavLink from '@/Components/general/ResponsiveNavLink.vue';
             </div>
 
             <div class="mt-3 space-y-1">
-                <ResponsiveNavLink 
+                <ResponsiveNavLink
                     :href="route('profile.edit')"
-                    class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                    class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
                 >
                     Profile
                 </ResponsiveNavLink>
@@ -58,11 +58,11 @@ import ResponsiveNavLink from '@/Components/general/ResponsiveNavLink.vue';
                     :href="route('logout')"
                     method="post"
                     as="button"
-                    class="text-yellow-400 hover:text-yellow-300 border-yellow-500"
+                    class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
                 >
                     Log Out
                 </ResponsiveNavLink>
             </div>
         </div>
     </div>
-</template> 
+</template>

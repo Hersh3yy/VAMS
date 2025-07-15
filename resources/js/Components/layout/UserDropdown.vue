@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import Dropdown from '@/Components/general/Dropdown.vue';
 import DropdownLink from '@/Components/general/DropdownLink.vue';
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -11,7 +11,7 @@ import DropdownLink from '@/Components/general/DropdownLink.vue';
                 :href="route('impersonate.leave')"
                 method="post"
                 as="button"
-                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition ease-in-out duration-150"
+                class="inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium leading-4 text-white transition duration-150 ease-in-out hover:bg-red-700 focus:outline-none"
             >
                 Return to Admin
             </Link>
@@ -45,14 +45,10 @@ import DropdownLink from '@/Components/general/DropdownLink.vue';
                 <DropdownLink :href="route('profile.edit')">
                     Profile
                 </DropdownLink>
-                <DropdownLink
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                >
+                <DropdownLink :href="route('logout')" method="post" as="button">
                     Log Out
                 </DropdownLink>
             </template>
         </Dropdown>
     </div>
-</template> 
+</template>

@@ -1,17 +1,22 @@
-import { ref, inject, computed } from 'vue';
+import {
+    useUpload,
+    type UploadConfig,
+    type UploadItem,
+} from '@/composables/shared/useUpload';
 import { router } from '@inertiajs/vue3';
-import type { Album, AlbumImage, AlbumVideo, AlbumUploadProgress } from '@/types/album';
-import { useUpload, type UploadItem, type UploadConfig } from '@/composables/shared/useUpload';
+import { inject, ref } from 'vue';
 
 // Re-export types for components that need them
-export type { UploadItem, UploadConfig };
+export type { UploadConfig, UploadItem };
 
 export function useAlbum(albumId: string) {
     const showConfirmation = ref(false);
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
     const confirmationAction = ref<(() => void) | null>(null);
-    const showError = inject('showError', (message: string) => console.error(message));
+    const showError = inject('showError', (message: string) =>
+        console.error(message),
+    );
 
     // Use the generic upload system
     const {
@@ -32,7 +37,7 @@ export function useAlbum(albumId: string) {
         if (!input.files?.length) return;
 
         const files = Array.from(input.files);
-        
+
         // Use the generic upload system with album-specific configuration
         await uploadFiles(files, {
             endpoint: route('albums.images.store', albumId),
@@ -42,7 +47,7 @@ export function useAlbum(albumId: string) {
             refreshParams: { album: albumId },
             onError: (error) => {
                 showError(error);
-            }
+            },
         });
 
         // Clear the file input
@@ -50,8 +55,6 @@ export function useAlbum(albumId: string) {
             input.value = '';
         }
     };
-
-
 
     const deleteAlbum = async () => {
         try {
@@ -64,11 +67,14 @@ export function useAlbum(albumId: string) {
 
     const deleteImage = async (imageId: string) => {
         try {
-            await router.delete(route('albums.images.destroy', [albumId, imageId]), {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['album']
-            });
+            await router.delete(
+                route('albums.images.destroy', [albumId, imageId]),
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    only: ['album'],
+                },
+            );
         } catch (error) {
             console.error('Delete failed:', error);
             showError('Failed to delete item. Please try again.');
@@ -77,14 +83,18 @@ export function useAlbum(albumId: string) {
 
     const reorderImages = async (fromIndex: number, toIndex: number) => {
         try {
-            await router.patch(route('albums.images.reorder', albumId), {
-                from_index: fromIndex,
-                to_index: toIndex
-            }, {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['album']
-            });
+            await router.patch(
+                route('albums.images.reorder', albumId),
+                {
+                    from_index: fromIndex,
+                    to_index: toIndex,
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    only: ['album'],
+                },
+            );
         } catch (error) {
             console.error('Reorder failed:', error);
             showError('Failed to reorder images. Please try again.');
@@ -93,22 +103,30 @@ export function useAlbum(albumId: string) {
 
     const addVideo = async (url: string, title: string, caption: string) => {
         try {
-            await router.post(route('albums.images.store-video', albumId), {
-                url,
-                title,
-                caption
-            }, {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['album']
-            });
+            await router.post(
+                route('albums.images.store-video', albumId),
+                {
+                    url,
+                    title,
+                    caption,
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    only: ['album'],
+                },
+            );
         } catch (error) {
             console.error('Video upload failed:', error);
             showError('Failed to add video. Please try again.');
         }
     };
 
-    const showConfirmationDialog = (title: string, message: string, action: () => void) => {
+    const showConfirmationDialog = (
+        title: string,
+        message: string,
+        action: () => void,
+    ) => {
         confirmationTitle.value = title;
         confirmationMessage.value = message;
         confirmationAction.value = action;
@@ -137,7 +155,7 @@ export function useAlbum(albumId: string) {
             refreshParams: { album: albumId },
             onError: (error) => {
                 showError(error);
-            }
+            },
         };
         return retryUploadCore(uploadItem, config);
     };
@@ -164,4 +182,4 @@ export function useAlbum(albumId: string) {
         confirmAction,
         cancelConfirmation,
     };
-} 
+}

@@ -7,7 +7,7 @@
             @delete="handleDeleteMosaic"
         />
 
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
             <MosaicGrid
                 :items="mosaic.items"
                 :settings="settings"
@@ -51,16 +51,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { router } from '@inertiajs/vue3';
-import type { Mosaic, MosaicItem, MosaicDisplaySettings } from '@/types/mosaic';
-import type { Album, AlbumImage } from '@/types/album';
-import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
-import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
-import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
 import MosaicEditModal from '@/Components/mosaics/MosaicEditModal.vue';
+import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
+import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
+import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
 import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { useMosaic } from '@/composables/mosaics/useMosaic';
+import type { Album } from '@/types/album';
+import type { Mosaic, MosaicDisplaySettings, MosaicItem } from '@/types/mosaic';
+import { router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
 
 const props = defineProps<{
     mosaic: Mosaic;
@@ -103,7 +103,7 @@ const handleItemDelete = (item: MosaicItem) => {
     showConfirmationDialog(
         'Delete Item',
         'Are you sure you want to delete this item? This action cannot be undone.',
-        () => deleteItem(item.id)
+        () => deleteItem(item.id),
     );
 };
 
@@ -139,11 +139,15 @@ const handleDeleteMosaic = () => {
         () => {
             deleteMosaic();
             router.visit(route('mosaics.index'));
-        }
+        },
     );
 };
 
-const handleSaveMosaic = async (data: { title: string; description: string; settings: MosaicDisplaySettings }) => {
+const handleSaveMosaic = async (data: {
+    title: string;
+    description: string;
+    settings: MosaicDisplaySettings;
+}) => {
     try {
         await router.put(route('mosaics.update', props.mosaic.id), {
             title: data.title,
@@ -155,4 +159,4 @@ const handleSaveMosaic = async (data: { title: string; description: string; sett
         console.error('Failed to update mosaic:', error);
     }
 };
-</script> 
+</script>

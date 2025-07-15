@@ -26,16 +26,22 @@ const updatePassword = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Update Password</h2>
+            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                Update Password
+            </h2>
 
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Ensure your account is using a long, random password to stay secure.
+                Ensure your account is using a long, random password to stay
+                secure.
             </p>
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <label for="current_password" class="block text-sm font-medium text-white">
+                <label
+                    for="current_password"
+                    class="block text-sm font-medium text-white"
+                >
                     Current Password
                 </label>
 
@@ -53,7 +59,10 @@ const updatePassword = () => {
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-white">
+                <label
+                    for="password"
+                    class="block text-sm font-medium text-white"
+                >
                     New Password
                 </label>
 
@@ -71,7 +80,10 @@ const updatePassword = () => {
             </div>
 
             <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-white">
+                <label
+                    for="password_confirmation"
+                    class="block text-sm font-medium text-white"
+                >
                     Confirm Password
                 </label>
 
@@ -89,10 +101,7 @@ const updatePassword = () => {
             </div>
 
             <div class="flex items-center gap-4">
-                <button
-                    class="btn-primary"
-                    :disabled="form.processing"
-                >
+                <button class="btn-primary" :disabled="form.processing">
                     Save
                 </button>
 

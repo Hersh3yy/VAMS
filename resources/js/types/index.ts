@@ -32,4 +32,4 @@ export interface PageProps {
         routes: Record<string, any>;
     };
     [key: string]: any;
-} 
+}

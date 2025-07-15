@@ -58,4 +58,4 @@ export interface AlbumConfirmation {
     title: string;
     message: string;
     action: () => void;
-} 
+}

@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import { router } from '@inertiajs/vue3';
 
 export function useMedia() {
     const uploading = ref(false);
@@ -17,7 +16,7 @@ export function useMedia() {
         uploadProgress.value = 0;
 
         const formData = new FormData();
-        Array.from(input.files).forEach(file => {
+        Array.from(input.files).forEach((file) => {
             formData.append('media', file);
         });
 
@@ -26,7 +25,10 @@ export function useMedia() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
                 },
             });
 
@@ -45,7 +47,11 @@ export function useMedia() {
         }
     };
 
-    const showConfirmationDialog = (title: string, message: string, action: () => void) => {
+    const showConfirmationDialog = (
+        title: string,
+        message: string,
+        action: () => void,
+    ) => {
         confirmationTitle.value = title;
         confirmationMessage.value = message;
         confirmationAction.value = action;
@@ -75,4 +81,4 @@ export function useMedia() {
         confirmAction,
         cancelConfirmation,
     };
-} 
+}
