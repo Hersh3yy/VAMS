@@ -6,7 +6,7 @@
         :style="gridStyles"
     >
         <div
-            v-for="(item, index) in items"
+            v-for="(item, index) in localItems"
             :key="item.id"
             :data-id="item.id"
             :data-index="index"
@@ -15,10 +15,10 @@
         >
             <slot 
                 name="item"
-                :item="item"
+                :item="item as T"
                 :index="index"
-                :on-click="() => handleItemClick(item)"
-                :on-delete="() => handleItemDelete(item)"
+                :on-click="() => handleItemClick(item as T)"
+                :on-delete="() => handleItemDelete(item as T)"
             >
                 <!-- Default slot content if no slot provided -->
                 <div class="bg-gray-200 rounded-lg p-4">
@@ -61,7 +61,7 @@ const emit = defineEmits<{
 }>();
 
 const gridContainer = ref<HTMLElement | null>(null);
-const localItems = ref([...props.items]);
+const localItems = ref<T[]>([...props.items]);
 let sortableInstance: any = null;
 
 // Watch for prop changes
