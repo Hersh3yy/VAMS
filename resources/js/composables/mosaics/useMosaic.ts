@@ -18,23 +18,19 @@ export function useMosaic(mosaicId: string) {
         uploadProgress.value = 0;
 
         const formData = new FormData();
-        Array.from(input.files).forEach((file) => {
+        Array.from(input.files).forEach(file => {
             formData.append('media[]', file);
         });
 
         try {
-            await router.post(
-                route('mosaics.media.store', mosaicId),
-                formData,
-                {
-                    forceFormData: true,
-                    onProgress: (progress) => {
-                        if (progress?.percentage !== undefined) {
-                            uploadProgress.value = progress.percentage;
-                        }
-                    },
-                },
-            );
+            await router.post(route('mosaics.media.store', mosaicId), formData, {
+                forceFormData: true,
+                onProgress: progress => {
+                    if (progress?.percentage !== undefined) {
+                        uploadProgress.value = progress.percentage;
+                    }
+                }
+            });
         } catch (error) {
             console.error('Upload failed:', error);
         } finally {
@@ -53,9 +49,7 @@ export function useMosaic(mosaicId: string) {
 
     const deleteItem = async (itemId: string) => {
         try {
-            await router.delete(
-                route('mosaics.items.destroy', [mosaicId, itemId]),
-            );
+            await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]));
         } catch (error) {
             console.error('Delete failed:', error);
         }
@@ -65,7 +59,7 @@ export function useMosaic(mosaicId: string) {
         try {
             await router.put(route('mosaics.items.reorder', mosaicId), {
                 from_id: fromId,
-                to_id: toId,
+                to_id: toId
             });
         } catch (error) {
             console.error('Reorder failed:', error);
@@ -77,7 +71,7 @@ export function useMosaic(mosaicId: string) {
             const payload = {
                 type: item.type,
                 properties: JSON.stringify(item.properties),
-                order: item.order,
+                order: item.order
             };
             await router.post(route('mosaics.items.store', mosaicId), payload);
         } catch (error) {
@@ -89,25 +83,16 @@ export function useMosaic(mosaicId: string) {
         try {
             const payload = {
                 type: updates.type,
-                properties: updates.properties
-                    ? JSON.stringify(updates.properties)
-                    : undefined,
-                order: updates.order,
+                properties: updates.properties ? JSON.stringify(updates.properties) : undefined,
+                order: updates.order
             };
-            await router.put(
-                route('mosaics.items.update', [mosaicId, itemId]),
-                payload,
-            );
+            await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload);
         } catch (error) {
             console.error('Update item failed:', error);
         }
     };
 
-    const showConfirmationDialog = (
-        title: string,
-        message: string,
-        action: () => void,
-    ) => {
+    const showConfirmationDialog = (title: string, message: string, action: () => void) => {
         confirmationTitle.value = title;
         confirmationMessage.value = message;
         confirmationAction.value = action;
@@ -140,6 +125,6 @@ export function useMosaic(mosaicId: string) {
         updateItem,
         showConfirmationDialog,
         confirmAction,
-        cancelConfirmation,
+        cancelConfirmation
     };
 }

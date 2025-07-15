@@ -26,31 +26,21 @@
                     class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                     role="alert"
                 >
-                    <span class="block sm:inline">{{
-                        $page.props.flash.success
-                    }}</span>
+                    <span class="block sm:inline">{{ $page.props.flash.success }}</span>
                 </div>
                 <div
                     v-if="$page.props.flash?.error"
                     class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
                     role="alert"
                 >
-                    <span class="block sm:inline">{{
-                        $page.props.flash.error
-                    }}</span>
+                    <span class="block sm:inline">{{ $page.props.flash.error }}</span>
                 </div>
 
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <form
-                            @submit.prevent="
-                                form.patch(route('admin.users.update', user.id))
-                            "
-                        >
+                        <form @submit.prevent="form.patch(route('admin.users.update', user.id))">
                             <div class="mb-4">
-                                <label for="name" class="form-label"
-                                    >Name</label
-                                >
+                                <label for="name" class="form-label">Name</label>
                                 <input
                                     id="name"
                                     type="text"
@@ -65,9 +55,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="email" class="form-label"
-                                    >Email</label
-                                >
+                                <label for="email" class="form-label">Email</label>
                                 <input
                                     id="email"
                                     type="email"
@@ -75,18 +63,13 @@
                                     required
                                     class="form-input"
                                 />
-                                <div
-                                    v-if="form.errors.email"
-                                    class="form-error"
-                                >
+                                <div v-if="form.errors.email" class="form-error">
                                     {{ form.errors.email }}
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="password" class="form-label"
-                                    >Password</label
-                                >
+                                <label for="password" class="form-label">Password</label>
                                 <input
                                     id="password"
                                     type="password"
@@ -96,10 +79,7 @@
                                 <div class="mt-1 text-sm text-gray-500">
                                     Leave blank to keep current password
                                 </div>
-                                <div
-                                    v-if="form.errors.password"
-                                    class="form-error"
-                                >
+                                <div v-if="form.errors.password" class="form-error">
                                     {{ form.errors.password }}
                                 </div>
                             </div>
@@ -112,15 +92,8 @@
                                         v-model="form.is_admin"
                                         class="form-checkbox"
                                     />
-                                    <label
-                                        for="is_admin"
-                                        class="form-label ml-2"
-                                        >Admin User</label
-                                    >
-                                    <div
-                                        v-if="form.errors.is_admin"
-                                        class="form-error"
-                                    >
+                                    <label for="is_admin" class="form-label ml-2">Admin User</label>
+                                    <div v-if="form.errors.is_admin" class="form-error">
                                         {{ form.errors.is_admin }}
                                     </div>
                                 </div>
@@ -132,15 +105,10 @@
                                         v-model="form.is_approved"
                                         class="form-checkbox"
                                     />
-                                    <label
-                                        for="is_approved"
-                                        class="form-label ml-2"
+                                    <label for="is_approved" class="form-label ml-2"
                                         >Approved</label
                                     >
-                                    <div
-                                        v-if="form.errors.is_approved"
-                                        class="form-error"
-                                    >
+                                    <div v-if="form.errors.is_approved" class="form-error">
                                         {{ form.errors.is_approved }}
                                     </div>
                                 </div>
@@ -148,19 +116,13 @@
 
                             <!-- API Key Management -->
                             <div class="mb-6 rounded-lg bg-gray-50 p-4">
-                                <h3
-                                    class="mb-3 text-lg font-medium text-gray-900"
-                                >
+                                <h3 class="mb-3 text-lg font-medium text-gray-900">
                                     API Key Management
                                 </h3>
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="form-label"
-                                            >Current API Key</label
-                                        >
-                                        <div
-                                            class="flex items-center space-x-2"
-                                        >
+                                        <label class="form-label">Current API Key</label>
+                                        <div class="flex items-center space-x-2">
                                             <input
                                                 type="text"
                                                 :value="
@@ -173,14 +135,10 @@
                                             />
                                             <button
                                                 type="button"
-                                                @click="
-                                                    showApiKey = !showApiKey
-                                                "
+                                                @click="showApiKey = !showApiKey"
                                                 class="rounded bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300"
                                             >
-                                                {{
-                                                    showApiKey ? 'Hide' : 'Show'
-                                                }}
+                                                {{ showApiKey ? 'Hide' : 'Show' }}
                                             </button>
                                             <button
                                                 type="button"
@@ -204,12 +162,9 @@
                                                     : 'Regenerate API Key'
                                             }}
                                         </button>
-                                        <p
-                                            class="self-center text-sm text-gray-600"
-                                        >
-                                            This will invalidate the current
-                                            key. Make sure to update any
-                                            integrations.
+                                        <p class="self-center text-sm text-gray-600">
+                                            This will invalidate the current key. Make sure to
+                                            update any integrations.
                                         </p>
                                     </div>
                                 </div>
@@ -238,7 +193,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
-    user: Object,
+    user: Object
 });
 
 const form = useForm({
@@ -246,7 +201,7 @@ const form = useForm({
     email: props.user.email,
     password: '',
     is_admin: props.user.is_admin,
-    is_approved: props.user.is_approved,
+    is_approved: props.user.is_approved
 });
 
 // API Key Management
@@ -267,27 +222,24 @@ const copyApiKey = async () => {
 const regenerateApiKey = () => {
     if (
         confirm(
-            'Are you sure you want to regenerate the API key? This will invalidate the current key and may break existing integrations.',
+            'Are you sure you want to regenerate the API key? This will invalidate the current key and may break existing integrations.'
         )
     ) {
         regenerating.value = true;
 
         const regenerateForm = useForm({});
-        regenerateForm.post(
-            route('admin.users.regenerate-api-key', props.user.id),
-            {
-                onSuccess: () => {
-                    regenerating.value = false;
-                    alert('API key regenerated successfully!');
-                    // Reload the page to show the new key
-                    window.location.reload();
-                },
-                onError: () => {
-                    regenerating.value = false;
-                    alert('Failed to regenerate API key');
-                },
+        regenerateForm.post(route('admin.users.regenerate-api-key', props.user.id), {
+            onSuccess: () => {
+                regenerating.value = false;
+                alert('API key regenerated successfully!');
+                // Reload the page to show the new key
+                window.location.reload();
             },
-        );
+            onError: () => {
+                regenerating.value = false;
+                alert('Failed to regenerate API key');
+            }
+        });
     }
 };
 </script>

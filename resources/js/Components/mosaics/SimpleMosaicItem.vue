@@ -16,10 +16,7 @@
                         <img
                             v-if="getVideoThumbnail(item)"
                             :src="getVideoThumbnail(item)"
-                            :alt="
-                                item.properties.selected_image?.title ||
-                                'Video thumbnail'
-                            "
+                            :alt="item.properties.selected_image?.title || 'Video thumbnail'"
                             class="h-full w-full object-cover"
                         />
                         <div v-else class="p-4 text-center text-white">
@@ -31,21 +28,14 @@
                                 <path d="M8 5v14l11-7z" />
                             </svg>
                             <p class="text-xs">
-                                {{
-                                    item.properties.selected_image?.title ||
-                                    'Video'
-                                }}
+                                {{ item.properties.selected_image?.title || 'Video' }}
                             </p>
                         </div>
                         <!-- Video badge -->
                         <div
                             class="absolute bottom-2 right-2 flex items-center space-x-1 rounded bg-red-600 px-2 py-1 text-xs text-white"
                         >
-                            <svg
-                                class="h-3 w-3"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                            >
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z" />
                             </svg>
                             <span>VIDEO</span>
@@ -71,10 +61,7 @@
                                 <path d="M8 5v14l11-7z" />
                             </svg>
                             <p class="text-xs">
-                                {{
-                                    item.properties.selected_image.title ||
-                                    'Video'
-                                }}
+                                {{ item.properties.selected_image.title || 'Video' }}
                             </p>
                         </div>
                         <div
@@ -131,19 +118,14 @@
                 <div
                     class="flex h-full w-full items-center justify-center"
                     :style="{
-                        backgroundColor: item.properties?.color || '#ffffff',
+                        backgroundColor: item.properties?.color || '#ffffff'
                     }"
                 >
                     <span
-                        v-if="
-                            item.properties?.text?.content ||
-                            item.properties?.text
-                        "
+                        v-if="item.properties?.text?.content || item.properties?.text"
                         class="px-2 text-center text-sm font-medium"
                         :style="{
-                            color: getContrastColor(
-                                item.properties?.color || '#ffffff',
-                            ),
+                            color: getContrastColor(item.properties?.color || '#ffffff')
                         }"
                     >
                         {{
@@ -157,15 +139,12 @@
 
             <!-- Text Item -->
             <template v-else-if="item.type === 'text'">
-                <div
-                    class="flex h-full w-full items-center justify-center bg-gray-50 p-4"
-                >
+                <div class="flex h-full w-full items-center justify-center bg-gray-50 p-4">
                     <p class="text-center text-sm text-gray-800">
                         {{
                             typeof item.properties?.text === 'string'
                                 ? item.properties.text
-                                : item.properties?.text?.content ||
-                                  'Text content'
+                                : item.properties?.text?.content || 'Text content'
                         }}
                     </p>
                 </div>
@@ -173,9 +152,7 @@
 
             <!-- Placeholder for empty items -->
             <template v-else>
-                <div
-                    class="flex h-full w-full items-center justify-center bg-gray-100"
-                >
+                <div class="flex h-full w-full items-center justify-center bg-gray-100">
                     <div class="text-center text-gray-400">
                         <svg
                             class="mx-auto mb-2 h-8 w-8"
@@ -205,12 +182,7 @@
                 class="rounded-full bg-red-600 p-1 text-white transition-colors hover:bg-red-700"
                 title="Delete item"
             >
-                <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -223,9 +195,7 @@
 
         <!-- Type Badge -->
         <div class="absolute bottom-2 left-2">
-            <span
-                class="rounded bg-black bg-opacity-60 px-2 py-1 text-xs text-white"
-            >
+            <span class="rounded bg-black bg-opacity-60 px-2 py-1 text-xs text-white">
                 {{ item.type }}
             </span>
         </div>
@@ -272,9 +242,7 @@ const getImageSrc = (item: MosaicItem) => {
     }
 
     // Fallback to album cover or placeholder
-    return (
-        item.properties?.album?.cover_image_path || '/images/placeholder.svg'
-    );
+    return item.properties?.album?.cover_image_path || '/images/placeholder.svg';
 };
 
 // Helper function to get appropriate alt text

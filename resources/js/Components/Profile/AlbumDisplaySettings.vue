@@ -20,7 +20,7 @@ const handleChange = (key: string, event: Event) => {
     if (target) {
         emit('update:modelValue', {
             ...props.modelValue,
-            [key]: target.checked,
+            [key]: target.checked
         });
     }
 };
@@ -40,10 +40,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('title', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="title"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="title" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Title
                 </label>
             </div>
@@ -55,10 +52,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('author', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="author"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="author" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Author
                 </label>
             </div>
@@ -70,10 +64,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('caption', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="caption"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="caption" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Caption
                 </label>
             </div>
@@ -85,10 +76,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('altText', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="altText"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="altText" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Alt Text
                 </label>
             </div>
@@ -100,10 +88,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('dateCreated', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="dateCreated"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="dateCreated" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Date Created
                 </label>
             </div>
@@ -115,10 +100,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('location', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="location"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="location" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Location
                 </label>
             </div>
@@ -130,10 +112,7 @@ const handleChange = (key: string, event: Event) => {
                     @change="handleChange('tags', $event)"
                     class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                 />
-                <label
-                    for="tags"
-                    class="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                >
+                <label for="tags" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Show Tags
                 </label>
             </div>

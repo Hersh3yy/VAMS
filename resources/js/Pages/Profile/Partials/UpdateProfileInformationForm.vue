@@ -8,13 +8,13 @@ const props = defineProps<{
 
 const form = useForm({
     name: '',
-    email: '',
+    email: ''
 });
 
 const updateProfileInformation = () => {
     form.put(route('profile.update'), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => form.reset()
     });
 };
 </script>
@@ -33,9 +33,7 @@ const updateProfileInformation = () => {
 
         <form @submit.prevent="updateProfileInformation" class="mt-6 space-y-6">
             <div>
-                <label for="name" class="block text-sm font-medium text-white">
-                    Name
-                </label>
+                <label for="name" class="block text-sm font-medium text-white"> Name </label>
 
                 <input
                     id="name"
@@ -53,9 +51,7 @@ const updateProfileInformation = () => {
             </div>
 
             <div>
-                <label for="email" class="block text-sm font-medium text-white">
-                    Email
-                </label>
+                <label for="email" class="block text-sm font-medium text-white"> Email </label>
 
                 <input
                     id="email"
@@ -71,23 +67,14 @@ const updateProfileInformation = () => {
                 </p>
             </div>
 
-            <div
-                v-if="
-                    props.mustVerifyEmail &&
-                    props.status === 'verification-link-sent'
-                "
-            >
-                <div
-                    class="mt-2 text-sm font-medium text-green-600 dark:text-green-400"
-                >
+            <div v-if="props.mustVerifyEmail && props.status === 'verification-link-sent'">
+                <div class="mt-2 text-sm font-medium text-green-600 dark:text-green-400">
                     A new verification link has been sent to your email address.
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
-                <button class="btn-primary" :disabled="form.processing">
-                    Save
-                </button>
+                <button class="btn-primary" :disabled="form.processing">Save</button>
 
                 <div
                     v-show="form.recentlySuccessful"

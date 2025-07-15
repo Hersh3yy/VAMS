@@ -4,8 +4,8 @@ withDefaults(
         type?: 'button' | 'submit' | 'reset';
     }>(),
     {
-        type: 'button',
-    },
+        type: 'button'
+    }
 );
 </script>
 

@@ -7,7 +7,7 @@
         empty-state-title="No Mosaics Yet"
         empty-state-message="Create your first mosaic layout to get started."
         empty-state-button-text="Create First Mosaic"
-        :get-item-route="(mosaic) => route('mosaics.show', mosaic.id)"
+        :get-item-route="mosaic => route('mosaics.show', mosaic.id)"
         :get-item-actions="getMosaicActions"
     >
         <template #item-image="{ item }">
@@ -20,10 +20,10 @@
             />
             <!-- Fallback to mosaic preview -->
             <div v-else class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
-                <div class="rounded bg-gray-200"></div>
-                <div class="rounded bg-gray-300"></div>
-                <div class="rounded bg-gray-300"></div>
-                <div class="rounded bg-gray-200"></div>
+                <div class="rounded bg-gray-200" />
+                <div class="rounded bg-gray-300" />
+                <div class="rounded bg-gray-300" />
+                <div class="rounded bg-gray-200" />
             </div>
         </template>
 
@@ -32,9 +32,7 @@
                 <span class="text-xs text-gray-500">
                     Created {{ new Date(item.created_at).toLocaleDateString() }}
                 </span>
-                <span class="text-xs text-gray-500">
-                    {{ item.items?.length || 0 }} tiles
-                </span>
+                <span class="text-xs text-gray-500"> {{ item.items?.length || 0 }} tiles </span>
             </div>
         </template>
     </IndexLayout>
@@ -60,14 +58,14 @@ const getMosaicActions = (mosaic: Mosaic) => [
         label: 'Edit Mosaic',
         handler: () => router.visit(route('mosaics.edit', mosaic.id)),
         icon: 'svg',
-        class: 'p-2 bg-secondary text-black rounded-full hover:brightness-90',
+        class: 'p-2 bg-secondary text-black rounded-full hover:brightness-90'
     },
     {
         label: 'Delete Mosaic',
         handler: () => deleteMosaic(mosaic),
         icon: 'svg',
-        class: 'btn-danger p-2 rounded-full',
-    },
+        class: 'btn-danger p-2 rounded-full'
+    }
 ];
 
 const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {

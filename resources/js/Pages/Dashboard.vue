@@ -37,9 +37,7 @@ defineProps<Props>();
             <div class="page-header">
                 <h2 class="page-title">Welcome back!</h2>
                 <div class="flex gap-4">
-                    <Link :href="route('albums.create')" class="btn-primary">
-                        Create Album
-                    </Link>
+                    <Link :href="route('albums.create')" class="btn-primary"> Create Album </Link>
                     <Link :href="route('mosaics.create')" class="btn-secondary">
                         Create Mosaic
                     </Link>
@@ -50,9 +48,7 @@ defineProps<Props>();
         <div class="content-wrapper">
             <div class="content-container">
                 <!-- Stats Grid -->
-                <div
-                    class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
-                >
+                <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <div class="card">
                         <div class="card-content">
                             <div class="flex items-center justify-between">
@@ -62,15 +58,11 @@ defineProps<Props>();
                                     >
                                         Albums
                                     </p>
-                                    <p
-                                        class="text-3xl font-bold text-secondary"
-                                    >
+                                    <p class="text-3xl font-bold text-secondary">
                                         {{ stats.totalAlbums }}
                                     </p>
                                 </div>
-                                <div
-                                    class="rounded-full bg-secondary bg-opacity-20 p-3"
-                                >
+                                <div class="rounded-full bg-secondary bg-opacity-20 p-3">
                                     <svg
                                         class="h-8 w-8 text-secondary"
                                         fill="none"
@@ -98,15 +90,11 @@ defineProps<Props>();
                                     >
                                         Mosaics
                                     </p>
-                                    <p
-                                        class="text-3xl font-bold text-secondary"
-                                    >
+                                    <p class="text-3xl font-bold text-secondary">
                                         {{ stats.totalMosaics }}
                                     </p>
                                 </div>
-                                <div
-                                    class="rounded-full bg-secondary bg-opacity-20 p-3"
-                                >
+                                <div class="rounded-full bg-secondary bg-opacity-20 p-3">
                                     <svg
                                         class="h-8 w-8 text-secondary"
                                         fill="none"
@@ -134,15 +122,11 @@ defineProps<Props>();
                                     >
                                         Images
                                     </p>
-                                    <p
-                                        class="text-3xl font-bold text-secondary"
-                                    >
+                                    <p class="text-3xl font-bold text-secondary">
                                         {{ stats.totalImages }}
                                     </p>
                                 </div>
-                                <div
-                                    class="rounded-full bg-secondary bg-opacity-20 p-3"
-                                >
+                                <div class="rounded-full bg-secondary bg-opacity-20 p-3">
                                     <svg
                                         class="h-8 w-8 text-secondary"
                                         fill="none"
@@ -170,15 +154,11 @@ defineProps<Props>();
                                     >
                                         Videos
                                     </p>
-                                    <p
-                                        class="text-3xl font-bold text-secondary"
-                                    >
+                                    <p class="text-3xl font-bold text-secondary">
                                         {{ stats.totalVideos }}
                                     </p>
                                 </div>
-                                <div
-                                    class="rounded-full bg-secondary bg-opacity-20 p-3"
-                                >
+                                <div class="rounded-full bg-secondary bg-opacity-20 p-3">
                                     <svg
                                         class="h-8 w-8 text-secondary"
                                         fill="none"
@@ -217,10 +197,7 @@ defineProps<Props>();
                                 </Link>
                             </div>
 
-                            <div
-                                v-if="recentAlbums.length === 0"
-                                class="py-8 text-center"
-                            >
+                            <div v-if="recentAlbums.length === 0" class="py-8 text-center">
                                 <svg
                                     class="mx-auto mb-4 h-12 w-12 text-gray-400"
                                     fill="none"
@@ -234,9 +211,7 @@ defineProps<Props>();
                                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                                     />
                                 </svg>
-                                <p class="text-gray-500 dark:text-yellow-400">
-                                    No albums yet
-                                </p>
+                                <p class="text-gray-500 dark:text-yellow-400">No albums yet</p>
                                 <Link
                                     :href="route('albums.create')"
                                     class="btn-primary mt-4 inline-block"
@@ -284,9 +259,7 @@ defineProps<Props>();
                                         >
                                             {{ album.title }}
                                         </p>
-                                        <p
-                                            class="text-xs text-gray-500 dark:text-yellow-400"
-                                        >
+                                        <p class="text-xs text-gray-500 dark:text-yellow-400">
                                             {{ album.images_count }} items ·
                                             {{ album.created_at }}
                                         </p>
@@ -313,10 +286,7 @@ defineProps<Props>();
                                 </Link>
                             </div>
 
-                            <div
-                                v-if="recentMosaics.length === 0"
-                                class="py-8 text-center"
-                            >
+                            <div v-if="recentMosaics.length === 0" class="py-8 text-center">
                                 <svg
                                     class="mx-auto mb-4 h-12 w-12 text-gray-400"
                                     fill="none"
@@ -330,9 +300,7 @@ defineProps<Props>();
                                         d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
                                     />
                                 </svg>
-                                <p class="text-gray-500 dark:text-yellow-400">
-                                    No mosaics yet
-                                </p>
+                                <p class="text-gray-500 dark:text-yellow-400">No mosaics yet</p>
                                 <Link
                                     :href="route('mosaics.create')"
                                     class="btn-primary mt-4 inline-block"
@@ -348,9 +316,7 @@ defineProps<Props>();
                                     :href="route('mosaics.edit', mosaic.id)"
                                     class="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-secondary hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                                 >
-                                    <div
-                                        class="flex items-start justify-between"
-                                    >
+                                    <div class="flex items-start justify-between">
                                         <div class="min-w-0 flex-grow">
                                             <p
                                                 class="truncate text-sm font-medium text-gray-900 dark:text-yellow-200"
@@ -376,16 +342,16 @@ defineProps<Props>();
                                             >
                                                 <div
                                                     class="rounded-sm bg-gray-300 dark:bg-gray-600"
-                                                ></div>
+                                                />
                                                 <div
                                                     class="rounded-sm bg-gray-200 dark:bg-gray-500"
-                                                ></div>
+                                                />
                                                 <div
                                                     class="rounded-sm bg-gray-200 dark:bg-gray-500"
-                                                ></div>
+                                                />
                                                 <div
                                                     class="rounded-sm bg-gray-300 dark:bg-gray-600"
-                                                ></div>
+                                                />
                                             </div>
                                         </div>
                                     </div>

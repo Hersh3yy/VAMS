@@ -67,16 +67,11 @@ defineProps<{
                         @click="toggleNavigation"
                         class="inline-flex items-center justify-center rounded-md p-2 text-yellow-400 transition duration-150 ease-in-out hover:bg-gray-900 hover:text-yellow-300 focus:bg-gray-900 focus:text-yellow-300 focus:outline-none"
                     >
-                        <svg
-                            class="h-6 w-6"
-                            stroke="currentColor"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path
                                 :class="{
                                     hidden: showingNavigationDropdown,
-                                    'inline-flex': !showingNavigationDropdown,
+                                    'inline-flex': !showingNavigationDropdown
                                 }"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -86,7 +81,7 @@ defineProps<{
                             <path
                                 :class="{
                                     hidden: !showingNavigationDropdown,
-                                    'inline-flex': showingNavigationDropdown,
+                                    'inline-flex': showingNavigationDropdown
                                 }"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"

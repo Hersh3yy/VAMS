@@ -7,21 +7,21 @@ const user = usePage().props.auth?.user as User;
 const regenerateApiKey = () => {
     if (
         confirm(
-            'Are you sure you want to regenerate your API key? This will invalidate your current key.',
+            'Are you sure you want to regenerate your API key? This will invalidate your current key.'
         )
     ) {
         router.post(
             route('profile.update'),
             {
                 _method: 'PATCH',
-                regenerate_api_key: true,
+                regenerate_api_key: true
             },
             {
                 preserveScroll: true,
                 onSuccess: () => {
                     // The page will refresh with the new API key
-                },
-            },
+                }
+            }
         );
     }
 };
@@ -31,8 +31,8 @@ const regenerateApiKey = () => {
     <div class="mt-6">
         <h3 class="text-lg font-medium text-gray-900">API Key</h3>
         <p class="mt-1 text-sm text-gray-600">
-            Your API key is used to authenticate requests to the API. Keep it
-            safe but don't worry too much about it being exposed.
+            Your API key is used to authenticate requests to the API. Keep it safe but don't worry
+            too much about it being exposed.
         </p>
 
         <div class="mt-4 flex items-center gap-4">

@@ -3,29 +3,19 @@
         v-if="show && video"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
     >
-        <div
-            class="w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl"
-        >
+        <div class="w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl">
             <div class="flex items-center justify-between border-b p-4">
                 <h3 class="text-lg font-medium">
                     {{ video.title || 'Video' }}
                 </h3>
-                <button
-                    @click="$emit('close')"
-                    class="text-gray-500 hover:text-gray-700"
-                >
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -38,7 +28,7 @@
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowfullscreen
-                    ></iframe>
+                    />
                 </div>
                 <div v-if="video.caption" class="mt-4 rounded bg-gray-100 p-4">
                     <p>{{ video.caption }}</p>
@@ -51,9 +41,7 @@
                 >
                     Delete Video
                 </button>
-                <button @click="$emit('close')" class="btn-primary">
-                    Close
-                </button>
+                <button @click="$emit('close')" class="btn-primary">Close</button>
             </div>
         </div>
     </div>

@@ -3,9 +3,7 @@
         <div class="px-4 py-5 sm:px-6">
             <div class="flex items-center justify-between">
                 <div class="min-w-0 flex-1">
-                    <h2
-                        class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl"
-                    >
+                    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
                         {{ mosaic.title }}
                     </h2>
                     <p class="mt-1 text-sm text-gray-500">
@@ -45,12 +43,10 @@
             class="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
         >
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                <div class="absolute inset-0 bg-gray-500 opacity-75" />
             </div>
 
-            <span
-                class="hidden sm:inline-block sm:h-screen sm:align-middle"
-                aria-hidden="true"
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
                 >&#8203;</span
             >
 
@@ -77,13 +73,11 @@
                         </svg>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900">
-                            Delete Mosaic
-                        </h3>
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Delete Mosaic</h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500">
-                                Are you sure you want to delete this mosaic?
-                                This action cannot be undone.
+                                Are you sure you want to delete this mosaic? This action cannot be
+                                undone.
                             </p>
                         </div>
                     </div>

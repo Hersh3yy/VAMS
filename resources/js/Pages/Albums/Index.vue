@@ -7,7 +7,7 @@
         empty-state-title="No Albums Yet"
         empty-state-message="Create your first album to get started organizing your images."
         empty-state-button-text="Create First Album"
-        :get-item-route="(album) => route('albums.show', album.id)"
+        :get-item-route="album => route('albums.show', album.id)"
     />
 </template>
 

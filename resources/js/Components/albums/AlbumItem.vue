@@ -78,9 +78,7 @@ const isVideo = computed(() => {
     // Handle both string and object properties
     if (item.properties) {
         const properties =
-            typeof item.properties === 'string'
-                ? JSON.parse(item.properties)
-                : item.properties;
+            typeof item.properties === 'string' ? JSON.parse(item.properties) : item.properties;
 
         if (properties?.type === 'video') {
             return true;
@@ -101,9 +99,7 @@ const imageSrc = computed(() => {
         // For videos, try to use the thumbnail URL first
         if (item.properties) {
             const properties =
-                typeof item.properties === 'string'
-                    ? JSON.parse(item.properties)
-                    : item.properties;
+                typeof item.properties === 'string' ? JSON.parse(item.properties) : item.properties;
 
             if (properties?.thumbnail_url) {
                 return properties.thumbnail_url;

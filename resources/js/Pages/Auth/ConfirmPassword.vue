@@ -2,12 +2,12 @@
 import { useForm } from '@inertiajs/vue3';
 
 const form = useForm({
-    password: '',
+    password: ''
 });
 
 const submit = () => {
     form.post(route('password.confirm'), {
-        onFinish: () => form.reset(),
+        onFinish: () => form.reset()
     });
 };
 </script>
@@ -20,8 +20,8 @@ const submit = () => {
             class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg"
         >
             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
+                This is a secure area of the application. Please confirm your password before
+                continuing.
             </div>
 
             <form @submit.prevent="submit">

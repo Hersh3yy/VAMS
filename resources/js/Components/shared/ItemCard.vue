@@ -31,12 +31,7 @@
                                     ry="2"
                                     stroke-width="2"
                                 />
-                                <circle
-                                    cx="8.5"
-                                    cy="8.5"
-                                    r="1.5"
-                                    stroke-width="2"
-                                />
+                                <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2" />
                                 <path
                                     d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"
                                     stroke-width="2"
@@ -140,7 +135,7 @@ const props = withDefaults(defineProps<Props>(), {
     actions: () => [],
     cardClasses: '',
     imageContainerClasses: '',
-    linkComponent: Link,
+    linkComponent: Link
 });
 
 const imageError = ref(false);

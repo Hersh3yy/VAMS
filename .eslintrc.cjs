@@ -65,11 +65,9 @@ module.exports = {
         "quotes": ["error", "single"],
         "semi": ["error", "always"],
         
-        // TypeScript specific
+        // TypeScript specific (safe rules that don't require type information)
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/prefer-nullish-coalescing": "error",
-        "@typescript-eslint/prefer-optional-chain": "error",
         
         // Ignore ziggy.js file issues
         "no-useless-escape": "off"

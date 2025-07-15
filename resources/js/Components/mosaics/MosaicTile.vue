@@ -13,12 +13,7 @@
             @mouseup="stopImageDrag"
             @mouseleave="stopImageDrag"
         >
-            <img
-                :src="imageSrc"
-                :alt="imageAlt"
-                class="tile-image"
-                :style="imageStyle"
-            />
+            <img :src="imageSrc" :alt="imageAlt" class="tile-image" :style="imageStyle" />
             <div v-if="imageOverlay" class="image-overlay">
                 {{ imageOverlay }}
             </div>
@@ -26,11 +21,7 @@
 
         <!-- Container Content -->
         <div v-else class="container-content">
-            <div
-                v-if="splitDirection"
-                class="split-indicator"
-                :class="splitDirection"
-            >
+            <div v-if="splitDirection" class="split-indicator" :class="splitDirection">
                 <div
                     v-if="isAdjusting"
                     class="split-handle"
@@ -38,7 +29,7 @@
                     @mousemove="handleSplitAdjust"
                     @mouseup="stopSplitAdjust"
                     @mouseleave="stopSplitAdjust"
-                ></div>
+                />
             </div>
         </div>
 
@@ -70,9 +61,7 @@ const emit = defineEmits<{
     split: [];
     image: [];
     delete: [];
-    'update:position': [
-        position: { x: number; y: number; width: number; height: number },
-    ];
+    'update:position': [position: { x: number; y: number; width: number; height: number }];
     'update:imagePosition': [position: { x: number; y: number; scale: number }];
     'update:splitRatio': [ratio: number];
 }>();
@@ -88,13 +77,13 @@ const tileStyle = computed(() => ({
     left: `${props.position.x}%`,
     top: `${props.position.y}%`,
     width: `${props.position.width}%`,
-    height: `${props.position.height}%`,
+    height: `${props.position.height}%`
 }));
 
 const imageStyle = computed(() => {
     const position = props.imagePosition || defaultImagePosition;
     return {
-        transform: `translate(${position.x}%, ${position.y}%) scale(${position.scale})`,
+        transform: `translate(${position.x}%, ${position.y}%) scale(${position.scale})`
     };
 });
 
@@ -113,7 +102,7 @@ const handleImageDrag = (e: MouseEvent) => {
     emit('update:imagePosition', {
         x: props.imagePosition.x + (deltaX / window.innerWidth) * 100,
         y: props.imagePosition.y + (deltaY / window.innerHeight) * 100,
-        scale: props.imagePosition.scale,
+        scale: props.imagePosition.scale
     });
 
     dragStart.value = { x: e.clientX, y: e.clientY };

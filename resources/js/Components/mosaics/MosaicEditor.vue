@@ -3,9 +3,7 @@
         <!-- Column Width Controls -->
         <div class="mb-6 space-y-4">
             <div class="space-y-3">
-                <h3 class="text-center text-lg font-medium text-gray-900">
-                    Column Widths
-                </h3>
+                <h3 class="text-center text-lg font-medium text-gray-900">Column Widths</h3>
 
                 <!-- Visual Columns with Centered Percentages -->
                 <div class="relative">
@@ -20,37 +18,25 @@
                             :class="[
                                 index % 2 === 0
                                     ? 'bg-gradient-to-br from-blue-50 to-blue-100'
-                                    : 'bg-gradient-to-br from-gray-50 to-gray-100',
+                                    : 'bg-gradient-to-br from-gray-50 to-gray-100'
                             ]"
                         >
                             <span class="text-lg font-bold text-gray-800"
                                 >{{ Math.round(percentage) }}%</span
                             >
-                            <span class="text-xs text-gray-600"
-                                >Column {{ index + 1 }}</span
-                            >
+                            <span class="text-xs text-gray-600">Column {{ index + 1 }}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Adjustable Width Controls -->
                 <div v-if="columnCount > 1" class="space-y-4">
-                    <div
-                        v-for="(slider, index) in columnCount - 1"
-                        :key="index"
-                        class="relative"
-                    >
+                    <div v-for="(slider, index) in columnCount - 1" :key="index" class="relative">
                         <!-- Interactive Width Adjuster -->
-                        <div
-                            class="flex items-center space-x-3 rounded-lg bg-gray-50 p-3"
-                        >
+                        <div class="flex items-center space-x-3 rounded-lg bg-gray-50 p-3">
                             <div class="flex-1">
-                                <div
-                                    class="mb-2 flex items-center justify-between"
-                                >
-                                    <span
-                                        class="text-sm font-medium text-gray-700"
-                                    >
+                                <div class="mb-2 flex items-center justify-between">
+                                    <span class="text-sm font-medium text-gray-700">
                                         Adjust between columns
                                         {{ index + 1 }} and {{ index + 2 }}
                                     </span>
@@ -70,23 +56,9 @@
                                     step="1"
                                     class="slider h-3 w-full cursor-pointer appearance-none rounded-lg bg-gradient-to-r from-blue-200 via-gray-200 to-blue-200"
                                 />
-                                <div
-                                    class="mt-1 flex justify-between text-xs text-gray-500"
-                                >
-                                    <span
-                                        >{{
-                                            Math.round(
-                                                columnPercentages[index],
-                                            )
-                                        }}%</span
-                                    >
-                                    <span
-                                        >{{
-                                            Math.round(
-                                                columnPercentages[index + 1],
-                                            )
-                                        }}%</span
-                                    >
+                                <div class="mt-1 flex justify-between text-xs text-gray-500">
+                                    <span>{{ Math.round(columnPercentages[index]) }}%</span>
+                                    <span>{{ Math.round(columnPercentages[index + 1]) }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -98,12 +70,8 @@
         <!-- Real-time Item Height Control -->
         <div class="mb-6 rounded-lg bg-gray-50 p-4">
             <div class="mb-3 flex items-center justify-between">
-                <label class="block text-sm font-medium text-gray-700"
-                    >Global Item Height</label
-                >
-                <span class="text-sm text-gray-500"
-                    >{{ itemHeight }}% of base size</span
-                >
+                <label class="block text-sm font-medium text-gray-700">Global Item Height</label>
+                <span class="text-sm text-gray-500">{{ itemHeight }}% of base size</span>
             </div>
             <input
                 type="range"
@@ -122,10 +90,7 @@
         </div>
 
         <!-- Mosaic Grid -->
-        <div
-            class="grid gap-4"
-            :style="{ gridTemplateColumns: gridTemplateColumns }"
-        >
+        <div class="grid gap-4" :style="{ gridTemplateColumns: gridTemplateColumns }">
             <div
                 v-for="columnIndex in columnCount"
                 :key="columnIndex"
@@ -142,7 +107,7 @@
                     @click="openItemEditor(item)"
                     :style="{
                         height: `${(item.properties?.height || itemHeight) * 2}px`,
-                        transition: 'height 0.3s ease-in-out',
+                        transition: 'height 0.3s ease-in-out'
                     }"
                 >
                     <!-- Item Content -->
@@ -157,10 +122,7 @@
                                     item.properties?.album?.cover_image_path ||
                                     '/placeholder.jpg'
                                 "
-                                :alt="
-                                    item.properties?.album?.title ||
-                                    'Album image'
-                                "
+                                :alt="item.properties?.album?.title || 'Album image'"
                                 class="h-full w-full object-cover"
                                 :style="getImageStyle(item)"
                             />
@@ -188,17 +150,14 @@
                             <div
                                 class="flex h-full w-full items-center justify-center"
                                 :style="{
-                                    backgroundColor:
-                                        item.properties?.color || '#ffffff',
+                                    backgroundColor: item.properties?.color || '#ffffff'
                                 }"
                             >
                                 <span
                                     v-if="item.properties?.text?.enabled"
                                     class="text-lg font-medium"
                                     :style="{
-                                        color:
-                                            item.properties?.text?.color ||
-                                            '#000000',
+                                        color: item.properties?.text?.color || '#000000'
                                     }"
                                 >
                                     {{ item.properties?.text?.content }}
@@ -208,14 +167,10 @@
 
                         <!-- Text Overlay -->
                         <div
-                            v-if="
-                                item.properties?.text?.enabled &&
-                                item.type !== 'color'
-                            "
+                            v-if="item.properties?.text?.enabled && item.type !== 'color'"
                             class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 p-4"
                             :style="{
-                                color:
-                                    item.properties?.text?.color || '#ffffff',
+                                color: item.properties?.text?.color || '#ffffff'
                             }"
                         >
                             <p class="text-center font-medium">
@@ -306,7 +261,7 @@
                     type: 'media',
                     column_index: selectedColumn,
                     order: itemsInColumn(selectedColumn).length,
-                    properties: { height: itemHeight },
+                    properties: { height: itemHeight }
                 }
             "
             :albums="albums"
@@ -341,9 +296,7 @@ const emit = defineEmits<{
 }>();
 
 const columnCount = ref(props.mosaic.columns || 3);
-const columnPercentages = ref(
-    getInitialColumnPercentages(props.mosaic.columns || 3),
-);
+const columnPercentages = ref(getInitialColumnPercentages(props.mosaic.columns || 3));
 const itemHeight = ref(100);
 const showItemEditor = ref(false);
 const editingItem = ref<MosaicItemWithImage | null>(null);
@@ -359,14 +312,12 @@ function getInitialColumnPercentages(columns: number): number[] {
 // Computed
 const itemsInColumn = (columnIndex: number) => {
     return props.mosaic.items
-        .filter((item) => item.column_index === columnIndex)
+        .filter(item => item.column_index === columnIndex)
         .sort((a, b) => a.order - b.order);
 };
 
 const gridTemplateColumns = computed(() => {
-    return columnPercentages.value
-        .map((percentage) => `${percentage}%`)
-        .join(' ');
+    return columnPercentages.value.map(percentage => `${percentage}%`).join(' ');
 });
 
 // Methods
@@ -389,25 +340,21 @@ const handleDrop = (event: DragEvent, columnIndex: number) => {
     if (!draggedItem.value) return;
 
     const items = [...props.mosaic.items];
-    const itemIndex = items.findIndex(
-        (item) => item.id === draggedItem.value?.id,
-    );
+    const itemIndex = items.findIndex(item => item.id === draggedItem.value?.id);
 
     if (itemIndex !== -1) {
         const item = items[itemIndex];
-        const newOrder = items.filter(
-            (i) => i.column_index === columnIndex,
-        ).length;
+        const newOrder = items.filter(i => i.column_index === columnIndex).length;
 
         items[itemIndex] = {
             ...item,
             column_index: columnIndex,
-            order: newOrder,
+            order: newOrder
         };
 
         emit('update', {
             ...props.mosaic,
-            items,
+            items
         });
     }
 
@@ -432,7 +379,7 @@ const openAddItemModal = (columnIndex: number) => {
 
 const saveItem = (item: MosaicItemWithImage) => {
     const items = [...props.mosaic.items];
-    const itemIndex = items.findIndex((i) => i.id === item.id);
+    const itemIndex = items.findIndex(i => i.id === item.id);
 
     if (itemIndex !== -1) {
         items[itemIndex] = item;
@@ -442,17 +389,17 @@ const saveItem = (item: MosaicItemWithImage) => {
 
     emit('update', {
         ...props.mosaic,
-        items,
+        items
     });
 
     closeItemEditor();
 };
 
 const deleteItem = (itemId: string) => {
-    const items = props.mosaic.items.filter((item) => item.id !== itemId);
+    const items = props.mosaic.items.filter(item => item.id !== itemId);
     emit('update', {
         ...props.mosaic,
-        items,
+        items
     });
     closeItemEditor();
 };
@@ -495,13 +442,13 @@ const updateItemHeights = () => {
     // Emit update to parent component if needed
     emit('update', {
         ...props.mosaic,
-        items: props.mosaic.items.map((item) => ({
+        items: props.mosaic.items.map(item => ({
             ...item,
             properties: {
                 ...item.properties,
-                height: itemHeight.value,
-            },
-        })),
+                height: itemHeight.value
+            }
+        }))
     });
 };
 
@@ -515,7 +462,7 @@ const getImageStyle = (item: MosaicItemWithImage) => {
     return {
         transform: `scale(${scale})`,
         objectPosition: position,
-        transformOrigin: 'center center',
+        transformOrigin: 'center center'
     };
 };
 </script>

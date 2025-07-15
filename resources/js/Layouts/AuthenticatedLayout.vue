@@ -21,8 +21,7 @@ const showError = (message: string) => {
 // Theme handling
 const userThemeStyle = computed(() => {
     const user = page.props.auth?.user as User;
-    if (!user)
-        return { '--primary-color': '#000000', '--secondary-color': '#EAB308' };
+    if (!user) return { '--primary-color': '#000000', '--secondary-color': '#EAB308' };
 
     const settings = user.album_display_settings || {};
     const mainColor = settings.main_color || '#000000'; // Default black
@@ -30,7 +29,7 @@ const userThemeStyle = computed(() => {
 
     return {
         '--primary-color': mainColor,
-        '--secondary-color': secondaryColor,
+        '--secondary-color': secondaryColor
     };
 });
 
@@ -42,12 +41,12 @@ onMounted(() => {
 // Update CSS variables when theme changes
 watch(
     () => userThemeStyle.value,
-    (newStyle) => {
+    newStyle => {
         Object.entries(newStyle).forEach(([key, value]) => {
             document.documentElement.style.setProperty(key, value);
         });
     },
-    { immediate: true },
+    { immediate: true }
 );
 
 // Provide the showError function to all child components

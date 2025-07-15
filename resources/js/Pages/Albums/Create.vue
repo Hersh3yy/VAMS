@@ -6,18 +6,18 @@ import { ref } from 'vue';
 const form = useForm({
     title: '',
     description: '',
-    cover_image: null,
+    cover_image: null
 });
 
 const coverImagePreview = ref(null);
 
-const handleFileChange = (event) => {
+const handleFileChange = event => {
     const file = event.target.files[0];
     if (file) {
         form.cover_image = file;
         // Create preview URL
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
             coverImagePreview.value = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -33,9 +33,9 @@ const submit = () => {
         onSuccess: () => {
             // Form will be redirected to show page after successful creation
         },
-        onError: (errors) => {
+        onError: errors => {
             console.error('Form submission errors:', errors);
-        },
+        }
     });
 };
 </script>
@@ -67,11 +67,7 @@ const submit = () => {
                         </svg>
                         Back
                     </Link>
-                    <h2
-                        class="text-xl font-semibold leading-tight text-gray-800"
-                    >
-                        Create Album
-                    </h2>
+                    <h2 class="text-xl font-semibold leading-tight text-gray-800">Create Album</h2>
                 </div>
             </div>
         </template>
@@ -90,10 +86,7 @@ const submit = () => {
                                     class="form-input"
                                     placeholder="Enter album title"
                                 />
-                                <div
-                                    v-if="form.errors.title"
-                                    class="form-error"
-                                >
+                                <div v-if="form.errors.title" class="form-error">
                                     {{ form.errors.title }}
                                 </div>
                             </div>
@@ -105,11 +98,8 @@ const submit = () => {
                                     rows="4"
                                     class="form-input"
                                     placeholder="Enter album description"
-                                ></textarea>
-                                <div
-                                    v-if="form.errors.description"
-                                    class="form-error"
-                                >
+                                />
+                                <div v-if="form.errors.description" class="form-error">
                                     {{ form.errors.description }}
                                 </div>
                             </div>
@@ -118,10 +108,7 @@ const submit = () => {
                                 <label class="form-label">Cover Image</label>
                                 <div class="flex items-start space-x-4">
                                     <!-- Image Preview -->
-                                    <div
-                                        v-if="coverImagePreview"
-                                        class="flex-shrink-0"
-                                    >
+                                    <div v-if="coverImagePreview" class="flex-shrink-0">
                                         <img
                                             :src="coverImagePreview"
                                             class="h-32 w-32 rounded-lg border-2 border-gray-200 object-cover"
@@ -138,24 +125,18 @@ const submit = () => {
                                             accept="image/*"
                                         />
                                         <p class="mt-1 text-sm text-gray-500">
-                                            Choose an image to represent this
-                                            album. PNG, JPG, GIF up to 10MB.
+                                            Choose an image to represent this album. PNG, JPG, GIF
+                                            up to 10MB.
                                         </p>
                                     </div>
                                 </div>
-                                <div
-                                    v-if="form.errors.cover_image"
-                                    class="form-error"
-                                >
+                                <div v-if="form.errors.cover_image" class="form-error">
                                     {{ form.errors.cover_image }}
                                 </div>
                             </div>
 
                             <div class="flex justify-end space-x-3">
-                                <Link
-                                    :href="route('albums.index')"
-                                    class="btn-danger"
-                                >
+                                <Link :href="route('albums.index')" class="btn-danger">
                                     Cancel
                                 </Link>
                                 <button
@@ -163,9 +144,7 @@ const submit = () => {
                                     class="btn-primary"
                                     :disabled="form.processing"
                                 >
-                                    <span v-if="form.processing"
-                                        >Creating...</span
-                                    >
+                                    <span v-if="form.processing">Creating...</span>
                                     <span v-else>Create Album</span>
                                 </button>
                             </div>

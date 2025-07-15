@@ -1,30 +1,18 @@
 <template>
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-    >
-        <div
-            class="w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl"
-        >
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+        <div class="w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl">
             <div class="flex items-center justify-between border-b p-4">
                 <h3 class="text-lg font-medium">
                     {{ isEditing ? 'Edit Item' : 'Add New Item' }}
                 </h3>
-                <button
-                    @click="$emit('close')"
-                    class="text-gray-500 hover:text-gray-700"
-                >
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -35,21 +23,15 @@
 
                 <!-- Album Grid -->
                 <div v-if="albums.length === 0" class="py-8 text-center">
-                    <p class="text-gray-500">
-                        No albums available. Please create an album first.
-                    </p>
+                    <p class="text-gray-500">No albums available. Please create an album first.</p>
                 </div>
-                <div
-                    v-else
-                    class="grid max-h-96 grid-cols-2 gap-4 overflow-y-auto md:grid-cols-3"
-                >
+                <div v-else class="grid max-h-96 grid-cols-2 gap-4 overflow-y-auto md:grid-cols-3">
                     <div
                         v-for="album in albums"
                         :key="album.id"
                         class="aspect-square cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-200 hover:border-blue-500"
                         :class="{
-                            'border-blue-500 ring-2 ring-blue-200':
-                                selectedAlbum?.id === album.id,
+                            'border-blue-500 ring-2 ring-blue-200': selectedAlbum?.id === album.id
                         }"
                         @click="selectAlbum(album)"
                     >
@@ -83,25 +65,18 @@
                 </h4>
 
                 <div
-                    v-if="
-                        !selectedAlbum.images ||
-                        selectedAlbum.images.length === 0
-                    "
+                    v-if="!selectedAlbum.images || selectedAlbum.images.length === 0"
                     class="py-8 text-center"
                 >
                     <p class="text-gray-500">No images in this album.</p>
                 </div>
-                <div
-                    v-else
-                    class="grid max-h-96 grid-cols-3 gap-3 overflow-y-auto md:grid-cols-4"
-                >
+                <div v-else class="grid max-h-96 grid-cols-3 gap-3 overflow-y-auto md:grid-cols-4">
                     <div
                         v-for="image in selectedAlbum.images"
                         :key="image.id"
                         class="aspect-square cursor-pointer overflow-hidden rounded border-2 border-gray-200 transition-all duration-200 hover:border-blue-500"
                         :class="{
-                            'border-blue-500 ring-2 ring-blue-200':
-                                selectedImageId === image.id,
+                            'border-blue-500 ring-2 ring-blue-200': selectedImageId === image.id
                         }"
                         @click="selectedImageId = image.id"
                     >
@@ -151,11 +126,7 @@
                         class="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                         :disabled="!canProceed"
                     >
-                        {{
-                            currentStep === 1
-                                ? 'Select Images'
-                                : 'Add to Mosaic'
-                        }}
+                        {{ currentStep === 1 ? 'Select Images' : 'Add to Mosaic' }}
                     </button>
                 </div>
             </div>
@@ -186,9 +157,7 @@ const currentItemIndex = ref(0);
 const selectedLayout = ref(1);
 
 // Type selection
-const selectedType = ref<'media' | 'color' | 'text' | 'album' | 'video' | null>(
-    null,
-);
+const selectedType = ref<'media' | 'color' | 'text' | 'album' | 'video' | null>(null);
 const contentSource = ref<'upload' | 'album' | 'video' | null>(null);
 
 // Content
@@ -220,8 +189,7 @@ const canProceed = computed(() => {
             if (selectedType.value === 'media') {
                 return (
                     contentSource.value !== null &&
-                    (contentSource.value === 'upload' ||
-                        selectedAlbum.value !== null)
+                    (contentSource.value === 'upload' || selectedAlbum.value !== null)
                 );
             }
             if (selectedType.value === 'video') {
@@ -261,7 +229,7 @@ const nextStep = () => {
     if (isLastStep.value) {
         // Save the album image item
         const selectedImage = selectedAlbum.value?.images?.find(
-            (img) => img.id === selectedImageId.value,
+            img => img.id === selectedImageId.value
         );
 
         const item: Partial<MosaicItem> = {
@@ -270,17 +238,17 @@ const nextStep = () => {
                 album: {
                     id: selectedAlbum.value!.id.toString(),
                     title: selectedAlbum.value!.title,
-                    cover_image_path: selectedAlbum.value!.cover_image_path,
+                    cover_image_path: selectedAlbum.value!.cover_image_path
                 },
                 selected_image: selectedImage
                     ? {
                           id: selectedImage.id,
                           path: selectedImage.path,
                           title: selectedImage.title ?? undefined,
-                          caption: selectedImage.caption ?? undefined,
+                          caption: selectedImage.caption ?? undefined
                       }
-                    : undefined,
-            },
+                    : undefined
+            }
         };
 
         emit('save', item);
@@ -303,9 +271,7 @@ const getImageUrl = (image: AlbumImage) => {
     // Try to get thumbnail URL from properties
     if (image.properties) {
         const props =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         if (props.thumbnail_url) {
             return props.thumbnail_url;

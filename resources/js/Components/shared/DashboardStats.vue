@@ -21,15 +21,9 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt
-                                class="truncate text-sm font-medium text-gray-500"
-                            >
-                                Total Albums
-                            </dt>
+                            <dt class="truncate text-sm font-medium text-gray-500">Total Albums</dt>
                             <dd class="flex items-baseline">
-                                <div
-                                    class="text-2xl font-semibold text-gray-900"
-                                >
+                                <div class="text-2xl font-semibold text-gray-900">
                                     {{ stats.totalAlbums }}
                                 </div>
                             </dd>
@@ -70,15 +64,11 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt
-                                class="truncate text-sm font-medium text-gray-500"
-                            >
+                            <dt class="truncate text-sm font-medium text-gray-500">
                                 Total Mosaics
                             </dt>
                             <dd class="flex items-baseline">
-                                <div
-                                    class="text-2xl font-semibold text-gray-900"
-                                >
+                                <div class="text-2xl font-semibold text-gray-900">
                                     {{ stats.totalMosaics }}
                                 </div>
                             </dd>
@@ -119,15 +109,11 @@
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt
-                                class="truncate text-sm font-medium text-gray-500"
-                            >
+                            <dt class="truncate text-sm font-medium text-gray-500">
                                 Total Media Items
                             </dt>
                             <dd class="flex items-baseline">
-                                <div
-                                    class="text-2xl font-semibold text-gray-900"
-                                >
+                                <div class="text-2xl font-semibold text-gray-900">
                                     {{ stats.totalMedia }}
                                 </div>
                             </dd>
@@ -150,29 +136,22 @@
 
     <!-- Recent Activity -->
     <div class="mt-8">
-        <h3 class="text-lg font-medium leading-6 text-gray-900">
-            Recent Activity
-        </h3>
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Recent Activity</h3>
         <div class="mt-4 overflow-hidden bg-white shadow sm:rounded-md">
             <ul role="list" class="divide-y divide-gray-200">
                 <li v-for="activity in recentActivity" :key="activity.id">
                     <div class="px-4 py-4 sm:px-6">
                         <div class="flex items-center justify-between">
-                            <p
-                                class="truncate text-sm font-medium text-indigo-600"
-                            >
+                            <p class="truncate text-sm font-medium text-indigo-600">
                                 {{ activity.description }}
                             </p>
                             <div class="ml-2 flex flex-shrink-0">
                                 <p
                                     class="inline-flex rounded-full px-2 text-xs font-semibold leading-5"
                                     :class="{
-                                        'bg-green-100 text-green-800':
-                                            activity.type === 'create',
-                                        'bg-yellow-100 text-yellow-800':
-                                            activity.type === 'update',
-                                        'bg-red-100 text-red-800':
-                                            activity.type === 'delete',
+                                        'bg-green-100 text-green-800': activity.type === 'create',
+                                        'bg-yellow-100 text-yellow-800': activity.type === 'update',
+                                        'bg-red-100 text-red-800': activity.type === 'delete'
                                     }"
                                 >
                                     {{ activity.type }}
@@ -181,15 +160,11 @@
                         </div>
                         <div class="mt-2 sm:flex sm:justify-between">
                             <div class="sm:flex">
-                                <p
-                                    class="flex items-center text-sm text-gray-500"
-                                >
+                                <p class="flex items-center text-sm text-gray-500">
                                     {{ activity.user.name }}
                                 </p>
                             </div>
-                            <div
-                                class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0"
-                            >
+                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                                 <svg
                                     class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
                                     fill="none"

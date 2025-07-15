@@ -10,8 +10,8 @@ const props = withDefaults(
     {
         modelValue: false,
         maxWidth: '2xl',
-        closeable: true,
-    },
+        closeable: true
+    }
 );
 
 const emit = defineEmits(['update:modelValue', 'close']);
@@ -34,7 +34,7 @@ watch(
                 showSlot.value = false;
             }, 200);
         }
-    },
+    }
 );
 
 const close = () => {
@@ -67,22 +67,18 @@ const maxWidthClass = computed(() => {
         md: 'sm:max-w-md',
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
-        '2xl': 'sm:max-w-2xl',
+        '2xl': 'sm:max-w-2xl'
     }[props.maxWidth];
 });
 </script>
 
 <template>
     <Transition name="modal">
-        <div
-            v-if="modelValue"
-            class="modal-backdrop"
-            @click="$emit('update:modelValue', false)"
-        >
+        <div v-if="modelValue" class="modal-backdrop" @click="$emit('update:modelValue', false)">
             <div :class="['modal-content', maxWidthClass]" @click.stop>
                 <div class="modal-header">
                     <h3 class="modal-title">
-                        <slot name="title"></slot>
+                        <slot name="title" />
                     </h3>
                     <button
                         @click="$emit('update:modelValue', false)"
@@ -92,10 +88,10 @@ const maxWidthClass = computed(() => {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <slot></slot>
+                    <slot />
                 </div>
                 <div class="modal-footer" v-if="$slots.footer">
-                    <slot name="footer"></slot>
+                    <slot name="footer" />
                 </div>
             </div>
         </div>

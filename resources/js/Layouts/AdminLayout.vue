@@ -18,8 +18,7 @@
                                 :href="route('dashboard')"
                                 class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
                                 :class="{
-                                    'border-indigo-500 text-gray-900':
-                                        route().current('dashboard'),
+                                    'border-indigo-500 text-gray-900': route().current('dashboard')
                                 }"
                             >
                                 Dashboard
@@ -28,8 +27,7 @@
                                 :href="route('albums.index')"
                                 class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
                                 :class="{
-                                    'border-indigo-500 text-gray-900':
-                                        route().current('albums.*'),
+                                    'border-indigo-500 text-gray-900': route().current('albums.*')
                                 }"
                             >
                                 Albums
@@ -38,8 +36,7 @@
                                 :href="route('mosaics.index')"
                                 class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
                                 :class="{
-                                    'border-indigo-500 text-gray-900':
-                                        route().current('mosaics.*'),
+                                    'border-indigo-500 text-gray-900': route().current('mosaics.*')
                                 }"
                             >
                                 Mosaics
@@ -53,16 +50,13 @@
                                     <button
                                         class="flex rounded-full border-2 border-transparent text-sm transition duration-150 ease-in-out focus:border-gray-300 focus:outline-none"
                                     >
-                                        <span class="sr-only"
-                                            >Open user menu</span
-                                        >
+                                        <span class="sr-only">Open user menu</span>
                                         <div
                                             class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200"
                                         >
-                                            <span
-                                                class="font-medium text-gray-600"
-                                                >{{ auth.user.name[0] }}</span
-                                            >
+                                            <span class="font-medium text-gray-600">{{
+                                                auth.user.name[0]
+                                            }}</span>
                                         </div>
                                     </button>
                                 </template>
@@ -71,11 +65,7 @@
                                     <DropdownLink :href="route('profile.edit')">
                                         Profile
                                     </DropdownLink>
-                                    <DropdownLink
-                                        :href="route('logout')"
-                                        method="post"
-                                        as="button"
-                                    >
+                                    <DropdownLink :href="route('logout')" method="post" as="button">
                                         Log Out
                                     </DropdownLink>
                                 </template>

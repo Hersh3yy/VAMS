@@ -22,15 +22,13 @@
                                 !hasChanges || !hasItems || isSaving,
                             'text-white shadow-lg hover:scale-105 hover:shadow-xl':
                                 hasChanges && hasItems && !isSaving,
-                            'animate-pulse':
-                                (hasChanges && hasItems && !isSaving) ||
-                                isSaving,
+                            'animate-pulse': (hasChanges && hasItems && !isSaving) || isSaving
                         }"
                         :style="{
                             backgroundColor:
                                 hasChanges && hasItems && !isSaving
                                     ? 'var(--secondary-color)'
-                                    : undefined,
+                                    : undefined
                         }"
                         :disabled="!hasChanges || !hasItems || isSaving"
                     >
@@ -54,7 +52,7 @@
                 <SimpleMosaicEditor
                     :mosaic="{
                         ...props.mosaic,
-                        items: mosaicItems,
+                        items: mosaicItems
                     }"
                     :albums="albums"
                     :mosaic-id="props.mosaic.id"
@@ -101,18 +99,17 @@ const isLocalUpdate = ref(false); // Flag to track when we're making local updat
 // Watch for changes in props.mosaic and update local state
 watch(
     () => props.mosaic,
-    (newMosaic) => {
+    newMosaic => {
         console.log(
             'Edit page props watcher - current items:',
             mosaicItems.value.length,
             'new items:',
-            (newMosaic.items || []).length,
+            (newMosaic.items || []).length
         );
 
         // Only update from props if we're not in the middle of a local update
         if (!isLocalUpdate.value) {
-            const lengthChanged =
-                mosaicItems.value.length !== (newMosaic.items || []).length;
+            const lengthChanged = mosaicItems.value.length !== (newMosaic.items || []).length;
 
             if (lengthChanged) {
                 console.log('Props items length changed, updating local state');
@@ -124,24 +121,17 @@ watch(
                 }
             }
         } else {
-            console.log(
-                'Skipping props update due to local update in progress',
-            );
+            console.log('Skipping props update due to local update in progress');
         }
     },
-    { deep: true, immediate: true },
+    { deep: true, immediate: true }
 );
 
 const handleMosaicUpdate = (updatedMosaic: Mosaic) => {
-    console.log(
-        'handleMosaicUpdate called with',
-        updatedMosaic.items.length,
-        'items',
-    );
+    console.log('handleMosaicUpdate called with', updatedMosaic.items.length, 'items');
 
     // Simple length check first, then force update for now to fix the issue
-    const hasLengthChange =
-        mosaicItems.value.length !== updatedMosaic.items.length;
+    const hasLengthChange = mosaicItems.value.length !== updatedMosaic.items.length;
 
     // For now, always update to fix the state sync issue
     isLocalUpdate.value = true; // Mark this as a local update
@@ -149,11 +139,7 @@ const handleMosaicUpdate = (updatedMosaic: Mosaic) => {
     hasChanges.value = true;
 
     // Debug logging
-    console.log(
-        'Mosaic updated - length changed:',
-        hasLengthChange,
-        '- hasChanges set to true',
-    );
+    console.log('Mosaic updated - length changed:', hasLengthChange, '- hasChanges set to true');
 
     // Reset the local update flag after a short delay
     setTimeout(() => {
@@ -170,18 +156,14 @@ const openImageSelector = (itemId: string) => {
 const selectImage = (image: AlbumImage) => {
     if (!selectedItemId.value) return;
 
-    const itemIndex = mosaicItems.value.findIndex(
-        (item) => item.id === selectedItemId.value,
-    );
+    const itemIndex = mosaicItems.value.findIndex(item => item.id === selectedItemId.value);
     if (itemIndex === -1) return;
 
     // Get the image URL (with video thumbnail support)
     let imageUrl = image.path;
     if (image.properties) {
         const properties =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         if (properties?.thumbnail_url) {
             imageUrl = properties.thumbnail_url;
@@ -196,7 +178,7 @@ const selectImage = (image: AlbumImage) => {
             media_url: imageUrl,
             media: {
                 type: 'image',
-                path: imageUrl,
+                path: imageUrl
             },
             title: image.title || '',
             caption: image.caption || '',
@@ -209,10 +191,10 @@ const selectImage = (image: AlbumImage) => {
                     path: image.path,
                     title: image.title,
                     caption: image.caption,
-                    properties: image.properties,
-                },
-            }),
-        },
+                    properties: image.properties
+                }
+            })
+        }
     };
 
     hasChanges.value = true;
@@ -248,7 +230,7 @@ const saveMosaic = () => {
             autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
-            pauseOnHover: true,
+            pauseOnHover: true
         });
         return;
     }
@@ -261,13 +243,13 @@ const saveMosaic = () => {
         autoClose: 10000,
         hideProgressBar: false,
         closeOnClick: false,
-        pauseOnHover: false,
+        pauseOnHover: false
     });
 
     // Clean up temporary IDs for new items before sending to backend
-    const itemsToSave = mosaicItems.value.map((item) => ({
+    const itemsToSave = mosaicItems.value.map(item => ({
         ...item,
-        id: item.id?.startsWith('temp_') ? '' : item.id,
+        id: item.id?.startsWith('temp_') ? '' : item.id
     }));
 
     // Add a timeout to prevent infinite waiting
@@ -278,14 +260,14 @@ const saveMosaic = () => {
         .patch(
             `/mosaics/${props.mosaic.id}`,
             {
-                items: itemsToSave,
+                items: itemsToSave
             },
             {
                 signal: controller.signal,
-                timeout: 30000,
-            },
+                timeout: 30000
+            }
         )
-        .then((response) => {
+        .then(response => {
             clearTimeout(timeoutId);
             isSaving.value = false;
 
@@ -301,7 +283,7 @@ const saveMosaic = () => {
                 only: ['mosaic'],
                 onSuccess: () => {
                     // Success handled by props watcher
-                },
+                }
             });
 
             toast.success('Your mosaic has been saved successfully!', {
@@ -309,10 +291,10 @@ const saveMosaic = () => {
                 autoClose: 3000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
+                pauseOnHover: true
             });
         })
-        .catch((error) => {
+        .catch(error => {
             clearTimeout(timeoutId);
             isSaving.value = false;
 
@@ -327,8 +309,7 @@ const saveMosaic = () => {
             } else if (error.response?.data?.message) {
                 errorMessage = 'Unable to save your mosaic. Please try again.';
             } else if (error.message) {
-                errorMessage =
-                    'Connection error. Please check your internet and try again.';
+                errorMessage = 'Connection error. Please check your internet and try again.';
             }
 
             toast.error(errorMessage, {
@@ -336,13 +317,11 @@ const saveMosaic = () => {
                 autoClose: 8000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
+                pauseOnHover: true
             });
         });
 };
 
 // Add a computed property to check if there are items
-const hasItems = computed(
-    () => mosaicItems.value && mosaicItems.value.length > 0,
-);
+const hasItems = computed(() => mosaicItems.value && mosaicItems.value.length > 0);
 </script>

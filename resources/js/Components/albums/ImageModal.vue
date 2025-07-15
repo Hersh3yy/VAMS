@@ -4,29 +4,19 @@
         v-if="show"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
     >
-        <div
-            class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white"
-        >
+        <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
             <div class="flex items-center justify-between border-b p-4">
                 <h3 class="text-lg font-medium">
                     {{ isVideo ? 'Edit Video' : 'Edit Image' }}
                 </h3>
-                <button
-                    @click="$emit('close')"
-                    class="text-gray-500 hover:text-gray-700"
-                >
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -34,9 +24,7 @@
                 <div class="bg-white p-6">
                     <!-- Video Display -->
                     <div v-if="isVideo" class="mb-4">
-                        <div
-                            class="aspect-video overflow-hidden rounded-lg bg-gray-100"
-                        >
+                        <div class="aspect-video overflow-hidden rounded-lg bg-gray-100">
                             <iframe
                                 v-if="videoEmbedUrl"
                                 :src="videoEmbedUrl"
@@ -44,11 +32,8 @@
                                 frameborder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen
-                            ></iframe>
-                            <div
-                                v-else
-                                class="flex h-full w-full items-center justify-center"
-                            >
+                            />
+                            <div v-else class="flex h-full w-full items-center justify-center">
                                 <div class="text-center">
                                     <svg
                                         class="mx-auto mb-2 h-16 w-16 text-gray-400"
@@ -61,7 +46,7 @@
                                             stroke-linejoin="round"
                                             stroke-width="2"
                                             d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        ></path>
+                                        />
                                     </svg>
                                     <p class="text-gray-500">Video Player</p>
                                 </div>
@@ -82,8 +67,7 @@
                         <!-- Video-specific fields -->
                         <template v-if="isVideo">
                             <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Video URL</label
                                 >
                                 <input
@@ -94,10 +78,7 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.title !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Title</label
-                                >
+                                <label class="block text-sm font-medium text-gray-700">Title</label>
                                 <input
                                     type="text"
                                     v-model="formData.title"
@@ -105,25 +86,21 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.caption !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Caption</label
                                 >
                                 <textarea
                                     v-model="formData.caption"
                                     rows="3"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                ></textarea>
+                                />
                             </div>
                         </template>
 
                         <!-- Image-specific fields -->
                         <template v-else>
                             <div v-if="displaySettings?.title !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Title</label
-                                >
+                                <label class="block text-sm font-medium text-gray-700">Title</label>
                                 <input
                                     type="text"
                                     v-model="formData.title"
@@ -131,8 +108,7 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.altText !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Alt Text</label
                                 >
                                 <input
@@ -142,19 +118,17 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.caption !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Caption</label
                                 >
                                 <textarea
                                     v-model="formData.caption"
                                     rows="3"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                ></textarea>
+                                />
                             </div>
                             <div v-if="displaySettings?.dateCreated !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Date Created</label
                                 >
                                 <input
@@ -164,8 +138,7 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.location !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Location</label
                                 >
                                 <input
@@ -175,10 +148,7 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.tags !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Tags</label
-                                >
+                                <label class="block text-sm font-medium text-gray-700">Tags</label>
                                 <input
                                     type="text"
                                     v-model="formData.tags"
@@ -187,8 +157,7 @@
                                 />
                             </div>
                             <div v-if="displaySettings?.author !== false">
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Author</label
                                 >
                                 <input
@@ -206,9 +175,7 @@
                             >
                                 Cancel
                             </button>
-                            <button @click="saveChanges" class="btn-primary">
-                                Save Changes
-                            </button>
+                            <button @click="saveChanges" class="btn-primary">Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -224,11 +191,11 @@ import { computed, ref, watch } from 'vue';
 const props = defineProps({
     show: {
         type: Boolean,
-        required: true,
+        required: true
     },
     image: {
         type: Object,
-        required: true,
+        required: true
     },
     displaySettings: {
         type: Object,
@@ -239,9 +206,9 @@ const props = defineProps({
             dateCreated: true,
             location: true,
             tags: true,
-            author: true,
-        }),
-    },
+            author: true
+        })
+    }
 });
 
 const emit = defineEmits(['close', 'update']);
@@ -254,7 +221,7 @@ const formData = ref({
     location: '',
     tags: '',
     author: '',
-    videoUrl: '',
+    videoUrl: ''
 });
 
 const isVideo = computed(() => {
@@ -297,7 +264,7 @@ const videoEmbedUrl = computed(() => {
 
 watch(
     () => props.image,
-    (newImage) => {
+    newImage => {
         if (newImage) {
             // Handle both string and object properties
             const properties =
@@ -313,11 +280,11 @@ watch(
                 location: newImage.location || '',
                 tags: newImage.tags || '',
                 author: newImage.author || '',
-                videoUrl: properties?.video_url || newImage.path || '',
+                videoUrl: properties?.video_url || newImage.path || ''
             };
         }
     },
-    { immediate: true },
+    { immediate: true }
 );
 
 const saveChanges = async () => {
@@ -325,7 +292,7 @@ const saveChanges = async () => {
         const updateData = isVideo.value
             ? {
                   title: formData.value.title,
-                  caption: formData.value.caption,
+                  caption: formData.value.caption
               }
             : {
                   title: formData.value.title,
@@ -334,13 +301,13 @@ const saveChanges = async () => {
                   dateCreated: formData.value.dateCreated,
                   location: formData.value.location,
                   tags: formData.value.tags,
-                  author: formData.value.author,
+                  author: formData.value.author
               };
 
         await router.patch(
             route('albums.images.update', {
                 album: props.image.album_id,
-                image: props.image.id,
+                image: props.image.id
             }),
             updateData,
             {
@@ -350,14 +317,12 @@ const saveChanges = async () => {
                     emit('update', { ...props.image, ...updateData });
                     emit('close');
                 },
-                onError: (errors) => {
+                onError: errors => {
                     console.error('Album image update error:', errors);
                     // Handle error with user-friendly message
-                    alert(
-                        'Unable to save changes. Please check the fields and try again.',
-                    );
-                },
-            },
+                    alert('Unable to save changes. Please check the fields and try again.');
+                }
+            }
         );
     } catch (error) {
         // Show user-friendly error message

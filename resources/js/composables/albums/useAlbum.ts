@@ -1,8 +1,4 @@
-import {
-    useUpload,
-    type UploadConfig,
-    type UploadItem,
-} from '@/composables/shared/useUpload';
+import { useUpload, type UploadConfig, type UploadItem } from '@/composables/shared/useUpload';
 import { router } from '@inertiajs/vue3';
 import { inject, ref } from 'vue';
 
@@ -14,9 +10,7 @@ export function useAlbum(albumId: string) {
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
     const confirmationAction = ref<(() => void) | null>(null);
-    const showError = inject('showError', (message: string) =>
-        console.error(message),
-    );
+    const showError = inject('showError', (message: string) => console.error(message));
 
     // Use the generic upload system
     const {
@@ -29,7 +23,7 @@ export function useAlbum(albumId: string) {
         uploadFiles,
         retryUpload: retryUploadCore,
         removeFromQueue,
-        clearCompletedUploads,
+        clearCompletedUploads
     } = useUpload();
 
     const handleFileUpload = async (event: Event) => {
@@ -45,9 +39,9 @@ export function useAlbum(albumId: string) {
             entityId: albumId,
             refreshRoute: 'albums.show',
             refreshParams: { album: albumId },
-            onError: (error) => {
+            onError: error => {
                 showError(error);
-            },
+            }
         });
 
         // Clear the file input
@@ -67,14 +61,11 @@ export function useAlbum(albumId: string) {
 
     const deleteImage = async (imageId: string) => {
         try {
-            await router.delete(
-                route('albums.images.destroy', [albumId, imageId]),
-                {
-                    preserveScroll: true,
-                    preserveState: false,
-                    only: ['album'],
-                },
-            );
+            await router.delete(route('albums.images.destroy', [albumId, imageId]), {
+                preserveScroll: true,
+                preserveState: false,
+                only: ['album']
+            });
         } catch (error) {
             console.error('Delete failed:', error);
             showError('Failed to delete item. Please try again.');
@@ -87,13 +78,13 @@ export function useAlbum(albumId: string) {
                 route('albums.images.reorder', albumId),
                 {
                     from_index: fromIndex,
-                    to_index: toIndex,
+                    to_index: toIndex
                 },
                 {
                     preserveScroll: true,
                     preserveState: false,
-                    only: ['album'],
-                },
+                    only: ['album']
+                }
             );
         } catch (error) {
             console.error('Reorder failed:', error);
@@ -108,13 +99,13 @@ export function useAlbum(albumId: string) {
                 {
                     url,
                     title,
-                    caption,
+                    caption
                 },
                 {
                     preserveScroll: true,
                     preserveState: false,
-                    only: ['album'],
-                },
+                    only: ['album']
+                }
             );
         } catch (error) {
             console.error('Video upload failed:', error);
@@ -122,11 +113,7 @@ export function useAlbum(albumId: string) {
         }
     };
 
-    const showConfirmationDialog = (
-        title: string,
-        message: string,
-        action: () => void,
-    ) => {
+    const showConfirmationDialog = (title: string, message: string, action: () => void) => {
         confirmationTitle.value = title;
         confirmationMessage.value = message;
         confirmationAction.value = action;
@@ -153,9 +140,9 @@ export function useAlbum(albumId: string) {
             entityId: albumId,
             refreshRoute: 'albums.show',
             refreshParams: { album: albumId },
-            onError: (error) => {
+            onError: error => {
                 showError(error);
-            },
+            }
         };
         return retryUploadCore(uploadItem, config);
     };
@@ -180,6 +167,6 @@ export function useAlbum(albumId: string) {
         addVideo,
         showConfirmationDialog,
         confirmAction,
-        cancelConfirmation,
+        cancelConfirmation
     };
 }

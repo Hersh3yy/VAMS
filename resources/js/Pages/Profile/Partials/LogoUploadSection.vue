@@ -2,11 +2,7 @@
     <div class="bg-white p-4 shadow dark:bg-gray-800 sm:rounded-lg sm:p-8">
         <section>
             <header>
-                <h2
-                    class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                >
-                    Custom Logo
-                </h2>
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Custom Logo</h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     Upload your own logo to display in the navigation bar.
                 </p>
@@ -105,7 +101,7 @@ interface User {
 const logoInput = ref<HTMLInputElement | null>(null);
 const logo = ref<File | null>(null);
 const form = useForm({
-    logo: null as File | null,
+    logo: null as File | null
 });
 const removeLogoForm = useForm({});
 
@@ -129,14 +125,14 @@ const updateLogo = () => {
                 if (logoInput.value) {
                     logoInput.value.value = '';
                 }
-            },
+            }
         });
     }
 };
 
 const removeLogo = () => {
     removeLogoForm.delete(route('profile.logo.destroy'), {
-        preserveScroll: true,
+        preserveScroll: true
     });
 };
 </script>

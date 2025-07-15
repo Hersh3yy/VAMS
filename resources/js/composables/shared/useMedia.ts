@@ -16,7 +16,7 @@ export function useMedia() {
         uploadProgress.value = 0;
 
         const formData = new FormData();
-        Array.from(input.files).forEach((file) => {
+        Array.from(input.files).forEach(file => {
             formData.append('media', file);
         });
 
@@ -28,8 +28,8 @@ export function useMedia() {
                     'X-CSRF-TOKEN':
                         document
                             .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') || '',
-                },
+                            ?.getAttribute('content') || ''
+                }
             });
 
             if (!response.ok) {
@@ -47,11 +47,7 @@ export function useMedia() {
         }
     };
 
-    const showConfirmationDialog = (
-        title: string,
-        message: string,
-        action: () => void,
-    ) => {
+    const showConfirmationDialog = (title: string, message: string, action: () => void) => {
         confirmationTitle.value = title;
         confirmationMessage.value = message;
         confirmationAction.value = action;
@@ -79,6 +75,6 @@ export function useMedia() {
         handleFileUpload,
         showConfirmationDialog,
         confirmAction,
-        cancelConfirmation,
+        cancelConfirmation
     };
 }

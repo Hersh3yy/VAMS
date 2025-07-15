@@ -5,7 +5,7 @@
         :class="{
             'scale-105 opacity-90 ring-4 ring-blue-500': isDragging,
             'ring-4 ring-green-500': isDropTarget,
-            'transition-all duration-300 ease-in-out': !isDragging,
+            'transition-all duration-300 ease-in-out': !isDragging
         }"
         :style="style"
         @mousedown="startDrag"
@@ -46,7 +46,7 @@
                 height: `${ghostSize}px`,
                 transform: `translate(${ghostX}px, ${ghostY}px)`,
                 opacity: 0.8,
-                transition: 'none',
+                transition: 'none'
             }"
         >
             <img
@@ -65,12 +65,12 @@ import { ref } from 'vue';
 const props = defineProps({
     image: {
         type: Object,
-        required: true,
+        required: true
     },
     isDropTarget: {
         type: Boolean,
-        default: false,
-    },
+        default: false
+    }
 });
 
 const emit = defineEmits(['dragStart', 'dragEnd', 'updatePosition']);
@@ -90,7 +90,7 @@ const constrainDrag = (value, min, max) => {
 const { x, y, style } = useDraggable(el, {
     initialValue: { x: 0, y: 0 },
     preventDefault: true,
-    onStart: (e) => {
+    onStart: e => {
         isDragging.value = true;
         // Calculate ghost image size based on original element
         const rect = el.value.getBoundingClientRect();
@@ -99,7 +99,7 @@ const { x, y, style } = useDraggable(el, {
         // Calculate offset from where user clicked within the image
         clickOffset.value = {
             x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
+            y: e.clientY - rect.top
         };
 
         // Position ghost image at cursor, accounting for click offset
@@ -124,22 +124,22 @@ const { x, y, style } = useDraggable(el, {
         ghostX.value = constrainDrag(
             e.clientX - clickOffset.value.x,
             0,
-            viewportWidth - ghostSize.value,
+            viewportWidth - ghostSize.value
         );
         ghostY.value = constrainDrag(
             e.clientY - clickOffset.value.y,
             0,
-            viewportHeight - ghostSize.value,
+            viewportHeight - ghostSize.value
         );
 
         emit('updatePosition', {
             image: props.image,
-            position: { x: position.x, y: position.y },
+            position: { x: position.x, y: position.y }
         });
-    },
+    }
 });
 
-const startDrag = (e) => {
+const startDrag = e => {
     // Prevent default only for mouse events to allow touch scrolling
     if (e.type === 'mousedown') {
         e.preventDefault();

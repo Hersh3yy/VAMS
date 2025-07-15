@@ -6,9 +6,7 @@
             <div v-if="localItem">
                 <!-- Link URL -->
                 <div class="mb-4">
-                    <label
-                        for="linkUrl"
-                        class="mb-1 block text-sm font-medium text-gray-300"
+                    <label for="linkUrl" class="mb-1 block text-sm font-medium text-gray-300"
                         >Link URL (optional)</label
                     >
                     <input
@@ -19,16 +17,14 @@
                         class="w-full rounded border border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
                     />
                     <p class="mt-1 text-xs text-gray-400">
-                        If internal (e.g. /about), it will use frontend routing.
-                        Full URLs for external sites.
+                        If internal (e.g. /about), it will use frontend routing. Full URLs for
+                        external sites.
                     </p>
                 </div>
 
                 <!-- Text Overlay -->
                 <div class="mb-4">
-                    <label
-                        for="overlayText"
-                        class="mb-1 block text-sm font-medium text-gray-300"
+                    <label for="overlayText" class="mb-1 block text-sm font-medium text-gray-300"
                         >Text Overlay (optional)</label
                     >
                     <input
@@ -42,9 +38,7 @@
 
                 <!-- Additional Overlay Config (Example: Text Color) -->
                 <div v-if="editableProperties.overlayText" class="mb-4">
-                    <label
-                        for="overlayColor"
-                        class="mb-1 block text-sm font-medium text-gray-300"
+                    <label for="overlayColor" class="mb-1 block text-sm font-medium text-gray-300"
                         >Overlay Text Color</label
                     >
                     <input
@@ -66,11 +60,7 @@
                 >
                     Cancel
                 </button>
-                <button
-                    @click="saveProperties"
-                    class="btn-primary"
-                    :disabled="!localItem"
-                >
+                <button @click="saveProperties" class="btn-primary" :disabled="!localItem">
                     Save Changes
                 </button>
             </div>
@@ -84,7 +74,7 @@ import { reactive, ref, watch } from 'vue';
 
 const props = defineProps({
     show: Boolean,
-    item: Object, // The mosaic item of type 'image'
+    item: Object // The mosaic item of type 'image'
 });
 
 const emit = defineEmits(['close', 'update:properties']);
@@ -94,14 +84,14 @@ const editableProperties = reactive({
     linkUrl: '',
     overlayText: '',
     overlayConfig: {
-        color: '#FFFFFF', // Default white
+        color: '#FFFFFF' // Default white
         // We can add more later: fontSize, position, etc.
-    },
+    }
 });
 
 watch(
     () => props.item,
-    (newItem) => {
+    newItem => {
         localItem.value = newItem;
         if (newItem && newItem.properties) {
             let currentProps;
@@ -118,7 +108,7 @@ watch(
             editableProperties.overlayText = currentProps.overlayText || '';
             editableProperties.overlayConfig = {
                 ...{ color: '#FFFFFF' }, // Ensure default
-                ...(currentProps.overlayConfig || {}),
+                ...(currentProps.overlayConfig || {})
             };
         } else {
             // Reset if no item or no properties
@@ -127,7 +117,7 @@ watch(
             editableProperties.overlayConfig = { color: '#FFFFFF' };
         }
     },
-    { immediate: true, deep: true },
+    { immediate: true, deep: true }
 );
 
 const closeModal = () => {
@@ -154,12 +144,12 @@ const saveProperties = () => {
         ...existingProps,
         linkUrl: editableProperties.linkUrl,
         overlayText: editableProperties.overlayText,
-        overlayConfig: editableProperties.overlayConfig,
+        overlayConfig: editableProperties.overlayConfig
     };
 
     emit('update:properties', {
         itemId: localItem.value.id,
-        properties: updatedProps,
+        properties: updatedProps
     });
     closeModal();
 };

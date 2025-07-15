@@ -1,30 +1,23 @@
 <template>
-    <div 
-        ref="gridContainer"
-        class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
-    >
-        <div 
-            v-for="(item, index) in localItems" 
+    <div ref="gridContainer" class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div
+            v-for="(item, index) in localItems"
             :key="item.id"
             :data-id="item.id"
             :data-index="index"
-            class="relative group"
+            class="group relative"
         >
-            <AlbumItem
-                :item="item"
-                @click="handleItemClick"
-                @delete="handleItemDelete"
-            />
+            <AlbumItem :item="item" @click="handleItemClick" @delete="handleItemDelete" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 // @ts-ignore
+import type { AlbumImage } from '@/types/album';
 import Sortable from 'sortablejs';
 import AlbumItem from './AlbumItem.vue';
-import type { AlbumImage } from '@/types/album';
 
 const props = defineProps<{
     items: AlbumImage[];
@@ -41,9 +34,13 @@ const localItems = ref([...props.items]);
 let sortableInstance: any = null;
 
 // Watch for prop changes
-watch(() => props.items, (newItems) => {
-    localItems.value = [...newItems];
-}, { deep: true });
+watch(
+    () => props.items,
+    newItems => {
+        localItems.value = [...newItems];
+    },
+    { deep: true }
+);
 
 const handleItemClick = (item: AlbumImage) => {
     emit('item-click', item);
@@ -85,15 +82,15 @@ onUnmounted(() => {
 
 <style scoped>
 .ghost-item {
-    @apply opacity-50 bg-blue-100 border-2 border-blue-300 border-dashed;
+    @apply border-2 border-dashed border-blue-300 bg-blue-100 opacity-50;
 }
 
 .chosen-item {
-    @apply ring-2 ring-blue-500 transform scale-105;
+    @apply scale-105 transform ring-2 ring-blue-500;
 }
 
 .drag-item {
-    @apply transform rotate-3 shadow-lg;
+    @apply rotate-3 transform shadow-lg;
 }
 
 .group {
@@ -101,6 +98,6 @@ onUnmounted(() => {
 }
 
 .group:hover {
-    @apply transform -translate-y-1 shadow-lg;
+    @apply -translate-y-1 transform shadow-lg;
 }
 </style>

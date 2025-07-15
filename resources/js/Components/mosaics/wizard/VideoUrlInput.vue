@@ -1,17 +1,13 @@
 <template>
     <div>
-        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">
-            Add Video Content
-        </h4>
+        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">Add Video Content</h4>
         <p class="mb-8 text-center text-sm text-gray-500">
             Enter a YouTube or Vimeo URL to embed the video.
         </p>
 
         <div class="mx-auto max-w-md space-y-4">
             <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700">
-                    Video URL *
-                </label>
+                <label class="mb-2 block text-sm font-medium text-gray-700"> Video URL * </label>
                 <input
                     v-model="videoUrl"
                     type="url"
@@ -22,9 +18,7 @@
                 <p v-if="urlError" class="mt-1 text-sm text-red-600">
                     {{ urlError }}
                 </p>
-                <p class="mt-1 text-xs text-gray-500">
-                    Supported: YouTube and Vimeo URLs
-                </p>
+                <p class="mt-1 text-xs text-gray-500">Supported: YouTube and Vimeo URLs</p>
             </div>
 
             <div>
@@ -48,7 +42,7 @@
                     placeholder="Video description or caption"
                     rows="3"
                     class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                ></textarea>
+                />
             </div>
 
             <div class="text-center">
@@ -63,18 +57,13 @@
                     "
                 >
                     Add Video
-                    <svg
-                        class="ml-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                    <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M12 4v16m8-8H4"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -86,10 +75,7 @@
 import { computed, ref } from 'vue';
 
 const emit = defineEmits<{
-    (
-        e: 'submit',
-        data: { url: string; title?: string; caption?: string },
-    ): void;
+    (e: 'submit', data: { url: string; title?: string; caption?: string }): void;
 }>();
 
 const videoUrl = ref('');
@@ -99,9 +85,7 @@ const urlError = ref('');
 
 const isValidUrl = computed(() => {
     if (!videoUrl.value) return false;
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(
-        videoUrl.value,
-    );
+    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(videoUrl.value);
 });
 
 const validateUrl = () => {
@@ -117,7 +101,7 @@ const submit = () => {
         emit('submit', {
             url: videoUrl.value,
             title: title.value || undefined,
-            caption: caption.value || undefined,
+            caption: caption.value || undefined
         });
     }
 };

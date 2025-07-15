@@ -6,7 +6,7 @@ defineProps<{
 }>();
 
 const form = useForm({
-    email: '',
+    email: ''
 });
 
 const submit = () => {
@@ -22,15 +22,11 @@ const submit = () => {
             class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg"
         >
             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
+                Forgot your password? No problem. Just let us know your email address and we will
+                email you a password reset link that will allow you to choose a new one.
             </div>
 
-            <div
-                v-if="status"
-                class="mb-4 text-sm font-medium text-green-600 dark:text-green-400"
-            >
+            <div v-if="status" class="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
                 {{ status }}
             </div>
 
@@ -53,10 +49,7 @@ const submit = () => {
                         autocomplete="username"
                     />
 
-                    <p
-                        v-if="form.errors.email"
-                        class="mt-2 text-sm text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="form.errors.email" class="mt-2 text-sm text-red-600 dark:text-red-400">
                         {{ form.errors.email }}
                     </p>
                 </div>

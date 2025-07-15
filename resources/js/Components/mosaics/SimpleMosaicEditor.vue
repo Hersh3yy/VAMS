@@ -1,13 +1,9 @@
 <template>
     <div class="simple-mosaic-editor">
         <!-- Header with column controls -->
-        <div
-            class="mb-6 flex items-center justify-between rounded-lg bg-gray-50 p-4"
-        >
+        <div class="mb-6 flex items-center justify-between rounded-lg bg-gray-50 p-4">
             <div class="flex items-center gap-4">
-                <label class="text-sm font-medium text-gray-700"
-                    >Columns:</label
-                >
+                <label class="text-sm font-medium text-gray-700">Columns:</label>
                 <select
                     v-model="columnCount"
                     @change="updateColumns"
@@ -23,23 +19,15 @@
         </div>
 
         <!-- Column Layout -->
-        <div
-            class="grid gap-6"
-            :style="{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }"
-        >
+        <div class="grid gap-6" :style="{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }">
             <div
                 v-for="columnIndex in columnCount"
                 :key="`column-${columnIndex}`"
                 class="min-h-[400px] rounded-lg border-2 border-dashed border-gray-300 p-4"
             >
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-lg font-medium text-gray-900">
-                        Column {{ columnIndex }}
-                    </h3>
-                    <button
-                        @click="addItem(columnIndex - 1)"
-                        class="btn-secondary text-sm"
-                    >
+                    <h3 class="text-lg font-medium text-gray-900">Column {{ columnIndex }}</h3>
+                    <button @click="addItem(columnIndex - 1)" class="btn-secondary text-sm">
                         + Add Item
                     </button>
                 </div>
@@ -134,12 +122,8 @@ const columnItems = ref<MosaicItem[][]>([]);
 
 // Initialize column arrays from items
 const initializeColumns = () => {
-    columnItems.value = Array.from(
-        { length: columnCount.value },
-        (_, colIndex) =>
-            items.value
-                .filter((item) => item.column_index === colIndex)
-                .sort((a, b) => a.order - b.order),
+    columnItems.value = Array.from({ length: columnCount.value }, (_, colIndex) =>
+        items.value.filter(item => item.column_index === colIndex).sort((a, b) => a.order - b.order)
     );
 };
 
@@ -149,7 +133,7 @@ watch([items, columnCount], initializeColumns, { immediate: true, deep: true });
 // Sync column items back to main items array when dragged
 watch(
     columnItems,
-    (newColumnItems) => {
+    newColumnItems => {
         const newItems: MosaicItem[] = [];
 
         newColumnItems.forEach((columnItemList, columnIndex) => {
@@ -157,7 +141,7 @@ watch(
                 newItems.push({
                     ...item,
                     column_index: columnIndex,
-                    order: order,
+                    order
                 });
             });
         });
@@ -168,13 +152,13 @@ watch(
             emitUpdate();
         }
     },
-    { deep: true },
+    { deep: true }
 );
 
 // Watch for external changes from parent
 watch(
     () => props.mosaic,
-    (newMosaic) => {
+    newMosaic => {
         if (newMosaic.columns !== columnCount.value) {
             columnCount.value = newMosaic.columns || 3;
         }
@@ -182,7 +166,7 @@ watch(
             items.value = [...(newMosaic.items || [])];
         }
     },
-    { deep: true, immediate: true },
+    { deep: true, immediate: true }
 );
 
 // Methods
@@ -197,7 +181,7 @@ const addItem = (columnIndex: number) => {
         type: 'album',
         column_index: columnIndex,
         order: columnItems.value[columnIndex]?.length || 0,
-        properties: {},
+        properties: {}
     };
 
     editingItem.value = newItem;
@@ -211,7 +195,7 @@ const editItem = (item: MosaicItem) => {
 
 const deleteItem = (item: MosaicItem) => {
     if (confirm('Are you sure you want to delete this item?')) {
-        items.value = items.value.filter((i) => i.id !== item.id);
+        items.value = items.value.filter(i => i.id !== item.id);
         emitUpdate();
     }
 };
@@ -222,7 +206,7 @@ const saveItem = (item: MosaicItem) => {
         item.id = `temp_${Date.now()}_${Math.random()}`;
     }
 
-    const existingIndex = items.value.findIndex((i) => i.id === item.id);
+    const existingIndex = items.value.findIndex(i => i.id === item.id);
 
     if (existingIndex !== -1) {
         items.value[existingIndex] = { ...item };
@@ -256,7 +240,7 @@ const emitUpdate = () => {
     emit('update', {
         ...props.mosaic,
         columns: columnCount.value,
-        items: items.value,
+        items: items.value
     });
 };
 </script>

@@ -2,9 +2,7 @@
     <div class="bg-white p-4 shadow dark:bg-gray-800 sm:rounded-lg sm:p-8">
         <section>
             <header>
-                <h2
-                    class="text-lg font-medium text-gray-900 dark:text-gray-100"
-                >
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                     Album Display Settings
                 </h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -18,15 +16,10 @@
                         <input
                             id="title_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.title']
-                            "
+                            v-model="settingsForm['album_display_settings.title']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="title_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="title_setting" class="ml-2 text-sm text-white">
                             Show Title
                         </label>
                     </div>
@@ -34,15 +27,10 @@
                         <input
                             id="author_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.author']
-                            "
+                            v-model="settingsForm['album_display_settings.author']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="author_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="author_setting" class="ml-2 text-sm text-white">
                             Show Author
                         </label>
                     </div>
@@ -50,15 +38,10 @@
                         <input
                             id="caption_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.caption']
-                            "
+                            v-model="settingsForm['album_display_settings.caption']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="caption_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="caption_setting" class="ml-2 text-sm text-white">
                             Show Caption
                         </label>
                     </div>
@@ -66,15 +49,10 @@
                         <input
                             id="altText_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.altText']
-                            "
+                            v-model="settingsForm['album_display_settings.altText']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="altText_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="altText_setting" class="ml-2 text-sm text-white">
                             Show Alt Text
                         </label>
                     </div>
@@ -82,17 +60,10 @@
                         <input
                             id="dateCreated_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm[
-                                    'album_display_settings.dateCreated'
-                                ]
-                            "
+                            v-model="settingsForm['album_display_settings.dateCreated']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="dateCreated_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="dateCreated_setting" class="ml-2 text-sm text-white">
                             Show Date Created
                         </label>
                     </div>
@@ -100,15 +71,10 @@
                         <input
                             id="location_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.location']
-                            "
+                            v-model="settingsForm['album_display_settings.location']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="location_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="location_setting" class="ml-2 text-sm text-white">
                             Show Location
                         </label>
                     </div>
@@ -116,15 +82,10 @@
                         <input
                             id="tags_setting"
                             type="checkbox"
-                            v-model="
-                                settingsForm['album_display_settings.tags']
-                            "
+                            v-model="settingsForm['album_display_settings.tags']"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900"
                         />
-                        <label
-                            for="tags_setting"
-                            class="ml-2 text-sm text-white"
-                        >
+                        <label for="tags_setting" class="ml-2 text-sm text-white">
                             Show Tags
                         </label>
                     </div>
@@ -166,16 +127,14 @@ const props = defineProps<{
 // Initialize form with props data (this was the bug - was using user object instead of props)
 const settingsForm = useForm({
     'album_display_settings.main_color': props.albumDisplaySettings.main_color,
-    'album_display_settings.secondary_color':
-        props.albumDisplaySettings.secondary_color,
+    'album_display_settings.secondary_color': props.albumDisplaySettings.secondary_color,
     'album_display_settings.caption': props.albumDisplaySettings.caption,
     'album_display_settings.altText': props.albumDisplaySettings.altText,
-    'album_display_settings.dateCreated':
-        props.albumDisplaySettings.dateCreated,
+    'album_display_settings.dateCreated': props.albumDisplaySettings.dateCreated,
     'album_display_settings.location': props.albumDisplaySettings.location,
     'album_display_settings.tags': props.albumDisplaySettings.tags,
     'album_display_settings.title': props.albumDisplaySettings.title,
-    'album_display_settings.author': props.albumDisplaySettings.author,
+    'album_display_settings.author': props.albumDisplaySettings.author
 });
 
 const updateSettings = () => {
@@ -184,7 +143,7 @@ const updateSettings = () => {
         onSuccess: () => {
             // Force a page reload to apply theme changes
             window.location.reload();
-        },
+        }
     });
 };
 </script>

@@ -4,9 +4,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Manage Users
-                </h2>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">Manage Users</h2>
                 <div class="flex space-x-3">
                     <Link
                         :href="route('test-api')"
@@ -32,18 +30,14 @@
                     class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
                     role="alert"
                 >
-                    <span class="block sm:inline">{{
-                        $page.props.flash.success
-                    }}</span>
+                    <span class="block sm:inline">{{ $page.props.flash.success }}</span>
                 </div>
                 <div
                     v-if="$page.props.flash?.error"
                     class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
                     role="alert"
                 >
-                    <span class="block sm:inline">{{
-                        $page.props.flash.error
-                    }}</span>
+                    <span class="block sm:inline">{{ $page.props.flash.error }}</span>
                 </div>
 
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -57,7 +51,7 @@
                                         'rounded px-3 py-1',
                                         activeFilter === 'all'
                                             ? 'bg-primary text-white'
-                                            : 'bg-gray-200',
+                                            : 'bg-gray-200'
                                     ]"
                                 >
                                     All Users
@@ -68,7 +62,7 @@
                                         'rounded px-3 py-1',
                                         activeFilter === 'admins'
                                             ? 'bg-primary text-white'
-                                            : 'bg-gray-200',
+                                            : 'bg-gray-200'
                                     ]"
                                 >
                                     Admins
@@ -79,7 +73,7 @@
                                         'rounded px-3 py-1',
                                         activeFilter === 'pending'
                                             ? 'bg-primary text-white'
-                                            : 'bg-gray-200',
+                                            : 'bg-gray-200'
                                     ]"
                                 >
                                     Pending Approval
@@ -144,20 +138,16 @@
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody
-                                    class="divide-y divide-gray-200 bg-white"
-                                >
+                                <tbody class="divide-y divide-gray-200 bg-white">
                                     <tr
                                         v-for="user in filteredUsers"
                                         :key="user.id"
                                         :class="{
-                                            'bg-yellow-50': !user.is_approved,
+                                            'bg-yellow-50': !user.is_approved
                                         }"
                                     >
                                         <td class="whitespace-nowrap px-6 py-4">
-                                            <div
-                                                class="text-sm font-medium text-gray-900"
-                                            >
+                                            <div class="text-sm font-medium text-gray-900">
                                                 {{ user.name }}
                                             </div>
                                         </td>
@@ -194,26 +184,17 @@
                                         <td
                                             class="whitespace-nowrap px-6 py-4 text-sm text-gray-500"
                                         >
-                                            <div
-                                                class="flex items-center space-x-2"
-                                            >
-                                                <code
-                                                    class="rounded bg-gray-100 px-2 py-1 text-xs"
-                                                >
+                                            <div class="flex items-center space-x-2">
+                                                <code class="rounded bg-gray-100 px-2 py-1 text-xs">
                                                     {{
                                                         user.api_key
-                                                            ? user.api_key.substring(
-                                                                  0,
-                                                                  8,
-                                                              ) + '...'
+                                                            ? user.api_key.substring(0, 8) + '...'
                                                             : 'None'
                                                     }}
                                                 </code>
                                                 <button
                                                     v-if="user.api_key"
-                                                    @click="
-                                                        copyApiKey(user.api_key)
-                                                    "
+                                                    @click="copyApiKey(user.api_key)"
                                                     class="text-xs text-blue-600 hover:text-blue-500"
                                                     title="Copy API Key"
                                                 >
@@ -230,12 +211,7 @@
                                             class="space-x-2 whitespace-nowrap px-6 py-4 text-right text-sm"
                                         >
                                             <Link
-                                                :href="
-                                                    route(
-                                                        'admin.users.edit',
-                                                        user.id,
-                                                    )
-                                                "
+                                                :href="route('admin.users.edit', user.id)"
                                                 class="mr-2 text-indigo-600 hover:text-indigo-900"
                                             >
                                                 Edit
@@ -250,9 +226,7 @@
                                             </button>
 
                                             <button
-                                                @click="
-                                                    impersonateUser(user.id)
-                                                "
+                                                @click="impersonateUser(user.id)"
                                                 class="mr-2 text-blue-600 hover:text-blue-900"
                                             >
                                                 Impersonate
@@ -267,12 +241,8 @@
                                         </td>
                                     </tr>
                                     <tr v-if="filteredUsers.length === 0">
-                                        <td
-                                            colspan="6"
-                                            class="px-6 py-4 text-center text-gray-500"
-                                        >
-                                            No users found matching your
-                                            criteria.
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                            No users found matching your criteria.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -288,16 +258,14 @@
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">Delete User</h2>
                 <p class="mt-1 text-sm text-gray-600">
-                    Are you sure you want to delete {{ userToDelete?.name }}?
-                    This action cannot be undone.
+                    Are you sure you want to delete {{ userToDelete?.name }}? This action cannot be
+                    undone.
                 </p>
                 <div class="mt-6 flex justify-end">
                     <SecondaryButton @click="deleteModal = false" class="mr-3">
                         Cancel
                     </SecondaryButton>
-                    <button @click="deleteUser" class="btn-danger">
-                        Delete User
-                    </button>
+                    <button @click="deleteUser" class="btn-danger">Delete User</button>
                 </div>
             </div>
         </Modal>
@@ -312,7 +280,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
-    users: Array,
+    users: Array
 });
 
 const search = ref('');
@@ -328,29 +296,29 @@ const filteredUsers = computed(() => {
     if (search.value) {
         const searchLower = search.value.toLowerCase();
         result = result.filter(
-            (user) =>
+            user =>
                 user.name.toLowerCase().includes(searchLower) ||
-                user.email.toLowerCase().includes(searchLower),
+                user.email.toLowerCase().includes(searchLower)
         );
     }
 
     // Apply category filter
     if (activeFilter.value === 'admins') {
-        result = result.filter((user) => user.is_admin);
+        result = result.filter(user => user.is_admin);
     } else if (activeFilter.value === 'pending') {
-        result = result.filter((user) => !user.is_approved);
+        result = result.filter(user => !user.is_approved);
     }
 
     return result;
 });
 
 // Format date for display
-const formatDate = (dateString) => {
+const formatDate = dateString => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric',
+        day: 'numeric'
     }).format(date);
 };
 
@@ -361,7 +329,7 @@ const deleteForm = useForm({});
 const actionForm = useForm({});
 
 // Confirm delete modal
-const confirmDelete = (user) => {
+const confirmDelete = user => {
     userToDelete.value = user;
     deleteModal.value = true;
 };
@@ -372,22 +340,22 @@ const deleteUser = () => {
         onSuccess: () => {
             deleteModal.value = false;
             userToDelete.value = null;
-        },
+        }
     });
 };
 
 // Approve a user
-const approveUser = (userId) => {
+const approveUser = userId => {
     actionForm.post(route('admin.users.approve', userId));
 };
 
 // Impersonate a user
-const impersonateUser = (userId) => {
+const impersonateUser = userId => {
     actionForm.post(route('admin.users.impersonate', userId));
 };
 
 // Copy API key to clipboard
-const copyApiKey = async (apiKey) => {
+const copyApiKey = async apiKey => {
     try {
         await navigator.clipboard.writeText(apiKey);
         alert('API key copied to clipboard!');

@@ -13,22 +13,14 @@
                 <h3 class="text-lg font-medium">
                     {{ item?.id ? 'Edit Item' : 'Add Item' }}
                 </h3>
-                <button
-                    @click="$emit('close')"
-                    class="text-gray-500 hover:text-gray-700"
-                >
-                    <svg
-                        class="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -38,9 +30,7 @@
                 <div v-if="isViewMode">
                     <!-- Current Image Display -->
                     <div class="space-y-4">
-                        <label class="block text-sm font-medium text-gray-700"
-                            >Current Image</label
-                        >
+                        <label class="block text-sm font-medium text-gray-700">Current Image</label>
                         <div class="rounded-lg border bg-gray-50 p-4">
                             <div class="h-48 w-full overflow-hidden rounded">
                                 <img
@@ -62,9 +52,7 @@
 
                     <!-- Edit Text Field -->
                     <div>
-                        <label
-                            class="mb-2 block text-sm font-medium text-gray-700"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-gray-700">
                             Display Text
                         </label>
                         <input
@@ -90,9 +78,7 @@
                 <div v-else>
                     <!-- Album Selection -->
                     <div>
-                        <label
-                            class="mb-2 block text-sm font-medium text-gray-700"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-gray-700">
                             Select Album
                         </label>
 
@@ -109,10 +95,7 @@
                             >
                                 <div class="aspect-square">
                                     <img
-                                        :src="
-                                            album.cover_image_path ||
-                                            '/placeholder.jpg'
-                                        "
+                                        :src="album.cover_image_path || '/placeholder.jpg'"
                                         :alt="album.title"
                                         class="h-full w-full object-cover"
                                     />
@@ -122,9 +105,7 @@
                                         <div
                                             class="text-center opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                                         >
-                                            <h3
-                                                class="text-sm font-medium text-white"
-                                            >
+                                            <h3 class="text-sm font-medium text-white">
                                                 {{ album.title }}
                                             </h3>
                                             <p class="text-xs text-white">
@@ -144,10 +125,7 @@
                             >
                                 <div class="flex items-center space-x-3">
                                     <img
-                                        :src="
-                                            selectedAlbum?.cover_image_path ||
-                                            '/placeholder.jpg'
-                                        "
+                                        :src="selectedAlbum?.cover_image_path || '/placeholder.jpg'"
                                         :alt="selectedAlbum?.title"
                                         class="h-12 w-12 rounded object-cover"
                                     />
@@ -172,12 +150,8 @@
                             </div>
 
                             <!-- Album Images Grid -->
-                            <div
-                                v-if="albumImages.length > 0"
-                                class="space-y-2"
-                            >
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
+                            <div v-if="albumImages.length > 0" class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700"
                                     >Select Image from Album ({{
                                         albumImages.length
                                     }}
@@ -193,15 +167,12 @@
                                         class="relative aspect-square cursor-pointer overflow-hidden rounded border-2 border-gray-200 transition-all duration-200 hover:border-blue-500"
                                         :class="{
                                             'border-blue-500 ring-2 ring-blue-200':
-                                                selectedImageId === image.id,
+                                                selectedImageId === image.id
                                         }"
                                     >
                                         <img
                                             :src="getImageUrl(image)"
-                                            :alt="
-                                                image.title ||
-                                                `Image ${image.id}`
-                                            "
+                                            :alt="image.title || `Image ${image.id}`"
                                             class="h-full w-full object-cover"
                                         />
                                         <div
@@ -228,9 +199,7 @@
 
                     <!-- Link Options (only in edit mode) -->
                     <div>
-                        <label
-                            class="mb-2 block text-sm font-medium text-gray-700"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-gray-700">
                             Link (Optional)
                         </label>
                         <input
@@ -243,9 +212,7 @@
 
                     <!-- Edit Text Field -->
                     <div>
-                        <label
-                            class="mb-2 block text-sm font-medium text-gray-700"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-gray-700">
                             Display Text (Optional)
                         </label>
                         <input
@@ -270,14 +237,8 @@
 
             <!-- Footer -->
             <div class="flex justify-end gap-3 border-t p-4">
-                <button @click="$emit('close')" class="btn-secondary">
-                    Cancel
-                </button>
-                <button
-                    @click="handleSave"
-                    class="btn-primary"
-                    :disabled="!isValid"
-                >
+                <button @click="$emit('close')" class="btn-secondary">Cancel</button>
+                <button @click="handleSave" class="btn-primary" :disabled="!isValid">
                     {{ item?.id ? 'Update' : 'Add' }} Item
                 </button>
             </div>
@@ -322,7 +283,7 @@ const isValid = computed(() => {
 const albumImages = computed(() => {
     if (!selectedAlbum.value?.images) return [];
 
-    return selectedAlbum.value.images.filter((image) => {
+    return selectedAlbum.value.images.filter(image => {
         if (image.properties) {
             try {
                 const props =
@@ -357,9 +318,7 @@ const selectImage = (image: any) => {
 const getImageUrl = (image: any) => {
     if (image.properties) {
         const props =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         if (props.thumbnail_url) {
             return props.thumbnail_url;
@@ -399,15 +358,15 @@ const handleSave = () => {
             album: {
                 id: selectedAlbum.value!.id.toString(),
                 title: selectedAlbum.value!.title,
-                cover_image_path: selectedAlbum.value!.cover_image_path,
-            },
-        },
+                cover_image_path: selectedAlbum.value!.cover_image_path
+            }
+        }
     };
 
     // If a specific image is selected, include it
     if (selectedImageId.value && selectedAlbum.value!.images) {
         const selectedImage = selectedAlbum.value!.images.find(
-            (img) => img.id === selectedImageId.value,
+            img => img.id === selectedImageId.value
         );
         if (selectedImage) {
             item.properties!.selected_image = {
@@ -415,7 +374,7 @@ const handleSave = () => {
                 path: selectedImage.path,
                 title: selectedImage.title || null,
                 caption: selectedImage.caption || null,
-                properties: selectedImage.properties || null,
+                properties: selectedImage.properties || null
             };
         }
     }
@@ -442,7 +401,7 @@ const handleSave = () => {
 // Watch for props changes
 watch(
     () => props.item,
-    (newItem) => {
+    newItem => {
         if (newItem) {
             // Set edit mode based on whether it's a new item or existing
             isEditMode.value = !newItem.id;
@@ -450,8 +409,7 @@ watch(
             if (newItem.type === 'album' && newItem.properties?.album) {
                 selectedAlbumId.value = newItem.properties.album.id;
                 if (newItem.properties?.selected_image?.id) {
-                    selectedImageId.value =
-                        newItem.properties.selected_image.id;
+                    selectedImageId.value = newItem.properties.selected_image.id;
                 }
             }
 
@@ -467,15 +425,14 @@ watch(
             editText.value = '';
         }
     },
-    { immediate: true },
+    { immediate: true }
 );
 
 // Watch for selectedAlbumId changes
 watch(selectedAlbumId, (newAlbumId, oldAlbumId) => {
     if (newAlbumId) {
         selectedAlbum.value =
-            props.albums.find((album) => album.id.toString() === newAlbumId) ||
-            null;
+            props.albums.find(album => album.id.toString() === newAlbumId) || null;
         if (oldAlbumId && oldAlbumId !== newAlbumId) {
             selectedImageId.value = '';
         }

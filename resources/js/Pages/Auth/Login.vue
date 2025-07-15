@@ -10,7 +10,7 @@ defineProps<{
 const form = useForm({
     email: '',
     password: '',
-    remember: false,
+    remember: false
 });
 
 const showPassword = ref(false);
@@ -21,7 +21,7 @@ const togglePasswordVisibility = () => {
 
 const submit = () => {
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+        onFinish: () => form.reset('password')
     });
 };
 </script>
@@ -52,10 +52,7 @@ const submit = () => {
                         autocomplete="username"
                     />
 
-                    <p
-                        v-if="form.errors.email"
-                        class="mt-2 text-sm text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="form.errors.email" class="mt-2 text-sm text-red-600 dark:text-red-400">
                         {{ form.errors.email }}
                     </p>
                 </div>
@@ -135,8 +132,7 @@ const submit = () => {
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                             v-model="form.remember"
                         />
-                        <span
-                            class="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400"
                             >Remember me</span
                         >
                     </label>

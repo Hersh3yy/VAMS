@@ -1,11 +1,7 @@
 <template>
     <div>
-        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">
-            Upload Images
-        </h4>
-        <p class="mb-8 text-center text-sm text-gray-500">
-            Upload images for your mosaic.
-        </p>
+        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">Upload Images</h4>
+        <p class="mb-8 text-center text-sm text-gray-500">Upload images for your mosaic.</p>
 
         <div class="mx-auto max-w-md">
             <!-- File Drop Zone -->
@@ -33,12 +29,10 @@
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        ></path>
+                        />
                     </svg>
                     <div>
-                        <p class="text-lg font-medium text-gray-900">
-                            Drop images here
-                        </p>
+                        <p class="text-lg font-medium text-gray-900">Drop images here</p>
                         <p class="text-sm text-gray-500">or click to browse</p>
                     </div>
                     <input
@@ -61,18 +55,10 @@
 
             <!-- Selected Files Preview -->
             <div v-if="selectedFiles.length > 0" class="mt-6">
-                <h5 class="mb-3 text-sm font-medium text-gray-900">
-                    Selected Files:
-                </h5>
+                <h5 class="mb-3 text-sm font-medium text-gray-900">Selected Files:</h5>
                 <div class="grid grid-cols-2 gap-3">
-                    <div
-                        v-for="(file, index) in selectedFiles"
-                        :key="index"
-                        class="group relative"
-                    >
-                        <div
-                            class="aspect-square overflow-hidden rounded-lg bg-gray-100"
-                        >
+                    <div v-for="(file, index) in selectedFiles" :key="index" class="group relative">
+                        <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
                             <img
                                 :src="getFilePreview(file)"
                                 :alt="file.name"
@@ -94,7 +80,7 @@
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12"
-                                ></path>
+                                />
                             </svg>
                         </button>
                         <p class="mt-1 truncate text-xs text-gray-500">
@@ -114,7 +100,7 @@
                     <div
                         class="h-2 rounded-full bg-blue-600 transition-all duration-300"
                         :style="{ width: `${uploadProgress}%` }"
-                    ></div>
+                    />
                 </div>
             </div>
 
@@ -130,21 +116,14 @@
                     @click="uploadFiles"
                     class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                    Upload {{ selectedFiles.length }} image{{
-                        selectedFiles.length > 1 ? 's' : ''
-                    }}
-                    <svg
-                        class="ml-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                    Upload {{ selectedFiles.length }} image{{ selectedFiles.length > 1 ? 's' : '' }}
+                    <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        ></path>
+                        />
                     </svg>
                 </button>
             </div>
@@ -161,9 +140,7 @@ const emit = defineEmits<{
     (e: 'upload', images: any[]): void;
 }>();
 
-const showError = inject('showError', (message: string) =>
-    console.error(message),
-);
+const showError = inject('showError', (message: string) => console.error(message));
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFiles = ref<File[]>([]);
@@ -184,7 +161,7 @@ const handleFileSelect = (event: Event) => {
 };
 
 const addFiles = (files: File[]) => {
-    const imageFiles = files.filter((file) => {
+    const imageFiles = files.filter(file => {
         // Check if file is an image and under 30MB
         if (!file.type.startsWith('image/')) {
             showError('Only image files are allowed.');
@@ -223,7 +200,7 @@ const uploadFiles = async () => {
 
         // Here you would normally upload to your server
         // For now, we'll simulate it
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         clearInterval(interval);
         uploadProgress.value = 100;
@@ -233,7 +210,7 @@ const uploadFiles = async () => {
             id: `temp_${Date.now()}_${index}`,
             path: getFilePreview(file),
             title: file.name,
-            file: file,
+            file
         }));
 
         emit('upload', uploadedImages);

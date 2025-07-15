@@ -26,12 +26,8 @@
             </h2>
         </div>
         <div class="flex space-x-3">
-            <button @click="handleDelete" class="btn-danger">
-                Delete Album
-            </button>
-            <Link :href="route('albums.edit', album.id)" class="btn-primary">
-                Edit Album
-            </Link>
+            <button @click="handleDelete" class="btn-danger">Delete Album</button>
+            <Link :href="route('albums.edit', album.id)" class="btn-primary"> Edit Album </Link>
             <label class="btn-primary cursor-pointer">
                 Add Images
                 <input
@@ -42,10 +38,7 @@
                     class="hidden"
                 />
             </label>
-            <button
-                @click="handleAddVideo"
-                class="btn-primary flex items-center"
-            >
+            <button @click="handleAddVideo" class="btn-primary flex items-center">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="mr-2 h-5 w-5"
@@ -81,9 +74,7 @@ const emit = defineEmits<{
     (e: 'add-video'): void;
 }>();
 
-const showError = inject('showError', (message: string) =>
-    console.error(message),
-);
+const showError = inject('showError', (message: string) => console.error(message));
 
 const handleFileUpload = (event: Event) => {
     try {

@@ -26,11 +26,11 @@ export function useUpload() {
 
     const uploadFiles = async (files: File[], config: UploadConfig) => {
         // Create upload queue for each file
-        const newUploads: UploadItem[] = files.map((file) => ({
+        const newUploads: UploadItem[] = files.map(file => ({
             id: `upload_${Date.now()}_${Math.random()}`,
             file,
             status: 'pending',
-            progress: 0,
+            progress: 0
         }));
 
         uploadQueue.value.push(...newUploads);
@@ -45,7 +45,7 @@ export function useUpload() {
     const uploadSingleFile = async (
         uploadItem: UploadItem,
         config: UploadConfig,
-        retryCount = 0,
+        retryCount = 0
     ) => {
         const { file } = uploadItem;
 
@@ -58,13 +58,10 @@ export function useUpload() {
         formData.append(fieldName, file);
 
         // Get CSRF token from meta tag
-        const token = document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content');
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (!token) {
             uploadItem.status = 'error';
-            uploadItem.error =
-                'Security token not found. Please refresh the page and try again.';
+            uploadItem.error = 'Security token not found. Please refresh the page and try again.';
             return;
         }
 
@@ -73,7 +70,7 @@ export function useUpload() {
             const xhr = new XMLHttpRequest();
 
             // Track upload progress (limit to 80% to save room for processing stage)
-            xhr.upload.addEventListener('progress', (e) => {
+            xhr.upload.addEventListener('progress', e => {
                 if (e.lengthComputable && uploadItem.status === 'uploading') {
                     uploadItem.progress = Math.round((e.loaded / e.total) * 80);
                 }
@@ -106,7 +103,7 @@ export function useUpload() {
                                 router.visit(config.refreshRoute!, {
                                     preserveScroll: true,
                                     preserveState: false,
-                                    onProgress: () => false, // Disable Inertia progress bar
+                                    onProgress: () => false // Disable Inertia progress bar
                                 });
                             }, 500);
                         }
@@ -115,18 +112,12 @@ export function useUpload() {
                     }
                 } else if (xhr.status === 419 && retryCount < 2) {
                     // CSRF token mismatch - try to refresh token and retry
-                    console.log(
-                        'CSRF token mismatch, attempting to refresh token...',
-                    );
+                    console.log('CSRF token mismatch, attempting to refresh token...');
                     refreshCsrfToken()
                         .then(() => {
                             // Retry the upload with fresh token
                             setTimeout(() => {
-                                uploadSingleFile(
-                                    uploadItem,
-                                    config,
-                                    retryCount + 1,
-                                );
+                                uploadSingleFile(uploadItem, config, retryCount + 1);
                             }, 1000);
                         })
                         .catch(() => {
@@ -135,7 +126,7 @@ export function useUpload() {
                                 'Session expired. Please refresh the page and try again.';
                             if (config.onError) {
                                 config.onError(
-                                    'Session expired. Please refresh the page and try again.',
+                                    'Session expired. Please refresh the page and try again.'
                                 );
                             }
                         });
@@ -161,8 +152,7 @@ export function useUpload() {
         } catch (error) {
             console.error('Upload failed:', error);
             uploadItem.status = 'error';
-            const errorMessage =
-                error instanceof Error ? error.message : 'Upload failed';
+            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
             uploadItem.error = errorMessage;
             if (config.onError) {
                 config.onError(errorMessage);
@@ -175,7 +165,7 @@ export function useUpload() {
             // Make a request to get a fresh CSRF token
             const response = await fetch('/sanctum/csrf-cookie', {
                 method: 'GET',
-                credentials: 'include',
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -194,18 +184,13 @@ export function useUpload() {
         }
     };
 
-    const retryUpload = async (
-        uploadItem: UploadItem,
-        config: UploadConfig,
-    ) => {
+    const retryUpload = async (uploadItem: UploadItem, config: UploadConfig) => {
         uploadItem.error = undefined;
         await uploadSingleFile(uploadItem, config);
     };
 
     const removeFromQueue = (uploadItem: UploadItem) => {
-        const index = uploadQueue.value.findIndex(
-            (item) => item.id === uploadItem.id,
-        );
+        const index = uploadQueue.value.findIndex(item => item.id === uploadItem.id);
         if (index !== -1) {
             uploadQueue.value.splice(index, 1);
         }
@@ -217,9 +202,7 @@ export function useUpload() {
     };
 
     const clearCompletedUploads = () => {
-        uploadQueue.value = uploadQueue.value.filter(
-            (item) => item.status !== 'complete',
-        );
+        uploadQueue.value = uploadQueue.value.filter(item => item.status !== 'complete');
         if (uploadQueue.value.length === 0) {
             uploading.value = false;
         }
@@ -227,32 +210,26 @@ export function useUpload() {
 
     // Computed properties for better UX
     const completedCount = computed(
-        () =>
-            uploadQueue.value.filter((item) => item.status === 'complete')
-                .length,
+        () => uploadQueue.value.filter(item => item.status === 'complete').length
     );
 
     const errorCount = computed(
-        () =>
-            uploadQueue.value.filter((item) => item.status === 'error').length,
+        () => uploadQueue.value.filter(item => item.status === 'error').length
     );
 
     const pendingCount = computed(
         () =>
             uploadQueue.value.filter(
-                (item) =>
+                item =>
                     item.status === 'pending' ||
                     item.status === 'uploading' ||
-                    item.status === 'processing',
-            ).length,
+                    item.status === 'processing'
+            ).length
     );
 
     const overallProgress = computed(() => {
         if (uploadQueue.value.length === 0) return 0;
-        const totalProgress = uploadQueue.value.reduce(
-            (sum, item) => sum + item.progress,
-            0,
-        );
+        const totalProgress = uploadQueue.value.reduce((sum, item) => sum + item.progress, 0);
         return Math.round(totalProgress / uploadQueue.value.length);
     });
 
@@ -266,6 +243,6 @@ export function useUpload() {
         uploadFiles,
         retryUpload,
         removeFromQueue,
-        clearCompletedUploads,
+        clearCompletedUploads
     };
 }

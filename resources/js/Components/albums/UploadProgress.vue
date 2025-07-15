@@ -3,17 +3,11 @@
         <div class="rounded-lg border border-gray-200 bg-white p-4">
             <!-- Header -->
             <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900">
-                    Uploading Images
-                </h3>
+                <h3 class="text-lg font-medium text-gray-900">Uploading Images</h3>
                 <div class="flex items-center space-x-4 text-sm text-gray-600">
                     <span>{{ completedCount }} complete</span>
-                    <span v-if="errorCount > 0" class="text-red-600"
-                        >{{ errorCount }} failed</span
-                    >
-                    <span v-if="pendingCount > 0"
-                        >{{ pendingCount }} remaining</span
-                    >
+                    <span v-if="errorCount > 0" class="text-red-600">{{ errorCount }} failed</span>
+                    <span v-if="pendingCount > 0">{{ pendingCount }} remaining</span>
                 </div>
             </div>
 
@@ -28,13 +22,11 @@
                         class="h-2 rounded-full transition-all duration-300"
                         :class="{
                             'bg-blue-600': pendingCount > 0,
-                            'bg-green-600':
-                                pendingCount === 0 && errorCount === 0,
-                            'bg-yellow-500':
-                                pendingCount === 0 && errorCount > 0,
+                            'bg-green-600': pendingCount === 0 && errorCount === 0,
+                            'bg-yellow-500': pendingCount === 0 && errorCount > 0
                         }"
                         :style="{ width: `${overallProgress}%` }"
-                    ></div>
+                    />
                 </div>
             </div>
 
@@ -70,9 +62,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="mb-2 flex items-start justify-between">
                             <div class="min-w-0 flex-1">
-                                <p
-                                    class="truncate text-sm font-medium text-gray-900"
-                                >
+                                <p class="truncate text-sm font-medium text-gray-900">
                                     {{ uploadItem.file.name }}
                                 </p>
                                 <p class="text-xs text-gray-500">
@@ -81,10 +71,7 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <!-- Status Icon -->
-                                <div
-                                    v-if="uploadItem.status === 'pending'"
-                                    class="h-4 w-4"
-                                >
+                                <div v-if="uploadItem.status === 'pending'" class="h-4 w-4">
                                     <svg
                                         class="h-4 w-4 text-gray-400"
                                         fill="none"
@@ -99,12 +86,7 @@
                                         />
                                     </svg>
                                 </div>
-                                <div
-                                    v-else-if="
-                                        uploadItem.status === 'uploading'
-                                    "
-                                    class="h-4 w-4"
-                                >
+                                <div v-else-if="uploadItem.status === 'uploading'" class="h-4 w-4">
                                     <svg
                                         class="h-4 w-4 animate-spin text-blue-600"
                                         fill="none"
@@ -119,12 +101,7 @@
                                         />
                                     </svg>
                                 </div>
-                                <div
-                                    v-else-if="
-                                        uploadItem.status === 'processing'
-                                    "
-                                    class="h-4 w-4"
-                                >
+                                <div v-else-if="uploadItem.status === 'processing'" class="h-4 w-4">
                                     <svg
                                         class="h-4 w-4 animate-spin text-yellow-500"
                                         fill="none"
@@ -145,10 +122,7 @@
                                         />
                                     </svg>
                                 </div>
-                                <div
-                                    v-else-if="uploadItem.status === 'complete'"
-                                    class="h-4 w-4"
-                                >
+                                <div v-else-if="uploadItem.status === 'complete'" class="h-4 w-4">
                                     <svg
                                         class="h-4 w-4 text-green-600"
                                         fill="none"
@@ -163,10 +137,7 @@
                                         />
                                     </svg>
                                 </div>
-                                <div
-                                    v-else-if="uploadItem.status === 'error'"
-                                    class="h-4 w-4"
-                                >
+                                <div v-else-if="uploadItem.status === 'error'" class="h-4 w-4">
                                     <svg
                                         class="h-4 w-4 text-red-600"
                                         fill="none"
@@ -213,56 +184,36 @@
                             <div
                                 class="h-1.5 rounded-full transition-all duration-300"
                                 :class="{
-                                    'bg-gray-400':
-                                        uploadItem.status === 'pending',
-                                    'bg-blue-600':
-                                        uploadItem.status === 'uploading',
-                                    'bg-yellow-500':
-                                        uploadItem.status === 'processing',
-                                    'bg-green-600':
-                                        uploadItem.status === 'complete',
-                                    'bg-red-600': uploadItem.status === 'error',
+                                    'bg-gray-400': uploadItem.status === 'pending',
+                                    'bg-blue-600': uploadItem.status === 'uploading',
+                                    'bg-yellow-500': uploadItem.status === 'processing',
+                                    'bg-green-600': uploadItem.status === 'complete',
+                                    'bg-red-600': uploadItem.status === 'error'
                                 }"
                                 :style="{ width: `${uploadItem.progress}%` }"
-                            ></div>
+                            />
                         </div>
 
                         <!-- Status Text -->
                         <div class="mt-1 flex items-center justify-between">
                             <span class="text-xs text-gray-500">
-                                <template
-                                    v-if="uploadItem.status === 'pending'"
-                                >
+                                <template v-if="uploadItem.status === 'pending'">
                                     Waiting to upload...
                                 </template>
-                                <template
-                                    v-else-if="
-                                        uploadItem.status === 'uploading'
-                                    "
-                                >
+                                <template v-else-if="uploadItem.status === 'uploading'">
                                     Uploading...
                                 </template>
-                                <template
-                                    v-else-if="
-                                        uploadItem.status === 'processing'
-                                    "
-                                >
+                                <template v-else-if="uploadItem.status === 'processing'">
                                     Processing image...
                                 </template>
-                                <template
-                                    v-else-if="uploadItem.status === 'complete'"
-                                >
+                                <template v-else-if="uploadItem.status === 'complete'">
                                     Upload complete!
                                 </template>
-                                <template
-                                    v-else-if="uploadItem.status === 'error'"
-                                >
+                                <template v-else-if="uploadItem.status === 'error'">
                                     {{ uploadItem.error }}
                                 </template>
                             </span>
-                            <span class="text-xs text-gray-500"
-                                >{{ uploadItem.progress }}%</span
-                            >
+                            <span class="text-xs text-gray-500">{{ uploadItem.progress }}%</span>
                         </div>
 
                         <!-- Error Message -->

@@ -15,8 +15,7 @@
                 <!-- Step 1: Video URL -->
                 <div v-if="currentStep === 1" class="space-y-4">
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
                             >Video URL</label
                         >
                         <input
@@ -26,16 +25,13 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-800 dark:text-yellow-200"
                             @input="fetchThumbnail"
                         />
-                        <p
-                            class="mt-2 text-sm text-gray-500 dark:text-yellow-400"
-                        >
+                        <p class="mt-2 text-sm text-gray-500 dark:text-yellow-400">
                             Supported formats: YouTube and Vimeo links
                         </p>
                     </div>
 
                     <div v-if="thumbnailUrl" class="mt-4">
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
                             >Video Thumbnail</label
                         >
                         <img
@@ -49,8 +45,7 @@
                 <!-- Step 2: Video Details -->
                 <div v-if="currentStep === 2" class="space-y-4">
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
                             >Title</label
                         >
                         <input
@@ -62,8 +57,7 @@
                     </div>
 
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
                             >Caption</label
                         >
                         <textarea
@@ -71,29 +65,19 @@
                             rows="3"
                             placeholder="Enter video description"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-800 dark:text-yellow-200"
-                        ></textarea>
+                        />
                     </div>
                 </div>
             </div>
 
             <!-- Navigation -->
             <div class="modal-footer">
-                <button
-                    v-if="currentStep > 1"
-                    @click="previousStep"
-                    class="btn-secondary"
-                >
+                <button v-if="currentStep > 1" @click="previousStep" class="btn-secondary">
                     Back
                 </button>
                 <div class="flex space-x-4">
-                    <button @click="$emit('close')" class="btn-secondary">
-                        Cancel
-                    </button>
-                    <button
-                        @click="nextStep"
-                        class="btn-primary"
-                        :disabled="!canProceed"
-                    >
+                    <button @click="$emit('close')" class="btn-secondary">Cancel</button>
+                    <button @click="nextStep" class="btn-primary" :disabled="!canProceed">
                         {{ isLastStep ? 'Add Video' : 'Next' }}
                     </button>
                 </div>
@@ -118,7 +102,7 @@ const emit = defineEmits<{
             title: string;
             caption: string;
             thumbnail_url?: string;
-        },
+        }
     ): void;
 }>();
 
@@ -138,16 +122,12 @@ const canProceed = computed(() => {
 });
 
 const isValidVideoUrl = (url: string): boolean => {
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(
-        url,
-    );
+    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+/.test(url);
 };
 
 const getVideoThumbnailUrl = (url: string): string | null => {
     // YouTube patterns
-    const youtubeMatch = url.match(
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-    );
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
     if (youtubeMatch) {
         return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
     }
@@ -183,7 +163,7 @@ const nextStep = () => {
             url: videoUrl.value,
             title: title.value,
             caption: caption.value,
-            thumbnail_url: thumbnailUrl.value,
+            thumbnail_url: thumbnailUrl.value
         });
     }
 };

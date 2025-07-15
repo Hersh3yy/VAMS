@@ -5,7 +5,7 @@
             'grid-cols-1': settings.grid_columns === 1,
             'grid-cols-2': settings.grid_columns === 2,
             'grid-cols-3': settings.grid_columns === 3,
-            'grid-cols-4': settings.grid_columns === 4,
+            'grid-cols-4': settings.grid_columns === 4
         }"
     >
         <slot

@@ -32,35 +32,13 @@
                                 ry="2"
                                 stroke-width="2"
                             />
-                            <line
-                                x1="16"
-                                y1="2"
-                                x2="16"
-                                y2="6"
-                                stroke-width="2"
-                            />
-                            <line
-                                x1="8"
-                                y1="2"
-                                x2="8"
-                                y2="6"
-                                stroke-width="2"
-                            />
-                            <line
-                                x1="3"
-                                y1="10"
-                                x2="21"
-                                y2="10"
-                                stroke-width="2"
-                            />
+                            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2" />
+                            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2" />
+                            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2" />
                         </svg>
                     </div>
-                    <h5 class="mb-2 text-lg font-medium text-gray-900">
-                        Single Item
-                    </h5>
-                    <p class="text-sm text-gray-500">
-                        Add one item to the column
-                    </p>
+                    <h5 class="mb-2 text-lg font-medium text-gray-900">Single Item</h5>
+                    <p class="text-sm text-gray-500">Add one item to the column</p>
                 </div>
             </button>
 
@@ -99,12 +77,8 @@
                             />
                         </svg>
                     </div>
-                    <h5 class="mb-2 text-lg font-medium text-gray-900">
-                        Double Item
-                    </h5>
-                    <p class="text-sm text-gray-500">
-                        Add two items side by side
-                    </p>
+                    <h5 class="mb-2 text-lg font-medium text-gray-900">Double Item</h5>
+                    <p class="text-sm text-gray-500">Add two items side by side</p>
                 </div>
             </button>
         </div>
@@ -116,18 +90,13 @@
                 class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
                 Continue
-                <svg
-                    class="ml-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
                         d="M9 5l7 7-7 7"
-                    ></path>
+                    />
                 </svg>
             </button>
         </div>

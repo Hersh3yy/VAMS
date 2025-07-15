@@ -4,12 +4,10 @@
             class="flex min-h-screen items-center justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
         >
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                <div class="absolute inset-0 bg-gray-500 opacity-75" />
             </div>
 
-            <span
-                class="hidden sm:inline-block sm:h-screen sm:align-middle"
-                aria-hidden="true"
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
                 >&#8203;</span
             >
 
@@ -36,9 +34,7 @@
                         </svg>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900">
-                            Error
-                        </h3>
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Error</h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500">
                                 {{ message }}
@@ -77,6 +73,6 @@ const close = () => {
 };
 
 defineExpose({
-    showError,
+    showError
 });
 </script>

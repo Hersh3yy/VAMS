@@ -3,17 +3,14 @@
         <h4 class="mb-4 text-lg font-medium text-gray-900">
             What type of content would you like to add?
         </h4>
-        <p class="mb-8 text-sm text-gray-500">
-            Choose from images, videos, or text content.
-        </p>
+        <p class="mb-8 text-sm text-gray-500">Choose from images, videos, or text content.</p>
 
         <div class="grid grid-cols-3 gap-6">
             <button
                 @click="selectType('image')"
                 class="group relative rounded-lg border-2 border-gray-300 bg-white p-6 transition-all duration-200 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
                 :class="{
-                    'border-secondary bg-secondary bg-opacity-20':
-                        selectedType === 'image',
+                    'border-secondary bg-secondary bg-opacity-20': selectedType === 'image'
                 }"
             >
                 <div class="flex flex-col items-center">
@@ -35,9 +32,7 @@
                             />
                         </svg>
                     </div>
-                    <h5 class="mb-2 text-lg font-medium text-gray-900">
-                        Image
-                    </h5>
+                    <h5 class="mb-2 text-lg font-medium text-gray-900">Image</h5>
                     <p class="text-sm text-gray-500">Add photos or graphics</p>
                 </div>
             </button>
@@ -46,8 +41,7 @@
                 @click="selectType('video')"
                 class="group relative rounded-lg border-2 border-gray-300 bg-white p-6 transition-all duration-200 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
                 :class="{
-                    'border-secondary bg-secondary bg-opacity-20':
-                        selectedType === 'video',
+                    'border-secondary bg-secondary bg-opacity-20': selectedType === 'video'
                 }"
             >
                 <div class="flex flex-col items-center">
@@ -69,9 +63,7 @@
                             />
                         </svg>
                     </div>
-                    <h5 class="mb-2 text-lg font-medium text-gray-900">
-                        Video
-                    </h5>
+                    <h5 class="mb-2 text-lg font-medium text-gray-900">Video</h5>
                     <p class="text-sm text-gray-500">Embed video content</p>
                 </div>
             </button>
@@ -80,8 +72,7 @@
                 @click="selectType('text')"
                 class="group relative rounded-lg border-2 border-gray-300 bg-white p-6 transition-all duration-200 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
                 :class="{
-                    'border-secondary bg-secondary bg-opacity-20':
-                        selectedType === 'text',
+                    'border-secondary bg-secondary bg-opacity-20': selectedType === 'text'
                 }"
             >
                 <div class="flex flex-col items-center">
@@ -116,18 +107,13 @@
                 class="btn-primary inline-flex items-center"
             >
                 Continue
-                <svg
-                    class="ml-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
                         d="M9 5l7 7-7 7"
-                    ></path>
+                    />
                 </svg>
             </button>
         </div>

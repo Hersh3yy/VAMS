@@ -79,7 +79,7 @@ const {
     updateItem,
     showConfirmationDialog,
     confirmAction,
-    cancelConfirmation,
+    cancelConfirmation
 } = useMosaic(String(props.mosaic.id));
 
 const showItemEditor = ref(false);
@@ -91,7 +91,7 @@ const settings = reactive<MosaicDisplaySettings>({
     gap: 16,
     padding: 16,
     show_titles: true,
-    show_captions: true,
+    show_captions: true
 });
 
 const handleItemClick = (item: MosaicItem) => {
@@ -103,7 +103,7 @@ const handleItemDelete = (item: MosaicItem) => {
     showConfirmationDialog(
         'Delete Item',
         'Are you sure you want to delete this item? This action cannot be undone.',
-        () => deleteItem(item.id),
+        () => deleteItem(item.id)
     );
 };
 
@@ -139,7 +139,7 @@ const handleDeleteMosaic = () => {
         () => {
             deleteMosaic();
             router.visit(route('mosaics.index'));
-        },
+        }
     );
 };
 
@@ -152,7 +152,7 @@ const handleSaveMosaic = async (data: {
         await router.put(route('mosaics.update', props.mosaic.id), {
             title: data.title,
             description: data.description,
-            display_settings: { ...data.settings },
+            display_settings: { ...data.settings }
         });
         showEditModal.value = false;
     } catch (error) {

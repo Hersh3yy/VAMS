@@ -51,10 +51,7 @@
                                     autofocus
                                     placeholder="Enter album title"
                                 />
-                                <div
-                                    v-if="form.errors.title"
-                                    class="mt-1 text-sm text-red-600"
-                                >
+                                <div v-if="form.errors.title" class="mt-1 text-sm text-red-600">
                                     {{ form.errors.title }}
                                 </div>
                             </div>
@@ -72,7 +69,7 @@
                                     v-model="form.description"
                                     rows="4"
                                     placeholder="Enter album description"
-                                ></textarea>
+                                />
                                 <div
                                     v-if="form.errors.description"
                                     class="mt-1 text-sm text-red-600"
@@ -93,10 +90,7 @@
                                     <div class="flex items-start space-x-4">
                                         <!-- Current Cover Image -->
                                         <div
-                                            v-if="
-                                                album.cover_image_path &&
-                                                !coverImagePreview
-                                            "
+                                            v-if="album.cover_image_path && !coverImagePreview"
                                             class="flex-shrink-0"
                                         >
                                             <div
@@ -108,9 +102,7 @@
                                                 class="image-container h-32 w-32 overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700"
                                             >
                                                 <img
-                                                    :src="
-                                                        album.cover_image_path
-                                                    "
+                                                    :src="album.cover_image_path"
                                                     class="cover-image"
                                                     alt="Current cover"
                                                 />
@@ -118,10 +110,7 @@
                                         </div>
 
                                         <!-- New Image Preview -->
-                                        <div
-                                            v-if="coverImagePreview"
-                                            class="flex-shrink-0"
-                                        >
+                                        <div v-if="coverImagePreview" class="flex-shrink-0">
                                             <div
                                                 class="mb-2 text-sm text-gray-600 dark:text-gray-400"
                                             >
@@ -177,10 +166,7 @@
                                 </label>
 
                                 <!-- Selected Cover Image Display -->
-                                <div
-                                    v-if="form.selected_cover_image_id"
-                                    class="mb-4"
-                                >
+                                <div v-if="form.selected_cover_image_id" class="mb-4">
                                     <div class="flex items-center space-x-4">
                                         <div class="flex-shrink-0">
                                             <div
@@ -195,10 +181,10 @@
                                                     :src="
                                                         getImageUrl(
                                                             album.images.find(
-                                                                (img) =>
+                                                                img =>
                                                                     img.id ===
-                                                                    form.selected_cover_image_id,
-                                                            ),
+                                                                    form.selected_cover_image_id
+                                                            )
                                                         )
                                                     "
                                                     class="cover-image"
@@ -209,10 +195,10 @@
                                                     v-if="
                                                         isVideoItem(
                                                             album.images.find(
-                                                                (img) =>
+                                                                img =>
                                                                     img.id ===
-                                                                    form.selected_cover_image_id,
-                                                            ),
+                                                                    form.selected_cover_image_id
+                                                            )
                                                         )
                                                     "
                                                     class="absolute right-1 top-1 z-10 rounded-full bg-red-600 p-1 text-white"
@@ -254,10 +240,7 @@
                                 <!-- Image Selector -->
                                 <div>
                                     <button
-                                        @click="
-                                            showImageSelector =
-                                                !showImageSelector
-                                        "
+                                        @click="showImageSelector = !showImageSelector"
                                         class="btn btn-secondary"
                                         type="button"
                                     >
@@ -279,17 +262,13 @@
                                             class="relative cursor-pointer overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-secondary"
                                             :class="{
                                                 'ring-2 ring-secondary':
-                                                    form.selected_cover_image_id ===
-                                                    image.id,
+                                                    form.selected_cover_image_id === image.id
                                             }"
                                         >
                                             <div class="aspect-square">
                                                 <img
                                                     :src="getImageUrl(image)"
-                                                    :alt="
-                                                        image.title ||
-                                                        'Album image'
-                                                    "
+                                                    :alt="image.title || 'Album image'"
                                                     class="h-full w-full object-cover"
                                                 />
                                                 <!-- Video badge -->
@@ -322,11 +301,9 @@
                                         </div>
                                     </div>
 
-                                    <p
-                                        class="mt-2 text-sm text-gray-500 dark:text-gray-400"
-                                    >
-                                        Click on an image or video thumbnail to
-                                        select it as the album cover.
+                                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                        Click on an image or video thumbnail to select it as the
+                                        album cover.
                                     </p>
                                 </div>
                             </div>
@@ -344,15 +321,11 @@
                                     type="submit"
                                     class="btn-primary"
                                     :class="{
-                                        'cursor-not-allowed opacity-50':
-                                            form.processing,
+                                        'cursor-not-allowed opacity-50': form.processing
                                     }"
                                     :disabled="form.processing"
                                 >
-                                    <span
-                                        v-if="form.processing"
-                                        class="flex items-center"
-                                    >
+                                    <span v-if="form.processing" class="flex items-center">
                                         <svg
                                             class="-ml-1 mr-2 h-4 w-4 animate-spin"
                                             xmlns="http://www.w3.org/2000/svg"
@@ -366,12 +339,12 @@
                                                 r="10"
                                                 stroke="currentColor"
                                                 stroke-width="4"
-                                            ></circle>
+                                            />
                                             <path
                                                 class="opacity-75"
                                                 fill="currentColor"
                                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            ></path>
+                                            />
                                         </svg>
                                         Updating...
                                     </span>
@@ -392,20 +365,20 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
-    album: Object,
+    album: Object
 });
 
 const form = useForm({
     title: props.album.title,
     description: props.album.description || '',
     cover_image: null,
-    selected_cover_image_id: null,
+    selected_cover_image_id: null
 });
 
 const coverImagePreview = ref(null);
 const showImageSelector = ref(false);
 
-const selectCoverImage = (image) => {
+const selectCoverImage = image => {
     form.selected_cover_image_id = image.id;
     showImageSelector.value = false;
 
@@ -418,13 +391,13 @@ const clearSelectedCoverImage = () => {
     form.selected_cover_image_id = null;
 };
 
-const handleFileChange = (event) => {
+const handleFileChange = event => {
     const file = event.target.files[0];
     if (file) {
         form.cover_image = file;
         // Create preview URL
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
             coverImagePreview.value = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -442,21 +415,19 @@ const submit = () => {
             form.cover_image = null;
             coverImagePreview.value = null;
         },
-        onError: (errors) => {
+        onError: errors => {
             console.error('Form submission errors:', errors);
-        },
+        }
     });
 };
 
 // Video handling functions (shared with ImageSelectionModal)
-const isVideoItem = (image) => {
+const isVideoItem = image => {
     if (!image) return false;
 
     if (image.properties) {
         const properties =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         return properties?.type === 'video';
     }
@@ -469,15 +440,13 @@ const isVideoItem = (image) => {
     );
 };
 
-const getImageUrl = (image) => {
+const getImageUrl = image => {
     if (!image) return '/images/placeholder.svg';
 
     // Try to get thumbnail URL from properties (for videos)
     if (image.properties) {
         const properties =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         if (properties?.thumbnail_url) {
             return properties.thumbnail_url;

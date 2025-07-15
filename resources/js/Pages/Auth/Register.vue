@@ -10,12 +10,12 @@ const form = useForm({
     name: '',
     email: '',
     password: '',
-    password_confirmation: '',
+    password_confirmation: ''
 });
 
 const submit = () => {
     form.post(route('register'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => form.reset('password', 'password_confirmation')
     });
 };
 </script>
@@ -46,10 +46,7 @@ const submit = () => {
                         autocomplete="name"
                     />
 
-                    <p
-                        v-if="form.errors.name"
-                        class="mt-2 text-sm text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="form.errors.name" class="mt-2 text-sm text-red-600 dark:text-red-400">
                         {{ form.errors.name }}
                     </p>
                 </div>
@@ -71,10 +68,7 @@ const submit = () => {
                         autocomplete="username"
                     />
 
-                    <p
-                        v-if="form.errors.email"
-                        class="mt-2 text-sm text-red-600 dark:text-red-400"
-                    >
+                    <p v-if="form.errors.email" class="mt-2 text-sm text-red-600 dark:text-red-400">
                         {{ form.errors.email }}
                     </p>
                 </div>

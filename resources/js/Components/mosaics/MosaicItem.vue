@@ -2,13 +2,12 @@
     <div
         class="group relative cursor-pointer overflow-hidden rounded-lg"
         :class="{
-            'opacity-50 ring-4 ring-blue-500':
-                isDragging && draggedItem?.id === item.id,
-            'ring-4 ring-green-500': isDragOver && draggedItem?.id !== item.id,
+            'opacity-50 ring-4 ring-blue-500': isDragging && draggedItem?.id === item.id,
+            'ring-4 ring-green-500': isDragOver && draggedItem?.id !== item.id
         }"
         :style="{
             aspectRatio: item.properties?.aspect_ratio || '1/1',
-            height: item.properties?.height || 'auto',
+            height: item.properties?.height || 'auto'
         }"
         draggable="true"
         @click="$emit('click', item)"
@@ -24,15 +23,13 @@
             <!-- Check if selected image is a video -->
             <template
                 v-if="
-                    item.properties?.selected_image &&
-                    isVideoItem(item.properties.selected_image)
+                    item.properties?.selected_image && isVideoItem(item.properties.selected_image)
                 "
             >
                 <div class="relative h-full w-full">
                     <img
                         :src="
-                            item.properties.selected_image.properties
-                                ?.thumbnail_url ||
+                            item.properties.selected_image.properties?.thumbnail_url ||
                             item.properties?.album?.cover_image_path ||
                             '/placeholder.jpg'
                         "
@@ -48,11 +45,7 @@
                     <div
                         class="absolute right-2 top-2 flex items-center space-x-1 rounded bg-red-600 px-2 py-1 text-xs text-white"
                     >
-                        <svg
-                            class="h-3 w-3"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                        >
+                        <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z" />
                         </svg>
                         <span>VIDEO</span>
@@ -112,14 +105,14 @@
             <div
                 class="flex h-full w-full items-center justify-center"
                 :style="{
-                    backgroundColor: item.properties?.color || '#ffffff',
+                    backgroundColor: item.properties?.color || '#ffffff'
                 }"
             >
                 <span
                     v-if="item.properties?.text?.enabled"
                     class="text-lg font-medium"
                     :style="{
-                        color: item.properties?.text?.color || '#000000',
+                        color: item.properties?.text?.color || '#000000'
                     }"
                 >
                     {{ item.properties?.text?.content }}
@@ -220,9 +213,7 @@ const getImageStyle = () => {
 const isVideoItem = (image: any) => {
     if (image.properties) {
         const props =
-            typeof image.properties === 'string'
-                ? JSON.parse(image.properties)
-                : image.properties;
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
 
         return props.type === 'video';
     }

@@ -16,9 +16,7 @@
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg"
-                >
+                <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
                     <UploadProgress
                         :upload-queue="uploadQueue"
                         :completed-count="completedCount"
@@ -124,7 +122,7 @@ const {
     addVideo,
     showConfirmationDialog,
     confirmAction,
-    cancelConfirmation,
+    cancelConfirmation
 } = useAlbum(props.album.id);
 
 const showModal = ref(false);
@@ -158,9 +156,7 @@ const closeVideoModal = () => {
 
 const handleImageUpdate = (updatedImage: AlbumImage) => {
     if (!props.album.images) return;
-    const index = props.album.images.findIndex(
-        (img) => img.id === updatedImage.id,
-    );
+    const index = props.album.images.findIndex(img => img.id === updatedImage.id);
     if (index !== -1) {
         props.album.images[index] = updatedImage;
     }
@@ -170,7 +166,7 @@ const confirmDeleteAlbum = () => {
     showConfirmationDialog(
         'Delete Album',
         'Are you sure you want to delete this album? This action cannot be undone.',
-        deleteAlbum,
+        deleteAlbum
     );
 };
 
@@ -178,7 +174,7 @@ const confirmDeleteImage = (image: AlbumImage) => {
     showConfirmationDialog(
         'Delete Item',
         'Are you sure you want to delete this item? This action cannot be undone.',
-        () => deleteImage(image.id),
+        () => deleteImage(image.id)
     );
 };
 
@@ -193,11 +189,7 @@ const closeAddVideoModal = () => {
     videoCaption.value = '';
 };
 
-const handleAddVideo = async (data: {
-    url: string;
-    title: string;
-    caption: string;
-}) => {
+const handleAddVideo = async (data: { url: string; title: string; caption: string }) => {
     await addVideo(data.url, data.title, data.caption);
     closeAddVideoModal();
 };

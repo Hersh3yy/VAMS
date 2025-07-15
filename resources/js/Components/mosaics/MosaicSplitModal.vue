@@ -7,9 +7,7 @@
                 @click="selectSplit('horizontal')"
                 class="flex-1 rounded-lg border-2 p-4"
                 :class="
-                    direction === 'horizontal'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200'
+                    direction === 'horizontal' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
                 "
             >
                 <svg
@@ -32,11 +30,7 @@
             <button
                 @click="selectSplit('vertical')"
                 class="flex-1 rounded-lg border-2 p-4"
-                :class="
-                    direction === 'vertical'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200'
-                "
+                :class="direction === 'vertical' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

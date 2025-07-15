@@ -30,9 +30,7 @@
                             />
                         </svg>
                     </slot>
-                    <h3
-                        class="mb-2 text-lg font-medium text-gray-900 dark:text-yellow-200"
-                    >
+                    <h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-yellow-200">
                         {{ emptyStateTitle }}
                     </h3>
                     <p class="mb-4 text-gray-600 dark:text-yellow-400">
@@ -80,9 +78,7 @@
 <script
     setup
     lang="ts"
-    generic="
-        T extends { id: string | number; title?: string; description?: string }
-    "
+    generic="T extends { id: string | number; title?: string; description?: string }"
 >
 import ItemCard from '@/Components/shared/ItemCard.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -106,7 +102,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    getItemActions: () => () => [],
+    getItemActions: () => () => []
 });
 </script>
 

@@ -28,7 +28,7 @@
             <div
                 v-if="isDragOver && dragTargetItem?.id === item.id"
                 class="absolute inset-0 rounded-lg border-2 border-dashed border-blue-500 bg-blue-50 bg-opacity-50"
-            ></div>
+            />
         </div>
 
         <!-- Add Item Button -->
@@ -39,18 +39,13 @@
             <div
                 class="flex flex-col items-center justify-center text-gray-500 group-hover:text-blue-600"
             >
-                <svg
-                    class="mb-2 h-8 w-8"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="mb-2 h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    ></path>
+                    />
                 </svg>
                 <span class="text-sm font-medium">Add Item</span>
             </div>
@@ -59,10 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-    MosaicDisplaySettings,
-    MosaicItem as MosaicItemType,
-} from '@/types/mosaic';
+import type { MosaicDisplaySettings, MosaicItem as MosaicItemType } from '@/types/mosaic';
 import { computed, inject, ref } from 'vue';
 import MosaicItem from './MosaicItem.vue';
 
@@ -80,9 +72,7 @@ const emit = defineEmits<{
     (e: 'add-item', columnIndex: number): void;
 }>();
 
-const showError = inject('showError', (message: string) =>
-    console.error(message),
-);
+const showError = inject('showError', (message: string) => console.error(message));
 
 const isDragging = ref(false);
 const isDragOver = ref(false);
@@ -157,11 +147,7 @@ const handleDrop = (event: DragEvent, item: MosaicItemType) => {
     event.preventDefault();
     if (draggedItem.value && draggedItem.value.id !== item.id) {
         try {
-            emit(
-                'item-reorder',
-                draggedItem.value.id.toString(),
-                item.id.toString(),
-            );
+            emit('item-reorder', draggedItem.value.id.toString(), item.id.toString());
         } catch (error) {
             showError('Failed to reorder items');
         }

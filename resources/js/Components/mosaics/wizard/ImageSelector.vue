@@ -1,8 +1,6 @@
 <template>
     <div>
-        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">
-            Select Images
-        </h4>
+        <h4 class="mb-4 text-center text-lg font-medium text-gray-900">Select Images</h4>
         <p class="mb-8 text-center text-sm text-gray-500">
             Choose up to {{ maxSelection || 'unlimited' }} image{{
                 (maxSelection || 0) > 1 ? 's' : ''
@@ -10,9 +8,7 @@
             from this album.
         </p>
 
-        <div
-            class="grid max-h-96 grid-cols-3 gap-4 overflow-y-auto md:grid-cols-4 lg:grid-cols-6"
-        >
+        <div class="grid max-h-96 grid-cols-3 gap-4 overflow-y-auto md:grid-cols-4 lg:grid-cols-6">
             <button
                 v-for="image in images"
                 :key="image.id"
@@ -46,7 +42,7 @@
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M5 13l4 4L19 7"
-                        ></path>
+                        />
                     </svg>
                 </div>
 
@@ -80,18 +76,13 @@
                 Continue with {{ selectedImages.length }} image{{
                     selectedImages.length > 1 ? 's' : ''
                 }}
-                <svg
-                    class="ml-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
                         d="M9 5l7 7-7 7"
-                    ></path>
+                    />
                 </svg>
             </button>
         </div>
@@ -114,25 +105,19 @@ const emit = defineEmits<{
 const selectedImages = ref<AlbumImage[]>([]);
 
 const isMaxReached = computed(() => {
-    return (
-        props.maxSelection && selectedImages.value.length >= props.maxSelection
-    );
+    return props.maxSelection && selectedImages.value.length >= props.maxSelection;
 });
 
 const isSelected = (image: AlbumImage) => {
-    return selectedImages.value.some((selected) => selected.id === image.id);
+    return selectedImages.value.some(selected => selected.id === image.id);
 };
 
 const getSelectionIndex = (image: AlbumImage) => {
-    return selectedImages.value.findIndex(
-        (selected) => selected.id === image.id,
-    );
+    return selectedImages.value.findIndex(selected => selected.id === image.id);
 };
 
 const toggleImage = (image: AlbumImage) => {
-    const index = selectedImages.value.findIndex(
-        (selected) => selected.id === image.id,
-    );
+    const index = selectedImages.value.findIndex(selected => selected.id === image.id);
 
     if (index >= 0) {
         // Remove if already selected
