@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, DefineComponent, h } from 'vue';
 import Toast from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+import { useCsrfToken } from './composables/shared/useCsrfToken';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -20,6 +21,9 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) });
         app.use(plugin).use(ZiggyVue).use(Toast).mount(el);
+        
+        // Initialize CSRF token synchronization
+        useCsrfToken();
     },
     progress: {
         color: '#4B5563',

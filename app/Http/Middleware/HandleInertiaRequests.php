@@ -45,6 +45,8 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            // Pass CSRF token refresh if available (for post-login synchronization)
+            'csrf_token_refresh' => session('csrf_token_refresh'),
         ];
     }
 }

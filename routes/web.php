@@ -89,4 +89,11 @@ Route::get('/test-api', function () {
     return view('test-api');
 })->middleware(['auth', 'admin'])->name('test-api');
 
+// CSRF Token refresh route
+Route::get('/csrf-token', function () {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+})->middleware(['web']);
+
 require __DIR__ . '/auth.php';

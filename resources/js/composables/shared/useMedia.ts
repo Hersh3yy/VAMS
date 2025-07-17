@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { useCsrfToken } from './useCsrfToken';
 
 export function useMedia() {
     const uploading = ref(false);
@@ -7,6 +8,7 @@ export function useMedia() {
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
     const confirmationAction = ref<(() => void) | null>(null);
+    const { getCsrfToken } = useCsrfToken();
 
     const handleFileUpload = async (event: Event, endpoint: string) => {
         const input = event.target as HTMLInputElement;
@@ -25,10 +27,7 @@ export function useMedia() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') || ''
+                    'X-CSRF-TOKEN': getCsrfToken() || ''
                 }
             });
 
