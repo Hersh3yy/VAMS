@@ -74,6 +74,6 @@ export function useMedia() {
         handleFileUpload,
         showConfirmationDialog,
         confirmAction,
-        cancelConfirmation,
+        cancelConfirmation
     };
-} 
+}

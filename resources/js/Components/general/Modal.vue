@@ -10,8 +10,8 @@ const props = withDefaults(
     {
         modelValue: false,
         maxWidth: '2xl',
-        closeable: true,
-    },
+        closeable: true
+    }
 );
 
 const emit = defineEmits(['update:modelValue', 'close']);
@@ -34,7 +34,7 @@ watch(
                 showSlot.value = false;
             }, 200);
         }
-    },
+    }
 );
 
 const close = () => {
@@ -67,7 +67,7 @@ const maxWidthClass = computed(() => {
         md: 'sm:max-w-md',
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
-        '2xl': 'sm:max-w-2xl',
+        '2xl': 'sm:max-w-2xl'
     }[props.maxWidth];
 });
 </script>
@@ -78,20 +78,20 @@ const maxWidthClass = computed(() => {
             <div :class="['modal-content', maxWidthClass]" @click.stop>
                 <div class="modal-header">
                     <h3 class="modal-title">
-                        <slot name="title"></slot>
+                        <slot name="title" />
                     </h3>
-                    <button 
+                    <button
                         @click="$emit('update:modelValue', false)"
-                        class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-2"
+                        class="p-2 text-2xl font-bold leading-none text-gray-400 hover:text-gray-600"
                     >
                         ×
                     </button>
                 </div>
                 <div class="modal-body">
-                    <slot></slot>
+                    <slot />
                 </div>
                 <div class="modal-footer" v-if="$slots.footer">
-                    <slot name="footer"></slot>
+                    <slot name="footer" />
                 </div>
             </div>
         </div>

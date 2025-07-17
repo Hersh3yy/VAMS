@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, provide, computed, onMounted, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
-import { User, PageProps } from '@/types';
-import Navbar from '@/Components/layout/Navbar.vue';
-import MobileNav from '@/Components/layout/MobileNav.vue';
 import ErrorModal from '@/Components/albums/ErrorModal.vue';
+import MobileNav from '@/Components/layout/MobileNav.vue';
+import Navbar from '@/Components/layout/Navbar.vue';
+import { PageProps, User } from '@/types';
+import { usePage } from '@inertiajs/vue3';
+import { computed, onMounted, provide, ref, watch } from 'vue';
 
 const showingNavigationDropdown = ref(false);
 const errorModal = ref<InstanceType<typeof ErrorModal> | null>(null);
@@ -22,14 +22,14 @@ const showError = (message: string) => {
 const userThemeStyle = computed(() => {
     const user = page.props.auth?.user as User;
     if (!user) return { '--primary-color': '#000000', '--secondary-color': '#EAB308' };
-    
+
     const settings = user.album_display_settings || {};
     const mainColor = settings.main_color || '#000000'; // Default black
     const secondaryColor = settings.secondary_color || '#EAB308'; // Default gold
-    
+
     return {
         '--primary-color': mainColor,
-        '--secondary-color': secondaryColor,
+        '--secondary-color': secondaryColor
     };
 });
 
@@ -39,11 +39,15 @@ onMounted(() => {
 });
 
 // Update CSS variables when theme changes
-watch(() => userThemeStyle.value, (newStyle) => {
-    Object.entries(newStyle).forEach(([key, value]) => {
-        document.documentElement.style.setProperty(key, value);
-    });
-}, { immediate: true });
+watch(
+    () => userThemeStyle.value,
+    newStyle => {
+        Object.entries(newStyle).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+        });
+    },
+    { immediate: true }
+);
 
 // Provide the showError function to all child components
 provide('showError', showError);
@@ -51,20 +55,15 @@ provide('showError', showError);
 
 <template>
     <div class="min-h-screen bg-gray-100" :style="userThemeStyle">
-        <Navbar 
+        <Navbar
             :showing-navigation-dropdown="showingNavigationDropdown"
             :toggle-navigation="toggleNavigation"
         />
 
-        <MobileNav
-            v-show="showingNavigationDropdown"
-        />
+        <MobileNav v-show="showingNavigationDropdown" />
 
         <!-- Page Heading -->
-        <header
-            class="bg-white shadow dark:bg-gray-800"
-            v-if="$slots.header"
-        >
+        <header class="bg-white shadow dark:bg-gray-800" v-if="$slots.header">
             <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 <slot name="header" />
             </div>

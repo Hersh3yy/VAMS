@@ -125,4 +125,4 @@ export interface MosaicConfirmation {
     title: string;
     message: string;
     action: () => void;
-} 
+}

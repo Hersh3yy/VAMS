@@ -1,6 +1,6 @@
-import { ref } from 'vue';
+import type { MosaicItem } from '@/types/mosaic';
 import { router } from '@inertiajs/vue3';
-import type { Mosaic, MosaicItem, MosaicUploadProgress, MosaicConfirmation } from '@/types/mosaic';
+import { ref } from 'vue';
 
 export function useMosaic(mosaicId: string) {
     const uploading = ref(false);
@@ -25,11 +25,11 @@ export function useMosaic(mosaicId: string) {
         try {
             await router.post(route('mosaics.media.store', mosaicId), formData, {
                 forceFormData: true,
-                onProgress: (progress) => {
+                onProgress: progress => {
                     if (progress?.percentage !== undefined) {
                         uploadProgress.value = progress.percentage;
                     }
-                },
+                }
             });
         } catch (error) {
             console.error('Upload failed:', error);
@@ -59,7 +59,7 @@ export function useMosaic(mosaicId: string) {
         try {
             await router.put(route('mosaics.items.reorder', mosaicId), {
                 from_id: fromId,
-                to_id: toId,
+                to_id: toId
             });
         } catch (error) {
             console.error('Reorder failed:', error);
@@ -71,7 +71,7 @@ export function useMosaic(mosaicId: string) {
             const payload = {
                 type: item.type,
                 properties: JSON.stringify(item.properties),
-                order: item.order,
+                order: item.order
             };
             await router.post(route('mosaics.items.store', mosaicId), payload);
         } catch (error) {
@@ -84,7 +84,7 @@ export function useMosaic(mosaicId: string) {
             const payload = {
                 type: updates.type,
                 properties: updates.properties ? JSON.stringify(updates.properties) : undefined,
-                order: updates.order,
+                order: updates.order
             };
             await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload);
         } catch (error) {
@@ -125,6 +125,6 @@ export function useMosaic(mosaicId: string) {
         updateItem,
         showConfirmationDialog,
         confirmAction,
-        cancelConfirmation,
+        cancelConfirmation
     };
-} 
+}

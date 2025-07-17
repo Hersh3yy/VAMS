@@ -7,43 +7,41 @@
         empty-state-title="No Mosaics Yet"
         empty-state-message="Create your first mosaic layout to get started."
         empty-state-button-text="Create First Mosaic"
-        :get-item-route="(mosaic) => route('mosaics.show', mosaic.id)"
+        :get-item-route="mosaic => route('mosaics.show', mosaic.id)"
         :get-item-actions="getMosaicActions"
     >
         <template #item-image="{ item }">
             <!-- Check if mosaic has a cover image -->
-            <img 
+            <img
                 v-if="getMosaicCoverImage(item)"
                 :src="getMosaicCoverImage(item)"
                 :alt="item.title"
-                class="w-full h-full object-cover"
+                class="h-full w-full object-cover"
             />
             <!-- Fallback to mosaic preview -->
             <div v-else class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
-                <div class="bg-gray-200 rounded"></div>
-                <div class="bg-gray-300 rounded"></div>
-                <div class="bg-gray-300 rounded"></div>
-                <div class="bg-gray-200 rounded"></div>
+                <div class="rounded bg-gray-200" />
+                <div class="rounded bg-gray-300" />
+                <div class="rounded bg-gray-300" />
+                <div class="rounded bg-gray-200" />
             </div>
         </template>
-        
+
         <template #item-footer="{ item }">
-            <div class="mt-4 flex justify-between items-center">
+            <div class="mt-4 flex items-center justify-between">
                 <span class="text-xs text-gray-500">
                     Created {{ new Date(item.created_at).toLocaleDateString() }}
                 </span>
-                <span class="text-xs text-gray-500">
-                    {{ item.items?.length || 0 }} tiles
-                </span>
+                <span class="text-xs text-gray-500"> {{ item.items?.length || 0 }} tiles </span>
             </div>
         </template>
     </IndexLayout>
 </template>
 
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
 import IndexLayout from '@/Components/shared/IndexLayout.vue';
 import type { Mosaic } from '@/types/mosaic';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     mosaics: Mosaic[];
@@ -88,4 +86,4 @@ const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
     }
     return undefined;
 };
-</script> 
+</script>

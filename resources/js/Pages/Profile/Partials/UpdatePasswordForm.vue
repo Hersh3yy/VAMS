@@ -4,7 +4,7 @@ import { useForm } from '@inertiajs/vue3';
 const form = useForm({
     current_password: '',
     password: '',
-    password_confirmation: '',
+    password_confirmation: ''
 });
 
 const updatePassword = () => {
@@ -18,7 +18,7 @@ const updatePassword = () => {
             if (form.errors.current_password) {
                 form.reset('current_password');
             }
-        },
+        }
     });
 };
 </script>
@@ -89,12 +89,7 @@ const updatePassword = () => {
             </div>
 
             <div class="flex items-center gap-4">
-                <button
-                    class="btn-primary"
-                    :disabled="form.processing"
-                >
-                    Save
-                </button>
+                <button class="btn-primary" :disabled="form.processing">Save</button>
 
                 <div
                     v-show="form.recentlySuccessful"

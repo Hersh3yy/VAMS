@@ -1,9 +1,9 @@
 <template>
     <div
         ref="el"
-        class="aspect-square relative bg-gray-100 rounded-lg overflow-hidden cursor-move group"
+        class="group relative aspect-square cursor-move overflow-hidden rounded-lg bg-gray-100"
         :class="{
-            'ring-4 ring-blue-500 opacity-90 scale-105': isDragging,
+            'scale-105 opacity-90 ring-4 ring-blue-500': isDragging,
             'ring-4 ring-green-500': isDropTarget,
             'transition-all duration-300 ease-in-out': !isDragging
         }"
@@ -11,23 +11,36 @@
         @mousedown="startDrag"
         @touchstart="startDrag"
     >
-        <img 
-            :src="image.path" 
+        <img
+            :src="image.path"
             :alt="image.title"
-            class="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
-        >
-        
+            class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+        />
+
         <!-- Drag Handle -->
-        <div class="absolute top-2 right-2 bg-white/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        <div
+            class="absolute right-2 top-2 rounded-full bg-white/80 p-1 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16m-7 6h7"
+                />
             </svg>
         </div>
 
         <!-- Ghost Image (shown during drag) -->
-        <div 
+        <div
             v-if="isDragging"
-            class="fixed pointer-events-none z-50"
+            class="pointer-events-none fixed z-50"
             :style="{
                 width: `${ghostSize}px`,
                 height: `${ghostSize}px`,
@@ -36,18 +49,18 @@
                 transition: 'none'
             }"
         >
-            <img 
-                :src="image.path" 
+            <img
+                :src="image.path"
                 :alt="image.title"
-                class="w-full h-full object-cover rounded-lg shadow-lg"
-            >
+                class="h-full w-full rounded-lg object-cover shadow-lg"
+            />
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
 import { useDraggable } from '@vueuse/core';
+import { ref } from 'vue';
 
 const props = defineProps({
     image: {
@@ -77,22 +90,22 @@ const constrainDrag = (value, min, max) => {
 const { x, y, style } = useDraggable(el, {
     initialValue: { x: 0, y: 0 },
     preventDefault: true,
-    onStart: (e) => {
+    onStart: e => {
         isDragging.value = true;
         // Calculate ghost image size based on original element
         const rect = el.value.getBoundingClientRect();
         ghostSize.value = rect.width;
-        
+
         // Calculate offset from where user clicked within the image
         clickOffset.value = {
             x: e.clientX - rect.left,
             y: e.clientY - rect.top
         };
-        
+
         // Position ghost image at cursor, accounting for click offset
         ghostX.value = e.clientX - clickOffset.value.x;
         ghostY.value = e.clientY - clickOffset.value.y;
-        
+
         emit('dragStart', props.image);
     },
     onEnd: () => {
@@ -106,11 +119,19 @@ const { x, y, style } = useDraggable(el, {
         // Constrain to viewport to prevent flying off screen
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
+
         // Update ghost image position, accounting for click offset and constraints
-        ghostX.value = constrainDrag(e.clientX - clickOffset.value.x, 0, viewportWidth - ghostSize.value);
-        ghostY.value = constrainDrag(e.clientY - clickOffset.value.y, 0, viewportHeight - ghostSize.value);
-        
+        ghostX.value = constrainDrag(
+            e.clientX - clickOffset.value.x,
+            0,
+            viewportWidth - ghostSize.value
+        );
+        ghostY.value = constrainDrag(
+            e.clientY - clickOffset.value.y,
+            0,
+            viewportHeight - ghostSize.value
+        );
+
         emit('updatePosition', {
             image: props.image,
             position: { x: position.x, y: position.y }
@@ -118,7 +139,7 @@ const { x, y, style } = useDraggable(el, {
     }
 });
 
-const startDrag = (e) => {
+const startDrag = e => {
     // Prevent default only for mouse events to allow touch scrolling
     if (e.type === 'mousedown') {
         e.preventDefault();
@@ -138,7 +159,9 @@ const startDrag = (e) => {
 
 /* Add smooth transitions for position changes */
 .aspect-square {
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
 }
 
 /* Add a subtle animation for the drop target */
@@ -157,4 +180,4 @@ const startDrag = (e) => {
         box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
     }
 }
-</style> 
+</style>

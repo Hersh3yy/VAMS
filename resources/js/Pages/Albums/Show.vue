@@ -15,8 +15,8 @@
         <AlbumCover :album="album" />
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
                     <UploadProgress
                         :upload-queue="uploadQueue"
                         :completed-count="completedCount"
@@ -41,14 +41,14 @@
         <!-- Image Modal -->
         <ImageModal
             v-if="selectedImage"
-            :show="showModal" 
-            :image="selectedImage" 
+            :show="showModal"
+            :image="selectedImage"
             :display-settings="album_display_settings"
-            @close="closeModal" 
-            @update="handleImageUpdate" 
+            @close="closeModal"
+            @update="handleImageUpdate"
             @delete="confirmDeleteImage"
         />
-        
+
         <!-- Video Modal -->
         <VideoModal
             :show="showVideoModal"
@@ -56,7 +56,7 @@
             @close="closeVideoModal"
             @delete="confirmDeleteImage"
         />
-        
+
         <!-- Confirmation Dialog -->
         <ConfirmationDialog
             :show="showConfirmation"
@@ -79,20 +79,20 @@
 </template>
 
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import ImageModal from '@/Components/albums/ImageModal.vue';
-import VideoModal from '@/Components/albums/VideoModal.vue';
-import AlbumHeader from '@/Components/albums/AlbumHeader.vue';
-import AlbumGrid from '@/Components/albums/AlbumGrid.vue';
 import AlbumCover from '@/Components/albums/AlbumCover.vue';
+import AlbumGrid from '@/Components/albums/AlbumGrid.vue';
+import AlbumHeader from '@/Components/albums/AlbumHeader.vue';
+import ImageModal from '@/Components/albums/ImageModal.vue';
+import UploadProgress from '@/Components/albums/UploadProgress.vue';
+import VideoModal from '@/Components/albums/VideoModal.vue';
 import VideoWizard from '@/Components/albums/VideoWizard.vue';
 import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
-import UploadProgress from '@/Components/albums/UploadProgress.vue';
-import { ref, computed } from 'vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album, AlbumImage } from '@/types/album';
 import type { User } from '@/types/index';
+import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps<{
     album: Album;
@@ -122,7 +122,7 @@ const {
     addVideo,
     showConfirmationDialog,
     confirmAction,
-    cancelConfirmation,
+    cancelConfirmation
 } = useAlbum(props.album.id);
 
 const showModal = ref(false);

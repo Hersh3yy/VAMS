@@ -3,10 +3,15 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Edit User: {{ user.name }}</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Edit User: {{ user.name }}
+                </h2>
                 <div>
-                    <Link :href="route('admin.users.index')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    <Link
+                        :href="route('admin.users.index')"
+                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+                    >
                         Back to Users
                     </Link>
                 </div>
@@ -14,16 +19,24 @@
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <!-- Flash Messages -->
-                <div v-if="$page.props.flash?.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <div
+                    v-if="$page.props.flash?.success"
+                    class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
+                    role="alert"
+                >
                     <span class="block sm:inline">{{ $page.props.flash.success }}</span>
                 </div>
-                <div v-if="$page.props.flash?.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <div
+                    v-if="$page.props.flash?.error"
+                    class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+                    role="alert"
+                >
                     <span class="block sm:inline">{{ $page.props.flash.error }}</span>
                 </div>
-                
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <form @submit.prevent="form.patch(route('admin.users.update', user.id))">
                             <div class="mb-4">
@@ -63,7 +76,9 @@
                                     v-model="form.password"
                                     class="form-input"
                                 />
-                                <div class="mt-1 text-sm text-gray-500">Leave blank to keep current password</div>
+                                <div class="mt-1 text-sm text-gray-500">
+                                    Leave blank to keep current password
+                                </div>
                                 <div v-if="form.errors.password" class="form-error">
                                     {{ form.errors.password }}
                                 </div>
@@ -90,7 +105,9 @@
                                         v-model="form.is_approved"
                                         class="form-checkbox"
                                     />
-                                    <label for="is_approved" class="form-label ml-2">Approved</label>
+                                    <label for="is_approved" class="form-label ml-2"
+                                        >Approved</label
+                                    >
                                     <div v-if="form.errors.is_approved" class="form-error">
                                         {{ form.errors.is_approved }}
                                     </div>
@@ -98,29 +115,35 @@
                             </div>
 
                             <!-- API Key Management -->
-                            <div class="mb-6 bg-gray-50 p-4 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-900 mb-3">API Key Management</h3>
+                            <div class="mb-6 rounded-lg bg-gray-50 p-4">
+                                <h3 class="mb-3 text-lg font-medium text-gray-900">
+                                    API Key Management
+                                </h3>
                                 <div class="space-y-3">
                                     <div>
                                         <label class="form-label">Current API Key</label>
                                         <div class="flex items-center space-x-2">
                                             <input
                                                 type="text"
-                                                :value="showApiKey ? user.api_key : '••••••••••••••••••••••••••••••••'"
+                                                :value="
+                                                    showApiKey
+                                                        ? user.api_key
+                                                        : '••••••••••••••••••••••••••••••••'
+                                                "
                                                 readonly
-                                                class="form-input font-mono text-sm flex-1"
+                                                class="form-input flex-1 font-mono text-sm"
                                             />
                                             <button
                                                 type="button"
                                                 @click="showApiKey = !showApiKey"
-                                                class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded"
+                                                class="rounded bg-gray-200 px-3 py-2 text-sm hover:bg-gray-300"
                                             >
                                                 {{ showApiKey ? 'Hide' : 'Show' }}
                                             </button>
                                             <button
                                                 type="button"
                                                 @click="copyApiKey"
-                                                class="px-3 py-2 text-sm bg-blue-500 text-white hover:bg-blue-600 rounded"
+                                                class="rounded bg-blue-500 px-3 py-2 text-sm text-white hover:bg-blue-600"
                                             >
                                                 Copy
                                             </button>
@@ -130,19 +153,24 @@
                                         <button
                                             type="button"
                                             @click="regenerateApiKey"
-                                            class="px-4 py-2 bg-yellow-500 text-white hover:bg-yellow-600 rounded"
+                                            class="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
                                             :disabled="regenerating"
                                         >
-                                            {{ regenerating ? 'Regenerating...' : 'Regenerate API Key' }}
+                                            {{
+                                                regenerating
+                                                    ? 'Regenerating...'
+                                                    : 'Regenerate API Key'
+                                            }}
                                         </button>
-                                        <p class="text-sm text-gray-600 self-center">
-                                            This will invalidate the current key. Make sure to update any integrations.
+                                        <p class="self-center text-sm text-gray-600">
+                                            This will invalidate the current key. Make sure to
+                                            update any integrations.
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
+                            <div class="mt-4 flex items-center justify-end">
                                 <button
                                     type="submit"
                                     class="btn-primary"
@@ -160,12 +188,12 @@
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
-    user: Object,
+    user: Object
 });
 
 const form = useForm({
@@ -173,7 +201,7 @@ const form = useForm({
     email: props.user.email,
     password: '',
     is_admin: props.user.is_admin,
-    is_approved: props.user.is_approved,
+    is_approved: props.user.is_approved
 });
 
 // API Key Management
@@ -192,9 +220,13 @@ const copyApiKey = async () => {
 };
 
 const regenerateApiKey = () => {
-    if (confirm('Are you sure you want to regenerate the API key? This will invalidate the current key and may break existing integrations.')) {
+    if (
+        confirm(
+            'Are you sure you want to regenerate the API key? This will invalidate the current key and may break existing integrations.'
+        )
+    ) {
         regenerating.value = true;
-        
+
         const regenerateForm = useForm({});
         regenerateForm.post(route('admin.users.regenerate-api-key', props.user.id), {
             onSuccess: () => {
@@ -210,4 +242,4 @@ const regenerateApiKey = () => {
         });
     }
 };
-</script> 
+</script>

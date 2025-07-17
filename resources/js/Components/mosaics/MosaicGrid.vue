@@ -1,11 +1,11 @@
 <template>
-    <div 
+    <div
         class="grid gap-4"
         :class="{
             'grid-cols-1': settings.grid_columns === 1,
             'grid-cols-2': settings.grid_columns === 2,
             'grid-cols-3': settings.grid_columns === 3,
-            'grid-cols-4': settings.grid_columns === 4,
+            'grid-cols-4': settings.grid_columns === 4
         }"
         :style="{
             gap: `${settings.gap}px`,
@@ -32,9 +32,9 @@
 </template>
 
 <script setup lang="ts">
+import type { MosaicDisplaySettings, MosaicItem } from '@/types/mosaic';
 import { ref } from 'vue';
 import MosaicItemComponent from './MosaicItem.vue';
-import type { MosaicItem, MosaicDisplaySettings } from '@/types/mosaic';
 
 const props = defineProps<{
     items: MosaicItem[];
@@ -86,4 +86,4 @@ const handleDrop = (event: DragEvent, item: MosaicItem) => {
     }
     isDragOver.value = false;
 };
-</script> 
+</script>

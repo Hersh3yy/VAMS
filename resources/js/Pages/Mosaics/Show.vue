@@ -7,7 +7,7 @@
             @delete="handleDeleteMosaic"
         />
 
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
             <MosaicGrid
                 :items="mosaic.items"
                 :settings="settings"
@@ -51,16 +51,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { router } from '@inertiajs/vue3';
-import type { Mosaic, MosaicItem, MosaicDisplaySettings } from '@/types/mosaic';
-import type { Album, AlbumImage } from '@/types/album';
-import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
-import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
-import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
 import MosaicEditModal from '@/Components/mosaics/MosaicEditModal.vue';
+import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
+import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
+import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
 import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { useMosaic } from '@/composables/mosaics/useMosaic';
+import type { Album } from '@/types/album';
+import type { Mosaic, MosaicDisplaySettings, MosaicItem } from '@/types/mosaic';
+import { router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
 
 const props = defineProps<{
     mosaic: Mosaic;
@@ -79,7 +79,7 @@ const {
     updateItem,
     showConfirmationDialog,
     confirmAction,
-    cancelConfirmation,
+    cancelConfirmation
 } = useMosaic(String(props.mosaic.id));
 
 const showItemEditor = ref(false);
@@ -91,7 +91,7 @@ const settings = reactive<MosaicDisplaySettings>({
     gap: 16,
     padding: 16,
     show_titles: true,
-    show_captions: true,
+    show_captions: true
 });
 
 const handleItemClick = (item: MosaicItem) => {
@@ -143,16 +143,20 @@ const handleDeleteMosaic = () => {
     );
 };
 
-const handleSaveMosaic = async (data: { title: string; description: string; settings: MosaicDisplaySettings }) => {
+const handleSaveMosaic = async (data: {
+    title: string;
+    description: string;
+    settings: MosaicDisplaySettings;
+}) => {
     try {
         await router.put(route('mosaics.update', props.mosaic.id), {
             title: data.title,
             description: data.description,
-            display_settings: { ...data.settings },
+            display_settings: { ...data.settings }
         });
         showEditModal.value = false;
     } catch (error) {
         console.error('Failed to update mosaic:', error);
     }
 };
-</script> 
+</script>

@@ -1,22 +1,19 @@
 <template>
-    <div 
-        class="mosaic-tile relative" 
+    <div
+        class="mosaic-tile relative"
         :class="[type, { 'is-adjusting': isAdjusting }]"
         :style="tileStyle"
     >
         <!-- Image Content -->
-        <div v-if="type === 'image'" 
-             class="image-content"
-             @mousedown="startImageDrag"
-             @mousemove="handleImageDrag"
-             @mouseup="stopImageDrag"
-             @mouseleave="stopImageDrag">
-            <img 
-                :src="imageSrc" 
-                :alt="imageAlt"
-                class="tile-image"
-                :style="imageStyle"
-            />
+        <div
+            v-if="type === 'image'"
+            class="image-content"
+            @mousedown="startImageDrag"
+            @mousemove="handleImageDrag"
+            @mouseup="stopImageDrag"
+            @mouseleave="stopImageDrag"
+        >
+            <img :src="imageSrc" :alt="imageAlt" class="tile-image" :style="imageStyle" />
             <div v-if="imageOverlay" class="image-overlay">
                 {{ imageOverlay }}
             </div>
@@ -25,14 +22,14 @@
         <!-- Container Content -->
         <div v-else class="container-content">
             <div v-if="splitDirection" class="split-indicator" :class="splitDirection">
-                <div 
+                <div
                     v-if="isAdjusting"
                     class="split-handle"
                     @mousedown="startSplitAdjust"
                     @mousemove="handleSplitAdjust"
                     @mouseup="stopSplitAdjust"
                     @mouseleave="stopSplitAdjust"
-                ></div>
+                />
             </div>
         </div>
 
@@ -46,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import MosaicTileControls from './MosaicTileControls.vue';
 
 const props = defineProps<{
@@ -61,9 +58,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    'split': [];
-    'image': [];
-    'delete': [];
+    split: [];
+    image: [];
+    delete: [];
     'update:position': [position: { x: number; y: number; width: number; height: number }];
     'update:imagePosition': [position: { x: number; y: number; scale: number }];
     'update:splitRatio': [ratio: number];
@@ -98,16 +95,16 @@ const startImageDrag = (e: MouseEvent) => {
 
 const handleImageDrag = (e: MouseEvent) => {
     if (!isDragging.value || !props.imagePosition) return;
-    
+
     const deltaX = e.clientX - dragStart.value.x;
     const deltaY = e.clientY - dragStart.value.y;
-    
+
     emit('update:imagePosition', {
         x: props.imagePosition.x + (deltaX / window.innerWidth) * 100,
         y: props.imagePosition.y + (deltaY / window.innerHeight) * 100,
         scale: props.imagePosition.scale
     });
-    
+
     dragStart.value = { x: e.clientX, y: e.clientY };
 };
 
@@ -123,17 +120,17 @@ const startSplitAdjust = (e: MouseEvent) => {
 
 const handleSplitAdjust = (e: MouseEvent) => {
     if (!isAdjusting.value || !props.splitDirection) return;
-    
+
     const container = e.currentTarget as HTMLElement;
     const rect = container.getBoundingClientRect();
-    
+
     let ratio;
     if (props.splitDirection === 'horizontal') {
         ratio = (e.clientY - rect.top) / rect.height;
     } else {
         ratio = (e.clientX - rect.left) / rect.width;
     }
-    
+
     ratio = Math.max(0.1, Math.min(0.9, ratio));
     emit('update:splitRatio', ratio);
 };
@@ -224,4 +221,4 @@ const stopSplitAdjust = () => {
 .is-adjusting .split-handle {
     background: rgb(37, 99, 235);
 }
-</style> 
+</style>

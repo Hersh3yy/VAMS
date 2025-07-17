@@ -3,7 +3,10 @@
         <div class="modal-content max-w-4xl">
             <div class="modal-header">
                 <h3 class="modal-title">Add Video</h3>
-                <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-2">
+                <button
+                    @click="$emit('close')"
+                    class="p-2 text-2xl font-bold leading-none text-gray-400 hover:text-gray-600"
+                >
                     ×
                 </button>
             </div>
@@ -12,68 +15,69 @@
                 <!-- Step 1: Video URL -->
                 <div v-if="currentStep === 1" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Video URL</label>
-                        <input 
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                            >Video URL</label
+                        >
+                        <input
                             type="text"
                             v-model="videoUrl"
                             placeholder="Enter YouTube or Vimeo URL"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-800 dark:text-yellow-200"
                             @input="fetchThumbnail"
                         />
-                        <p class="mt-2 text-sm text-gray-500 dark:text-yellow-400">Supported formats: YouTube and Vimeo links</p>
+                        <p class="mt-2 text-sm text-gray-500 dark:text-yellow-400">
+                            Supported formats: YouTube and Vimeo links
+                        </p>
                     </div>
 
                     <div v-if="thumbnailUrl" class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Video Thumbnail</label>
-                        <img :src="thumbnailUrl" alt="Video thumbnail" class="mt-2 w-full max-w-md rounded-lg" />
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                            >Video Thumbnail</label
+                        >
+                        <img
+                            :src="thumbnailUrl"
+                            alt="Video thumbnail"
+                            class="mt-2 w-full max-w-md rounded-lg"
+                        />
                     </div>
                 </div>
 
                 <!-- Step 2: Video Details -->
                 <div v-if="currentStep === 2" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Title</label>
-                        <input 
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                            >Title</label
+                        >
+                        <input
                             type="text"
                             v-model="title"
                             placeholder="Enter video title"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-800 dark:text-yellow-200"
                         />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200">Caption</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-yellow-200"
+                            >Caption</label
+                        >
                         <textarea
                             v-model="caption"
                             rows="3"
                             placeholder="Enter video description"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-secondary focus:border-secondary dark:bg-gray-800 dark:border-gray-600 dark:text-yellow-200"
-                        ></textarea>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-800 dark:text-yellow-200"
+                        />
                     </div>
                 </div>
             </div>
 
             <!-- Navigation -->
             <div class="modal-footer">
-                <button 
-                    v-if="currentStep > 1"
-                    @click="previousStep"
-                    class="btn-secondary"
-                >
+                <button v-if="currentStep > 1" @click="previousStep" class="btn-secondary">
                     Back
                 </button>
                 <div class="flex space-x-4">
-                    <button 
-                        @click="$emit('close')"
-                        class="btn-secondary"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        @click="nextStep"
-                        class="btn-primary"
-                        :disabled="!canProceed"
-                    >
+                    <button @click="$emit('close')" class="btn-secondary">Cancel</button>
+                    <button @click="nextStep" class="btn-primary" :disabled="!canProceed">
                         {{ isLastStep ? 'Add Video' : 'Next' }}
                     </button>
                 </div>
@@ -83,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     show: boolean;
@@ -91,7 +95,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'close'): void;
-    (e: 'save', data: { url: string; title: string; caption: string; thumbnail_url?: string }): void;
+    (
+        e: 'save',
+        data: {
+            url: string;
+            title: string;
+            caption: string;
+            thumbnail_url?: string;
+        }
+    ): void;
 }>();
 
 const currentStep = ref(1);
@@ -119,7 +131,7 @@ const getVideoThumbnailUrl = (url: string): string | null => {
     if (youtubeMatch) {
         return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
     }
-    
+
     // Vimeo patterns
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
@@ -127,7 +139,7 @@ const getVideoThumbnailUrl = (url: string): string | null => {
         // In a real implementation, you'd fetch from Vimeo's API
         return `https://vumbnail.com/${vimeoMatch[1]}.jpg`;
     }
-    
+
     return null;
 };
 
@@ -136,7 +148,7 @@ const fetchThumbnail = () => {
         thumbnailUrl.value = '';
         return;
     }
-    
+
     const thumbnail = getVideoThumbnailUrl(videoUrl.value);
     if (thumbnail) {
         thumbnailUrl.value = thumbnail;
@@ -159,4 +171,4 @@ const nextStep = () => {
 const previousStep = () => {
     currentStep.value--;
 };
-</script> 
+</script>

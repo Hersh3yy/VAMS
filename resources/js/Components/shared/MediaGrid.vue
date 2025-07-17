@@ -1,15 +1,15 @@
 <template>
-    <div 
+    <div
         class="grid gap-4"
         :class="{
             'grid-cols-1': settings.grid_columns === 1,
             'grid-cols-2': settings.grid_columns === 2,
             'grid-cols-3': settings.grid_columns === 3,
-            'grid-cols-4': settings.grid_columns === 4,
+            'grid-cols-4': settings.grid_columns === 4
         }"
     >
-        <slot 
-            v-for="item in items" 
+        <slot
+            v-for="item in items"
             :key="item.id"
             :item="item"
             :is-dragging="isDragging"
@@ -79,4 +79,4 @@ const handleDrop = (event: DragEvent, item: any) => {
     }
     isDragOver.value = false;
 };
-</script> 
+</script>

@@ -62,7 +62,7 @@ export function useUpload() {
         }
 
         const { file } = uploadItem;
-        
+
         // Update status to uploading
         uploadItem.status = 'uploading';
         uploadItem.progress = 0;
@@ -104,7 +104,7 @@ export function useUpload() {
             const uploadStartTime = Date.now();
 
             // Track upload progress (limit to 80% to save room for processing stage)
-            xhr.upload.addEventListener('progress', (e) => {
+            xhr.upload.addEventListener('progress', e => {
                 if (e.lengthComputable && uploadItem.status === 'uploading') {
                     uploadItem.progress = Math.round((e.loaded / e.total) * 80);
                 }
@@ -121,16 +121,16 @@ export function useUpload() {
                 if (xhr.status === 200 || xhr.status === 201) {
                     uploadItem.status = 'complete';
                     uploadItem.progress = 100;
-                    
+
                     try {
                         const response = JSON.parse(xhr.responseText);
                         uploadItem.result = response;
-                        
+
                         // Call success callback if provided
                         if (config.onSuccess) {
                             config.onSuccess(response);
                         }
-                        
+
                         // Refresh the page if route is provided
                         if (config.refreshRoute && config.refreshParams) {
                             setTimeout(() => {
@@ -246,7 +246,6 @@ export function useUpload() {
 
             // Send the request
             xhr.send(formData);
-            
         } catch (error) {
             console.error('Upload failed:', error);
             uploadItem.status = 'error';
@@ -269,7 +268,7 @@ export function useUpload() {
         if (index !== -1) {
             uploadQueue.value.splice(index, 1);
         }
-        
+
         // If no more uploads, hide the upload section
         if (uploadQueue.value.length === 0) {
             uploading.value = false;
@@ -284,16 +283,22 @@ export function useUpload() {
     };
 
     // Computed properties for better UX
-    const completedCount = computed(() => 
-        uploadQueue.value.filter(item => item.status === 'complete').length
+    const completedCount = computed(
+        () => uploadQueue.value.filter(item => item.status === 'complete').length
     );
 
-    const errorCount = computed(() => 
-        uploadQueue.value.filter(item => item.status === 'error').length
+    const errorCount = computed(
+        () => uploadQueue.value.filter(item => item.status === 'error').length
     );
 
-    const pendingCount = computed(() => 
-        uploadQueue.value.filter(item => item.status === 'pending' || item.status === 'uploading' || item.status === 'processing').length
+    const pendingCount = computed(
+        () =>
+            uploadQueue.value.filter(
+                item =>
+                    item.status === 'pending' ||
+                    item.status === 'uploading' ||
+                    item.status === 'processing'
+            ).length
     );
 
     const overallProgress = computed(() => {
@@ -312,6 +317,6 @@ export function useUpload() {
         uploadFiles,
         retryUpload,
         removeFromQueue,
-        clearCompletedUploads,
+        clearCompletedUploads
     };
-} 
+}

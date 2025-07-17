@@ -18,14 +18,17 @@ const emit = defineEmits<{
 const handleChange = (key: string, event: Event) => {
     const target = event.target as HTMLInputElement;
     if (target) {
-        emit('update:modelValue', { ...props.modelValue, [key]: target.checked });
+        emit('update:modelValue', {
+            ...props.modelValue,
+            [key]: target.checked
+        });
     }
 };
 </script>
 
 <template>
     <div class="mt-6">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+        <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
             Album Image Display Settings
         </h3>
         <div class="space-y-4">
@@ -115,4 +118,4 @@ const handleChange = (key: string, event: Event) => {
             </div>
         </div>
     </div>
-</template> 
+</template>
