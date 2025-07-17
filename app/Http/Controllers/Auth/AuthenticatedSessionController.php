@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -32,6 +33,16 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Flash a fresh CSRF token to ensure frontend synchronization
+        $newCsrfToken = csrf_token();
+        session()->flash('csrf_token_refresh', $newCsrfToken);
+        
+        Log::info('AuthenticatedSessionController@store - Session regenerated and CSRF token flashed', [
+            'user_id' => $request->user()->id,
+            'new_csrf_token' => substr($newCsrfToken, 0, 8) . '...',
+            'session_id' => session()->getId()
+        ]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

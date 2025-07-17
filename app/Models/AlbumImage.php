@@ -14,8 +14,12 @@ class AlbumImage extends Model
         'album_id',
         'path',
         'title',
+        'alt_text',
         'caption',
         'author',
+        'date_created',
+        'location',
+        'tags',
         'order',
         'properties',
     ];

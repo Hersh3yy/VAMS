@@ -48,7 +48,6 @@ Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])
 // These require session auth since they're called by your Inertia frontend
 Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
     Route::post('/media/upload', [MediaController::class, 'upload'])
-        ->middleware('file.size:10240') // 10MB limit
         ->name('api.media.upload');
     Route::delete('/media', [MediaController::class, 'delete'])
         ->name('api.media.delete');

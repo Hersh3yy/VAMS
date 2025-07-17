@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useCsrfToken } from './useCsrfToken';
 
 export interface UploadItem {
     id: string;
@@ -23,6 +25,7 @@ export interface UploadConfig {
 export function useUpload() {
     const uploading = ref(false);
     const uploadQueue = ref<UploadItem[]>([]);
+    const { getCsrfToken, refreshCsrfToken: refreshToken } = useCsrfToken();
 
     const uploadFiles = async (files: File[], config: UploadConfig) => {
         // Create upload queue for each file
@@ -42,7 +45,23 @@ export function useUpload() {
         }
     };
 
-    const uploadSingleFile = async (uploadItem: UploadItem, config: UploadConfig, retryCount = 0) => {
+    const uploadSingleFile = async (
+        uploadItem: UploadItem,
+        config: UploadConfig,
+        retryCount = 0
+    ) => {
+        // Limit retries to prevent infinite loops
+        if (retryCount >= 3) {
+            console.error('Max retries reached for CSRF token refresh', {
+                file_name: uploadItem.file.name,
+                retry_count: retryCount,
+                timestamp: new Date().toISOString()
+            });
+            uploadItem.status = 'error';
+            uploadItem.error = 'Upload failed after multiple retries. Please refresh the page and try again.';
+            return;
+        }
+
         const { file } = uploadItem;
         
         // Update status to uploading
@@ -53,18 +72,38 @@ export function useUpload() {
         const fieldName = config.fieldName || 'images[]';
         formData.append(fieldName, file);
 
-        // Get CSRF token from meta tag
-        let token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        // Get CSRF token using the composable
+        const token = getCsrfToken();
         if (!token) {
+            console.error('CSRF token not found for upload', {
+                file_name: file.name,
+                file_size: file.size,
+                timestamp: new Date().toISOString()
+            });
             uploadItem.status = 'error';
             uploadItem.error = 'Security token not found. Please refresh the page and try again.';
             return;
         }
+        
+        console.log('Starting upload with CSRF token', {
+            file_name: file.name,
+            file_size: file.size,
+            token: token.substring(0, 8) + '...',
+            endpoint: config.endpoint,
+            retry_count: retryCount,
+            timestamp: new Date().toISOString()
+        });
 
         try {
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             
+            // Set a timeout for the request (100 seconds for large files)
+            xhr.timeout = 100000; // 100 seconds
+            
+            // Track upload start time for smart retry logic
+            const uploadStartTime = Date.now();
+
             // Track upload progress (limit to 80% to save room for processing stage)
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable && uploadItem.status === 'uploading') {
@@ -94,9 +133,9 @@ export function useUpload() {
                         }
                         
                         // Refresh the page if route is provided
-                        if (config.refreshRoute) {
+                        if (config.refreshRoute && config.refreshParams) {
                             setTimeout(() => {
-                                router.visit(config.refreshRoute!, {
+                                router.visit(route(config.refreshRoute!, config.refreshParams), {
                                     preserveScroll: true,
                                     preserveState: false,
                                     onProgress: () => false // Disable Inertia progress bar
@@ -106,30 +145,98 @@ export function useUpload() {
                     } catch (e) {
                         console.warn('Could not parse response:', e);
                     }
-                } else if (xhr.status === 419 && retryCount < 2) {
+                } else if (xhr.status === 419) {
                     // CSRF token mismatch - try to refresh token and retry
-                    console.log('CSRF token mismatch, attempting to refresh token...');
-                    refreshCsrfToken().then(() => {
-                        // Retry the upload with fresh token
-                        setTimeout(() => {
-                            uploadSingleFile(uploadItem, config, retryCount + 1);
-                        }, 1000);
-                    }).catch(() => {
-                        uploadItem.status = 'error';
-                        uploadItem.error = 'Session expired. Please refresh the page and try again.';
-                        if (config.onError) {
-                            config.onError('Session expired. Please refresh the page and try again.');
-                        }
+                    console.warn('CSRF token mismatch detected', {
+                        file_name: file.name,
+                        retry_count: retryCount,
+                        status: xhr.status,
+                        response: xhr.responseText,
+                        timestamp: new Date().toISOString()
                     });
+                    
+                    if (retryCount < 2) { // Only retry twice
+                        refreshToken()
+                            .then(() => {
+                                console.log('CSRF token refreshed, retrying upload', {
+                                    file_name: file.name,
+                                    retry_count: retryCount + 1,
+                                    timestamp: new Date().toISOString()
+                                });
+                                // Retry the upload with fresh token
+                                setTimeout(() => {
+                                    uploadSingleFile(uploadItem, config, retryCount + 1);
+                                }, 1000);
+                            })
+                            .catch((refreshError) => {
+                                console.error('Failed to refresh CSRF token for retry', {
+                                    file_name: file.name,
+                                    retry_count: retryCount,
+                                    error: refreshError,
+                                    timestamp: new Date().toISOString()
+                                });
+                                uploadItem.status = 'error';
+                                uploadItem.error =
+                                    'Session expired. Please refresh the page and try again.';
+                                if (config.onError) {
+                                    config.onError(
+                                        'Session expired. Please refresh the page and try again.'
+                                    );
+                                }
+                            });
+                    } else {
+                        uploadItem.status = 'error';
+                        uploadItem.error = 'Session expired after multiple retries. Please refresh the page and try again.';
+                        if (config.onError) {
+                            config.onError('Session expired after multiple retries. Please refresh the page and try again.');
+                        }
+                    }
+                } else if (xhr.status === 422) {
+                    try {
+                        const errorData = JSON.parse(xhr.responseText);
+                        const errorMessage = errorData?.message || 'Upload failed';
+                        throw new Error(errorMessage);
+                    } catch (parseError) {
+                        throw new Error('Upload failed with validation errors');
+                    }
                 } else {
-                    const errorData = JSON.parse(xhr.responseText);
-                    const errorMessage = errorData?.message || 'Upload failed';
-                    throw new Error(errorMessage);
+                    throw new Error(`Upload failed with status ${xhr.status}`);
                 }
             });
 
             xhr.addEventListener('error', () => {
                 throw new Error('Network error during upload');
+            });
+            
+            // Handle timeout - if it's been more than 40 seconds with no progress, try CSRF refresh
+            xhr.addEventListener('timeout', () => {
+                const timeElapsed = Date.now() - uploadStartTime;
+                console.warn('Upload timeout detected', {
+                    file_name: file.name,
+                    time_elapsed: timeElapsed,
+                    retry_count: retryCount,
+                    timestamp: new Date().toISOString()
+                });
+                
+                if (timeElapsed > 40000 && retryCount < 2) {
+                    // Likely a stale CSRF token causing the hang
+                    refreshToken()
+                        .then(() => {
+                            console.log('CSRF token refreshed after timeout, retrying upload', {
+                                file_name: file.name,
+                                retry_count: retryCount + 1,
+                                timestamp: new Date().toISOString()
+                            });
+                            setTimeout(() => {
+                                uploadSingleFile(uploadItem, config, retryCount + 1);
+                            }, 1000);
+                        })
+                        .catch(() => {
+                            throw new Error('Upload timeout and failed to refresh token');
+                        });
+                } else {
+                    throw new Error('Upload timeout');
+                }
             });
 
             // Set up the request
@@ -152,29 +259,6 @@ export function useUpload() {
         }
     };
 
-    const refreshCsrfToken = async (): Promise<void> => {
-        try {
-            // Make a request to get a fresh CSRF token
-            const response = await fetch('/sanctum/csrf-cookie', {
-                method: 'GET',
-                credentials: 'include'
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to refresh CSRF token');
-            }
-            
-            // Update the meta tag with the new token
-            const newToken = document.querySelector('meta[name="csrf-token"]');
-            if (newToken) {
-                // The token should be automatically updated by Laravel
-                console.log('CSRF token refreshed successfully');
-            }
-        } catch (error) {
-            console.error('Failed to refresh CSRF token:', error);
-            throw error;
-        }
-    };
 
     const retryUpload = async (uploadItem: UploadItem, config: UploadConfig) => {
         uploadItem.error = undefined;
