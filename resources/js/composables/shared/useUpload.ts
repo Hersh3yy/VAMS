@@ -72,16 +72,42 @@ export function useUpload() {
         formData.append(fieldName, file);
 
         // Get CSRF token using the composable
-        const token = getCsrfToken();
+        let token = getCsrfToken();
         if (!token) {
-            console.error('CSRF token not found for upload', {
+            console.warn('CSRF token not found, attempting to refresh', {
                 file_name: file.name,
-                file_size: file.size,
+                retry_count: retryCount,
                 timestamp: new Date().toISOString()
             });
-            uploadItem.status = 'error';
-            uploadItem.error = 'Security token not found. Please refresh the page and try again.';
-            return;
+            
+            if (retryCount < 2) {
+                try {
+                    token = await refreshToken();
+                    console.log('CSRF token refreshed successfully', {
+                        file_name: file.name,
+                        token: token.substring(0, 8) + '...',
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (refreshError) {
+                    console.error('Failed to refresh CSRF token', {
+                        file_name: file.name,
+                        error: refreshError,
+                        timestamp: new Date().toISOString()
+                    });
+                    uploadItem.status = 'error';
+                    uploadItem.error = 'Security token not found. Please refresh the page and try again.';
+                    return;
+                }
+            } else {
+                console.error('CSRF token not found after retries', {
+                    file_name: file.name,
+                    retry_count: retryCount,
+                    timestamp: new Date().toISOString()
+                });
+                uploadItem.status = 'error';
+                uploadItem.error = 'Security token not found. Please refresh the page and try again.';
+                return;
+            }
         }
         
         console.log('Starting upload with CSRF token', {
