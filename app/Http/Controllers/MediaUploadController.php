@@ -150,12 +150,13 @@ class MediaUploadController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $lastOrder = $album->images()->max('order') ?? -1;
+        // Shift all existing images down to make room at the top
+        $album->images()->increment('order', 1);
         
         return $album->images()->create([
             'id' => Str::uuid(),
             'path' => $result['url'],
-            'order' => ++$lastOrder
+            'order' => 0
         ]);
     }
 

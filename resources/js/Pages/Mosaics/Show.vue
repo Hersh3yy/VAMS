@@ -1,32 +1,41 @@
 <template>
-    <div class="min-h-screen bg-gray-100">
-        <MosaicHeader
-            :mosaic="mosaic"
-            @edit="showEditModal = true"
-            @add-item="showItemEditor = true"
-            @delete="handleDeleteMosaic"
-        />
+    <Head :title="mosaic.title" />
 
-        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-            <MosaicGrid
-                :items="mosaic.items"
-                :settings="settings"
-                @item-click="handleItemClick"
-                @item-delete="handleItemDelete"
-                @reorder="handleItemReorder"
-                draggable="true"
+    <AuthenticatedLayout>
+        <template #header>
+            <MosaicHeader
+                :mosaic="mosaic"
+                @edit="showEditModal = true"
+                @add-item="showItemEditor = true"
+                @delete="handleDeleteMosaic"
             />
+        </template>
+
+        <div class="py-12">
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+                    <MosaicGrid
+                        :items="mosaic.items"
+                        :settings="settings"
+                        @item-click="handleItemClick"
+                        @item-delete="handleItemDelete"
+                        @reorder="handleItemReorder"
+                        draggable="true"
+                    />
+                </div>
+            </div>
         </div>
 
         <!-- Item Editor Modal -->
-        <MosaicItemWizard
-            v-if="showItemEditor"
+        <SimpleMosaicItemEditor
             :show="showItemEditor"
-            :is-editing="!!selectedItem"
             :item="selectedItem"
             :albums="albums"
+            :mosaic-id="mosaic.id"
             @close="closeItemEditor"
             @save="handleSaveItem"
+            @delete="handleDeleteItem"
+            @update="handleItemUpdate"
         />
 
         <!-- Edit Mosaic Modal -->
@@ -47,19 +56,20 @@
             @confirm="confirmAction"
             @cancel="cancelConfirmation"
         />
-    </div>
+    </AuthenticatedLayout>
 </template>
 
 <script setup lang="ts">
 import MosaicEditModal from '@/Components/mosaics/MosaicEditModal.vue';
 import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
 import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
-import MosaicItemWizard from '@/Components/mosaics/MosaicItemWizard.vue';
+import SimpleMosaicItemEditor from '@/Components/mosaics/SimpleMosaicItemEditor.vue';
 import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { useMosaic } from '@/composables/mosaics/useMosaic';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album } from '@/types/album';
 import type { Mosaic, MosaicDisplaySettings, MosaicItem } from '@/types/mosaic';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
 
 const props = defineProps<{
@@ -84,7 +94,7 @@ const {
 
 const showItemEditor = ref(false);
 const showEditModal = ref(false);
-const selectedItem = ref<MosaicItem | undefined>();
+const selectedItem = ref<MosaicItem | null>(null);
 
 const settings = reactive<MosaicDisplaySettings>({
     grid_columns: 3,
@@ -113,7 +123,12 @@ const handleItemReorder = (fromId: string, toId: string) => {
 
 const closeItemEditor = () => {
     showItemEditor.value = false;
-    selectedItem.value = undefined;
+    selectedItem.value = null;
+};
+
+const handleItemUpdate = () => {
+    // Force reactivity update - this will be called when items are updated
+    router.reload({ only: ['mosaic'] });
 };
 
 const handleSaveItem = (item: Partial<MosaicItem>) => {

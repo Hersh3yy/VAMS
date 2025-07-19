@@ -70,6 +70,11 @@
         border: 2px solid #eab308;
     }
 
+    /* Static cards for stats - no hover effects */
+    .stat-card {
+        @apply bg-white overflow-hidden shadow-sm sm:rounded-lg dark:bg-gray-900;
+    }
+
     .card-content {
         @apply p-6;
     }
