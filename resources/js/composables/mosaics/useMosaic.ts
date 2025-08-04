@@ -49,7 +49,11 @@ export function useMosaic(mosaicId: string) {
 
     const deleteItem = async (itemId: string) => {
         try {
-            await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]));
+            await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]), {
+                preserveScroll: true,
+                preserveState: false,
+                only: ['mosaic']
+            });
         } catch (error) {
             console.error('Delete failed:', error);
         }
@@ -57,9 +61,13 @@ export function useMosaic(mosaicId: string) {
 
     const reorderItems = async (fromId: string, toId: string) => {
         try {
-            await router.put(route('mosaics.items.reorder', mosaicId), {
+            await router.patch(route('mosaics.items.reorder', mosaicId), {
                 from_id: fromId,
                 to_id: toId
+            }, {
+                preserveScroll: true,
+                preserveState: false,
+                only: ['mosaic']
             });
         } catch (error) {
             console.error('Reorder failed:', error);
@@ -70,10 +78,15 @@ export function useMosaic(mosaicId: string) {
         try {
             const payload = {
                 type: item.type,
-                properties: JSON.stringify(item.properties),
-                order: item.order
-            };
-            await router.post(route('mosaics.items.store', mosaicId), payload);
+                properties: item.properties || {},
+                order: item.order || 0,
+                column_index: item.column_index || 0
+            } as any;
+            await router.post(route('mosaics.items.store', mosaicId), payload, {
+                preserveScroll: true,
+                preserveState: false,
+                only: ['mosaic']
+            });
         } catch (error) {
             console.error('Add item failed:', error);
         }
@@ -83,10 +96,15 @@ export function useMosaic(mosaicId: string) {
         try {
             const payload = {
                 type: updates.type,
-                properties: updates.properties ? JSON.stringify(updates.properties) : undefined,
-                order: updates.order
-            };
-            await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload);
+                properties: updates.properties || {},
+                order: updates.order || 0,
+                column_index: updates.column_index || 0
+            } as any;
+            await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload, {
+                preserveScroll: true,
+                preserveState: false,
+                only: ['mosaic']
+            });
         } catch (error) {
             console.error('Update item failed:', error);
         }

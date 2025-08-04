@@ -52,6 +52,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/mosaics/{mosaic}', [MosaicController::class, 'update'])->name('mosaics.update');
     Route::delete('/mosaics/{mosaic}', [MosaicController::class, 'destroy'])->name('mosaics.destroy');
 
+    // Mosaic Item Management
+    Route::post('/mosaics/{mosaic}/items', [MosaicController::class, 'storeItem'])->name('mosaics.items.store');
+    Route::put('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'updateItem'])->name('mosaics.items.update');
+    Route::delete('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'destroyItem'])->name('mosaics.items.destroy');
+    Route::patch('/mosaics/{mosaic}/items/reorder', [MosaicController::class, 'reorderItems'])->name('mosaics.items.reorder');
+
     // Mosaic Media Upload
     Route::post('/mosaics/{mosaic}/media', [MosaicController::class, 'storeMedia'])->name('mosaics.media.upload');
 });

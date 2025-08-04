@@ -74,8 +74,9 @@ class AlbumImageController extends Controller
             $this->authorize('update', $album);
             Log::info('AlbumImageController@store - Authorization passed');
 
-            $lastOrder = $album->images()->max('order') ?? -1;
-            Log::info('AlbumImageController@store - Last order:', ['order' => $lastOrder]);
+            // Shift all existing images down to make room at the top
+            $album->images()->increment('order', count($request->file('images')));
+            Log::info('AlbumImageController@store - Shifted existing images down');
 
             $uploadedImages = [];
             foreach ($request->file('images') as $index => $image) {
@@ -97,7 +98,7 @@ class AlbumImageController extends Controller
                 $albumImage = $album->images()->create([
                     'id' => Str::uuid(),
                     'path' => $result['url'],
-                    'order' => ++$lastOrder
+                    'order' => $index
                 ]);
                 
                 Log::info('AlbumImageController@store - AlbumImage created:', ['id' => $albumImage->id]);
@@ -306,7 +307,8 @@ class AlbumImageController extends Controller
 
             $this->authorize('update', $album);
 
-            $lastOrder = $album->images()->max('order') ?? -1;
+            // Shift all existing images down to make room at the top
+            $album->images()->increment('order', 1);
             
             // Store video thumbnail using ImageService
             $thumbnailResult = $this->imageService->storeVideoThumbnail(
@@ -331,7 +333,7 @@ class AlbumImageController extends Controller
                 'title' => $request->title,
                 'caption' => $request->caption,
                 'properties' => json_encode($properties),
-                'order' => ++$lastOrder
+                'order' => 0
             ]);
 
             return back()->with('message', 'Video added successfully');
