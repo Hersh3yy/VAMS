@@ -5,13 +5,7 @@
                 :href="route('albums.index')"
                 class="btn-secondary mr-4 inline-flex items-center rounded-full"
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="mr-1 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
+                <svg class="mr-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -25,46 +19,23 @@
                 {{ album.title }}
             </h2>
         </div>
-        <div class="flex space-x-3">
-            <button @click="handleDelete" class="btn-danger">Delete Album</button>
-            <Link :href="route('albums.edit', album.id)" class="btn-primary"> Edit Album </Link>
-            <label class="btn-primary cursor-pointer">
-                Add Images
-                <input
-                    type="file"
-                    multiple
-                    @change="handleFileUpload"
-                    accept="image/*"
-                    class="hidden"
-                />
-            </label>
-            <button @click="handleAddVideo" class="btn-primary flex items-center">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="mr-2 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                </svg>
-                Add Video
-            </button>
-        </div>
+        <HeaderActions
+            entity-type="Album"
+            :edit-url="route('albums.edit', album.id)"
+            @delete="handleDelete"
+            @upload="handleFileUpload"
+            @add-video="handleAddVideo"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
+import { HeaderActions } from '@/Components/Composite';
 import type { Album } from '@/types/album';
 import { Link } from '@inertiajs/vue3';
 import { inject } from 'vue';
 
-const props = defineProps<{
+const _props = defineProps<{
     album: Album;
 }>();
 
