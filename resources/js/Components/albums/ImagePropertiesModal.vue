@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { ImagePropertyField } from '@/Components/Composite';
+import ImagePropertyField from '@/Components/Composite/ImagePropertyField.vue';
 import { reactive, ref, watch } from 'vue';
 
 const props = defineProps({

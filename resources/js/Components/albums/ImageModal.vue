@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ImageFormField } from '@/Components/Composite';
+import ImageFormField from '@/Components/Composite/ImageFormField.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 

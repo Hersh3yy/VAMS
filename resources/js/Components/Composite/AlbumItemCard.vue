@@ -4,40 +4,25 @@
         @click="$emit('click', item)"
     >
         <!-- Video badge -->
-        <div
+        <Badge
             v-if="isVideo"
-            class="absolute right-2 top-2 z-10 rounded-full bg-red-600 p-1 text-white"
+            variant="danger"
+            size="sm"
+            class="absolute right-2 top-2 z-10"
         >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                />
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-            </svg>
-        </div>
+            <Icon name="play-circle" size="sm" class="text-white" />
+        </Badge>
 
         <!-- Delete button -->
-        <button
+        <Button
+            variant="danger"
+            size="sm"
+            icon-only
+            class="absolute left-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100"
             @click.stop="handleDelete"
-            class="absolute left-2 top-2 z-10 rounded-full bg-red-600 p-1 text-white opacity-0 transition-opacity hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group-hover:opacity-100"
         >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-            </svg>
-        </button>
+            <Icon name="trash" size="sm" />
+        </Button>
 
         <img
             :src="imageSrc"
@@ -48,6 +33,9 @@
 </template>
 
 <script setup lang="ts">
+import Badge from '@/Components/Base/Badge.vue';
+import Button from '@/Components/Base/Button.vue';
+import Icon from '@/Components/Base/Icon.vue';
 import type { AlbumImage } from '@/types/album';
 import { computed } from 'vue';
 

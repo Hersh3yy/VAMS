@@ -4,15 +4,15 @@
             {{ label }}
             <span v-if="required" class="text-red-500">*</span>
         </label>
-        <input
+        <Input
             :id="id"
-            :value="localValue"
+            :model-value="localValue"
             :type="type"
             :placeholder="placeholder"
             :required="required"
-            :class="inputClasses"
-            @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-        >
+            :error="error"
+            @update:model-value="$emit('update:modelValue', $event)"
+        />
         <p v-if="helpText" class="mt-1 text-xs text-gray-400">
             {{ helpText }}
         </p>
@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import Input from '@/Components/Base/Input.vue';
 import { computed } from 'vue';
 
 interface Props {
@@ -47,15 +48,5 @@ const emit = defineEmits<{
 const localValue = computed({
     get: () => props.modelValue,
     set: (value: string) => emit('update:modelValue', value)
-});
-
-const inputClasses = computed(() => {
-    const baseClasses =
-        'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
-    const errorClasses = props.error
-        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:focus:border-red-400 dark:focus:ring-red-400'
-        : '';
-
-    return `${baseClasses} ${errorClasses}`;
 });
 </script>

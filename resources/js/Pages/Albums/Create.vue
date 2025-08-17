@@ -1,4 +1,5 @@
 <script setup>
+import AlbumForm from '@/Components/Composite/AlbumForm.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -25,6 +26,11 @@ const handleFileChange = event => {
         form.cover_image = null;
         coverImagePreview.value = null;
     }
+};
+
+const clearCoverImage = () => {
+    form.cover_image = null;
+    coverImagePreview.value = null;
 };
 
 const submit = () => {
@@ -76,79 +82,19 @@ const submit = () => {
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <form @submit.prevent="submit" class="space-y-6">
-                            <div>
-                                <label class="form-label">Title *</label>
-                                <input
-                                    type="text"
-                                    v-model="form.title"
-                                    required
-                                    class="form-input"
-                                    placeholder="Enter album title"
-                                />
-                                <div v-if="form.errors.title" class="form-error">
-                                    {{ form.errors.title }}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Description</label>
-                                <textarea
-                                    v-model="form.description"
-                                    rows="4"
-                                    class="form-input"
-                                    placeholder="Enter album description"
-                                />
-                                <div v-if="form.errors.description" class="form-error">
-                                    {{ form.errors.description }}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Cover Image</label>
-                                <div class="flex items-start space-x-4">
-                                    <!-- Image Preview -->
-                                    <div v-if="coverImagePreview" class="flex-shrink-0">
-                                        <img
-                                            :src="coverImagePreview"
-                                            class="h-32 w-32 rounded-lg border-2 border-gray-200 object-cover"
-                                            alt="Cover image preview"
-                                        />
-                                    </div>
-
-                                    <!-- File Input -->
-                                    <div class="flex-1">
-                                        <input
-                                            type="file"
-                                            @change="handleFileChange"
-                                            class="form-input"
-                                            accept="image/*"
-                                        />
-                                        <p class="mt-1 text-sm text-gray-500">
-                                            Choose an image to represent this album. PNG, JPG, GIF
-                                            up to 10MB.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div v-if="form.errors.cover_image" class="form-error">
-                                    {{ form.errors.cover_image }}
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end space-x-3">
-                                <Link :href="route('albums.index')" class="btn-danger">
-                                    Cancel
-                                </Link>
-                                <button
-                                    type="submit"
-                                    class="btn-primary"
-                                    :disabled="form.processing"
-                                >
-                                    <span v-if="form.processing">Creating...</span>
-                                    <span v-else>Create Album</span>
-                                </button>
-                            </div>
-                        </form>
+                        <AlbumForm
+                            :title="form.title"
+                            :description="form.description"
+                            :cover-image-preview="coverImagePreview"
+                            :errors="form.errors"
+                            :loading="form.processing"
+                            @update:title="form.title = $event"
+                            @update:description="form.description = $event"
+                            @cover-file-change="handleFileChange"
+                            @clear-cover-preview="clearCoverImage"
+                            @submit="submit"
+                            @cancel="() => {}"
+                        />
                     </div>
                 </div>
             </div>
