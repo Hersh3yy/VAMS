@@ -1,12 +1,8 @@
 <template>
     <div class="flex space-x-3">
-        <Button variant="danger" @click="$emit('delete')">
-            Delete {{ entityType }}
-        </Button>
+        <Button variant="danger" @click="$emit('delete')"> Delete {{ entityType }} </Button>
 
-        <Button variant="secondary" as="a" :href="editUrl">
-            Edit {{ entityType }}
-        </Button>
+        <Button variant="secondary" as="a" :href="editUrl"> Edit {{ entityType }} </Button>
 
         <Button variant="primary" as="label" class="cursor-pointer">
             Add Images

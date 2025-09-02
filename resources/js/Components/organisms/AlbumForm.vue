@@ -2,7 +2,10 @@
     <form @submit.prevent="$emit('submit')" class="space-y-6">
         <!-- Title Field -->
         <div>
-            <label for="album-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+                for="album-title"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
                 Title *
             </label>
             <Input
@@ -18,7 +21,10 @@
 
         <!-- Description Field -->
         <div>
-            <label for="album-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+                for="album-description"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
                 Description
             </label>
             <Textarea
@@ -36,7 +42,7 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Cover Image
             </label>
-            
+
             <!-- File Upload -->
             <div class="mt-2">
                 <Button variant="secondary" as="label" class="cursor-pointer">
@@ -92,10 +98,7 @@
 
             <!-- Select from Album Button (only in edit mode) -->
             <div v-if="isEditMode && albumImages?.length" class="mt-2">
-                <Button
-                    variant="secondary"
-                    @click="$emit('select-from-album')"
-                >
+                <Button variant="secondary" @click="$emit('select-from-album')">
                     Select from Album Images
                 </Button>
             </div>
@@ -103,18 +106,8 @@
 
         <!-- Form Actions -->
         <div class="flex justify-end space-x-4">
-            <Button
-                variant="secondary"
-                type="button"
-                @click="$emit('cancel')"
-            >
-                Cancel
-            </Button>
-            <Button
-                variant="primary"
-                type="submit"
-                :loading="loading"
-            >
+            <Button variant="secondary" type="button" @click="$emit('cancel')"> Cancel </Button>
+            <Button variant="primary" type="submit" :loading="loading">
                 {{ isEditMode ? 'Update Album' : 'Create Album' }}
             </Button>
         </div>
@@ -153,25 +146,24 @@ defineEmits<{
     'clear-cover-preview': [];
     'clear-selected-cover': [];
     'select-from-album': [];
-    'submit': [];
-    'cancel': [];
+    submit: [];
+    cancel: [];
 }>();
 
 // Helper function to get image URL (could be moved to a utility if reused)
 const getImageUrl = (image: any) => {
     if (!image) return '/images/placeholder.svg';
-    
+
     // Handle video items
     if (image.properties) {
-        const properties = typeof image.properties === 'string' 
-            ? JSON.parse(image.properties) 
-            : image.properties;
-        
+        const properties =
+            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
+
         if (properties?.type === 'video' && properties?.thumbnail_url) {
             return properties.thumbnail_url;
         }
     }
-    
+
     return image.path || '/images/placeholder.svg';
 };
 </script>

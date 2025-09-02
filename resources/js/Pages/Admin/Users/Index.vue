@@ -262,9 +262,9 @@
                     undone.
                 </p>
                 <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="deleteModal = false" class="mr-3">
+                    <Button variant="secondary" @click="deleteModal = false" class="mr-3">
                         Cancel
-                    </SecondaryButton>
+                    </Button>
                     <button @click="deleteUser" class="btn-danger">Delete User</button>
                 </div>
             </div>
@@ -273,8 +273,8 @@
 </template>
 
 <script setup>
-import Modal from '@/Components/general/Modal.vue';
-import SecondaryButton from '@/Components/general/SecondaryButton.vue';
+import Button from '@/Components/Base/Button.vue';
+import Modal from '@/Components/Base/Modal.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';

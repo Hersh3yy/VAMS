@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import AlbumItemCard from '@/Components/Composite/AlbumItemCard.vue';
+import AlbumItemCard from '@/Components/organisms/AlbumItemCard.vue';
 import type { AlbumImage } from '@/types/album';
 
 const _props = defineProps<{

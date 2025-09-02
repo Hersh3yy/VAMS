@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import HeaderActions from '@/Components/Composite/HeaderActions.vue';
+import HeaderActions from '@/Components/organisms/HeaderActions.vue';
 import type { Album } from '@/types/album';
 import { Link } from '@inertiajs/vue3';
 import { inject } from 'vue';

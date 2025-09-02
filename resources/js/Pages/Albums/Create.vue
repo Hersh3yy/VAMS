@@ -1,5 +1,5 @@
 <script setup>
-import AlbumForm from '@/Components/Composite/AlbumForm.vue';
+import AlbumForm from '@/Components/organisms/AlbumForm.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';

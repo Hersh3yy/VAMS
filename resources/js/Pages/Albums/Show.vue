@@ -11,7 +11,6 @@
             />
         </template>
 
-        <!-- Album Cover Section -->
         <AlbumCover :album="album" />
 
         <div class="py-12">
@@ -38,7 +37,6 @@
             </div>
         </div>
 
-        <!-- Image Modal -->
         <ImageModal
             v-if="selectedImage"
             :show="showModal"
@@ -49,7 +47,6 @@
             @delete="confirmDeleteImage"
         />
 
-        <!-- Video Modal -->
         <VideoModal
             :show="showVideoModal"
             :video="selectedVideo"
@@ -57,7 +54,6 @@
             @delete="confirmDeleteImage"
         />
 
-        <!-- Confirmation Dialog -->
         <ConfirmationDialog
             :show="showConfirmation"
             :title="confirmationTitle"
@@ -68,7 +64,6 @@
             @cancel="cancelConfirmation"
         />
 
-        <!-- Add Video Modal -->
         <VideoWizard
             v-if="showAddVideoModal"
             :show="showAddVideoModal"
@@ -86,7 +81,7 @@ import ImageModal from '@/Components/albums/ImageModal.vue';
 import UploadProgress from '@/Components/albums/UploadProgress.vue';
 import VideoModal from '@/Components/albums/VideoModal.vue';
 import VideoWizard from '@/Components/albums/VideoWizard.vue';
-import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
+import ConfirmationDialog from '@/Components/molecules/ConfirmationDialog.vue';
 import { useAlbum } from '@/composables/albums/useAlbum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album, AlbumImage } from '@/types/album';

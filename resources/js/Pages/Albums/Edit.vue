@@ -5,26 +5,7 @@
         <template #header>
             <div class="page-header">
                 <div class="flex items-center">
-                    <Link
-                        :href="route('albums.show', album.id)"
-                        class="mr-4 inline-flex items-center rounded-full bg-gray-200 px-4 py-2 font-bold text-gray-800 transition-all duration-200 hover:bg-gray-300"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="mr-1 h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                            />
-                        </svg>
-                        Back
-                    </Link>
+                    <BackLink :href="route('albums.show', album.id)" />
                     <h2 class="page-title">Edit Album</h2>
                 </div>
             </div>
@@ -360,8 +341,9 @@
 </template>
 
 <script setup>
+import BackLink from '@/Components/Base/BackLink.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({

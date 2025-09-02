@@ -1,47 +1,33 @@
 <template>
-    <IndexLayout
-        title="Mosaics"
-        :items="mosaics"
-        :create-route="route('mosaics.create')"
-        create-button-text="Create New Mosaic"
-        empty-state-title="No Mosaics Yet"
-        empty-state-message="Create your first mosaic layout to get started."
-        empty-state-button-text="Create First Mosaic"
-        :get-item-route="mosaic => route('mosaics.show', mosaic.id)"
-        :get-item-actions="getMosaicActions"
-    >
-        <template #item-image="{ item }">
-            <!-- Check if mosaic has a cover image -->
-            <img
-                v-if="getMosaicCoverImage(item)"
-                :src="getMosaicCoverImage(item)"
-                :alt="item.title"
-                class="h-full w-full object-cover"
-            />
-            <!-- Fallback to mosaic preview -->
-            <div v-else class="absolute inset-0 grid grid-cols-2 gap-1 p-2">
-                <div class="rounded bg-gray-200" />
-                <div class="rounded bg-gray-300" />
-                <div class="rounded bg-gray-300" />
-                <div class="rounded bg-gray-200" />
+    <Head title="Mosaics" />
+    <AuthenticatedLayout>
+        <template #header>
+            <div class="page-header">
+                <h2 class="page-title">Mosaics</h2>
+                <Link :href="route('mosaics.create')" class="btn-primary">
+                    Create New Mosaic
+                </Link>
             </div>
         </template>
 
-        <template #item-footer="{ item }">
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-xs text-gray-500">
-                    Created {{ new Date(item.created_at).toLocaleDateString() }}
-                </span>
-                <span class="text-xs text-gray-500"> {{ item.items?.length || 0 }} tiles </span>
+        <div class="content-wrapper">
+            <div class="content-container">
+                <MosaicContentWrapper
+                    :mosaics="mosaics"
+                    :create-route="route('mosaics.create')"
+                    :get-item-route="(mosaic: Mosaic) => route('mosaics.show', mosaic.id)"
+                    :actions="getMosaicActions"
+                />
             </div>
-        </template>
-    </IndexLayout>
+        </div>
+    </AuthenticatedLayout>
 </template>
 
 <script setup lang="ts">
-import IndexLayout from '@/Components/shared/IndexLayout.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import MosaicContentWrapper from '@/Components/organisms/MosaicContentWrapper.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import type { Mosaic } from '@/types/mosaic';
-import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     mosaics: Mosaic[];
@@ -57,33 +43,14 @@ const getMosaicActions = (mosaic: Mosaic) => [
     {
         label: 'Edit Mosaic',
         handler: () => router.visit(route('mosaics.edit', mosaic.id)),
-        icon: 'svg',
-        class: 'p-2 bg-secondary text-black rounded-full hover:brightness-90'
+        icon: 'edit' as const,
+        variant: 'secondary' as const
     },
     {
         label: 'Delete Mosaic',
         handler: () => deleteMosaic(mosaic),
-        icon: 'svg',
-        class: 'btn-danger p-2 rounded-full'
+        icon: 'trash' as const,
+        variant: 'danger' as const
     }
 ];
-
-const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
-    // Find the first image in the mosaic items
-    for (const item of mosaic.items) {
-        if (item.type === 'album' && item.properties?.selected_image?.path) {
-            return item.properties.selected_image.path;
-        }
-        if (item.type === 'album' && item.properties?.album?.cover_image_path) {
-            return item.properties.album.cover_image_path;
-        }
-        if (item.type === 'media' && item.properties?.media?.path) {
-            return item.properties.media.path;
-        }
-        if (item.type === 'media' && item.properties?.media_url) {
-            return item.properties.media_url;
-        }
-    }
-    return undefined;
-};
 </script>

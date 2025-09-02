@@ -60,11 +60,11 @@
 </template>
 
 <script setup lang="ts">
+import ConfirmationDialog from '@/Components/molecules/ConfirmationDialog.vue';
 import MosaicEditModal from '@/Components/mosaics/MosaicEditModal.vue';
 import MosaicGrid from '@/Components/mosaics/MosaicGrid.vue';
 import MosaicHeader from '@/Components/mosaics/MosaicHeader.vue';
 import SimpleMosaicItemEditor from '@/Components/mosaics/SimpleMosaicItemEditor.vue';
-import ConfirmationDialog from '@/Components/shared/ConfirmationDialog.vue';
 import { useMosaic } from '@/composables/mosaics/useMosaic';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album } from '@/types/album';

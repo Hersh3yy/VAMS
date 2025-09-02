@@ -19,9 +19,14 @@
         @apply text-sm text-red-600 dark:text-red-400;
     }
 
-    /* Button styles */
+    /* Button styles - using theme colors */
     .btn-primary {
-        @apply inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-indigo-700 dark:focus:ring-offset-gray-800;
+        @apply inline-flex items-center rounded-md border border-transparent px-4 py-2 text-xs font-semibold uppercase tracking-widest text-black transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
+        background-color: var(--secondary-color);
+    }
+    
+    .btn-primary:hover {
+        filter: brightness(90%);
     }
 
     .btn-danger {

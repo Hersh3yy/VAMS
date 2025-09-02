@@ -30,7 +30,6 @@
 
 <script setup lang="ts">
 import Input from '@/Components/Base/Input.vue';
-import { computed } from 'vue';
 
 interface Props {
     modelValue: string;
@@ -49,8 +48,6 @@ const _props = withDefaults(defineProps<Props>(), {
     disabled: false,
     required: false
 });
-
-
 
 defineEmits<{
     'update:modelValue': [value: string];

@@ -91,8 +91,8 @@
 </template>
 
 <script setup lang="ts">
-import Dropdown from '@/Components/general/Dropdown.vue';
-import DropdownLink from '@/Components/general/DropdownLink.vue';
+import Dropdown from '@/Components/Base/Dropdown.vue';
+import DropdownLink from '@/Components/Base/DropdownLink.vue';
 import { Link } from '@inertiajs/vue3';
 
 defineProps<{

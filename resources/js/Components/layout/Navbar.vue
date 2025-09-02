@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ApplicationLogo from '@/Components/general/ApplicationLogo.vue';
-import NavLink from '@/Components/general/NavLink.vue';
+import ApplicationLogo from '@/Components/Base/ApplicationLogo.vue';
+import NavLink from '@/Components/Base/NavLink.vue';
 import { Link } from '@inertiajs/vue3';
 import UserDropdown from './UserDropdown.vue';
 

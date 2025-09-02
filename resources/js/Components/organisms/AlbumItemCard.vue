@@ -4,12 +4,7 @@
         @click="$emit('click', item)"
     >
         <!-- Video badge -->
-        <Badge
-            v-if="isVideo"
-            variant="danger"
-            size="sm"
-            class="absolute right-2 top-2 z-10"
-        >
+        <Badge v-if="isVideo" variant="danger" size="sm" class="absolute right-2 top-2 z-10">
             <Icon name="play-circle" size="sm" class="text-white" />
         </Badge>
 
