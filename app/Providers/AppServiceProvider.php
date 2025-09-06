@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Models\Album;
 use App\Policies\AlbumPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
+        
         Vite::prefetch(concurrency: 3);
         Gate::policy(Album::class, AlbumPolicy::class);
     }
