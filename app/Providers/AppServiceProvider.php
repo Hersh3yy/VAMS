@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         // Force HTTPS in production or when behind a proxy
         if (app()->isProduction() || request()->header('X-Forwarded-Proto') === 'https') {
             URL::forceScheme('https');
+            request()->server->set('HTTPS', 'on');
         }
         
         Vite::prefetch(concurrency: 3);
