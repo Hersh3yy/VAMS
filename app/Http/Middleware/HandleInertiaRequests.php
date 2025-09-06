@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -31,19 +30,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // Debug logging for Inertia requests
-        if ($request->is('login')) {
-            Log::info('HandleInertiaRequests@share - Login page request', [
-                'url' => $request->url(),
-                'full_url' => $request->fullUrl(),
-                'is_secure' => $request->isSecure(),
-                'scheme' => $request->getScheme(),
-                'app_url' => config('app.url'),
-                'asset_url' => config('app.asset_url'),
-                'ziggy_location' => $request->url(),
-            ]);
-        }
-
         return [
             ...parent::share($request),
             'auth' => [
