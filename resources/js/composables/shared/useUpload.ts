@@ -57,7 +57,8 @@ export function useUpload() {
                 timestamp: new Date().toISOString()
             });
             uploadItem.status = 'error';
-            uploadItem.error = 'Upload failed after multiple retries. Please refresh the page and try again.';
+            uploadItem.error =
+                'Upload failed after multiple retries. Please refresh the page and try again.';
             return;
         }
 
@@ -79,7 +80,7 @@ export function useUpload() {
                 retry_count: retryCount,
                 timestamp: new Date().toISOString()
             });
-            
+
             if (retryCount < 2) {
                 try {
                     token = await refreshToken();
@@ -95,7 +96,8 @@ export function useUpload() {
                         timestamp: new Date().toISOString()
                     });
                     uploadItem.status = 'error';
-                    uploadItem.error = 'Security token not found. Please refresh the page and try again.';
+                    uploadItem.error =
+                        'Security token not found. Please refresh the page and try again.';
                     return;
                 }
             } else {
@@ -105,11 +107,12 @@ export function useUpload() {
                     timestamp: new Date().toISOString()
                 });
                 uploadItem.status = 'error';
-                uploadItem.error = 'Security token not found. Please refresh the page and try again.';
+                uploadItem.error =
+                    'Security token not found. Please refresh the page and try again.';
                 return;
             }
         }
-        
+
         console.log('Starting upload with CSRF token', {
             file_name: file.name,
             file_size: file.size,
@@ -122,10 +125,10 @@ export function useUpload() {
         try {
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
-            
+
             // Set a timeout for the request (100 seconds for large files)
             xhr.timeout = 100000; // 100 seconds
-            
+
             // Track upload start time for smart retry logic
             const uploadStartTime = Date.now();
 
@@ -179,8 +182,9 @@ export function useUpload() {
                         response: xhr.responseText,
                         timestamp: new Date().toISOString()
                     });
-                    
-                    if (retryCount < 2) { // Only retry twice
+
+                    if (retryCount < 2) {
+                        // Only retry twice
                         refreshToken()
                             .then(() => {
                                 console.log('CSRF token refreshed, retrying upload', {
@@ -193,7 +197,7 @@ export function useUpload() {
                                     uploadSingleFile(uploadItem, config, retryCount + 1);
                                 }, 1000);
                             })
-                            .catch((refreshError) => {
+                            .catch(refreshError => {
                                 console.error('Failed to refresh CSRF token for retry', {
                                     file_name: file.name,
                                     retry_count: retryCount,
@@ -211,9 +215,12 @@ export function useUpload() {
                             });
                     } else {
                         uploadItem.status = 'error';
-                        uploadItem.error = 'Session expired after multiple retries. Please refresh the page and try again.';
+                        uploadItem.error =
+                            'Session expired after multiple retries. Please refresh the page and try again.';
                         if (config.onError) {
-                            config.onError('Session expired after multiple retries. Please refresh the page and try again.');
+                            config.onError(
+                                'Session expired after multiple retries. Please refresh the page and try again.'
+                            );
                         }
                     }
                 } else if (xhr.status === 422) {
@@ -232,7 +239,7 @@ export function useUpload() {
             xhr.addEventListener('error', () => {
                 throw new Error('Network error during upload');
             });
-            
+
             // Handle timeout - if it's been more than 40 seconds with no progress, try CSRF refresh
             xhr.addEventListener('timeout', () => {
                 const timeElapsed = Date.now() - uploadStartTime;
@@ -242,7 +249,7 @@ export function useUpload() {
                     retry_count: retryCount,
                     timestamp: new Date().toISOString()
                 });
-                
+
                 if (timeElapsed > 40000 && retryCount < 2) {
                     // Likely a stale CSRF token causing the hang
                     refreshToken()
@@ -282,7 +289,6 @@ export function useUpload() {
             }
         }
     };
-
 
     const retryUpload = async (uploadItem: UploadItem, config: UploadConfig) => {
         uploadItem.error = undefined;

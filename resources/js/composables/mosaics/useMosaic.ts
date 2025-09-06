@@ -61,14 +61,18 @@ export function useMosaic(mosaicId: string) {
 
     const reorderItems = async (fromId: string, toId: string) => {
         try {
-            await router.patch(route('mosaics.items.reorder', mosaicId), {
-                from_id: fromId,
-                to_id: toId
-            }, {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['mosaic']
-            });
+            await router.patch(
+                route('mosaics.items.reorder', mosaicId),
+                {
+                    from_id: fromId,
+                    to_id: toId
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    only: ['mosaic']
+                }
+            );
         } catch (error) {
             console.error('Reorder failed:', error);
         }

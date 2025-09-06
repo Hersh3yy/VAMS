@@ -1,5 +1,5 @@
 <template>
-    <Modal :modelValue="show" @update:modelValue="value => !value && handleClose()" max-width="2xl">
+    <Modal :show="show" @update:show="value => !value && handleClose()" size="2xl">
         <template #title>
             <div class="flex items-center justify-between">
                 <span>Select Album Image</span>
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import Modal from '@/Components/general/Modal.vue';
+import Modal from '@/Components/Base/Modal.vue';
 import type { Album, AlbumImage } from '@/types/mosaic';
 
 const props = defineProps<{

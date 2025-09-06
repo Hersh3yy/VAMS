@@ -16,27 +16,11 @@
                         class="cover-image flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-600"
                     >
                         <slot name="placeholder" :item="item">
-                            <svg
-                                class="h-16 w-16 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <rect
-                                    x="3"
-                                    y="3"
-                                    width="18"
-                                    height="18"
-                                    rx="2"
-                                    ry="2"
-                                    stroke-width="2"
-                                />
-                                <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2" />
-                                <path
-                                    d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"
-                                    stroke-width="2"
-                                />
-                            </svg>
+                            <img 
+                                src="/images/placeholder.svg" 
+                                alt="No image" 
+                                class="h-16 w-16 opacity-50"
+                            />
                         </slot>
                     </div>
                 </slot>
@@ -46,15 +30,17 @@
                     v-if="actions.length > 0"
                     class="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
                 >
-                    <button
+                    <Button
                         v-for="action in actions"
                         :key="action.label"
                         @click.prevent="action.handler(item)"
-                        :class="action.class"
+                        :variant="getButtonVariant(action.class)"
+                        size="sm"
+                        icon-only
                         :title="action.label"
                     >
                         <component :is="action.icon" class="h-5 w-5" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -114,6 +100,7 @@
 >
 import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import Button from '@/Components/Base/Button.vue';
 
 interface CardAction {
     label: string;
@@ -142,6 +129,16 @@ const imageError = ref(false);
 
 const handleImageError = () => {
     imageError.value = true;
+};
+
+const getButtonVariant = (actionClass: string): 'primary' | 'secondary' | 'danger' | 'ghost' => {
+    if (actionClass.includes('btn-danger') || actionClass.includes('danger')) {
+        return 'danger';
+    }
+    if (actionClass.includes('bg-secondary')) {
+        return 'secondary';
+    }
+    return 'primary';
 };
 
 const getItemCount = (item: T) => {

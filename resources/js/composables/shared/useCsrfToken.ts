@@ -1,9 +1,9 @@
-import { ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { watch } from 'vue';
 
 export function useCsrfToken() {
     const page = usePage();
-    
+
     // Function to update the CSRF token in the meta tag
     const updateCsrfToken = (token: string) => {
         const metaTag = document.querySelector('meta[name="csrf-token"]');
@@ -29,7 +29,7 @@ export function useCsrfToken() {
     // Watch for CSRF token refresh from the server
     watch(
         () => page.props.csrf_token_refresh as string | undefined,
-        (newToken) => {
+        newToken => {
             if (newToken) {
                 console.log('CSRF token refresh received from server', {
                     token: newToken.substring(0, 8) + '...',
@@ -50,7 +50,7 @@ export function useCsrfToken() {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
@@ -60,7 +60,7 @@ export function useCsrfToken() {
             }
 
             const data = await response.json();
-            
+
             if (data.csrf_token) {
                 console.log('CSRF token refreshed from manual request', {
                     token: data.csrf_token.substring(0, 8) + '...',
@@ -82,4 +82,4 @@ export function useCsrfToken() {
         updateCsrfToken,
         refreshCsrfToken
     };
-} 
+}

@@ -1,75 +1,102 @@
 <template>
-    <Modal :show="show" @close="closeModal" maxWidth="lg">
-        <div class="bg-gray-800 p-6 text-white">
-            <h3 class="mb-4 text-xl font-bold">Image Properties</h3>
-
-            <div v-if="localItem">
-                <!-- Link URL -->
-                <div class="mb-4">
-                    <label for="linkUrl" class="mb-1 block text-sm font-medium text-gray-300"
-                        >Link URL (optional)</label
-                    >
-                    <input
-                        type="text"
-                        id="linkUrl"
-                        v-model="editableProperties.linkUrl"
-                        placeholder="e.g., /my-page or https://example.com"
-                        class="w-full rounded border border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p class="mt-1 text-xs text-gray-400">
-                        If internal (e.g. /about), it will use frontend routing. Full URLs for
-                        external sites.
-                    </p>
-                </div>
-
-                <!-- Text Overlay -->
-                <div class="mb-4">
-                    <label for="overlayText" class="mb-1 block text-sm font-medium text-gray-300"
-                        >Text Overlay (optional)</label
-                    >
-                    <input
-                        type="text"
-                        id="overlayText"
-                        v-model="editableProperties.overlayText"
-                        placeholder="Text to display on image"
-                        class="w-full rounded border border-gray-600 bg-gray-700 p-2 text-white focus:border-blue-500 focus:ring-blue-500"
-                    />
-                </div>
-
-                <!-- Additional Overlay Config (Example: Text Color) -->
-                <div v-if="editableProperties.overlayText" class="mb-4">
-                    <label for="overlayColor" class="mb-1 block text-sm font-medium text-gray-300"
-                        >Overlay Text Color</label
-                    >
-                    <input
-                        type="color"
-                        id="overlayColor"
-                        v-model="editableProperties.overlayConfig.color"
-                        class="h-10 w-full rounded border border-gray-600 bg-gray-700 p-1 text-white"
-                    />
-                </div>
-            </div>
-            <div v-else class="py-4 text-center">
-                <p>No image item selected.</p>
+    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+        <div
+            class="flex min-h-screen items-center justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
+        >
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75" />
             </div>
 
-            <div class="mt-6 flex justify-end gap-4">
-                <button
-                    @click="closeModal"
-                    class="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-500"
-                >
-                    Cancel
-                </button>
-                <button @click="saveProperties" class="btn-primary" :disabled="!localItem">
-                    Save Changes
-                </button>
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
+                >&#8203;</span
+            >
+
+            <div
+                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle"
+            >
+                <div class="flex items-center justify-between border-b p-4">
+                    <h3 class="text-lg font-medium">Image Properties</h3>
+                    <button
+                        type="button"
+                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        @click="closeModal"
+                    >
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div v-if="localItem" class="space-y-4">
+                        <!-- Link URL -->
+                        <ImagePropertyField
+                            v-model="editableProperties.linkUrl"
+                            label="Link URL (optional)"
+                            id="linkUrl"
+                            type="text"
+                            placeholder="e.g., /my-page or https://example.com"
+                            help-text="If internal (e.g. /about), it will use frontend routing. Full URLs for external sites."
+                        />
+
+                        <!-- Text Overlay -->
+                        <ImagePropertyField
+                            v-model="editableProperties.overlayText"
+                            label="Text Overlay (optional)"
+                            id="overlayText"
+                            type="text"
+                            placeholder="Text to display on image"
+                        />
+
+                        <!-- Text Color -->
+                        <div v-if="editableProperties.overlayText" class="mb-4">
+                            <label
+                                for="overlayColor"
+                                class="block text-sm font-medium text-gray-700"
+                            >
+                                Overlay Text Color
+                            </label>
+                            <input
+                                type="color"
+                                id="overlayColor"
+                                v-model="editableProperties.overlayConfig.color"
+                                class="mt-1 h-10 w-full rounded border border-gray-300 bg-white p-1"
+                            >
+                        </div>
+                    </div>
+                    <div v-else class="py-4 text-center">
+                        <p>No image item selected.</p>
+                    </div>
+                </div>
+
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button
+                        type="button"
+                        class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                        @click="saveProperties"
+                    >
+                        Save Changes
+                    </button>
+                    <button
+                        type="button"
+                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:mt-0 sm:w-auto sm:text-sm"
+                        @click="closeModal"
+                    >
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
-    </Modal>
+    </div>
 </template>
 
 <script setup>
-import Modal from '@/Components/general/Modal.vue'; // Assuming Modal is in this path
+import ImagePropertyField from '@/Components/molecules/ImagePropertyField.vue';
 import { reactive, ref, watch } from 'vue';
 
 const props = defineProps({

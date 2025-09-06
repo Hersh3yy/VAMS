@@ -1,6 +1,6 @@
 declare module 'vue3-draggable' {
     import { DefineComponent } from 'vue';
-    
+
     interface DraggableProps {
         modelValue?: any[];
         tag?: string;
@@ -60,4 +60,4 @@ declare module 'vue3-draggable' {
 
     const Draggable: DefineComponent<DraggableProps, {}, any, {}, {}, any, any, DraggableEmits>;
     export default Draggable;
-} 
+}

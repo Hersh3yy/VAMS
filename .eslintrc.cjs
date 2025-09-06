@@ -69,6 +69,18 @@ module.exports = {
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/no-explicit-any": "warn",
         
+        // Atomic Design Rules
+        "vue/component-name-in-template-casing": ["error", "PascalCase"],
+        "vue/match-component-file-name": ["error", {
+            "extensions": ["vue"],
+            "shouldMatchCase": true
+        }],
+        
+        // Enforce Base component usage
+        "vue/no-unused-components": ["error", {
+            "ignoreWhenBindingPresent": true
+        }],
+        
         // Ignore ziggy.js file issues
         "no-useless-escape": "off"
     },

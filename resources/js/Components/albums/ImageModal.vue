@@ -1,27 +1,41 @@
 <!-- components/ImageModal.vue -->
 <template>
-    <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-        <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
-            <div class="flex items-center justify-between border-b p-4">
-                <h3 class="text-lg font-medium">
-                    {{ isVideo ? 'Edit Video' : 'Edit Image' }}
-                </h3>
-                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
+    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+        <div
+            class="flex min-h-screen items-center justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
+        >
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75" />
             </div>
-            <div class="p-6">
-                <div class="bg-white p-6">
+
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
+                >&#8203;</span
+            >
+
+            <div
+                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 sm:align-middle"
+            >
+                <div class="flex items-center justify-between border-b p-4">
+                    <h3 class="text-lg font-medium">
+                        {{ isVideo ? 'Edit Video' : 'Edit Image' }}
+                    </h3>
+                    <button
+                        type="button"
+                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        @click="$emit('close')"
+                    >
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6">
                     <!-- Video Display -->
                     <div v-if="isVideo" class="mb-4">
                         <div class="aspect-video overflow-hidden rounded-lg bg-gray-100">
@@ -45,7 +59,7 @@
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                             stroke-width="2"
-                                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                                         />
                                     </svg>
                                     <p class="text-gray-500">Video Player</p>
@@ -60,122 +74,88 @@
                             :src="image.path"
                             :alt="image.title || 'Image'"
                             class="h-auto max-h-[60vh] w-full object-contain"
-                        />
+                        >
                     </div>
 
                     <div class="mt-4 space-y-4">
                         <!-- Video-specific fields -->
                         <template v-if="isVideo">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Video URL</label
-                                >
-                                <input
-                                    type="url"
-                                    v-model="formData.videoUrl"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    readonly
-                                />
-                            </div>
-                            <div v-if="displaySettings?.title !== false">
-                                <label class="block text-sm font-medium text-gray-700">Title</label>
-                                <input
-                                    type="text"
-                                    v-model="formData.title"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.caption !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Caption</label
-                                >
-                                <textarea
-                                    v-model="formData.caption"
-                                    rows="3"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
+                            <ImageFormField
+                                v-model="formData.videoUrl"
+                                label="Video URL"
+                                type="url"
+                                readonly
+                            />
+                            <ImageFormField
+                                v-model="formData.title"
+                                label="Title"
+                                :display-settings="displaySettings?.title"
+                            />
+                            <ImageFormField
+                                v-model="formData.caption"
+                                label="Caption"
+                                type="textarea"
+                                :display-settings="displaySettings?.caption"
+                            />
                         </template>
 
                         <!-- Image-specific fields -->
                         <template v-else>
-                            <div v-if="displaySettings?.title !== false">
-                                <label class="block text-sm font-medium text-gray-700">Title</label>
-                                <input
-                                    type="text"
-                                    v-model="formData.title"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.altText !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Alt Text</label
-                                >
-                                <input
-                                    type="text"
-                                    v-model="formData.altText"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.caption !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Caption</label
-                                >
-                                <textarea
-                                    v-model="formData.caption"
-                                    rows="3"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.dateCreated !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Date Created</label
-                                >
-                                <input
-                                    type="datetime-local"
-                                    v-model="formData.dateCreated"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.location !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Location</label
-                                >
-                                <input
-                                    type="text"
-                                    v-model="formData.location"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.tags !== false">
-                                <label class="block text-sm font-medium text-gray-700">Tags</label>
-                                <input
-                                    type="text"
-                                    v-model="formData.tags"
-                                    placeholder="Separate tags with commas"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div v-if="displaySettings?.author !== false">
-                                <label class="block text-sm font-medium text-gray-700"
-                                    >Author</label
-                                >
-                                <input
-                                    type="text"
-                                    v-model="formData.author"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                />
-                            </div>
+                            <ImageFormField
+                                v-model="formData.title"
+                                label="Title"
+                                :display-settings="displaySettings?.title"
+                            />
+                            <ImageFormField
+                                v-model="formData.altText"
+                                label="Alt Text"
+                                :display-settings="displaySettings?.altText"
+                            />
+                            <ImageFormField
+                                v-model="formData.caption"
+                                label="Caption"
+                                type="textarea"
+                                :display-settings="displaySettings?.caption"
+                            />
+                            <ImageFormField
+                                v-model="formData.dateCreated"
+                                label="Date Created"
+                                type="datetime-local"
+                                :display-settings="displaySettings?.dateCreated"
+                            />
+                            <ImageFormField
+                                v-model="formData.location"
+                                label="Location"
+                                :display-settings="displaySettings?.location"
+                            />
+                            <ImageFormField
+                                v-model="formData.tags"
+                                label="Tags"
+                                placeholder="Separate tags with commas"
+                                :display-settings="displaySettings?.tags"
+                            />
+                            <ImageFormField
+                                v-model="formData.author"
+                                label="Author"
+                                :display-settings="displaySettings?.author"
+                            />
                         </template>
 
-                        <div class="flex justify-end space-x-3">
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                             <button
+                                type="button"
+                                class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                                @click="saveChanges"
+                            >
+                                Save Changes
+                            </button>
+                            <button
+                                type="button"
+                                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:mt-0 sm:w-auto sm:text-sm"
                                 @click="$emit('close')"
-                                class="rounded-md border px-4 py-2 text-gray-700 hover:bg-gray-50"
                             >
                                 Cancel
                             </button>
-                            <button @click="saveChanges" class="btn-primary">Save Changes</button>
                         </div>
                     </div>
                 </div>
@@ -185,6 +165,7 @@
 </template>
 
 <script setup>
+import ImageFormField from '@/Components/molecules/ImageFormField.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 

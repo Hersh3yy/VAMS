@@ -12,7 +12,7 @@
             >
 
             <div
-                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle"
+                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6 sm:align-middle"
             >
                 <div class="sm:flex sm:items-start">
                     <div
@@ -20,10 +20,9 @@
                     >
                         <svg
                             class="h-6 w-6 text-red-600"
-                            xmlns="http://www.w3.org/2000/svg"
                             fill="none"
-                            viewBox="0 0 24 24"
                             stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
                             <path
                                 stroke-linecap="round"
@@ -42,6 +41,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                     <button
                         type="button"

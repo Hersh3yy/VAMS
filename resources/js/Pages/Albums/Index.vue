@@ -1,18 +1,31 @@
 <template>
-    <IndexLayout
-        title="Albums"
-        :items="albums"
-        :create-route="route('albums.create')"
-        create-button-text="Create Album"
-        empty-state-title="No Albums Yet"
-        empty-state-message="Create your first album to get started organizing your images."
-        empty-state-button-text="Create First Album"
-        :get-item-route="album => route('albums.show', album.id)"
-    />
+    <Head title="Albums" />
+    <AuthenticatedLayout>
+        <template #header>
+            <div class="page-header">
+                <h2 class="page-title">Albums</h2>
+                <Link :href="route('albums.create')" class="btn-primary">
+                    Create Album
+                </Link>
+            </div>
+        </template>
+
+        <div class="content-wrapper">
+            <div class="content-container">
+                <AlbumContentWrapper
+                    :albums="albums"
+                    :create-route="route('albums.create')"
+                    :get-item-route="(album: Album) => route('albums.show', album.id)"
+                />
+            </div>
+        </div>
+    </AuthenticatedLayout>
 </template>
 
 <script setup lang="ts">
-import IndexLayout from '@/Components/shared/IndexLayout.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AlbumContentWrapper from '@/Components/organisms/AlbumContentWrapper.vue';
+import { Head, Link } from '@inertiajs/vue3';
 import type { Album } from '@/types/album';
 
 defineProps<{
