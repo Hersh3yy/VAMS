@@ -30,6 +30,21 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        Log::info('AuthenticatedSessionController@store - Login attempt started', [
+            'url' => $request->url(),
+            'full_url' => $request->fullUrl(),
+            'is_secure' => $request->isSecure(),
+            'scheme' => $request->getScheme(),
+            'headers' => [
+                'host' => $request->header('host'),
+                'x-forwarded-proto' => $request->header('x-forwarded-proto'),
+                'x-forwarded-for' => $request->header('x-forwarded-for'),
+                'user-agent' => $request->header('user-agent'),
+            ],
+            'app_url' => config('app.url'),
+            'asset_url' => config('app.asset_url'),
+        ]);
+
         $request->authenticate();
 
         $request->session()->regenerate();
@@ -41,7 +56,9 @@ class AuthenticatedSessionController extends Controller
         Log::info('AuthenticatedSessionController@store - Session regenerated and CSRF token flashed', [
             'user_id' => $request->user()->id,
             'new_csrf_token' => substr($newCsrfToken, 0, 8) . '...',
-            'session_id' => session()->getId()
+            'session_id' => session()->getId(),
+            'intended_url' => route('dashboard', absolute: false),
+            'intended_url_absolute' => route('dashboard', absolute: true),
         ]);
 
         return redirect()->intended(route('dashboard', absolute: false));
