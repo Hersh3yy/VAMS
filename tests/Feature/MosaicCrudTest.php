@@ -145,29 +145,19 @@ it('prevents user from viewing other users mosaics', function () {
     $response->assertForbidden();
 });
 
-it('allows authenticated user to view edit mosaic page', function () {
+it('allows authenticated user to view mosaic show page for editing', function () {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
 
-    $response = $this->get(route('mosaics.edit', $mosaic));
+    $response = $this->get(route('mosaics.show', $mosaic));
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => 
-        $page->component('Mosaics/Edit')
+        $page->component('Mosaics/Show')
              ->has('mosaic')
              ->where('mosaic.id', $mosaic->id)
     );
-});
-
-it('prevents user from editing other users mosaics', function () {
-    $this->actingAs($this->user);
-
-    $otherMosaic = Mosaic::factory()->forUser($this->otherUser)->create();
-
-    $response = $this->get(route('mosaics.edit', $otherMosaic));
-
-    $response->assertForbidden();
 });
 
 it('allows authenticated user to update mosaic', function () {
@@ -183,13 +173,17 @@ it('allows authenticated user to update mosaic', function () {
         'title' => 'Updated Title',
         'description' => 'Updated Description',
         'columns' => 4,
-        'display_settings' => [
-            'show_titles' => false,
-            'show_captions' => true,
-        ],
+        'items' => [
+            [
+                'type' => 'album',
+                'column_index' => 0,
+                'order' => 0,
+                'properties' => []
+            ]
+        ]
     ];
 
-    $response = $this->put(route('mosaics.update', $mosaic), $updateData);
+    $response = $this->patch(route('mosaics.update', $mosaic), $updateData);
 
     $response->assertRedirect(route('mosaics.show', $mosaic));
     
@@ -211,7 +205,7 @@ it('prevents user from updating other users mosaics', function () {
         'columns' => 3,
     ];
 
-    $response = $this->put(route('mosaics.update', $otherMosaic), $updateData);
+    $response = $this->patch(route('mosaics.update', $otherMosaic), $updateData);
 
     $response->assertForbidden();
     
@@ -256,8 +250,10 @@ it('allows user to add items to mosaic', function () {
     $album = Album::factory()->forUser($this->user)->create();
 
     $itemData = [
-        'album_id' => $album->id,
-        'position' => 1,
+        'type' => 'album',
+        'properties' => ['album_id' => $album->id],
+        'order' => 1,
+        'column_index' => 0,
     ];
 
     $response = $this->post(route('mosaics.items.store', $mosaic), $itemData);
@@ -266,8 +262,9 @@ it('allows user to add items to mosaic', function () {
     
     $this->assertDatabaseHas('mosaic_items', [
         'mosaic_id' => $mosaic->id,
-        'album_id' => $album->id,
-        'position' => 1,
+        'type' => 'album',
+        'order' => 1,
+        'column_index' => 0,
     ]);
 });
 
@@ -278,28 +275,38 @@ it('allows user to reorder mosaic items', function () {
     $album1 = Album::factory()->forUser($this->user)->create();
     $album2 = Album::factory()->forUser($this->user)->create();
 
-    $item1 = MosaicItem::factory()->forMosaic($mosaic)->forAlbum($album1)->create(['position' => 1]);
-    $item2 = MosaicItem::factory()->forMosaic($mosaic)->forAlbum($album2)->create(['position' => 2]);
+    $item1 = MosaicItem::factory()->forMosaic($mosaic)->create([
+        'type' => 'album',
+        'properties' => ['album_id' => $album1->id],
+        'order' => 1,
+        'column_index' => 0
+    ]);
+    $item2 = MosaicItem::factory()->forMosaic($mosaic)->create([
+        'type' => 'album',
+        'properties' => ['album_id' => $album2->id],
+        'order' => 2,
+        'column_index' => 0
+    ]);
 
     $reorderData = [
         'items' => [
-            ['id' => $item2->id, 'position' => 1],
-            ['id' => $item1->id, 'position' => 2],
+            ['id' => $item2->id, 'order' => 1, 'column_index' => 0],
+            ['id' => $item1->id, 'order' => 2, 'column_index' => 0],
         ],
     ];
 
-    $response = $this->put(route('mosaics.items.reorder', $mosaic), $reorderData);
+    $response = $this->patch(route('mosaics.items.reorder', $mosaic), $reorderData);
 
-    $response->assertSuccessful();
+    $response->assertRedirect();
     
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item1->id,
-        'position' => 2,
+        'order' => 2,
     ]);
     
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item2->id,
-        'position' => 1,
+        'order' => 1,
     ]);
 });
 
@@ -311,7 +318,7 @@ it('validates mosaic item data', function () {
     $response = $this->post(route('mosaics.items.store', $mosaic), []);
 
     $response->assertStatus(302);
-    $response->assertSessionHasErrors(['album_id']);
+    $response->assertSessionHasErrors(['type', 'properties', 'order', 'column_index']);
 });
 
 it('prevents adding items to other users mosaics', function () {
