@@ -83,6 +83,11 @@ class User extends Authenticatable
         return $this->hasMany(Album::class);
     }
 
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
     public function generateNewApiKey()
     {
         $this->api_key = Str::random(32);

@@ -9,7 +9,7 @@
         "php": "^8.2",
         "dedoc/scramble": "^0.12.19",
         "inertiajs/inertia-laravel": "^2.0",
-        "laravel/framework": "11.x.x",
+        "laravel/framework": "12.x.x",
         "laravel/sanctum": "^4.0",
         "laravel/telescope": "^5.4",
         "laravel/tinker": "^2.9",

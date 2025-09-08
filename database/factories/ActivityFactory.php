@@ -23,10 +23,10 @@ class ActivityFactory extends Factory
     public function definition(): array
     {
         $subjectTypes = [Album::class, Mosaic::class];
-        $subjectType = $this->faker->randomElement($subjectTypes);
+        $subjectType = fake()->randomElement($subjectTypes);
         
         return [
-            'type' => $this->faker->randomElement(['created', 'updated', 'deleted', 'restored']),
+            'type' => fake()->randomElement(['create', 'update', 'delete']),
             'description' => $this->faker->sentence(),
             'user_id' => User::factory(),
             'subject_type' => $subjectType,
@@ -48,8 +48,8 @@ class ActivityFactory extends Factory
     public function created(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'created',
-            'description' => 'Created new ' . class_basename($attributes['subject_type']),
+            'type' => 'create',
+            'description' => 'Created ' . class_basename($attributes['subject_type']),
         ]);
     }
 
@@ -59,7 +59,7 @@ class ActivityFactory extends Factory
     public function updated(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'updated',
+            'type' => 'update',
             'description' => 'Updated ' . class_basename($attributes['subject_type']),
         ]);
     }
@@ -70,7 +70,7 @@ class ActivityFactory extends Factory
     public function deleted(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'deleted',
+            'type' => 'delete',
             'description' => 'Deleted ' . class_basename($attributes['subject_type']),
         ]);
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -13,7 +14,7 @@ beforeEach(function () {
 });
 
 it('allows user to add image to their album', function () {
-    $file = \Illuminate\Http\UploadedFile::fake()->image('test-image.jpg', 800, 600);
+    $file = UploadedFile::fake()->image('test-image.jpg', 800, 600);
     
     $response = $this->post(route('albums.images.store', $this->album->id), [
         'images' => [$file],

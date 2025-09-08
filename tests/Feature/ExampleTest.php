@@ -1,37 +1,22 @@
 <?php
 
-namespace Tests\Feature;
+declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
 
-class ExampleTest extends TestCase
-{
-    use RefreshDatabase;
+it('redirects unauthenticated users to login', function () {
+    $response = $this->get('/');
 
-    /**
-     * Test that the root route redirects unauthenticated users to login.
-     */
-    public function test_the_application_redirects_guests_to_login(): void
-    {
-        $response = $this->get('/');
+    $response->assertRedirect('/login');
+});
 
-        $response->assertRedirect('/login');
-    }
+it('allows authenticated users to access dashboard', function () {
+    $user = User::factory()->create([
+        'is_approved' => true,
+        'email_verified_at' => now()
+    ]);
 
-    /**
-     * Test that authenticated users can access the dashboard.
-     */
-    public function test_authenticated_users_can_access_dashboard(): void
-    {
-        $user = User::factory()->create([
-            'is_approved' => true,
-            'email_verified_at' => now()
-        ]);
+    $response = $this->actingAs($user)->get('/');
 
-        $response = $this->actingAs($user)->get('/');
-
-        $response->assertStatus(200);
-    }
-}
+    $response->assertStatus(200);
+});
