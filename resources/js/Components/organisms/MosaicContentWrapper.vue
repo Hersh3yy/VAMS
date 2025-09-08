@@ -17,7 +17,7 @@
             />
             <!-- Fallback to mosaic preview -->
             <div v-else class="h-full w-full">
-                <div class="grid grid-cols-2 gap-1 p-2 h-full">
+                <div class="grid h-full grid-cols-2 gap-1 p-2">
                     <div class="rounded bg-gray-200" />
                     <div class="rounded bg-gray-300" />
                     <div class="rounded bg-gray-300" />
@@ -27,12 +27,9 @@
         </template>
 
         <template #actions="{ item }">
-            <ActionButtons 
-                v-if="actions" 
-                :actions="getSimpleActions(item)" 
-            />
+            <ActionButtons v-if="actions" :actions="getSimpleActions(item)" />
         </template>
-        
+
         <template #content="{ item }">
             <h3 class="text-lg font-semibold dark:text-yellow-200">
                 {{ item.title }}
@@ -49,14 +46,22 @@
 </template>
 
 <script setup lang="ts">
-import ContentGrid from '@/Components/organisms/ContentGrid.vue';
 import ActionButtons from '@/Components/molecules/ActionButtons.vue';
+import ContentGrid from '@/Components/organisms/ContentGrid.vue';
 import type { Mosaic } from '@/types/mosaic';
 
 interface MosaicAction {
     label: string;
     handler: (mosaic: Mosaic) => void;
-    icon: 'arrow-left' | 'video' | 'play-circle' | 'play-circle-outline' | 'trash' | 'x' | 'exclamation-triangle' | 'edit';
+    icon:
+        | 'arrow-left'
+        | 'video'
+        | 'play-circle'
+        | 'play-circle-outline'
+        | 'trash'
+        | 'x'
+        | 'exclamation-triangle'
+        | 'edit';
     variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
 }
 
@@ -71,7 +76,7 @@ const props = defineProps<Props>();
 
 const getSimpleActions = (mosaic: Mosaic) => {
     if (!props.actions) return [];
-    
+
     return props.actions(mosaic).map(action => ({
         label: action.label,
         handler: () => action.handler(mosaic),
@@ -99,5 +104,3 @@ const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
     return undefined;
 };
 </script>
-
-

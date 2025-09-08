@@ -3,9 +3,8 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Manage Users</h2>
-                <div class="flex space-x-3">
+            <PageHeader title="Manage Users">
+                <template #actions>
                     <Link
                         :href="route('test-api')"
                         class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
@@ -18,27 +17,15 @@
                     >
                         Add New User
                     </Link>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
         </template>
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <!-- Flash Messages -->
-                <div
-                    v-if="$page.props.flash?.success"
-                    class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700"
-                    role="alert"
-                >
-                    <span class="block sm:inline">{{ $page.props.flash.success }}</span>
-                </div>
-                <div
-                    v-if="$page.props.flash?.error"
-                    class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-                    role="alert"
-                >
-                    <span class="block sm:inline">{{ $page.props.flash.error }}</span>
-                </div>
+                <FlashMessage :message="$page.props.flash?.success" type="success" class="mb-4" />
+                <FlashMessage :message="$page.props.flash?.error" type="error" class="mb-4" />
 
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
@@ -268,8 +255,10 @@
 </template>
 
 <script setup>
+import FlashMessage from '@/Components/atoms/FlashMessage.vue';
 import BaseButton from '@/Components/Base/Button.vue';
 import Modal from '@/Components/Base/Modal.vue';
+import PageHeader from '@/Components/molecules/PageHeader.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';

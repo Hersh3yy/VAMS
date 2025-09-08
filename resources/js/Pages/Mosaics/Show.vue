@@ -20,6 +20,7 @@
                         @item-click="handleItemClick"
                         @item-delete="handleItemDelete"
                         @reorder="handleItemReorder"
+                        @add-item="handleAddItem"
                         draggable="true"
                     />
                 </div>
@@ -119,6 +120,19 @@ const handleItemDelete = (item: MosaicItem) => {
 
 const handleItemReorder = (fromId: string, toId: string) => {
     reorderItems(fromId, toId);
+};
+
+const handleAddItem = (columnIndex: number) => {
+    // Create a new item with the specified column index
+    const newItem: MosaicItem = {
+        id: '',
+        type: 'album',
+        column_index: columnIndex,
+        order: 0,
+        properties: {}
+    };
+    selectedItem.value = newItem;
+    showItemEditor.value = true;
 };
 
 const closeItemEditor = () => {

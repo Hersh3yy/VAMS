@@ -41,7 +41,7 @@
                 <div v-for="album in albums" :key="album.id" class="space-y-4">
                     <div class="flex items-center space-x-3 border-b pb-3">
                         <img
-                            :src="album.cover_image_path || '/placeholder.jpg'"
+                            :src="album.cover_image_path || '/images/placeholder.svg'"
                             :alt="album.title"
                             class="h-12 w-12 rounded-lg object-cover"
                         />

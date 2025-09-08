@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
 const valueClass = computed(() => {
     const classes = {
         primary: 'text-primary',
-        secondary: 'text-secondary', 
+        secondary: 'text-secondary',
         success: 'text-green-600',
         warning: 'text-yellow-600',
         danger: 'text-red-600',

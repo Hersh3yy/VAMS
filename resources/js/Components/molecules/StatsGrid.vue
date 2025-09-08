@@ -1,21 +1,9 @@
 <template>
     <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-            title="Albums"
-            :value="stats.totalAlbums"
-        />
-        <StatCard
-            title="Mosaics"
-            :value="stats.totalMosaics"
-        />
-        <StatCard
-            title="Images"
-            :value="stats.totalImages"
-        />
-        <StatCard
-            title="Videos"
-            :value="stats.totalVideos"
-        />
+        <StatCard title="Albums" :value="stats.totalAlbums" />
+        <StatCard title="Mosaics" :value="stats.totalMosaics" />
+        <StatCard title="Images" :value="stats.totalImages" />
+        <StatCard title="Videos" :value="stats.totalVideos" />
     </div>
 </template>
 

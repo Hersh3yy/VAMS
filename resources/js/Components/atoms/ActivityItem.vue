@@ -2,7 +2,10 @@
     <div class="flex items-center justify-between py-3">
         <div class="flex items-center space-x-3">
             <div class="flex-shrink-0">
-                <div :class="iconBgClass" class="flex h-8 w-8 items-center justify-center rounded-full">
+                <div
+                    :class="iconBgClass"
+                    class="flex h-8 w-8 items-center justify-center rounded-full"
+                >
                     <Icon :name="iconName" size="sm" class="text-white" />
                 </div>
             </div>
@@ -22,9 +25,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import Icon from '@/Components/Base/Icon.vue';
 import Badge from '@/Components/Base/Badge.vue';
+import Icon from '@/Components/Base/Icon.vue';
+import { computed } from 'vue';
 
 interface Activity {
     id: number;

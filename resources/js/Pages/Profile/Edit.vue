@@ -1,48 +1,3 @@
-<script setup lang="ts">
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
-import AlbumDisplaySettingsSection from '@/Components/Profile/AlbumDisplaySettingsSection.vue';
-import DeleteUserForm from '@/Components/Profile/DeleteUserForm.vue';
-import LogoUploadSection from '@/Components/Profile/LogoUploadSection.vue';
-import UpdatePasswordForm from '@/Components/Profile/UpdatePasswordForm.vue';
-import UpdateProfileInformationForm from '@/Components/Profile/UpdateProfileInformationForm.vue';
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    logo_url?: string;
-    album_display_settings?: {
-        main_color?: string;
-        secondary_color?: string;
-        caption?: boolean;
-        altText?: boolean;
-        dateCreated?: boolean;
-        location?: boolean;
-        tags?: boolean;
-        title?: boolean;
-        author?: boolean;
-    };
-}
-
-defineProps<{
-    mustVerifyEmail: boolean;
-    status?: string;
-    album_display_settings: {
-        caption: boolean;
-        altText: boolean;
-        dateCreated: boolean;
-        location: boolean;
-        tags: boolean;
-        title: boolean;
-        author: boolean;
-        main_color: string;
-        secondary_color: string;
-    };
-}>();
-</script>
-
 <template>
     <Head title="Profile" />
 
@@ -80,3 +35,48 @@ defineProps<{
         </div>
     </AuthenticatedLayout>
 </template>
+
+<script setup lang="ts">
+import AlbumDisplaySettingsSection from '@/Components/Profile/AlbumDisplaySettingsSection.vue';
+import DeleteUserForm from '@/Components/Profile/DeleteUserForm.vue';
+import LogoUploadSection from '@/Components/Profile/LogoUploadSection.vue';
+import UpdatePasswordForm from '@/Components/Profile/UpdatePasswordForm.vue';
+import UpdateProfileInformationForm from '@/Components/Profile/UpdateProfileInformationForm.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head } from '@inertiajs/vue3';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    logo_url?: string;
+    album_display_settings?: {
+        main_color?: string;
+        secondary_color?: string;
+        caption?: boolean;
+        altText?: boolean;
+        dateCreated?: boolean;
+        location?: boolean;
+        tags?: boolean;
+        title?: boolean;
+        author?: boolean;
+    };
+}
+
+defineProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
+    album_display_settings: {
+        caption: boolean;
+        altText: boolean;
+        dateCreated: boolean;
+        location: boolean;
+        tags: boolean;
+        title: boolean;
+        author: boolean;
+        main_color: string;
+        secondary_color: string;
+    };
+}>();
+</script>

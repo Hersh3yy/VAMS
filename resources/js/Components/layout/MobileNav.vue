@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import ResponsiveNavLink from '@/Components/Base/ResponsiveNavLink.vue';
-</script>
-
 <template>
     <div class="border-t border-yellow-500 bg-black sm:hidden">
         <div class="space-y-1 pb-3 pt-2">
@@ -66,3 +62,7 @@ import ResponsiveNavLink from '@/Components/Base/ResponsiveNavLink.vue';
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import ResponsiveNavLink from '@/Components/Base/ResponsiveNavLink.vue';
+</script>

@@ -14,11 +14,7 @@
         </div>
 
         <div v-else class="space-y-0 divide-y divide-gray-200 dark:divide-gray-700">
-            <ActivityItem
-                v-for="activity in activities"
-                :key="activity.id"
-                :activity="activity"
-            />
+            <ActivityItem v-for="activity in activities" :key="activity.id" :activity="activity" />
         </div>
     </Card>
 </template>

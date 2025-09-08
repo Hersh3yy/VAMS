@@ -1,9 +1,3 @@
-<script setup lang="ts">
-import Dropdown from '@/Components/Base/Dropdown.vue';
-import DropdownLink from '@/Components/Base/DropdownLink.vue';
-import { Link } from '@inertiajs/vue3';
-</script>
-
 <template>
     <div class="relative ms-3">
         <div v-if="$page.props.is_impersonating" class="mb-2">
@@ -50,3 +44,9 @@ import { Link } from '@inertiajs/vue3';
         </Dropdown>
     </div>
 </template>
+
+<script setup lang="ts">
+import Dropdown from '@/Components/Base/Dropdown.vue';
+import DropdownLink from '@/Components/Base/DropdownLink.vue';
+import { Link } from '@inertiajs/vue3';
+</script>

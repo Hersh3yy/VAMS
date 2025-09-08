@@ -1,5 +1,7 @@
 <template>
-    <div class="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+    <div
+        class="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+    >
         <Button
             v-for="action in actions"
             :key="action.label"
@@ -21,7 +23,15 @@ import Icon from '@/Components/Base/Icon.vue';
 interface Action {
     label: string;
     handler: () => void;
-    icon: 'arrow-left' | 'video' | 'play-circle' | 'play-circle-outline' | 'trash' | 'x' | 'exclamation-triangle' | 'edit';
+    icon:
+        | 'arrow-left'
+        | 'video'
+        | 'play-circle'
+        | 'play-circle-outline'
+        | 'trash'
+        | 'x'
+        | 'exclamation-triangle'
+        | 'edit';
     variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
 }
 

@@ -2,9 +2,9 @@
     <div class="content-grid-wrapper">
         <!-- Empty state -->
         <div v-if="items.length === 0" class="py-12 text-center">
-            <img 
-                src="/images/placeholder.svg" 
-                alt="No items" 
+            <img
+                src="/images/placeholder.svg"
+                alt="No items"
                 class="mx-auto mb-4 h-12 w-12 text-gray-400"
             />
             <h3 class="mb-2 text-lg font-medium text-gray-900 dark:text-yellow-200">
@@ -23,7 +23,7 @@
             <div
                 v-for="item in items"
                 :key="item.id"
-                class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 group"
+                class="group overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
             >
                 <Link :href="getItemRoute(item)" class="block">
                     <div class="relative aspect-video overflow-hidden bg-gray-100">
@@ -37,11 +37,11 @@
                             />
                             <div
                                 v-else
-                                class="h-full w-full flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-600"
+                                class="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-400 to-gray-600"
                             >
-                                <img 
-                                    src="/images/placeholder.svg" 
-                                    alt="No image" 
+                                <img
+                                    src="/images/placeholder.svg"
+                                    alt="No image"
                                     class="h-16 w-16 opacity-50"
                                 />
                             </div>
@@ -68,7 +68,18 @@
     </div>
 </template>
 
-<script setup lang="ts" generic="T extends { id: string | number; title?: string; description?: string; cover_image_path?: string }">
+<script
+    setup
+    lang="ts"
+    generic="
+        T extends {
+            id: string | number;
+            title?: string;
+            description?: string;
+            cover_image_path?: string;
+        }
+    "
+>
 import { Link } from '@inertiajs/vue3';
 
 interface Props {

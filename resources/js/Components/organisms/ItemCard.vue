@@ -16,9 +16,9 @@
                         class="cover-image flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-600"
                     >
                         <slot name="placeholder" :item="item">
-                            <img 
-                                src="/images/placeholder.svg" 
-                                alt="No image" 
+                            <img
+                                src="/images/placeholder.svg"
+                                alt="No image"
                                 class="h-16 w-16 opacity-50"
                             />
                         </slot>
@@ -98,9 +98,9 @@
         }
     "
 >
+import Button from '@/Components/Base/Button.vue';
 import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import Button from '@/Components/Base/Button.vue';
 
 interface CardAction {
     label: string;

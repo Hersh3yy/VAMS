@@ -26,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import AdminStatsGrid from '@/Components/organisms/AdminStatsGrid.vue';
 import AdminQuickActions from '@/Components/organisms/AdminQuickActions.vue';
+import AdminStatsGrid from '@/Components/organisms/AdminStatsGrid.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 interface Stats {

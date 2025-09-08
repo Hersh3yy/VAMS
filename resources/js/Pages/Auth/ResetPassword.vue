@@ -1,25 +1,3 @@
-<script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
-
-const props = defineProps<{
-    email: string;
-    token: string;
-}>();
-
-const form = useForm({
-    token: props.token,
-    email: props.email,
-    password: '',
-    password_confirmation: ''
-});
-
-const submit = () => {
-    form.post(route('password.store'), {
-        onFinish: () => form.reset('password', 'password_confirmation')
-    });
-};
-</script>
-
 <template>
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
@@ -113,3 +91,25 @@ const submit = () => {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { useForm } from '@inertiajs/vue3';
+
+const props = defineProps<{
+    email: string;
+    token: string;
+}>();
+
+const form = useForm({
+    token: props.token,
+    email: props.email,
+    password: '',
+    password_confirmation: ''
+});
+
+const submit = () => {
+    form.post(route('password.store'), {
+        onFinish: () => form.reset('password', 'password_confirmation')
+    });
+};
+</script>

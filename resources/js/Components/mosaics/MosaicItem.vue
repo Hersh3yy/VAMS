@@ -31,7 +31,7 @@
                         :src="
                             item.properties.selected_image.properties?.thumbnail_url ||
                             item.properties?.album?.cover_image_path ||
-                            '/placeholder.jpg'
+                            '/images/placeholder.svg'
                         "
                         :alt="
                             item.properties.selected_image.title ||

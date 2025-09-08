@@ -1,15 +1,3 @@
-<script setup lang="ts">
-import ApplicationLogo from '@/Components/Base/ApplicationLogo.vue';
-import NavLink from '@/Components/Base/NavLink.vue';
-import { Link } from '@inertiajs/vue3';
-import UserDropdown from './UserDropdown.vue';
-
-defineProps<{
-    showingNavigationDropdown: boolean;
-    toggleNavigation: () => void;
-}>();
-</script>
-
 <template>
     <nav class="border-b border-yellow-500 bg-black">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -95,3 +83,15 @@ defineProps<{
         </div>
     </nav>
 </template>
+
+<script setup lang="ts">
+import ApplicationLogo from '@/Components/Base/ApplicationLogo.vue';
+import NavLink from '@/Components/Base/NavLink.vue';
+import { Link } from '@inertiajs/vue3';
+import UserDropdown from './UserDropdown.vue';
+
+defineProps<{
+    showingNavigationDropdown: boolean;
+    toggleNavigation: () => void;
+}>();
+</script>

@@ -4,9 +4,7 @@
         <template #header>
             <div class="page-header">
                 <h2 class="page-title">Mosaics</h2>
-                <Link :href="route('mosaics.create')" class="btn-primary">
-                    Create New Mosaic
-                </Link>
+                <Link :href="route('mosaics.create')" class="btn-primary"> Create New Mosaic </Link>
             </div>
         </template>
 
@@ -24,10 +22,10 @@
 </template>
 
 <script setup lang="ts">
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import MosaicContentWrapper from '@/Components/organisms/MosaicContentWrapper.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Mosaic } from '@/types/mosaic';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps<{
     mosaics: Mosaic[];
@@ -41,8 +39,8 @@ const deleteMosaic = (mosaic: Mosaic) => {
 
 const getMosaicActions = (mosaic: Mosaic) => [
     {
-        label: 'Edit Mosaic',
-        handler: () => router.visit(route('mosaics.edit', mosaic.id)),
+        label: 'View & Edit',
+        handler: () => router.visit(route('mosaics.show', mosaic.id)),
         icon: 'edit' as const,
         variant: 'secondary' as const
     },

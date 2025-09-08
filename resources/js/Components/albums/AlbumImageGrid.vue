@@ -1,8 +1,6 @@
 <template>
     <div v-if="album.images && album.images.length > 0">
-        <label
-            class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Or Select from Album Images
         </label>
 
@@ -10,9 +8,7 @@
         <div v-if="selectedCoverImageId" class="mb-4">
             <div class="flex items-center space-x-4">
                 <div class="flex-shrink-0">
-                    <div
-                        class="mb-2 text-sm text-gray-600 dark:text-gray-400"
-                    >
+                    <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
                         Selected as cover:
                     </div>
                     <div
@@ -33,11 +29,7 @@
                     </div>
                 </div>
                 <div>
-                    <BaseButton
-                        variant="secondary"
-                        size="sm"
-                        @click="$emit('clear-selection')"
-                    >
+                    <BaseButton variant="secondary" size="sm" @click="$emit('clear-selection')">
                         Clear Selection
                     </BaseButton>
                 </div>
@@ -46,16 +38,8 @@
 
         <!-- Image Selector -->
         <div>
-            <BaseButton
-                variant="secondary"
-                @click="$emit('toggle-selector')"
-                type="button"
-            >
-                {{
-                    showSelector
-                        ? 'Hide Images'
-                        : 'Choose from Album Images'
-                }}
+            <BaseButton variant="secondary" @click="$emit('toggle-selector')" type="button">
+                {{ showSelector ? 'Hide Images' : 'Choose from Album Images' }}
             </BaseButton>
 
             <div
@@ -68,8 +52,7 @@
                     @click="$emit('select-image', image)"
                     class="relative cursor-pointer overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-secondary"
                     :class="{
-                        'ring-2 ring-secondary':
-                            selectedCoverImageId === image.id
+                        'ring-2 ring-secondary': selectedCoverImageId === image.id
                     }"
                 >
                     <div class="aspect-square">
@@ -90,8 +73,7 @@
             </div>
 
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Click on an image or video thumbnail to select it as the
-                album cover.
+                Click on an image or video thumbnail to select it as the album cover.
             </p>
         </div>
     </div>
@@ -99,8 +81,6 @@
 
 <script>
 import { computed } from 'vue';
-import BaseButton from '@/Components/Base/Button.vue';
-import VideoPlayIcon from '@/Components/Base/VideoPlayIcon.vue';
 
 const props = defineProps({
     album: {

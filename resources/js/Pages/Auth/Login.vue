@@ -1,6 +1,10 @@
 <template>
-    <div class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0">
-        <div class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg">
+    <div
+        class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
+    >
+        <div
+            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg"
+        >
             <!-- Status Message -->
             <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
                 {{ status }}
@@ -62,9 +66,9 @@
 </template>
 
 <script setup lang="ts">
-import { Link, useForm } from '@inertiajs/vue3';
 import FormField from '@/Components/molecules/FormField.vue';
 import PasswordField from '@/Components/molecules/PasswordField.vue';
+import { Link, useForm } from '@inertiajs/vue3';
 
 defineProps<{
     canResetPassword?: boolean;

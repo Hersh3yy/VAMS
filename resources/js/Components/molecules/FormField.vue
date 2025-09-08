@@ -1,12 +1,7 @@
 <template>
     <div :class="containerClass">
-        <BaseLabel 
-            v-if="label" 
-            :text="label" 
-            :for-id="id" 
-            :required="required" 
-        />
-        
+        <BaseLabel v-if="label" :text="label" :for-id="id" :required="required" />
+
         <div :class="inputWrapperClass">
             <BaseInput
                 :id="id"
@@ -21,12 +16,12 @@
                 :size="size"
                 @update:model-value="$emit('update:modelValue', $event)"
             />
-            
+
             <slot name="append" />
         </div>
-        
+
         <BaseErrorMessage :error="error" />
-        
+
         <p v-if="hint" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {{ hint }}
         </p>
@@ -34,10 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import BaseLabel from '@/Components/atoms/BaseLabel.vue';
-import BaseInput from '@/Components/atoms/BaseInput.vue';
 import BaseErrorMessage from '@/Components/atoms/BaseErrorMessage.vue';
+import BaseInput from '@/Components/atoms/BaseInput.vue';
+import BaseLabel from '@/Components/atoms/BaseLabel.vue';
+import { computed } from 'vue';
 
 interface Props {
     id?: string;

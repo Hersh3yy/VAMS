@@ -7,7 +7,7 @@
                 </h3>
                 <Link
                     :href="route('albums.index')"
-                    class="text-sm font-medium text-secondary hover:text-secondary/80"
+                    class="hover:text-secondary/80 text-sm font-medium text-secondary"
                 >
                     View all →
                 </Link>
@@ -17,10 +17,7 @@
         <div v-if="entities.length === 0" class="py-8 text-center">
             <Icon name="collection" size="lg" class="mx-auto mb-4 text-gray-400" />
             <p class="text-gray-500 dark:text-yellow-400">No entities yet</p>
-            <Link
-                :href="route('albums.create')"
-                class="btn-primary mt-4 inline-block"
-            >
+            <Link :href="route('albums.create')" class="btn-primary mt-4 inline-block">
                 Create your first album
             </Link>
         </div>
@@ -36,10 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import Card from '@/Components/Base/Card.vue';
 import Icon from '@/Components/Base/Icon.vue';
 import EntityCard from '@/Components/atoms/EntityCard.vue';
+import { Link } from '@inertiajs/vue3';
 
 interface Entity {
     id: string | number;

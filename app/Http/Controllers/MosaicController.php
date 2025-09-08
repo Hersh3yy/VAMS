@@ -53,47 +53,9 @@ class MosaicController extends BaseController
             'columns' => $validated['columns'],
         ]);
 
-        return $this->redirectWithSuccess('mosaics.edit', $mosaic, 'Mosaic created successfully');
+        return $this->redirectWithSuccess('mosaics.show', $mosaic, 'Mosaic created successfully');
     }
 
-    public function edit(Mosaic $mosaic): Response
-    {
-        // Check if user owns this mosaic
-        $this->authorizeOwnership($mosaic);
-
-        // Get mosaic with items using service
-        $mosaic = $this->mosaicService->getMosaicWithItems($mosaic, false);
-
-        // Get user's albums with their images
-        $albums = $this->user()->albums()
-            ->with(['images' => function($query) {
-                $query->orderBy('order');
-            }])
-            ->get()
-            ->map(function($album) {
-                return [
-                    'id' => $album->id,
-                    'title' => $album->title,
-                    'cover_image_path' => $album->cover_image_path,
-                    'images_count' => $album->images->count(),
-                    'images' => $album->images->map(function($image) {
-                        return [
-                            'id' => $image->id,
-                            'path' => $image->path,
-                            'order' => $image->order,
-                            'title' => $image->title,
-                            'caption' => $image->caption,
-                            'properties' => $image->properties
-                        ];
-                    })
-                ];
-            });
-
-        return Inertia::render('Mosaics/Edit', [
-            'mosaic' => $mosaic,
-            'albums' => $albums
-        ]);
-    }
 
     public function show(Mosaic $mosaic): Response
     {
@@ -264,11 +226,17 @@ class MosaicController extends BaseController
             'items_created' => count($validated['items'])
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Mosaic updated successfully',
-            'items_count' => count($validated['items'])
-        ]);
+        // Return redirect for web requests, JSON for API requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Mosaic updated successfully',
+                'items_count' => count($validated['items'])
+            ]);
+        }
+
+        return redirect()->route('mosaics.show', $mosaic->id)
+            ->with('success', 'Mosaic updated successfully');
     }
 
     public function destroy(Mosaic $mosaic): RedirectResponse
@@ -367,7 +335,13 @@ class MosaicController extends BaseController
             'column_index' => $validated['column_index'],
         ]);
 
-        return response()->json($item);
+        // Load the updated mosaic with items for Inertia response
+        $mosaic->load('items');
+        
+        return back()->with([
+            'mosaic' => $mosaic,
+            'new_item' => $item
+        ]);
     }
 
     public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
@@ -386,7 +360,13 @@ class MosaicController extends BaseController
 
         $item->update($validated);
 
-        return response()->json($item);
+        // Load the updated mosaic with items for Inertia response
+        $mosaic->load('items');
+        
+        return back()->with([
+            'mosaic' => $mosaic,
+            'updated_item' => $item
+        ]);
     }
 
     public function destroyItem(Mosaic $mosaic, MosaicItem $item)
@@ -398,7 +378,13 @@ class MosaicController extends BaseController
 
         $item->delete();
 
-        return response()->json(['success' => true]);
+        // Load the updated mosaic with items for Inertia response
+        $mosaic->load('items');
+        
+        return back()->with([
+            'mosaic' => $mosaic,
+            'deleted_item_id' => $item->id
+        ]);
     }
 
     public function reorderItems(Request $request, Mosaic $mosaic)
@@ -422,7 +408,13 @@ class MosaicController extends BaseController
             ]);
         }
 
-        return response()->json(['success' => true]);
+        // Load the updated mosaic with items for Inertia response
+        $mosaic->load('items');
+        
+        return back()->with([
+            'mosaic' => $mosaic,
+            'reordered' => true
+        ]);
     }
 
     public function storeMedia(Request $request, Mosaic $mosaic)

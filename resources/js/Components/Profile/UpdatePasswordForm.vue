@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
 import BaseButton from '@/Components/Base/Button.vue';
+import { useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     current_password: '',
@@ -90,11 +90,7 @@ const updatePassword = () => {
             </div>
 
             <div class="flex items-center gap-4">
-                <BaseButton 
-                    type="submit" 
-                    :disabled="form.processing" 
-                    :loading="form.processing"
-                >
+                <BaseButton type="submit" :disabled="form.processing" :loading="form.processing">
                     Save
                 </BaseButton>
 

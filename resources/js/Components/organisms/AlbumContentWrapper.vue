@@ -8,12 +8,9 @@
         empty-button-text="Create First Album"
     >
         <template #actions="{ item }">
-            <ActionButtons 
-                v-if="actions" 
-                :actions="getSimpleActions(item)" 
-            />
+            <ActionButtons v-if="actions" :actions="getSimpleActions(item)" />
         </template>
-        
+
         <template #content="{ item }">
             <h3 class="text-lg font-semibold dark:text-yellow-200">
                 {{ item.title }}
@@ -29,14 +26,22 @@
 </template>
 
 <script setup lang="ts">
-import ContentGrid from '@/Components/organisms/ContentGrid.vue';
 import ActionButtons from '@/Components/molecules/ActionButtons.vue';
+import ContentGrid from '@/Components/organisms/ContentGrid.vue';
 import type { Album } from '@/types/album';
 
 interface AlbumAction {
     label: string;
     handler: (album: Album) => void;
-    icon: 'arrow-left' | 'video' | 'play-circle' | 'play-circle-outline' | 'trash' | 'x' | 'exclamation-triangle' | 'edit';
+    icon:
+        | 'arrow-left'
+        | 'video'
+        | 'play-circle'
+        | 'play-circle-outline'
+        | 'trash'
+        | 'x'
+        | 'exclamation-triangle'
+        | 'edit';
     variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
 }
 
@@ -51,7 +56,7 @@ const props = defineProps<Props>();
 
 const getSimpleActions = (album: Album) => {
     if (!props.actions) return [];
-    
+
     return props.actions(album).map(action => ({
         label: action.label,
         handler: () => action.handler(album),
@@ -65,5 +70,3 @@ const getAlbumItemCount = (album: Album) => {
     return `${count} ${count === 1 ? 'item' : 'items'}`;
 };
 </script>
-
-

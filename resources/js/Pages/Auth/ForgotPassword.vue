@@ -1,19 +1,3 @@
-<script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
-
-defineProps<{
-    status?: string;
-}>();
-
-const form = useForm({
-    email: ''
-});
-
-const submit = () => {
-    form.post(route('password.email'));
-};
-</script>
-
 <template>
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
@@ -66,3 +50,19 @@ const submit = () => {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { useForm } from '@inertiajs/vue3';
+
+defineProps<{
+    status?: string;
+}>();
+
+const form = useForm({
+    email: ''
+});
+
+const submit = () => {
+    form.post(route('password.email'));
+};
+</script>

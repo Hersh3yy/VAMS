@@ -4,9 +4,7 @@
         <template #header>
             <div class="page-header">
                 <h2 class="page-title">Albums</h2>
-                <Link :href="route('albums.create')" class="btn-primary">
-                    Create Album
-                </Link>
+                <Link :href="route('albums.create')" class="btn-primary"> Create Album </Link>
             </div>
         </template>
 
@@ -23,10 +21,10 @@
 </template>
 
 <script setup lang="ts">
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AlbumContentWrapper from '@/Components/organisms/AlbumContentWrapper.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album } from '@/types/album';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps<{
     albums: Album[];

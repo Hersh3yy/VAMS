@@ -1,51 +1,3 @@
-<script setup>
-import AlbumForm from '@/Components/organisms/AlbumForm.vue';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-
-const form = useForm({
-    title: '',
-    description: '',
-    cover_image: null
-});
-
-const coverImagePreview = ref(null);
-
-const handleFileChange = event => {
-    const file = event.target.files[0];
-    if (file) {
-        form.cover_image = file;
-        // Create preview URL
-        const reader = new FileReader();
-        reader.onload = e => {
-            coverImagePreview.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        form.cover_image = null;
-        coverImagePreview.value = null;
-    }
-};
-
-const clearCoverImage = () => {
-    form.cover_image = null;
-    coverImagePreview.value = null;
-};
-
-const submit = () => {
-    form.post(route('albums.store'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Form will be redirected to show page after successful creation
-        },
-        onError: errors => {
-            console.error('Form submission errors:', errors);
-        }
-    });
-};
-</script>
-
 <template>
     <Head title="Create Album" />
 
@@ -101,3 +53,51 @@ const submit = () => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<script setup>
+import AlbumForm from '@/Components/organisms/AlbumForm.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+const form = useForm({
+    title: '',
+    description: '',
+    cover_image: null
+});
+
+const coverImagePreview = ref(null);
+
+const handleFileChange = event => {
+    const file = event.target.files[0];
+    if (file) {
+        form.cover_image = file;
+        // Create preview URL
+        const reader = new FileReader();
+        reader.onload = e => {
+            coverImagePreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        form.cover_image = null;
+        coverImagePreview.value = null;
+    }
+};
+
+const clearCoverImage = () => {
+    form.cover_image = null;
+    coverImagePreview.value = null;
+};
+
+const submit = () => {
+    form.post(route('albums.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Form will be redirected to show page after successful creation
+        },
+        onError: errors => {
+            console.error('Form submission errors:', errors);
+        }
+    });
+};
+</script>

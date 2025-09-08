@@ -24,7 +24,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mosaics', [MosaicController::class, 'index'])->name('mosaics.index');
     Route::get('/mosaics/create', [MosaicController::class, 'create'])->name('mosaics.create');
     Route::get('/mosaics/{mosaic}', [MosaicController::class, 'show'])->name('mosaics.show');
-    Route::get('/mosaics/{mosaic}/edit', [MosaicController::class, 'edit'])->name('mosaics.edit');
 
     // Profile Frontend Pages
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

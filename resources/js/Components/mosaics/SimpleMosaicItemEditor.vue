@@ -95,7 +95,7 @@
                             >
                                 <div class="aspect-square">
                                     <img
-                                        :src="album.cover_image_path || '/placeholder.jpg'"
+                                        :src="album.cover_image_path || '/images/placeholder.svg'"
                                         :alt="album.title"
                                         class="h-full w-full object-cover"
                                     />
@@ -125,7 +125,10 @@
                             >
                                 <div class="flex items-center space-x-3">
                                     <img
-                                        :src="selectedAlbum?.cover_image_path || '/placeholder.jpg'"
+                                        :src="
+                                            selectedAlbum?.cover_image_path ||
+                                            '/images/placeholder.svg'
+                                        "
                                         :alt="selectedAlbum?.title"
                                         class="h-12 w-12 rounded object-cover"
                                     />
@@ -331,7 +334,7 @@ const getDisplayImageSrc = () => {
     if (props.item?.properties?.selected_image) {
         return getImageUrl(props.item.properties.selected_image);
     }
-    return selectedAlbum.value?.cover_image_path || '/placeholder.jpg';
+    return selectedAlbum.value?.cover_image_path || '/images/placeholder.svg';
 };
 
 const getDisplayImageAlt = () => {

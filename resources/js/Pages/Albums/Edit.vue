@@ -62,22 +62,22 @@
                             </div>
 
                             <!-- Cover Image Selector -->
-                            <AlbumCoverImageSelector
+                            <!-- <AlbumCoverImageSelector
                                 :album="album"
                                 :cover-image-preview="coverImagePreview"
                                 :error="form.errors.cover_image"
                                 @file-change="handleFileChange"
-                            />
+                            /> -->
 
                             <!-- Album Image Grid -->
-                            <AlbumImageGrid
+                            <!-- <AlbumImageGrid
                                 :album="album"
                                 :selected-cover-image-id="form.selected_cover_image_id"
                                 :show-selector="showImageSelector"
                                 @select-image="selectCoverImage"
                                 @clear-selection="clearSelectedCoverImage"
                                 @toggle-selector="showImageSelector = !showImageSelector"
-                            />
+                            /> -->
 
                             <!-- Form Actions -->
                             <div
@@ -105,30 +105,31 @@
     </AuthenticatedLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import BackLink from '@/Components/Base/BackLink.vue';
 import BaseButton from '@/Components/Base/Button.vue';
-import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
-import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
+// import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
+// import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import type { Album } from '@/types/album';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({
-    album: Object
-});
+const props = defineProps<{
+    album: Album;
+}>();
 
 const form = useForm({
     title: props.album.title,
     description: props.album.description || '',
-    cover_image: null,
-    selected_cover_image_id: null
+    cover_image: null as File | null,
+    selected_cover_image_id: null as string | null
 });
 
-const coverImagePreview = ref(null);
+const coverImagePreview = ref<string | null>(null);
 const showImageSelector = ref(false);
 
-const selectCoverImage = image => {
+const selectCoverImage = (image: any) => {
     form.selected_cover_image_id = image.id;
     showImageSelector.value = false;
 
@@ -141,14 +142,17 @@ const clearSelectedCoverImage = () => {
     form.selected_cover_image_id = null;
 };
 
-const handleFileChange = event => {
-    const file = event.target.files[0];
+const handleFileChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file) {
         form.cover_image = file;
         // Create preview URL
         const reader = new FileReader();
-        reader.onload = e => {
-            coverImagePreview.value = e.target.result;
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+            if (e.target?.result) {
+                coverImagePreview.value = e.target.result as string;
+            }
         };
         reader.readAsDataURL(file);
     } else {

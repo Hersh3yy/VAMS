@@ -26,10 +26,7 @@
                 <p class="truncate text-sm font-medium text-gray-900 dark:text-yellow-200">
                     {{ entity.title }}
                 </p>
-                <Badge
-                    :variant="entity.type === 'album' ? 'info' : 'warning'"
-                    size="sm"
-                >
+                <Badge :variant="entity.type === 'album' ? 'info' : 'warning'" size="sm">
                     {{ entity.type }}
                 </Badge>
             </div>
@@ -41,9 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import Icon from '@/Components/Base/Icon.vue';
 import Badge from '@/Components/Base/Badge.vue';
+import Icon from '@/Components/Base/Icon.vue';
+import { Link } from '@inertiajs/vue3';
 
 interface Entity {
     id: string | number;

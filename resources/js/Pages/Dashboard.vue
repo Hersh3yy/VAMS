@@ -1,10 +1,36 @@
+<template>
+    <Head title="Dashboard" />
+
+    <AuthenticatedLayout>
+        <template #header>
+            <DashboardHeader :user-name="user.name" />
+        </template>
+
+        <div class="content-wrapper">
+            <div class="content-container">
+                <!-- Stats Grid -->
+                <StatsGrid :stats="stats" />
+
+                <!-- Recent Content Grid -->
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <!-- Recent Entities -->
+                    <RecentEntitiesSection :entities="recentEntities" />
+
+                    <!-- Recent Activities -->
+                    <RecentActivitiesSection :activities="recentActivities" />
+                </div>
+            </div>
+        </div>
+    </AuthenticatedLayout>
+</template>
+
 <script setup lang="ts">
+import DashboardHeader from '@/Components/molecules/DashboardHeader.vue';
+import RecentActivitiesSection from '@/Components/molecules/RecentActivitiesSection.vue';
+import RecentEntitiesSection from '@/Components/molecules/RecentEntitiesSection.vue';
+import StatsGrid from '@/Components/molecules/StatsGrid.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import DashboardHeader from '@/Components/molecules/DashboardHeader.vue';
-import StatsGrid from '@/Components/molecules/StatsGrid.vue';
-import RecentEntitiesSection from '@/Components/molecules/RecentEntitiesSection.vue';
-import RecentActivitiesSection from '@/Components/molecules/RecentActivitiesSection.vue';
 
 interface Stats {
     totalAlbums: number;
@@ -57,29 +83,3 @@ interface Props {
 
 defineProps<Props>();
 </script>
-
-<template>
-    <Head title="Dashboard" />
-
-    <AuthenticatedLayout>
-        <template #header>
-            <DashboardHeader :user-name="user.name" />
-        </template>
-
-        <div class="content-wrapper">
-            <div class="content-container">
-                <!-- Stats Grid -->
-                <StatsGrid :stats="stats" />
-
-                <!-- Recent Content Grid -->
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                    <!-- Recent Entities -->
-                    <RecentEntitiesSection :entities="recentEntities" />
-
-                    <!-- Recent Activities -->
-                    <RecentActivitiesSection :activities="recentActivities" />
-                </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
-</template>

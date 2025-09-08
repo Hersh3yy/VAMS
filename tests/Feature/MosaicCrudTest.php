@@ -168,11 +168,11 @@ class MosaicCrudTest extends TestCase
 
         $mosaic = Mosaic::factory()->forUser($this->user)->create();
 
-        $response = $this->get(route('mosaics.edit', $mosaic));
+        $response = $this->get(route('mosaics.show', $mosaic));
 
         $response->assertSuccessful();
         $response->assertInertia(fn ($page) => 
-            $page->component('Mosaics/Edit')
+            $page->component('Mosaics/Show')
                  ->has('mosaic')
                  ->where('mosaic.id', $mosaic->id)
         );
@@ -184,7 +184,7 @@ class MosaicCrudTest extends TestCase
 
         $mosaic = Mosaic::factory()->forUser($this->otherUser)->create();
 
-        $response = $this->get(route('mosaics.edit', $mosaic));
+        $response = $this->get(route('mosaics.show', $mosaic));
 
         $response->assertForbidden();
     }

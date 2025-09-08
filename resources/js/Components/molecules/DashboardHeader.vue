@@ -2,9 +2,7 @@
     <div class="page-header">
         <h2 class="page-title">Welcome, {{ userName }}!</h2>
         <div class="flex gap-4">
-            <Button variant="primary" as="a" :href="route('albums.create')">
-                Create Album
-            </Button>
+            <Button variant="primary" as="a" :href="route('albums.create')"> Create Album </Button>
             <Button variant="primary" as="a" :href="route('mosaics.create')">
                 Create Mosaic
             </Button>

@@ -1,25 +1,3 @@
-<script setup lang="ts">
-import { Link, useForm } from '@inertiajs/vue3';
-
-defineProps<{
-    mustVerifyEmail?: boolean;
-    status?: string;
-}>();
-
-const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: ''
-});
-
-const submit = () => {
-    form.post(route('register'), {
-        onFinish: () => form.reset('password', 'password_confirmation')
-    });
-};
-</script>
-
 <template>
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
@@ -142,3 +120,25 @@ const submit = () => {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { Link, useForm } from '@inertiajs/vue3';
+
+defineProps<{
+    mustVerifyEmail?: boolean;
+    status?: string;
+}>();
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: ''
+});
+
+const submit = () => {
+    form.post(route('register'), {
+        onFinish: () => form.reset('password', 'password_confirmation')
+    });
+};
+</script>
