@@ -45,39 +45,27 @@
                         <!-- Filter Options -->
                         <div class="mb-4 flex justify-between">
                             <div class="flex space-x-2">
-                                <button
+                                <BaseButton
                                     @click="activeFilter = 'all'"
-                                    :class="[
-                                        'rounded px-3 py-1',
-                                        activeFilter === 'all'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-200'
-                                    ]"
+                                    :variant="activeFilter === 'all' ? 'primary' : 'secondary'"
+                                    size="sm"
                                 >
                                     All Users
-                                </button>
-                                <button
+                                </BaseButton>
+                                <BaseButton
                                     @click="activeFilter = 'admins'"
-                                    :class="[
-                                        'rounded px-3 py-1',
-                                        activeFilter === 'admins'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-200'
-                                    ]"
+                                    :variant="activeFilter === 'admins' ? 'primary' : 'secondary'"
+                                    size="sm"
                                 >
                                     Admins
-                                </button>
-                                <button
+                                </BaseButton>
+                                <BaseButton
                                     @click="activeFilter = 'pending'"
-                                    :class="[
-                                        'rounded px-3 py-1',
-                                        activeFilter === 'pending'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-200'
-                                    ]"
+                                    :variant="activeFilter === 'pending' ? 'primary' : 'secondary'"
+                                    size="sm"
                                 >
                                     Pending Approval
-                                </button>
+                                </BaseButton>
                             </div>
                             <div>
                                 <input
@@ -192,14 +180,15 @@
                                                             : 'None'
                                                     }}
                                                 </code>
-                                                <button
+                                                <BaseButton
                                                     v-if="user.api_key"
                                                     @click="copyApiKey(user.api_key)"
-                                                    class="text-xs text-blue-600 hover:text-blue-500"
+                                                    variant="ghost"
+                                                    size="sm"
                                                     title="Copy API Key"
                                                 >
                                                     Copy
-                                                </button>
+                                                </BaseButton>
                                             </div>
                                         </td>
                                         <td
@@ -217,27 +206,33 @@
                                                 Edit
                                             </Link>
 
-                                            <button
+                                            <BaseButton
                                                 v-if="!user.is_approved"
                                                 @click="approveUser(user.id)"
+                                                variant="ghost"
+                                                size="sm"
                                                 class="mr-2 text-green-600 hover:text-green-900"
                                             >
                                                 Approve
-                                            </button>
+                                            </BaseButton>
 
-                                            <button
+                                            <BaseButton
                                                 @click="impersonateUser(user.id)"
+                                                variant="ghost"
+                                                size="sm"
                                                 class="mr-2 text-blue-600 hover:text-blue-900"
                                             >
                                                 Impersonate
-                                            </button>
+                                            </BaseButton>
 
-                                            <button
+                                            <BaseButton
                                                 @click="confirmDelete(user)"
+                                                variant="ghost"
+                                                size="sm"
                                                 class="text-red-600 hover:text-red-900"
                                             >
                                                 Delete
-                                            </button>
+                                            </BaseButton>
                                         </td>
                                     </tr>
                                     <tr v-if="filteredUsers.length === 0">
@@ -262,10 +257,10 @@
                     undone.
                 </p>
                 <div class="mt-6 flex justify-end">
-                    <Button variant="secondary" @click="deleteModal = false" class="mr-3">
+                    <BaseButton variant="secondary" @click="deleteModal = false" class="mr-3">
                         Cancel
-                    </Button>
-                    <button @click="deleteUser" class="btn-danger">Delete User</button>
+                    </BaseButton>
+                    <BaseButton variant="danger" @click="deleteUser">Delete User</BaseButton>
                 </div>
             </div>
         </Modal>
@@ -273,7 +268,7 @@
 </template>
 
 <script setup>
-import Button from '@/Components/Base/Button.vue';
+import BaseButton from '@/Components/Base/Button.vue';
 import Modal from '@/Components/Base/Modal.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';

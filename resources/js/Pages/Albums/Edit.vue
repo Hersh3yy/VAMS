@@ -16,6 +16,7 @@
                 <div class="card">
                     <div class="card-content">
                         <form @submit.prevent="submit" class="space-y-6">
+                            <!-- Album Title -->
                             <div>
                                 <label
                                     for="title"
@@ -37,6 +38,7 @@
                                 </div>
                             </div>
 
+                            <!-- Album Description -->
                             <div>
                                 <label
                                     for="description"
@@ -59,236 +61,25 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label
-                                    for="cover_image"
-                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                >
-                                    Cover Image
-                                </label>
-                                <div class="mt-2 space-y-4">
-                                    <!-- Current and New Image Display -->
-                                    <div class="flex items-start space-x-4">
-                                        <!-- Current Cover Image -->
-                                        <div
-                                            v-if="album.cover_image_path && !coverImagePreview"
-                                            class="flex-shrink-0"
-                                        >
-                                            <div
-                                                class="mb-2 text-sm text-gray-600 dark:text-gray-400"
-                                            >
-                                                Current cover:
-                                            </div>
-                                            <div
-                                                class="image-container h-32 w-32 overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700"
-                                            >
-                                                <img
-                                                    :src="album.cover_image_path"
-                                                    class="cover-image"
-                                                    alt="Current cover"
-                                                />
-                                            </div>
-                                        </div>
+                            <!-- Cover Image Selector -->
+                            <AlbumCoverImageSelector
+                                :album="album"
+                                :cover-image-preview="coverImagePreview"
+                                :error="form.errors.cover_image"
+                                @file-change="handleFileChange"
+                            />
 
-                                        <!-- New Image Preview -->
-                                        <div v-if="coverImagePreview" class="flex-shrink-0">
-                                            <div
-                                                class="mb-2 text-sm text-gray-600 dark:text-gray-400"
-                                            >
-                                                New cover preview:
-                                            </div>
-                                            <div
-                                                class="image-container h-32 w-32 overflow-hidden rounded-lg border-2 border-secondary"
-                                            >
-                                                <img
-                                                    :src="coverImagePreview"
-                                                    class="cover-image"
-                                                    alt="New cover preview"
-                                                />
-                                            </div>
-                                        </div>
+                            <!-- Album Image Grid -->
+                            <AlbumImageGrid
+                                :album="album"
+                                :selected-cover-image-id="form.selected_cover_image_id"
+                                :show-selector="showImageSelector"
+                                @select-image="selectCoverImage"
+                                @clear-selection="clearSelectedCoverImage"
+                                @toggle-selector="showImageSelector = !showImageSelector"
+                            />
 
-                                        <!-- File Input -->
-                                        <div class="flex-1">
-                                            <input
-                                                type="file"
-                                                id="cover_image"
-                                                @change="handleFileChange"
-                                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                                accept="image/*"
-                                            />
-                                            <p
-                                                class="mt-1 text-sm text-gray-500 dark:text-gray-400"
-                                            >
-                                                {{
-                                                    album.cover_image_path
-                                                        ? 'Choose a new image to replace the current cover.'
-                                                        : 'Choose an image for the album cover.'
-                                                }}
-                                                PNG, JPG, GIF up to 10MB.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div
-                                    v-if="form.errors.cover_image"
-                                    class="mt-1 text-sm text-red-600"
-                                >
-                                    {{ form.errors.cover_image }}
-                                </div>
-                            </div>
-
-                            <!-- Select from Album Images -->
-                            <div v-if="album.images && album.images.length > 0">
-                                <label
-                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                >
-                                    Or Select from Album Images
-                                </label>
-
-                                <!-- Selected Cover Image Display -->
-                                <div v-if="form.selected_cover_image_id" class="mb-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="mb-2 text-sm text-gray-600 dark:text-gray-400"
-                                            >
-                                                Selected as cover:
-                                            </div>
-                                            <div
-                                                class="image-container relative h-32 w-32 overflow-hidden rounded-lg border-2 border-secondary"
-                                            >
-                                                <img
-                                                    :src="
-                                                        getImageUrl(
-                                                            album.images.find(
-                                                                img =>
-                                                                    img.id ===
-                                                                    form.selected_cover_image_id
-                                                            )
-                                                        )
-                                                    "
-                                                    class="cover-image"
-                                                    alt="Selected cover"
-                                                />
-                                                <!-- Video badge for selected cover -->
-                                                <div
-                                                    v-if="
-                                                        isVideoItem(
-                                                            album.images.find(
-                                                                img =>
-                                                                    img.id ===
-                                                                    form.selected_cover_image_id
-                                                            )
-                                                        )
-                                                    "
-                                                    class="absolute right-1 top-1 z-10 rounded-full bg-red-600 p-1 text-white"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        class="h-3 w-3"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                                        />
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <button
-                                                @click="clearSelectedCoverImage"
-                                                class="btn btn-secondary text-sm"
-                                            >
-                                                Clear Selection
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Image Selector -->
-                                <div>
-                                    <button
-                                        @click="showImageSelector = !showImageSelector"
-                                        class="btn btn-secondary"
-                                        type="button"
-                                    >
-                                        {{
-                                            showImageSelector
-                                                ? 'Hide Images'
-                                                : 'Choose from Album Images'
-                                        }}
-                                    </button>
-
-                                    <div
-                                        v-if="showImageSelector"
-                                        class="mt-4 grid max-h-64 grid-cols-4 gap-3 overflow-y-auto rounded-lg border p-4 md:grid-cols-6 lg:grid-cols-8"
-                                    >
-                                        <div
-                                            v-for="image in album.images"
-                                            :key="image.id"
-                                            @click="selectCoverImage(image)"
-                                            class="relative cursor-pointer overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-secondary"
-                                            :class="{
-                                                'ring-2 ring-secondary':
-                                                    form.selected_cover_image_id === image.id
-                                            }"
-                                        >
-                                            <div class="aspect-square">
-                                                <img
-                                                    :src="getImageUrl(image)"
-                                                    :alt="image.title || 'Album image'"
-                                                    class="h-full w-full object-cover"
-                                                />
-                                                <!-- Video badge -->
-                                                <div
-                                                    v-if="isVideoItem(image)"
-                                                    class="absolute right-1 top-1 z-10 rounded-full bg-red-600 p-1 text-white"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        class="h-3 w-3"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                                        />
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                        Click on an image or video thumbnail to select it as the
-                                        album cover.
-                                    </p>
-                                </div>
-                            </div>
-
+                            <!-- Form Actions -->
                             <div
                                 class="flex items-center justify-end space-x-3 border-t border-gray-200 pt-6 dark:border-gray-700"
                             >
@@ -298,39 +89,13 @@
                                 >
                                     Cancel
                                 </Link>
-                                <button
+                                <BaseButton
                                     type="submit"
-                                    class="btn-primary"
-                                    :class="{
-                                        'cursor-not-allowed opacity-50': form.processing
-                                    }"
                                     :disabled="form.processing"
+                                    :loading="form.processing"
                                 >
-                                    <span v-if="form.processing" class="flex items-center">
-                                        <svg
-                                            class="-ml-1 mr-2 h-4 w-4 animate-spin"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <circle
-                                                class="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                stroke-width="4"
-                                            />
-                                            <path
-                                                class="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            />
-                                        </svg>
-                                        Updating...
-                                    </span>
-                                    <span v-else>Update Album</span>
-                                </button>
+                                    Update Album
+                                </BaseButton>
                             </div>
                         </form>
                     </div>
@@ -342,6 +107,9 @@
 
 <script setup>
 import BackLink from '@/Components/Base/BackLink.vue';
+import BaseButton from '@/Components/Base/Button.vue';
+import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
+import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -401,41 +169,5 @@ const submit = () => {
             console.error('Form submission errors:', errors);
         }
     });
-};
-
-// Video handling functions (shared with ImageSelectionModal)
-const isVideoItem = image => {
-    if (!image) return false;
-
-    if (image.properties) {
-        const properties =
-            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
-
-        return properties?.type === 'video';
-    }
-
-    // Fallback check based on path
-    return (
-        image.path?.includes('youtube.com') ||
-        image.path?.includes('youtu.be') ||
-        image.path?.includes('vimeo.com')
-    );
-};
-
-const getImageUrl = image => {
-    if (!image) return '/images/placeholder.svg';
-
-    // Try to get thumbnail URL from properties (for videos)
-    if (image.properties) {
-        const properties =
-            typeof image.properties === 'string' ? JSON.parse(image.properties) : image.properties;
-
-        if (properties?.thumbnail_url) {
-            return properties.thumbnail_url;
-        }
-    }
-
-    // Fallback to regular path
-    return image.path;
 };
 </script>

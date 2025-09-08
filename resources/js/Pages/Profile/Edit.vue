@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import AlbumDisplaySettingsSection from './Partials/AlbumDisplaySettingsSection.vue';
-import DeleteUserForm from './Partials/DeleteUserForm.vue';
-import LogoUploadSection from './Partials/LogoUploadSection.vue';
-import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
-import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
+import AlbumDisplaySettingsSection from '@/Components/Profile/AlbumDisplaySettingsSection.vue';
+import DeleteUserForm from '@/Components/Profile/DeleteUserForm.vue';
+import LogoUploadSection from '@/Components/Profile/LogoUploadSection.vue';
+import UpdatePasswordForm from '@/Components/Profile/UpdatePasswordForm.vue';
+import UpdateProfileInformationForm from '@/Components/Profile/UpdateProfileInformationForm.vue';
 
 interface User {
     id: number;

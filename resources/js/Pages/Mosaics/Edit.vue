@@ -14,14 +14,11 @@
                     >
                         No items added yet. Add some items below to get started!
                     </div>
-                    <button
+                    <BaseButton
                         @click="saveMosaic"
-                        class="transform rounded-md px-4 py-2 font-medium transition-all duration-300"
+                        :disabled="!hasChanges || !hasItems || isSaving"
+                        :loading="isSaving"
                         :class="{
-                            'cursor-not-allowed bg-gray-400 text-gray-600 opacity-50':
-                                !hasChanges || !hasItems || isSaving,
-                            'text-white shadow-lg hover:scale-105 hover:shadow-xl':
-                                hasChanges && hasItems && !isSaving,
                             'animate-pulse': (hasChanges && hasItems && !isSaving) || isSaving
                         }"
                         :style="{
@@ -30,7 +27,6 @@
                                     ? 'var(--secondary-color)'
                                     : undefined
                         }"
-                        :disabled="!hasChanges || !hasItems || isSaving"
                     >
                         {{
                             isSaving
@@ -41,7 +37,7 @@
                                     ? 'Save Changes'
                                     : 'Saved'
                         }}
-                    </button>
+                    </BaseButton>
                 </div>
             </div>
         </template>
@@ -53,7 +49,7 @@
                     :mosaic="{
                         ...props.mosaic,
                         items: mosaicItems
-                    }"
+                    }"x
                     :albums="albums"
                     :mosaic-id="props.mosaic.id"
                     @update="handleMosaicUpdate"
@@ -76,6 +72,7 @@
 <script setup lang="ts">
 import ImageSelectionModal from '@/Components/mosaics/ImageSelectionModal.vue';
 import SimpleMosaicEditor from '@/Components/mosaics/SimpleMosaicEditor.vue';
+import BaseButton from '@/Components/Base/Button.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album, AlbumImage, Mosaic, MosaicItem } from '@/types/mosaic';
 import { Head, router } from '@inertiajs/vue3';
