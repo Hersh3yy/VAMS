@@ -1,57 +1,83 @@
 <template>
-    <div class="space-y-1">
-        <label
-            v-if="label"
-            :for="id"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-            {{ label }}
-            <span v-if="required" class="text-red-500">*</span>
-        </label>
-
-        <Input
-            :id="id"
-            :model-value="modelValue"
-            :type="type"
-            :placeholder="placeholder"
-            :disabled="disabled"
-            :required="required"
-            :error="error"
-            @update:model-value="$emit('update:modelValue', $event)"
-            @blur="$emit('blur', $event)"
-            @focus="$emit('focus', $event)"
+    <div :class="containerClass">
+        <BaseLabel 
+            v-if="label" 
+            :text="label" 
+            :for-id="id" 
+            :required="required" 
         />
-
-        <p v-if="helpText" class="text-sm text-gray-500 dark:text-gray-400">
-            {{ helpText }}
+        
+        <div :class="inputWrapperClass">
+            <BaseInput
+                :id="id"
+                :type="type"
+                :model-value="modelValue"
+                :required="required"
+                :autofocus="autofocus"
+                :autocomplete="autocomplete"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :has-error="!!error"
+                :size="size"
+                @update:model-value="$emit('update:modelValue', $event)"
+            />
+            
+            <slot name="append" />
+        </div>
+        
+        <BaseErrorMessage :error="error" />
+        
+        <p v-if="hint" class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {{ hint }}
         </p>
     </div>
 </template>
 
 <script setup lang="ts">
-import Input from '@/Components/Base/Input.vue';
+import { computed } from 'vue';
+import BaseLabel from '@/Components/atoms/BaseLabel.vue';
+import BaseInput from '@/Components/atoms/BaseInput.vue';
+import BaseErrorMessage from '@/Components/atoms/BaseErrorMessage.vue';
 
 interface Props {
-    modelValue: string;
-    label?: string;
     id?: string;
-    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+    label?: string;
+    type?: string;
+    modelValue: string;
+    required?: boolean;
+    autofocus?: boolean;
+    autocomplete?: string;
     placeholder?: string;
     disabled?: boolean;
-    required?: boolean;
     error?: string;
-    helpText?: string;
+    hint?: string;
+    size?: 'sm' | 'md' | 'lg';
+    spacing?: 'sm' | 'md' | 'lg';
 }
 
-const _props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     type: 'text',
+    required: false,
+    autofocus: false,
     disabled: false,
-    required: false
+    size: 'md',
+    spacing: 'md'
 });
 
-defineEmits<{
+const emit = defineEmits<{
     'update:modelValue': [value: string];
-    blur: [event: FocusEvent];
-    focus: [event: FocusEvent];
 }>();
+
+const containerClass = computed(() => {
+    const spacingClasses = {
+        sm: 'mb-3',
+        md: 'mb-4',
+        lg: 'mb-6'
+    };
+    return spacingClasses[props.spacing];
+});
+
+const inputWrapperClass = computed(() => {
+    return props.label ? 'mt-1' : '';
+});
 </script>

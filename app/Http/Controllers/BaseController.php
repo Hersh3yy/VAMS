@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
-abstract class BaseController extends Controller
+abstract class BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 

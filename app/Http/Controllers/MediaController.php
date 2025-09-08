@@ -6,7 +6,7 @@ use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class MediaController extends Controller
+class MediaController
 {
     protected $imageService;
 

@@ -1,24 +1,20 @@
 <template>
     <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-            label="Albums"
+            title="Albums"
             :value="stats.totalAlbums"
-            icon="collection"
         />
         <StatCard
-            label="Mosaics"
+            title="Mosaics"
             :value="stats.totalMosaics"
-            icon="template"
         />
         <StatCard
-            label="Images"
+            title="Images"
             :value="stats.totalImages"
-            icon="photograph"
         />
         <StatCard
-            label="Videos"
+            title="Videos"
             :value="stats.totalVideos"
-            icon="video"
         />
     </div>
 </template>

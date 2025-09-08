@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
-class MediaUploadController extends Controller
+class MediaUploadController
 {
     protected $imageService;
 

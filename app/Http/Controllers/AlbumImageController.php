@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class AlbumImageController extends Controller
+class AlbumImageController
 {
     use AuthorizesRequests;
 

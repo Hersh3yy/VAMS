@@ -1,29 +1,34 @@
 <template>
-    <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-900">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-yellow-400">
-                    {{ label }}
-                </p>
-                <p class="text-3xl font-bold text-secondary">
-                    {{ value }}
-                </p>
-            </div>
-            <div class="flex-shrink-0">
-                <Icon :name="icon" size="lg" class="text-secondary" />
-            </div>
-        </div>
+    <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
+        <h3 class="mb-2 text-lg font-semibold text-gray-700">{{ title }}</h3>
+        <p class="text-3xl font-bold" :class="valueClass">
+            {{ value }}
+        </p>
     </div>
 </template>
 
 <script setup lang="ts">
-import Icon from '@/Components/Base/Icon.vue';
+import { computed } from 'vue';
 
 interface Props {
-    label: string;
-    value: number | string;
-    icon: 'collection' | 'template' | 'photograph' | 'video';
+    title: string;
+    value: string | number;
+    variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'purple';
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    variant: 'primary'
+});
+
+const valueClass = computed(() => {
+    const classes = {
+        primary: 'text-primary',
+        secondary: 'text-secondary', 
+        success: 'text-green-600',
+        warning: 'text-yellow-600',
+        danger: 'text-red-600',
+        purple: 'text-purple-600'
+    };
+    return classes[props.variant];
+});
 </script>

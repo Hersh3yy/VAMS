@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-class DashboardController extends Controller
+class DashboardController
 {
     public function index()
     {
