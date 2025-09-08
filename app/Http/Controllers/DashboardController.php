@@ -100,7 +100,7 @@ class DashboardController
                     'cover_image_path' => null,
                     'items_count' => $mosaic['items_count'],
                     'created_at' => $mosaic['created_at'],
-                    'url' => route('mosaics.edit', $mosaic['id']),
+                    'url' => route('mosaics.show', $mosaic['id']),
                 ];
             }),
         ])->sortByDesc('created_at')->take(6)->values();
