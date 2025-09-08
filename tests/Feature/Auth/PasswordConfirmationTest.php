@@ -1,44 +1,37 @@
 <?php
 
-namespace Tests\Feature\Auth;
+declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class PasswordConfirmationTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    public function test_confirm_password_screen_can_be_rendered(): void
-    {
-        $user = User::factory()->create();
+it('can render confirm password screen', function () {
+    $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/confirm-password');
+    $response = $this->actingAs($user)->get('/confirm-password');
 
-        $response->assertStatus(200);
-    }
+    $response->assertSuccessful();
+});
 
-    public function test_password_can_be_confirmed(): void
-    {
-        $user = User::factory()->create();
+it('can confirm password', function () {
+    $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/confirm-password', [
-            'password' => 'password',
-        ]);
+    $response = $this->actingAs($user)->post('/confirm-password', [
+        'password' => 'password',
+    ]);
 
-        $response->assertRedirect();
-        $response->assertSessionHasNoErrors();
-    }
+    $response->assertRedirect();
+    $response->assertSessionHasNoErrors();
+});
 
-    public function test_password_is_not_confirmed_with_invalid_password(): void
-    {
-        $user = User::factory()->create();
+it('does not confirm password with invalid password', function () {
+    $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/confirm-password', [
-            'password' => 'wrong-password',
-        ]);
+    $response = $this->actingAs($user)->post('/confirm-password', [
+        'password' => 'wrong-password',
+    ]);
 
-        $response->assertSessionHasErrors();
-    }
-}
+    $response->assertSessionHasErrors();
+});

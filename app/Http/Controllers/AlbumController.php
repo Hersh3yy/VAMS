@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAlbumRequest;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
@@ -38,12 +39,9 @@ class AlbumController extends BaseController
         return Inertia::render('Albums/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreAlbumRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $album = $this->user()->albums()->create([
             'id' => Str::uuid(),

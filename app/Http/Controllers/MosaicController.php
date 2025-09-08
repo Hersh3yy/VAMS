@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMosaicRequest;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
@@ -39,18 +40,15 @@ class MosaicController extends BaseController
         return Inertia::render('Mosaics/Create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreMosaicRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'columns' => 'required|integer|min:2|max:5',
-        ]);
+        $validated = $request->validated();
 
         $mosaic = $this->user()->mosaics()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
             'columns' => $validated['columns'],
+            'display_settings' => $validated['display_settings'] ?? null,
         ]);
 
         return $this->redirectWithSuccess('mosaics.show', $mosaic, 'Mosaic created successfully');
