@@ -79,33 +79,33 @@
     </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-    album: {
-        type: Object,
-        required: true
-    },
-    selectedCoverImageId: {
-        type: [String, Number],
-        default: null
-    },
-    showSelector: {
-        type: Boolean,
-        default: false
-    }
+interface Props {
+    album: any;
+    selectedCoverImageId?: string | number | null;
+    showSelector?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    selectedCoverImageId: null,
+    showSelector: false
 });
 
-defineEmits(['select-image', 'clear-selection', 'toggle-selector']);
+defineEmits<{
+    'select-image': [image: any];
+    'clear-selection': [];
+    'toggle-selector': [];
+}>();
 
 // Computed property for selected image
 const selectedImage = computed(() => {
-    return props.album.images?.find(img => img.id === props.selectedCoverImageId);
+    return props.album.images?.find((img: any) => img.id === props.selectedCoverImageId);
 });
 
 // Video handling functions (shared with ImageSelectionModal)
-const isVideoItem = image => {
+const isVideoItem = (image: any) => {
     if (!image) return false;
 
     if (image.properties) {
@@ -123,7 +123,7 @@ const isVideoItem = image => {
     );
 };
 
-const getImageUrl = image => {
+const getImageUrl = (image: any) => {
     if (!image) return '/images/placeholder.svg';
 
     // Try to get thumbnail URL from properties (for videos)

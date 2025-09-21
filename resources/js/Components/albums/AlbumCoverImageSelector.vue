@@ -61,21 +61,16 @@
     </div>
 </template>
 
-<script>
-defineProps({
-    album: {
-        type: Object,
-        required: true
-    },
-    coverImagePreview: {
-        type: String,
-        default: null
-    },
-    error: {
-        type: String,
-        default: null
-    }
-});
+<script setup lang="ts">
+interface Props {
+    album: any;
+    coverImagePreview?: string | null;
+    error?: string | null;
+}
 
-defineEmits(['file-change']);
+defineProps<Props>();
+
+defineEmits<{
+    'file-change': [event: Event];
+}>();
 </script>

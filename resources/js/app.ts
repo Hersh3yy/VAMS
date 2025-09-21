@@ -9,7 +9,7 @@ import 'vue3-toastify/dist/index.css';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { useCsrfToken } from './composables/shared/useCsrfToken';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Visual Album Management System';
 
 createInertiaApp({
     title: title => `${title} - ${appName}`,

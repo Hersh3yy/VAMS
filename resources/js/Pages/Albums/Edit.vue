@@ -62,22 +62,22 @@
                             </div>
 
                             <!-- Cover Image Selector -->
-                            <!-- <AlbumCoverImageSelector
+                            <AlbumCoverImageSelector
                                 :album="album"
                                 :cover-image-preview="coverImagePreview"
                                 :error="form.errors.cover_image"
                                 @file-change="handleFileChange"
-                            /> -->
+                            />
 
                             <!-- Album Image Grid -->
-                            <!-- <AlbumImageGrid
+                            <AlbumImageGrid
                                 :album="album"
                                 :selected-cover-image-id="form.selected_cover_image_id"
                                 :show-selector="showImageSelector"
                                 @select-image="selectCoverImage"
                                 @clear-selection="clearSelectedCoverImage"
                                 @toggle-selector="showImageSelector = !showImageSelector"
-                            /> -->
+                            />
 
                             <!-- Form Actions -->
                             <div
@@ -106,13 +106,13 @@
 </template>
 
 <script setup lang="ts">
+import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
+import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
 import BackLink from '@/Components/Base/BackLink.vue';
 import BaseButton from '@/Components/Base/Button.vue';
-// import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
-// import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album } from '@/types/album';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps<{

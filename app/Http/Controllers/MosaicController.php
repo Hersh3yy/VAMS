@@ -7,23 +7,24 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMosaicRequest;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
-use App\Services\MosaicService;
 use App\Services\ImageService;
+use App\Services\MosaicService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MosaicController extends BaseController
 {
     public function __construct(
         protected readonly MosaicService $mosaicService,
         protected readonly ImageService $imageService
-    ) {
-    }
+    ) {}
 
     // Web Routes
     public function index(): Response
@@ -31,7 +32,7 @@ class MosaicController extends BaseController
         $mosaics = $this->mosaicService->getAllMosaics(false);
 
         return Inertia::render('Mosaics/Index', [
-            'mosaics' => $mosaics
+            'mosaics' => $mosaics,
         ]);
     }
 
@@ -54,7 +55,6 @@ class MosaicController extends BaseController
         return $this->redirectWithSuccess('mosaics.show', $mosaic, 'Mosaic created successfully');
     }
 
-
     public function show(Mosaic $mosaic): Response
     {
         // Check if user owns this mosaic
@@ -65,32 +65,32 @@ class MosaicController extends BaseController
 
         // Get user's albums with their images
         $albums = $this->user()->albums()
-            ->with(['images' => function($query) {
+            ->with(['images' => function ($query) {
                 $query->orderBy('order');
             }])
             ->get()
-            ->map(function($album) {
+            ->map(function ($album) {
                 return [
                     'id' => $album->id,
                     'title' => $album->title,
                     'cover_image_path' => $album->cover_image_path,
                     'images_count' => $album->images->count(),
-                    'images' => $album->images->map(function($image) {
+                    'images' => $album->images->map(function ($image) {
                         return [
                             'id' => $image->id,
                             'path' => $image->path,
                             'order' => $image->order,
                             'title' => $image->title,
                             'caption' => $image->caption,
-                            'properties' => $image->properties
+                            'properties' => $image->properties,
                         ];
-                    })
+                    }),
                 ];
             });
 
         return Inertia::render('Mosaics/Show', [
             'mosaic' => $mosaic,
-            'albums' => $albums
+            'albums' => $albums,
         ]);
     }
 
@@ -98,18 +98,18 @@ class MosaicController extends BaseController
     {
         // Check if user owns this mosaic
         if ($mosaic->user_id !== Auth::id()) {
-            \Log::warning('Unauthorized mosaic update attempt', [
+            Log::warning('Unauthorized mosaic update attempt', [
                 'user_id' => Auth::id(),
                 'mosaic_id' => $mosaic->id,
-                'mosaic_owner' => $mosaic->user_id
+                'mosaic_owner' => $mosaic->user_id,
             ]);
             abort(403);
         }
 
-        \Log::info('Mosaic update started', [
+        Log::info('Mosaic update started', [
             'user_id' => Auth::id(),
             'mosaic_id' => $mosaic->id,
-            'request_data' => $request->all()
+            'request_data' => $request->all(),
         ]);
 
         try {
@@ -117,7 +117,7 @@ class MosaicController extends BaseController
                 'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'columns' => 'nullable|integer|min:2|max:5',
-                'items' => 'required|array', // Temporarily remove min:1 for debugging
+                'items' => 'nullable|array',
                 'items.*.column_index' => 'required|integer|min:0',
                 'items.*.type' => 'required|string|in:album,media,color,text',
                 'items.*.content' => 'nullable',
@@ -125,57 +125,57 @@ class MosaicController extends BaseController
                 'items.*.properties' => 'nullable|array',
                 'items.*.order' => 'required|integer|min:0',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Mosaic update validation failed', [
+        } catch (ValidationException $e) {
+            Log::error('Mosaic update validation failed', [
                 'user_id' => Auth::id(),
                 'mosaic_id' => $mosaic->id,
                 'validation_errors' => $e->errors(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
-            
+
             // Return more user-friendly error messages
             $errors = $e->errors();
             $userFriendlyMessages = [];
-            
+
             if (isset($errors['items'])) {
                 $userFriendlyMessages['items'] = ['Please add at least one item to your mosaic before saving.'];
             }
-            
+
             if (isset($errors['items.*.type'])) {
                 $userFriendlyMessages['items.*.type'] = ['Invalid item type. Please refresh the page and try again.'];
             }
-            
+
             if (isset($errors['items.*.column_index'])) {
                 $userFriendlyMessages['items.*.column_index'] = ['Invalid column position. Please refresh the page and try again.'];
             }
-            
+
             return response()->json([
                 'message' => 'Validation failed. Please check your mosaic items and try again.',
                 'errors' => $userFriendlyMessages ?: $errors,
                 'debug_info' => [
                     'items_count' => is_array($request->get('items')) ? count($request->get('items')) : 0,
-                    'has_items' => !empty($request->get('items'))
-                ]
+                    'has_items' => ! empty($request->get('items')),
+                ],
             ], 422);
         }
 
-        \Log::info('Mosaic update validation passed', [
+        Log::info('Mosaic update validation passed', [
             'user_id' => Auth::id(),
             'mosaic_id' => $mosaic->id,
-            'items_count' => count($validated['items'])
+            'items_count' => isset($validated['items']) ? count($validated['items']) : 0,
         ]);
 
-        // Check if items array is empty and handle accordingly
-        if (empty($validated['items'])) {
+        // Check if items array is empty and handle accordingly (only if items are provided)
+        if (isset($validated['items']) && empty($validated['items'])) {
             Log::warning('Mosaic update attempted with empty items array', [
                 'user_id' => Auth::id(),
-                'mosaic_id' => $mosaic->id
+                'mosaic_id' => $mosaic->id,
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'No items to save. Please add at least one item to your mosaic before saving.',
-                'items_count' => 0
+                'items_count' => 0,
             ], 400);
         }
 
@@ -190,38 +190,40 @@ class MosaicController extends BaseController
         if (isset($validated['columns'])) {
             $updateData['columns'] = $validated['columns'];
         }
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $mosaic->update($updateData);
         }
 
-        // Update items
-        $mosaic->items()->delete(); // Remove old items
-        foreach ($validated['items'] as $index => $item) {
-            try {
-                $mosaic->items()->create([
-                    'column_index' => $item['column_index'],
-                    'type' => $item['type'],
-                    'content' => $item['content'] ?? null,
-                    'album_id' => $item['album_id'] ?? null,
-                    'properties' => $item['properties'] ?? null,
-                    'order' => $item['order'],
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('Failed to create mosaic item', [
-                    'user_id' => Auth::id(),
-                    'mosaic_id' => $mosaic->id,
-                    'item_index' => $index,
-                    'item_data' => $item,
-                    'error' => $e->getMessage()
-                ]);
-                throw $e;
+        // Update items (only if items are provided)
+        if (isset($validated['items']) && ! empty($validated['items'])) {
+            $mosaic->items()->delete(); // Remove old items
+            foreach ($validated['items'] as $index => $item) {
+                try {
+                    $mosaic->items()->create([
+                        'column_index' => $item['column_index'],
+                        'type' => $item['type'],
+                        'content' => $item['content'] ?? null,
+                        'album_id' => $item['album_id'] ?? null,
+                        'properties' => $item['properties'] ?? null,
+                        'order' => $item['order'],
+                    ]);
+                } catch (Exception $e) {
+                    Log::error('Failed to create mosaic item', [
+                        'user_id' => Auth::id(),
+                        'mosaic_id' => $mosaic->id,
+                        'item_index' => $index,
+                        'item_data' => $item,
+                        'error' => $e->getMessage(),
+                    ]);
+                    throw $e;
+                }
             }
         }
 
-        \Log::info('Mosaic update completed successfully', [
+        Log::info('Mosaic update completed successfully', [
             'user_id' => Auth::id(),
             'mosaic_id' => $mosaic->id,
-            'items_created' => count($validated['items'])
+            'items_created' => isset($validated['items']) ? count($validated['items']) : 0,
         ]);
 
         // Return redirect for web requests, JSON for API requests
@@ -229,7 +231,7 @@ class MosaicController extends BaseController
             return response()->json([
                 'success' => true,
                 'message' => 'Mosaic updated successfully',
-                'items_count' => count($validated['items'])
+                'items_count' => isset($validated['items']) ? count($validated['items']) : 0,
             ]);
         }
 
@@ -252,14 +254,14 @@ class MosaicController extends BaseController
     public function showApi(Request $request, Mosaic $mosaic): JsonResponse
     {
         $mosaic = $this->mosaicService->getMosaic($mosaic, true);
-        if (!$mosaic) {
+        if (! $mosaic) {
             return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
         }
-        
+
         return response()->json(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic), 
-            200, 
-            [], 
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            200,
+            [],
             JSON_UNESCAPED_UNICODE
         );
     }
@@ -267,23 +269,23 @@ class MosaicController extends BaseController
     public function showByTitle(string $title): JsonResponse
     {
         $mosaic = Mosaic::where('title', $title)->first();
-        
-        if (!$mosaic) {
+
+        if (! $mosaic) {
             return response()->json(['error' => 'Mosaic not found'], 404);
         }
-        
+
         return $this->showApi(request(), $mosaic);
     }
 
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $mosaic = $user->mosaics()->where('title', $title)->first();
-        if (!$mosaic) {
+        if (! $mosaic) {
             return response()->json(['error' => 'Mosaic not found'], 404);
         }
-        
+
         return $this->showApi($request, $mosaic);
     }
 
@@ -291,16 +293,16 @@ class MosaicController extends BaseController
     {
         $user = $request->user();
         $mosaics = $user->mosaics()->with('items')->get();
-        
+
         return response()->json([
-            'mosaics' => $mosaics->map(fn($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
+            'mosaics' => $mosaics->map(fn ($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         if ($mosaicItem->mosaic->user_id !== $user->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -308,7 +310,7 @@ class MosaicController extends BaseController
         $newItem = $this->mosaicService->splitItem($mosaicItem);
 
         return response()->json([
-            'item' => $this->mosaicService->formatMosaicItemForApi($newItem)
+            'item' => $this->mosaicService->formatMosaicItemForApi($newItem),
         ]);
     }
 
@@ -335,10 +337,10 @@ class MosaicController extends BaseController
 
         // Load the updated mosaic with items for Inertia response
         $mosaic->load('items');
-        
+
         return back()->with([
             'mosaic' => $mosaic,
-            'new_item' => $item
+            'new_item' => $item,
         ]);
     }
 
@@ -360,10 +362,10 @@ class MosaicController extends BaseController
 
         // Load the updated mosaic with items for Inertia response
         $mosaic->load('items');
-        
+
         return back()->with([
             'mosaic' => $mosaic,
-            'updated_item' => $item
+            'updated_item' => $item,
         ]);
     }
 
@@ -378,10 +380,10 @@ class MosaicController extends BaseController
 
         // Load the updated mosaic with items for Inertia response
         $mosaic->load('items');
-        
+
         return back()->with([
             'mosaic' => $mosaic,
-            'deleted_item_id' => $item->id
+            'deleted_item_id' => $item->id,
         ]);
     }
 
@@ -408,10 +410,10 @@ class MosaicController extends BaseController
 
         // Load the updated mosaic with items for Inertia response
         $mosaic->load('items');
-        
+
         return back()->with([
             'mosaic' => $mosaic,
-            'reordered' => true
+            'reordered' => true,
         ]);
     }
 
@@ -428,13 +430,13 @@ class MosaicController extends BaseController
 
         try {
             $file = $request->file('media');
-            
+
             // Use ImageService to store the file (same as albums)
             $result = $this->imageService->storeImage(
                 $file,
                 "mosaics/{$mosaic->id}"
             );
-            
+
             // Determine the type
             $mime = $file->getMimeType();
             $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
@@ -449,14 +451,14 @@ class MosaicController extends BaseController
                     'size' => $file->getSize(),
                     // Include WebP URL if available
                     'webp_url' => $result['webp_url'] ?? null,
-                ]
+                ],
             ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to upload mosaic media: ' . $e->getMessage());
-            
+        } catch (Exception $e) {
+            Log::error('Failed to upload mosaic media: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage()
+                'message' => 'Upload failed: '.$e->getMessage(),
             ], 422);
         }
     }

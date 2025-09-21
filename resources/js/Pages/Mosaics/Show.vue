@@ -146,7 +146,7 @@ const handleItemUpdate = () => {
 };
 
 const handleSaveItem = (item: Partial<MosaicItem>) => {
-    if (selectedItem.value) {
+    if (selectedItem.value && selectedItem.value.id && selectedItem.value.id !== '') {
         updateItem(selectedItem.value.id, item);
     } else {
         addItem(item);
@@ -178,7 +178,7 @@ const handleSaveMosaic = async (data: {
     settings: MosaicDisplaySettings;
 }) => {
     try {
-        await router.put(route('mosaics.update', props.mosaic.id), {
+        await router.patch(route('mosaics.update', props.mosaic.id), {
             title: data.title,
             description: data.description,
             display_settings: { ...data.settings }
