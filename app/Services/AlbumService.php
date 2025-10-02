@@ -7,73 +7,64 @@ namespace App\Services;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
+use App\Services\BaseEntityService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
-class AlbumService
+class AlbumService extends BaseEntityService
 {
+    /**
+     * Get the entity model class name
+     */
+    protected function getEntityModelClass(): string
+    {
+        return Album::class;
+    }
+
+    /**
+     * Get relationships to load for web context
+     */
+    protected function getWebRelationships(): array
+    {
+        return [
+            'images' => function ($query) {
+                $query->orderBy('order');
+            }
+        ];
+    }
+
+    /**
+     * Get relationships to load for API context
+     */
+    protected function getApiRelationships(): array
+    {
+        return [
+            'images' => function ($query) {
+                $query->orderBy('order');
+            }
+        ];
+    }
     /**
      * Get all albums for the current user or for the API
      */
     public function getAllAlbums(bool $forApi = false): Collection
     {
+        $albums = $this->getAll($forApi);
+
         if ($forApi) {
-            // For API, we return all published albums
-            return Album::with(['images' => function ($query) {
-                $query->orderBy('order');
-            }])
-                ->withCount('images')
-                ->get();
+            $albums->loadCount('images');
         }
-        
-        // For web, we only return the user's albums
-        $user = Auth::user();
-        
-        if (!$user instanceof User) {
-            return new Collection();
-        }
-        
-        return $user->albums()
-            ->with(['images' => function ($query) {
-                $query->orderBy('order');
-            }])
-            ->withCount('images')
-            ->orderBy('updated_at', 'desc')
-            ->get();
+
+        return $albums;
     }
-    
+
     /**
      * Get a specific album with its images
-     * 
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getAlbum(string|Album $album, bool $forApi = false): ?Album
     {
-        try {
-            if (is_string($album)) {
-                $album = Album::findOrFail($album);
-            }
-            
-            if (!$album instanceof Album) {
-                return null;
-            }
-            
-            // Load all images for this album ordered correctly
-            $album->load(['images' => function ($query) {
-                $query->orderBy('order');
-            }]);
-            
-            return $album;
-        } catch (\Exception $e) {
-            Log::error('Error in AlbumService@getAlbum:', [
-                'album_id' => is_string($album) ? $album : $album->id ?? 'unknown',
-                'for_api' => $forApi,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        return $this->getById($album, $forApi);
     }
     
     /**
@@ -253,6 +244,17 @@ class AlbumService
                 'main_color' => $settings['main_color'] ?? '#4F46E5',
                 'secondary_color' => $settings['secondary_color'] ?? '#10B981',
             ],
+        ];
+    }
+
+    /**
+     * Format entity with its media for API response
+     */
+    public function formatWithMediaForApi(Model $entity): array
+    {
+        return [
+            'album' => $this->formatForApi($entity),
+            'images' => $entity->images->map(fn(AlbumImage $image) => $this->formatImageForApi($image))
         ];
     }
 }

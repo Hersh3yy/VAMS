@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Album;
+use App\Http\Requests\BaseEntityRequest;
+use App\Models\Entry;
 
-class StoreAlbumRequest extends BaseEntityRequest
+class StoreEntryRequest extends BaseEntityRequest
 {
     /**
      * Get the entity model class name
      */
     protected function getEntityModelClass(): string
     {
-        return Album::class;
+        return Entry::class;
     }
 }

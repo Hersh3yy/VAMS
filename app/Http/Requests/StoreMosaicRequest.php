@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Mosaic;
 
-class StoreMosaicRequest extends FormRequest
+class StoreMosaicRequest extends BaseEntityRequest
 {
+    /**
+     * Get the entity model class name
+     */
+    protected function getEntityModelClass(): string
+    {
+        return Mosaic::class;
+    }
     public function authorize(): bool
     {
         return true; // Authorization is handled by policies

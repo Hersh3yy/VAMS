@@ -180,7 +180,7 @@ class AlbumImageController
             'dateCreated' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
-            'image' => 'nullable|image|max:5120', // 5MB max
+            'image' => 'nullable|image|max:15120', // 5MB max
         ]);
 
         // The mutators in the model will handle mapping to the appropriate columns

@@ -25,6 +25,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mosaics/create', [MosaicController::class, 'create'])->name('mosaics.create');
     Route::get('/mosaics/{mosaic}', [MosaicController::class, 'show'])->name('mosaics.show');
 
+    // Entry Frontend Pages (I AMS)
+    Route::get('/entries', [\App\Http\Controllers\EntryController::class, 'index'])->name('entries.index');
+    Route::get('/entries/create', [\App\Http\Controllers\EntryController::class, 'create'])->name('entries.create');
+    Route::get('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'show'])->name('entries.show');
+    Route::get('/entries/{entry}/edit', [\App\Http\Controllers\EntryController::class, 'edit'])->name('entries.edit');
+
     // Profile Frontend Pages
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 });
@@ -45,6 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Generic Media Upload (for future entities like blog posts, news articles, etc.)
     Route::post('/media/upload', [\App\Http\Controllers\MediaUploadController::class, 'upload'])->name('media.upload');
+
+    // Entry CRUD operations (I AMS)
+    Route::post('/entries', [\App\Http\Controllers\EntryController::class, 'store'])->name('entries.store');
+    Route::patch('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'update'])->name('entries.update');
+    Route::delete('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'destroy'])->name('entries.destroy');
 
     // Mosaic CRUD operations
     Route::post('/mosaics', [MosaicController::class, 'store'])->name('mosaics.store');

@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\BaseEntity;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Mosaic extends Model
+class Mosaic extends BaseEntity
 {
-    use HasFactory, HasUuids, LogsActivity;
-
     protected $table = 'mosaics';
 
     protected $fillable = [
@@ -35,9 +29,33 @@ class Mosaic extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    /**
+     * Get validation rules for this entity type
+     */
+    public static function getValidationRules(): array
     {
-        return $this->belongsTo(User::class);
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'columns' => ['nullable', 'integer', 'min:2', 'max:5'],
+            'display_settings' => ['nullable', 'array'],
+        ];
+    }
+
+    /**
+     * Check if the entity has media attachments
+     */
+    public function hasMedia(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get media relationships for this entity
+     */
+    public function getMediaRelationships(): array
+    {
+        return ['items', 'media'];
     }
 
     public function items(): HasMany

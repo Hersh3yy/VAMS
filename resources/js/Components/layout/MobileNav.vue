@@ -16,6 +16,13 @@
                 Albums
             </ResponsiveNavLink>
             <ResponsiveNavLink
+                :href="route('entries.index')"
+                :active="route().current('entries.*')"
+                class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
+            >
+                Entries
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
                 v-if="$page.props.auth?.user?.is_admin"
                 :href="route('admin.dashboard')"
                 :active="route().current('admin.*')"
