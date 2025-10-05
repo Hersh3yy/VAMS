@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -19,11 +18,11 @@ class AdminUserSeeder extends Seeder
         $adminEmail = env('ADMIN_EMAIL', 'info@hiren.ninja');
         $adminName = env('ADMIN_NAME', 'Hiren Test');
         $adminPassword = env('ADMIN_PASSWORD', 'password');
-        
+
         // Check if admin user already exists
         $existingUser = User::where('email', $adminEmail)->first();
-        
-        if (!$existingUser) {
+
+        if (! $existingUser) {
             // Create admin user
             $admin = User::create([
                 'name' => $adminName,
@@ -47,7 +46,7 @@ class AdminUserSeeder extends Seeder
                 ],
                 'api_key' => Str::random(64),
             ]);
-            
+
             $this->command->info("Admin user '{$adminName}' created with email: {$adminEmail}");
         } else {
             $this->command->info("Admin user '{$adminEmail}' already exists");

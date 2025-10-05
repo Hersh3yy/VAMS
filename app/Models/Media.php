@@ -30,4 +30,4 @@ class Media extends Model
     {
         return $this->belongsToMany(Mosaic::class);
     }
-} 
+}

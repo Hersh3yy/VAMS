@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\BaseEntityController;
-use App\Http\Requests\BaseEntityRequest;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
@@ -103,7 +101,7 @@ class MosaicController extends BaseEntityController
                             ];
                         }),
                     ];
-                })
+                }),
         ];
     }
 
@@ -112,12 +110,27 @@ class MosaicController extends BaseEntityController
      */
     public function update(Request $request, $mosaic): JsonResponse|RedirectResponse
     {
+        // Debug: Check what type $mosaic is
+        \Log::info('MosaicController@update - Parameter check:', [
+            'mosaic_type' => gettype($mosaic),
+            'mosaic_value' => $mosaic,
+            'is_object' => is_object($mosaic),
+            'is_string' => is_string($mosaic),
+        ]);
+        
+        // If $mosaic is a string (ID), resolve it to a model
+        if (is_string($mosaic)) {
+            $mosaic = Mosaic::findOrFail($mosaic);
+        }
+        
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             Log::warning('Unauthorized mosaic update attempt', [
                 'user_id' => Auth::id(),
+                'user_id_type' => gettype(Auth::id()),
                 'mosaic_id' => $mosaic->id,
                 'mosaic_owner' => $mosaic->user_id,
+                'mosaic_owner_type' => gettype($mosaic->user_id),
             ]);
             abort(403);
         }
@@ -322,7 +335,7 @@ class MosaicController extends BaseEntityController
     public function storeItem(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -352,7 +365,7 @@ class MosaicController extends BaseEntityController
     public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -377,7 +390,7 @@ class MosaicController extends BaseEntityController
     public function destroyItem(Mosaic $mosaic, MosaicItem $item)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -395,7 +408,7 @@ class MosaicController extends BaseEntityController
     public function reorderItems(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -425,7 +438,7 @@ class MosaicController extends BaseEntityController
     public function storeMedia(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 

@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Base policy for all entities providing common authorization logic
@@ -32,7 +32,7 @@ abstract class BaseEntityPolicy
     {
         return $user->id === $model->user_id
             ? Response::allow()
-            : Response::deny('You do not own this ' . strtolower(class_basename($model)) . '.');
+            : Response::deny('You do not own this '.strtolower(class_basename($model)).'.');
     }
 
     /**
@@ -50,7 +50,7 @@ abstract class BaseEntityPolicy
     {
         return $user->id === $model->user_id
             ? Response::allow()
-            : Response::deny('You do not own this ' . strtolower(class_basename($model)) . '.');
+            : Response::deny('You do not own this '.strtolower(class_basename($model)).'.');
     }
 
     /**
@@ -60,7 +60,7 @@ abstract class BaseEntityPolicy
     {
         return $user->id === $model->user_id
             ? Response::allow()
-            : Response::deny('You do not own this ' . strtolower(class_basename($model)) . '.');
+            : Response::deny('You do not own this '.strtolower(class_basename($model)).'.');
     }
 
     /**

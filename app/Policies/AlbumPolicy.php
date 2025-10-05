@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Album;
 use App\Models\User;
-use App\Policies\BaseEntityPolicy;
 use Illuminate\Auth\Access\Response;
 
 class AlbumPolicy extends BaseEntityPolicy
@@ -16,6 +15,7 @@ class AlbumPolicy extends BaseEntityPolicy
     {
         return Album::class;
     }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -29,9 +29,7 @@ class AlbumPolicy extends BaseEntityPolicy
      */
     public function view(User $user, $album): Response
     {
-        \Illuminate\Support\Facades\Log::info('User ID: ' . $user->id);
-        \Illuminate\Support\Facades\Log::info('Album User ID: ' . $album->user_id);
-        return $user->id === $album->user_id
+        return $user->id == $album->user_id
             ? Response::allow()
             : Response::deny('You do not own this album.');
     }
@@ -49,7 +47,7 @@ class AlbumPolicy extends BaseEntityPolicy
      */
     public function update(User $user, $album): Response
     {
-        return $user->id === $album->user_id
+        return $user->id == $album->user_id
             ? Response::allow()
             : Response::deny('You do not own this album.');
     }
@@ -59,7 +57,7 @@ class AlbumPolicy extends BaseEntityPolicy
      */
     public function delete(User $user, $album): Response
     {
-        return $user->id === $album->user_id
+        return $user->id == $album->user_id
             ? Response::allow()
             : Response::deny('You do not own this album.');
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\BaseEntity;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -84,4 +83,4 @@ class Album extends BaseEntity
     {
         return $this->media()->count();
     }
-} 
+}

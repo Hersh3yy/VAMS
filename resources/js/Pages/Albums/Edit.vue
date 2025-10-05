@@ -5,7 +5,7 @@
         <template #header>
             <div class="page-header">
                 <div class="flex items-center">
-                    <BackLink :href="route('albums.show', album.id)" />
+                    <BackLink :href="route('albums.show', Album.id)" />
                     <h2 class="page-title">Edit Album</h2>
                 </div>
             </div>
@@ -63,7 +63,7 @@
 
                             <!-- Cover Image Selector -->
                             <AlbumCoverImageSelector
-                                :album="album"
+                                :album="Album"
                                 :cover-image-preview="coverImagePreview"
                                 :error="form.errors.cover_image"
                                 @file-change="handleFileChange"
@@ -71,7 +71,7 @@
 
                             <!-- Album Image Grid -->
                             <AlbumImageGrid
-                                :album="album"
+                                :album="Album"
                                 :selected-cover-image-id="form.selected_cover_image_id"
                                 :show-selector="showImageSelector"
                                 @select-image="selectCoverImage"
@@ -84,7 +84,7 @@
                                 class="flex items-center justify-end space-x-3 border-t border-gray-200 pt-6 dark:border-gray-700"
                             >
                                 <Link
-                                    :href="route('albums.show', album.id)"
+                                    :href="route('albums.show', Album.id)"
                                     class="btn btn-secondary"
                                 >
                                     Cancel
@@ -116,12 +116,12 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps<{
-    album: Album;
+    Album: Album;
 }>();
 
 const form = useForm({
-    title: props.album.title,
-    description: props.album.description || '',
+    title: props.Album.title,
+    description: props.Album.description || '',
     cover_image: null as File | null,
     selected_cover_image_id: null as string | null
 });
@@ -162,7 +162,7 @@ const handleFileChange = (event: Event) => {
 };
 
 const submit = () => {
-    form.patch(route('albums.update', props.album.id), {
+    form.patch(route('albums.update', props.Album.id), {
         preserveScroll: true,
         onSuccess: () => {
             // Reset the file input and preview

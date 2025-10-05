@@ -22,7 +22,7 @@ class AlbumImageFactory extends Factory
     {
         return [
             'album_id' => Album::factory(),
-            'path' => 'albums/' . $this->faker->uuid . '.jpg',
+            'path' => 'albums/'.$this->faker->uuid.'.jpg',
             'title' => $this->faker->sentence(2),
             'caption' => $this->faker->sentence(),
             'author' => $this->faker->name(),
@@ -42,12 +42,12 @@ class AlbumImageFactory extends Factory
     public function video(): static
     {
         return $this->state(fn (array $attributes) => [
-            'path' => 'https://www.youtube.com/watch?v=' . $this->faker->regexify('[A-Za-z0-9_-]{11}'),
+            'path' => 'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
             'properties' => [
                 'type' => 'video',
                 'is_video' => true,
-                'video_url' => 'https://www.youtube.com/watch?v=' . $this->faker->regexify('[A-Za-z0-9_-]{11}'),
-                'thumbnail_url' => 'https://img.youtube.com/vi/' . $this->faker->regexify('[A-Za-z0-9_-]{11}') . '/maxresdefault.jpg',
+                'video_url' => 'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
+                'thumbnail_url' => 'https://img.youtube.com/vi/'.$this->faker->regexify('[A-Za-z0-9_-]{11}').'/maxresdefault.jpg',
             ],
         ]);
     }
@@ -71,4 +71,4 @@ class AlbumImageFactory extends Factory
             'order' => $order,
         ]);
     }
-} 
+}

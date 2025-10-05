@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\BaseEntityRequest;
 use App\Models\Entry;
 
 class StoreEntryRequest extends BaseEntityRequest

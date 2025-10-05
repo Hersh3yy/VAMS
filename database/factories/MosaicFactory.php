@@ -53,4 +53,4 @@ class MosaicFactory extends Factory
             'user_id' => $user->id,
         ]);
     }
-} 
+}

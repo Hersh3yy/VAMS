@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\BaseEntity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,7 +14,7 @@ class Entry extends BaseEntity
     protected $fillable = [
         'id',
         'user_id',
-        'entry_collection_id',
+        'entry_type_id',
         'title',
         'content',
         'status',
@@ -24,7 +23,7 @@ class Entry extends BaseEntity
     ];
 
     protected $casts = [
-        'content' => 'array', // Dynamic JSON content
+        'content' => 'json', // Store as JSON but can be simple key-value
         'published_at' => 'datetime',
         'order' => 'integer',
         'created_at' => 'datetime',
@@ -32,11 +31,11 @@ class Entry extends BaseEntity
     ];
 
     /**
-     * Get the collection this entry belongs to
+     * Get the type this entry belongs to
      */
-    public function entryCollection(): BelongsTo
+    public function entryType(): BelongsTo
     {
-        return $this->belongsTo(EntryCollection::class);
+        return $this->belongsTo(EntryType::class);
     }
 
     /**
@@ -54,8 +53,7 @@ class Entry extends BaseEntity
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'entry_collection_id' => ['required', 'uuid', 'exists:entry_collections,id'],
-            'content' => ['required', 'array'],
+            'content' => ['required', 'string'],
             'status' => ['nullable', 'string', 'in:draft,published'],
             'order' => ['nullable', 'integer'],
         ];
@@ -70,8 +68,8 @@ class Entry extends BaseEntity
             'title.required' => 'The entry title is required.',
             'title.max' => 'The entry title cannot be longer than 255 characters.',
             'content.required' => 'The entry content is required.',
-            'entry_collection_id.required' => 'The entry collection is required.',
-            'entry_collection_id.exists' => 'The selected collection does not exist.',
+            'entry_type_id.required' => 'The entry type is required.',
+            'entry_type_id.exists' => 'The selected entry type does not exist.',
             'status.in' => 'The status must be either draft or published.',
         ];
     }
@@ -116,7 +114,7 @@ class Entry extends BaseEntity
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-                    ->whereNotNull('published_at');
+            ->whereNotNull('published_at');
     }
 
     /**

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +31,7 @@ class User extends Authenticatable
         'is_approved',
         'approved_at',
         'api_key',
+        'entry_type_permissions',
     ];
 
     /**
@@ -56,6 +57,7 @@ class User extends Authenticatable
             'theme_settings' => 'array',
             'site_settings' => 'array',
             'album_display_settings' => 'array',
+            'entry_type_permissions' => 'array',
             'is_admin' => 'boolean',
             'is_approved' => 'boolean',
             'approved_at' => 'datetime',
@@ -65,9 +67,9 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($user) {
-            if (!$user->api_key) {
+            if (! $user->api_key) {
                 $user->api_key = Str::random(32);
             }
         });
@@ -88,9 +90,36 @@ class User extends Authenticatable
         return $this->hasMany(Entry::class);
     }
 
-    public function entryCollections()
+    /**
+     * Get allowed entry types for this user based on permissions
+     */
+    public function allowedEntryTypes()
     {
-        return $this->hasMany(EntryCollection::class);
+        $permissions = $this->entry_type_permissions ?? [];
+
+        // If no permissions set, return empty collection (no access)
+        if (empty($permissions)) {
+            return collect();
+        }
+
+        return \App\Models\EntryType::active()
+            ->whereIn('slug', $permissions)
+            ->get();
+    }
+
+    /**
+     * Check if user has permission for entry type
+     */
+    public function hasEntryTypePermission(string $slug): bool
+    {
+        $permissions = $this->entry_type_permissions ?? [];
+
+        // Empty permissions means no access
+        if (empty($permissions)) {
+            return false;
+        }
+
+        return in_array($slug, $permissions);
     }
 
     public function activities()
@@ -102,6 +131,7 @@ class User extends Authenticatable
     {
         $this->api_key = Str::random(32);
         $this->save();
+
         return $this->api_key;
     }
 
@@ -109,6 +139,7 @@ class User extends Authenticatable
     {
         $this->api_key = Str::random(32);
         $this->save();
+
         return $this->api_key;
     }
 }

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Mosaic;
 use App\Models\User;
-use App\Policies\BaseEntityPolicy;
 use Illuminate\Auth\Access\Response;
 
 class MosaicPolicy extends BaseEntityPolicy
@@ -16,6 +15,7 @@ class MosaicPolicy extends BaseEntityPolicy
     {
         return Mosaic::class;
     }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -29,7 +29,7 @@ class MosaicPolicy extends BaseEntityPolicy
      */
     public function view(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }
@@ -47,7 +47,7 @@ class MosaicPolicy extends BaseEntityPolicy
      */
     public function update(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }
@@ -57,7 +57,7 @@ class MosaicPolicy extends BaseEntityPolicy
      */
     public function delete(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }

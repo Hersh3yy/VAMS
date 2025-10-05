@@ -107,9 +107,20 @@ const props = defineProps({
     }
 })
 
+// Extract content from JSON structure
+const getContent = () => {
+    if (!props.entry.content) return ''
+    
+    if (typeof props.entry.content === 'object') {
+        return props.entry.content.statement || props.entry.content.content || ''
+    }
+    
+    return props.entry.content
+}
+
 const form = useForm({
     title: props.entry.title,
-    content: props.entry.content,
+    content: getContent(),
     status: props.entry.status
 })
 

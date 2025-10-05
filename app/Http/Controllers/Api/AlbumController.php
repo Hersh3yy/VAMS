@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Album;
 use App\Services\AlbumService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * READ-ONLY API for external frontends using API keys
@@ -17,8 +17,7 @@ class AlbumController extends BaseApiController
 {
     public function __construct(
         protected readonly AlbumService $albumService,
-    ) {
-    }
+    ) {}
 
     /**
      * Get all albums for the authenticated user (API key)
@@ -31,7 +30,7 @@ class AlbumController extends BaseApiController
         $albums = $user->albums()->with('images')->get();
 
         return $this->success([
-            'albums' => $albums->map(fn (Album $album) => $this->albumService->formatAlbumForApi($album))
+            'albums' => $albums->map(fn (Album $album) => $this->albumService->formatAlbumForApi($album)),
         ]);
     }
 
@@ -44,7 +43,7 @@ class AlbumController extends BaseApiController
         $user = $request->user();
 
         $album = $user->albums()->with('images')->find($id);
-        if (!$album) {
+        if (! $album) {
             return $this->notFound('Album not found');
         }
 
@@ -62,7 +61,7 @@ class AlbumController extends BaseApiController
         $user = $request->user();
 
         $album = $user->albums()->where('title', $title)->with('images')->first();
-        if (!$album) {
+        if (! $album) {
             return $this->notFound('Album not found');
         }
 

@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Services\ImageService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class MediaUploadController
@@ -35,10 +34,10 @@ class MediaUploadController
         try {
             $entityType = $request->input('entity_type');
             $entityId = $request->input('entity_id');
-            
+
             // Determine the storage folder based on entity type
             $folder = $this->getStorageFolder($entityType, $entityId);
-            
+
             $uploadedMedia = [];
             foreach ($request->file('media') as $index => $file) {
                 Log::info('MediaUploadController@upload - Processing file:', [
@@ -47,24 +46,24 @@ class MediaUploadController
                     'index' => $index,
                     'name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
-                    'mime' => $file->getMimeType()
+                    'mime' => $file->getMimeType(),
                 ]);
 
                 // Use ImageService to store the file
                 $result = $this->imageService->storeImage($file, $folder);
-                
+
                 Log::info('MediaUploadController@upload - File stored:', $result);
 
                 // Create media record
                 $media = $this->createMediaRecord($entityType, $entityId, $result, $file);
-                
+
                 Log::info('MediaUploadController@upload - Media record created:', ['id' => $media->id]);
-                
+
                 $uploadedMedia[] = $media;
             }
 
             Log::info('MediaUploadController@upload - All files processed successfully', [
-                'count' => count($uploadedMedia)
+                'count' => count($uploadedMedia),
             ]);
 
             // Check if this is an AJAX request
@@ -72,31 +71,31 @@ class MediaUploadController
                 return response()->json([
                     'success' => true,
                     'message' => 'Media uploaded successfully',
-                    'media' => $uploadedMedia
+                    'media' => $uploadedMedia,
                 ]);
             }
 
             return back()->with([
                 'message' => 'Media uploaded successfully',
-                'media' => $uploadedMedia
+                'media' => $uploadedMedia,
             ]);
         } catch (\Exception $e) {
             Log::error('MediaUploadController@upload - Error occurred:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
             ]);
 
             // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error uploading media: ' . $e->getMessage()
+                    'message' => 'Error uploading media: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->with('error', 'Error uploading media: ' . $e->getMessage());
+            return back()->with('error', 'Error uploading media: '.$e->getMessage());
         }
     }
 
@@ -144,19 +143,19 @@ class MediaUploadController
     private function createAlbumImageRecord(string $albumId, array $result, $file)
     {
         $album = \App\Models\Album::findOrFail($albumId);
-        
+
         // Check authorization using Gate facade
-        if (!Gate::allows('update', $album)) {
+        if (! Gate::allows('update', $album)) {
             abort(403, 'Unauthorized action.');
         }
-        
+
         // Shift all existing images down to make room at the top
         $album->images()->increment('order', 1);
-        
+
         return $album->images()->create([
             'id' => Str::uuid(),
             'path' => $result['url'],
-            'order' => 0
+            'order' => 0,
         ]);
     }
 
@@ -201,7 +200,7 @@ class MediaUploadController
                 'original_name' => $file->getClientOriginalName(),
                 'entity_type' => $entityType,
                 'entity_id' => $entityId,
-            ]
+            ],
         ]);
 
         // Attach to the appropriate entity using pivot table
@@ -216,15 +215,15 @@ class MediaUploadController
     private function getFileType($file): string
     {
         $mime = $file->getMimeType();
-        
+
         if (str_starts_with($mime, 'image/')) {
             return 'image';
         }
-        
+
         if (str_starts_with($mime, 'video/')) {
             return 'video';
         }
-        
+
         return 'file';
     }
 
@@ -248,7 +247,7 @@ class MediaUploadController
                     $mosaic->media()->attach($media->id, ['order' => ++$lastOrder]);
                 }
                 break;
-            // Add more entity types as needed
+                // Add more entity types as needed
         }
     }
-} 
+}

@@ -48,11 +48,11 @@ class EntryImage extends Model
         if (isset($this->properties['is_video'])) {
             return (bool) $this->properties['is_video'];
         }
-        
+
         // Legacy check based on path
-        return 
-            strpos($this->path, 'youtube.com') !== false || 
-            strpos($this->path, 'youtu.be') !== false || 
+        return
+            strpos($this->path, 'youtube.com') !== false ||
+            strpos($this->path, 'youtu.be') !== false ||
             strpos($this->path, 'vimeo.com') !== false;
     }
 }

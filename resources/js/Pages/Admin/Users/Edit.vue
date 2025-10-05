@@ -114,6 +114,34 @@
                                 </div>
                             </div>
 
+                            <!-- Entry Type Permissions -->
+                            <div class="mb-6 rounded-lg bg-gray-50 p-4">
+                                <h3 class="mb-3 text-lg font-medium text-gray-900">
+                                    Entry Type Permissions
+                                </h3>
+                                <p class="mb-4 text-sm text-gray-600">
+                                    Control which entry types this user can access. Users can only access checked entry types.
+                                </p>
+                                <div class="space-y-3">
+                                    <div v-for="entryType in entryTypes" :key="entryType.id" class="flex items-center">
+                                        <input
+                                            :id="`entry_type_${entryType.slug}`"
+                                            type="checkbox"
+                                            :value="entryType.slug"
+                                            v-model="form.entry_type_permissions"
+                                            class="form-checkbox"
+                                        />
+                                        <label :for="`entry_type_${entryType.slug}`" class="form-label ml-2">
+                                            {{ entryType.name }}
+                                            <span class="text-xs text-gray-500">({{ entryType.slug }})</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div v-if="form.errors.entry_type_permissions" class="form-error">
+                                    {{ form.errors.entry_type_permissions }}
+                                </div>
+                            </div>
+
                             <!-- API Key Management -->
                             <div class="mb-6 rounded-lg bg-gray-50 p-4">
                                 <h3 class="mb-3 text-lg font-medium text-gray-900">
@@ -193,7 +221,11 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
-    user: Object
+    user: Object,
+    entryTypes: {
+        type: Array,
+        default: () => []
+    }
 });
 
 const form = useForm({
@@ -201,7 +233,8 @@ const form = useForm({
     email: props.user.email,
     password: '',
     is_admin: props.user.is_admin,
-    is_approved: props.user.is_approved
+    is_approved: props.user.is_approved,
+    entry_type_permissions: props.user.entry_type_permissions || []
 });
 
 // API Key Management

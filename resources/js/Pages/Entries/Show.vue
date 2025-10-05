@@ -32,7 +32,7 @@
                         </div>
 
                         <div class="prose dark:prose-invert max-w-none">
-                            <div class="text-lg leading-relaxed whitespace-pre-wrap">{{ entry.content }}</div>
+                            <div class="text-lg leading-relaxed whitespace-pre-wrap">{{ getEntryContent }}</div>
                         </div>
                     </div>
                 </div>
@@ -43,11 +43,23 @@
 
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
-defineProps({
+const props = defineProps({
     entry: {
         type: Object,
         required: true
     }
+})
+
+const getEntryContent = computed(() => {
+    if (!props.entry.content) return ''
+    
+    // Handle JSON content
+    if (typeof props.entry.content === 'object') {
+        return props.entry.content.statement || props.entry.content.content || ''
+    }
+    
+    return props.entry.content
 })
 </script>

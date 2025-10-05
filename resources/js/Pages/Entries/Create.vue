@@ -1,19 +1,20 @@
 <template>
-    <div>
-        <Head title="Create I AM" />
+    <Head :title="`Create ${entryType.name}`" />
+
+    <AuthenticatedLayout>
         
         <div class="py-12">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-semibold">Create New I AM</h2>
-                            <Link :href="route('entries.index')" class="text-gray-500 hover:text-gray-700">
-                                ← Back to I AMS
+                            <h2 class="text-2xl font-semibold">Create New {{ entryType.name }}</h2>
+                            <Link :href="route('entries.index', { type: entryType.slug })" class="text-gray-500 hover:text-gray-700">
+                                ← Back to {{ entryType.name }}
                             </Link>
                         </div>
 
-                        <form @submit.prevent="form.post(route('entries.store'))" class="space-y-6">
+                        <form @submit.prevent="submitForm" class="space-y-6">
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Title
@@ -23,7 +24,7 @@
                                     v-model="form.title"
                                     type="text"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="Give your I AM a title..."
+                                    :placeholder="`Give your ${entryType.name} a title...`"
                                     required
                                 />
                                 <div v-if="form.errors.title" class="text-red-600 text-sm mt-1">
@@ -66,7 +67,7 @@
                             </div>
 
                             <div class="flex justify-end space-x-3">
-                                <Link :href="route('entries.index')" 
+                                <Link :href="route('entries.index', { type: entryType.slug })" 
                                       class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     Cancel
                                 </Link>
@@ -84,15 +85,28 @@
                 </div>
             </div>
         </div>
-    </div>
+    </AuthenticatedLayout>
 </template>
 
 <script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
+
+const props = defineProps({
+    entryType: Object
+});
 
 const form = useForm({
     title: '',
     content: '',
-    status: 'draft'
+    status: 'draft',
+    entry_type_id: ''
 })
+
+const submitForm = () => {
+    // Set the entry_type_id before submitting
+    form.entry_type_id = props.entryType.id;
+    
+    form.post(route('entries.store'));
+}
 </script>

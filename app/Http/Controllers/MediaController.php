@@ -24,18 +24,18 @@ class MediaController
         try {
             $result = $this->imageService->storeImage(
                 $request->file('media'),
-                'uploads/' . Auth::user()->id
+                'uploads/'.Auth::user()->id
             );
 
             return response()->json([
                 'success' => true,
-                'data' => $result
+                'data' => $result,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage()
+                'message' => 'Upload failed: '.$e->getMessage(),
             ], 422);
         }
     }
-} 
+}

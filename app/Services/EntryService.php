@@ -5,17 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Entry;
-use App\Services\BaseEntityService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class EntryService extends BaseEntityService
 {
-    public function __construct()
-    {
-        // No specific dependencies for EntryService
-    }
-
     /**
      * Get the entity model class name
      */
@@ -25,101 +19,117 @@ class EntryService extends BaseEntityService
     }
 
     /**
-     * Get all entries for the current user or API context
+     * Get relationships to load for web context
+     */
+    protected function getWebRelationships(): array
+    {
+        return [
+            'entryType',
+            'images' => function ($query) {
+                $query->orderBy('field_name')->orderBy('order');
+            },
+        ];
+    }
+
+    /**
+     * Get relationships to load for API context
+     */
+    protected function getApiRelationships(): array
+    {
+        return [
+            'entryType',
+            'images' => function ($query) {
+                $query->orderBy('field_name')->orderBy('order');
+            },
+        ];
+    }
+
+    /**
+     * Get all entries for the current user
+     */
+    public function getAllEntries(bool $forApi = false): Collection
+    {
+        return $this->getAll($forApi)
+            ->load('entryType')
+            ->sortBy('order');
+    }
+
+    /**
+     * Override to use correct relationship name
      */
     public function getAll(bool $forApi = false): Collection
     {
-        $query = auth()->user()->entries()->orderBy('order')->latest();
+        $user = Auth::user();
 
-        if ($forApi) {
-            // For API, only return published entries
-            $query->published();
+        if (! $user) {
+            return new Collection;
         }
 
-        return $query->get();
+        $relationships = $forApi ? $this->getApiRelationships() : $this->getWebRelationships();
+
+        return $user->entries()
+            ->with($relationships)
+            ->orderBy('order')
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 
     /**
      * Get a specific entry with its relationships
      */
-    public function getById(string|Model $entry, bool $forApi = false): ?Model
+    public function getEntry(string|Entry $entry, bool $forApi = false): ?Entry
     {
-        if (is_string($entry)) {
-            $entry = Entry::find($entry);
-        }
-
-        if (!$entry) {
-            return null;
-        }
-
-        // For API, only return published entries
-        if ($forApi && $entry->status !== 'published') {
-            return null;
-        }
-
-        return $entry;
+        return $this->getById($entry, $forApi);
     }
 
     /**
-     * Format entry for API response
+     * Format entry data for API response
      */
-    public function formatForApi(Model $entry): array
+    public function formatEntryForApi(Entry $entry): array
     {
         return [
             'id' => $entry->id,
             'title' => $entry->title,
             'content' => $entry->content,
             'status' => $entry->status,
-            'order' => $entry->order,
             'published_at' => $entry->published_at?->toISOString(),
-            'created_at' => $entry->created_at->toISOString(),
-            'updated_at' => $entry->updated_at->toISOString(),
+            'order' => $entry->order,
+            'entry_type' => [
+                'id' => $entry->entryType->id,
+                'name' => $entry->entryType->name,
+                'slug' => $entry->entryType->slug,
+            ],
+            'user_id' => $entry->user_id,
+            'created_at' => $entry->created_at?->toISOString(),
+            'updated_at' => $entry->updated_at?->toISOString(),
         ];
     }
 
     /**
-     * Format entry with its media for API response
+     * Reorder entries
      */
-    public function formatWithMediaForApi(Model $entry): array
+    public function reorder(array $orderedIds): void
     {
-        // Entries don't have media relationships for now
-        return $this->formatForApi($entry);
+        $user = Auth::user();
+
+        if (! $user) {
+            return;
+        }
+
+        foreach ($orderedIds as $index => $id) {
+            $user->entries()->where('id', $id)->update(['order' => $index]);
+        }
     }
 
     /**
-     * Get recent entries for the current user
+     * Format entity with its media for API response (required by contract)
      */
-    public function getRecent(int $limit = 3): Collection
+    public function formatWithMediaForApi(\Illuminate\Database\Eloquent\Model $entity): array
     {
-        return auth()->user()->entries()
-            ->latest()
-            ->limit($limit)
-            ->get();
-    }
+        if (! $entity instanceof Entry) {
+            return [];
+        }
 
-    /**
-     * Publish an entry
-     */
-    public function publish(Entry $entry): Entry
-    {
-        $entry->update([
-            'status' => 'published',
-            'published_at' => now(),
-        ]);
-
-        return $entry;
-    }
-
-    /**
-     * Unpublish an entry (set to draft)
-     */
-    public function unpublish(Entry $entry): Entry
-    {
-        $entry->update([
-            'status' => 'draft',
-            'published_at' => null,
-        ]);
-
-        return $entry;
+        return $this->formatEntryForApi($entity);
     }
 }

@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
 use App\Models\Album;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Inertia\Inertia;
 
 class DashboardController
@@ -17,7 +16,7 @@ class DashboardController
             'total_albums' => Album::count(),
             'total_admins' => User::where('is_admin', true)->count(),
         ];
-        
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
         ]);

@@ -15,6 +15,7 @@ class StoreMosaicRequest extends BaseEntityRequest
     {
         return Mosaic::class;
     }
+
     public function authorize(): bool
     {
         return true; // Authorization is handled by policies
@@ -45,4 +46,4 @@ class StoreMosaicRequest extends BaseEntityRequest
             'columns.max' => 'The mosaic cannot have more than 5 columns.',
         ];
     }
-} 
+}

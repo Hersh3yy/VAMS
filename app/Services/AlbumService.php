@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
-use App\Services\BaseEntityService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +29,7 @@ class AlbumService extends BaseEntityService
         return [
             'images' => function ($query) {
                 $query->orderBy('order');
-            }
+            },
         ];
     }
 
@@ -42,9 +41,10 @@ class AlbumService extends BaseEntityService
         return [
             'images' => function ($query) {
                 $query->orderBy('order');
-            }
+            },
         ];
     }
+
     /**
      * Get all albums for the current user or for the API
      */
@@ -66,7 +66,7 @@ class AlbumService extends BaseEntityService
     {
         return $this->getById($album, $forApi);
     }
-    
+
     /**
      * Format album data for API response
      */
@@ -80,19 +80,19 @@ class AlbumService extends BaseEntityService
             'images_count' => $album->images_count ?? $album->images->count(),
             'user_id' => $album->user_id,
             'created_at' => $album->created_at?->toISOString(),
-            'updated_at' => $album->updated_at?->toISOString()
+            'updated_at' => $album->updated_at?->toISOString(),
         ];
     }
-    
+
     /**
      * Format image data for API response
      */
     public function formatImageForApi(AlbumImage $image): array
     {
-        $properties = is_string($image->properties) ? 
-            json_decode($image->properties, true) : 
+        $properties = is_string($image->properties) ?
+            json_decode($image->properties, true) :
             ($image->properties ?? []);
-            
+
         return [
             'id' => $image->id,
             'title' => $image->title,
@@ -105,10 +105,10 @@ class AlbumService extends BaseEntityService
             'order' => $image->order,
             'properties' => $properties,
             'created_at' => $image->created_at?->toISOString(),
-            'updated_at' => $image->updated_at?->toISOString()
+            'updated_at' => $image->updated_at?->toISOString(),
         ];
     }
-    
+
     /**
      * Format album with images for API response
      */
@@ -116,7 +116,7 @@ class AlbumService extends BaseEntityService
     {
         return [
             'album' => $this->formatAlbumForApi($album),
-            'images' => $album->images->map(fn(AlbumImage $image) => $this->formatImageForApi($image))
+            'images' => $album->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
         ];
     }
 
@@ -129,10 +129,10 @@ class AlbumService extends BaseEntityService
             ->orderBy('order')
             ->get()
             ->map(function (AlbumImage $image) {
-                $properties = is_string($image->properties) ? 
-                    json_decode($image->properties, true) : 
+                $properties = is_string($image->properties) ?
+                    json_decode($image->properties, true) :
                     ($image->properties ?? []);
-                    
+
                 return [
                     'id' => $image->id,
                     'created_at' => $image->created_at?->toISOString(),
@@ -146,10 +146,10 @@ class AlbumService extends BaseEntityService
                         'url' => $image->path,
                         'formats' => [
                             'thumbnail' => [
-                                'url' => $image->path
-                            ]
-                        ]
-                    ]
+                                'url' => $image->path,
+                            ],
+                        ],
+                    ],
                 ];
             })
             ->toArray();
@@ -161,11 +161,11 @@ class AlbumService extends BaseEntityService
     public function getRecentAlbums(int $limit = 3): Collection
     {
         $user = Auth::user();
-        
-        if (!$user instanceof User) {
-            return new Collection();
+
+        if (! $user instanceof User) {
+            return new Collection;
         }
-        
+
         return $user->albums()
             ->withCount('images')
             ->orderBy('updated_at', 'desc')
@@ -196,8 +196,8 @@ class AlbumService extends BaseEntityService
             ->orderBy('order')
             ->get()
             ->map(function (AlbumImage $image) use ($settings, $album) {
-                $properties = is_string($image->properties) ? 
-                    json_decode($image->properties, true) : 
+                $properties = is_string($image->properties) ?
+                    json_decode($image->properties, true) :
                     ($image->properties ?? []);
 
                 $formattedImage = [
@@ -254,7 +254,7 @@ class AlbumService extends BaseEntityService
     {
         return [
             'album' => $this->formatForApi($entity),
-            'images' => $entity->images->map(fn(AlbumImage $image) => $this->formatImageForApi($image))
+            'images' => $entity->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
         ];
     }
 }

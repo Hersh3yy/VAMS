@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\BaseEntityController;
-use App\Http\Requests\BaseEntityRequest;
 use App\Models\Album;
 use App\Services\AlbumService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class AlbumController extends BaseEntityController
 {
@@ -97,11 +93,24 @@ class AlbumController extends BaseEntityController
     {
         Log::info('AlbumController@update - Incoming request data:', $request->all());
 
+        // Debug: Check what type $album is
+        \Log::info('AlbumController@update - Parameter check:', [
+            'album_type' => gettype($album),
+            'album_value' => $album,
+            'is_object' => is_object($album),
+            'is_string' => is_string($album),
+        ]);
+        
+        // If $album is a string (ID), resolve it to a model
+        if (is_string($album)) {
+            $album = \App\Models\Album::findOrFail($album);
+        }
+
         // Check if user owns this album
         $this->authorizeOwnership($album);
 
         $formRequestClass = $this->getFormRequestClass();
-        $formRequest = new $formRequestClass();
+        $formRequest = new $formRequestClass;
         $rules = $formRequest->rules();
 
         // Add additional validation rules specific to album updates

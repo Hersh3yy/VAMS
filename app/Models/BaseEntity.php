@@ -84,6 +84,7 @@ abstract class BaseEntity extends Model implements EntityContract
     public static function getRouteParameterName(): string
     {
         $className = class_basename(static::class);
+
         return strtolower($className);
     }
 
@@ -92,7 +93,7 @@ abstract class BaseEntity extends Model implements EntityContract
      */
     public static function getRouteParameterNamePlural(): string
     {
-        return static::getRouteParameterName() . 's';
+        return static::getRouteParameterName().'s';
     }
 
     /**
@@ -100,6 +101,6 @@ abstract class BaseEntity extends Model implements EntityContract
      */
     public static function getRouteNamePrefix(): string
     {
-        return static::getRouteParameterNamePlural() . '.';
+        return static::getRouteParameterNamePlural().'.';
     }
 }

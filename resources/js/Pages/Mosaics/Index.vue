@@ -11,7 +11,7 @@
         <div class="content-wrapper">
             <div class="content-container">
                 <MosaicContentWrapper
-                    :mosaics="mosaics"
+                    :mosaics="entities"
                     :create-route="route('mosaics.create')"
                     :get-item-route="(mosaic: Mosaic) => route('mosaics.show', mosaic.id)"
                     :actions="getMosaicActions"
@@ -28,7 +28,7 @@ import type { Mosaic } from '@/types/mosaic';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps<{
-    mosaics: Mosaic[];
+    entities: Mosaic[];
 }>();
 
 const deleteMosaic = (mosaic: Mosaic) => {

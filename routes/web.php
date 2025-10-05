@@ -1,12 +1,10 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AlbumController;
-use App\Http\Controllers\MosaicController;
 use App\Http\Controllers\DashboardController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\MosaicController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Redirect root to dashboard (with auth protection)
 Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
@@ -20,16 +18,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/albums/{album}', [AlbumController::class, 'show'])->name('albums.show');
     Route::get('/albums/{album}/edit', [AlbumController::class, 'edit'])->name('albums.edit');
 
-    // Mosaic Frontend Pages  
+    // Mosaic Frontend Pages
     Route::get('/mosaics', [MosaicController::class, 'index'])->name('mosaics.index');
     Route::get('/mosaics/create', [MosaicController::class, 'create'])->name('mosaics.create');
     Route::get('/mosaics/{mosaic}', [MosaicController::class, 'show'])->name('mosaics.show');
 
-    // Entry Frontend Pages (I AMS)
+    // Entry Frontend Pages
     Route::get('/entries', [\App\Http\Controllers\EntryController::class, 'index'])->name('entries.index');
     Route::get('/entries/create', [\App\Http\Controllers\EntryController::class, 'create'])->name('entries.create');
-    Route::get('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'show'])->name('entries.show');
-    Route::get('/entries/{entry}/edit', [\App\Http\Controllers\EntryController::class, 'edit'])->name('entries.edit');
 
     // Profile Frontend Pages
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -42,7 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/albums/{album}', [AlbumController::class, 'update'])->name('albums.update');
     Route::delete('/albums/{album}', [AlbumController::class, 'destroy'])->name('albums.destroy');
 
-    // Album Images CRUD operations  
+    // Album Images CRUD operations
     Route::post('/albums/{album}/images', [\App\Http\Controllers\AlbumImageController::class, 'store'])->name('albums.images.store');
     Route::post('/albums/{album}/images/video', [\App\Http\Controllers\AlbumImageController::class, 'storeVideo'])->name('albums.images.store-video');
     Route::patch('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'update'])->name('albums.images.update');
@@ -52,9 +48,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Generic Media Upload (for future entities like blog posts, news articles, etc.)
     Route::post('/media/upload', [\App\Http\Controllers\MediaUploadController::class, 'upload'])->name('media.upload');
 
-    // Entry CRUD operations (I AMS)
+    // Entry CRUD operations
     Route::post('/entries', [\App\Http\Controllers\EntryController::class, 'store'])->name('entries.store');
-    Route::patch('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'update'])->name('entries.update');
+    Route::patch('/entries/reorder', [\App\Http\Controllers\EntryController::class, 'reorder'])->name('entries.reorder');
+    Route::patch('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'updateEntry'])->name('entries.update');
     Route::delete('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'destroy'])->name('entries.destroy');
 
     // Mosaic CRUD operations
@@ -93,6 +90,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('users/{user}/approve', [App\Http\Controllers\Admin\UserController::class, 'approve'])->name('users.approve');
     Route::post('users/{user}/impersonate', [App\Http\Controllers\Admin\UserController::class, 'impersonate'])->name('users.impersonate');
     Route::post('users/{user}/regenerate-api-key', [App\Http\Controllers\Admin\UserController::class, 'regenerateApiKey'])->name('users.regenerate-api-key');
+    // Entry type management
+    Route::get('/entry-types', [App\Http\Controllers\Admin\EntryTypeController::class, 'index'])->name('entry-types.index');
+    Route::post('/entry-types', [App\Http\Controllers\Admin\EntryTypeController::class, 'store'])->name('entry-types.store');
+    Route::patch('/entry-types/{entryType}', [App\Http\Controllers\Admin\EntryTypeController::class, 'update'])->name('entry-types.update');
+    Route::delete('/entry-types/{entryType}', [App\Http\Controllers\Admin\EntryTypeController::class, 'destroy'])->name('entry-types.destroy');
 });
 
 // Route for stopping impersonation - accessible to anyone while impersonating
@@ -108,8 +110,8 @@ Route::get('/test-api', function () {
 // CSRF Token refresh route
 Route::get('/csrf-token', function () {
     return response()->json([
-        'csrf_token' => csrf_token()
+        'csrf_token' => csrf_token(),
     ]);
 })->middleware(['web']);
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -55,8 +55,8 @@ abstract class BaseEntityService implements EntityServiceContract
         // For web, we only return the user's entities
         $user = Auth::user();
 
-        if (!$user) {
-            return new Collection();
+        if (! $user) {
+            return new Collection;
         }
 
         return $user->{$this->getEntityNamePlural()}()
@@ -77,24 +77,24 @@ abstract class BaseEntityService implements EntityServiceContract
                 $entity = $entityModelClass::findOrFail($entity);
             }
 
-            if (!$entity instanceof Model) {
+            if (! $entity instanceof Model) {
                 return null;
             }
 
             $relationships = $forApi ? $this->getApiRelationships() : $this->getWebRelationships();
 
             // Load relationships
-            if (!empty($relationships)) {
+            if (! empty($relationships)) {
                 $entity->load($relationships);
             }
 
             return $entity;
         } catch (\Exception $e) {
-            Log::error('Error in ' . class_basename($this) . '@getById:', [
+            Log::error('Error in '.class_basename($this).'@getById:', [
                 'entity_id' => is_string($entity) ? $entity : $entity->id ?? 'unknown',
                 'for_api' => $forApi,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
@@ -111,7 +111,7 @@ abstract class BaseEntityService implements EntityServiceContract
             'description' => $entity->getDescription(),
             'user_id' => $entity->user_id,
             'created_at' => $entity->created_at?->toISOString(),
-            'updated_at' => $entity->updated_at?->toISOString()
+            'updated_at' => $entity->updated_at?->toISOString(),
         ];
     }
 
@@ -127,8 +127,8 @@ abstract class BaseEntityService implements EntityServiceContract
     {
         $user = Auth::user();
 
-        if (!$user) {
-            return new Collection();
+        if (! $user) {
+            return new Collection;
         }
 
         $entityModelClass = $this->getEntityModelClass();
@@ -145,6 +145,7 @@ abstract class BaseEntityService implements EntityServiceContract
     protected function getEntityName(): string
     {
         $className = class_basename($this->getEntityModelClass());
+
         return strtolower($className);
     }
 
@@ -153,6 +154,6 @@ abstract class BaseEntityService implements EntityServiceContract
      */
     protected function getEntityNamePlural(): string
     {
-        return $this->getEntityName() . 's';
+        return $this->getEntityName().'s';
     }
 }

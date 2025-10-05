@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
-use App\Services\BaseEntityService;
 use Illuminate\Database\Eloquent\Model;
 
 class MosaicService extends BaseEntityService
@@ -50,7 +49,7 @@ class MosaicService extends BaseEntityService
     {
         return [
             'mosaic' => $this->formatForApi($entity),
-            'items' => $entity->items->map(fn(MosaicItem $item) => $this->formatMosaicItemForApi($item))
+            'items' => $entity->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
         ];
     }
 
@@ -66,7 +65,7 @@ class MosaicService extends BaseEntityService
             'columns' => $mosaic->columns,
             'user_id' => $mosaic->user_id,
             'created_at' => $mosaic->created_at?->toISOString(),
-            'updated_at' => $mosaic->updated_at?->toISOString()
+            'updated_at' => $mosaic->updated_at?->toISOString(),
         ];
     }
 
@@ -77,7 +76,7 @@ class MosaicService extends BaseEntityService
     {
         return [
             'mosaic' => $this->formatMosaicForApi($mosaic),
-            'items' => $mosaic->items->map(fn(MosaicItem $item) => $this->formatMosaicItemForApi($item))
+            'items' => $mosaic->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
         ];
     }
 
@@ -94,7 +93,7 @@ class MosaicService extends BaseEntityService
             'column_index' => $item->column_index,
             'order' => $item->order,
             'created_at' => $item->created_at?->toISOString(),
-            'updated_at' => $item->updated_at?->toISOString()
+            'updated_at' => $item->updated_at?->toISOString(),
         ];
     }
 

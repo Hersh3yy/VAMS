@@ -47,8 +47,8 @@ class MosaicItemFactory extends Factory
             'type' => 'media',
             'album_id' => null,
             'content' => [
-                'albums/media/' . $this->faker->uuid . '.jpg',
-                'albums/media/' . $this->faker->uuid . '.jpg',
+                'albums/media/'.$this->faker->uuid.'.jpg',
+                'albums/media/'.$this->faker->uuid.'.jpg',
             ],
         ]);
     }
@@ -97,4 +97,4 @@ class MosaicItemFactory extends Factory
             'order' => $order,
         ]);
     }
-} 
+}

@@ -1,10 +1,10 @@
 <template>
-    <Head :title="mosaic.title" />
+    <Head :title="Mosaic.title" />
 
     <AuthenticatedLayout>
         <template #header>
             <MosaicHeader
-                :mosaic="mosaic"
+                :mosaic="Mosaic"
                 @edit="showEditModal = true"
                 @add-item="showItemEditor = true"
                 @delete="handleDeleteMosaic"
@@ -15,7 +15,7 @@
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
                     <MosaicGrid
-                        :items="mosaic.items"
+                        :items="Mosaic.items"
                         :settings="settings"
                         @item-click="handleItemClick"
                         @item-delete="handleItemDelete"
@@ -32,7 +32,7 @@
             :show="showItemEditor"
             :item="selectedItem"
             :albums="albums"
-            :mosaic-id="mosaic.id"
+            :mosaic-id="Mosaic.id"
             @close="closeItemEditor"
             @save="handleSaveItem"
             @delete="handleDeleteItem"
@@ -42,7 +42,7 @@
         <!-- Edit Mosaic Modal -->
         <MosaicEditModal
             :show="showEditModal"
-            :mosaic="mosaic"
+            :mosaic="Mosaic"
             @close="showEditModal = false"
             @save="handleSaveMosaic"
         />
@@ -74,9 +74,14 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
 
 const props = defineProps<{
-    mosaic: Mosaic;
+    Mosaic: Mosaic;
     albums: Album[];
 }>();
+
+// Add null check for mosaic
+if (!props.Mosaic) {
+    throw new Error('Mosaic data is required');
+}
 
 const {
     showConfirmation,
@@ -91,7 +96,7 @@ const {
     showConfirmationDialog,
     confirmAction,
     cancelConfirmation
-} = useMosaic(String(props.mosaic.id));
+} = useMosaic(String(props.Mosaic.id));
 
 const showItemEditor = ref(false);
 const showEditModal = ref(false);
@@ -178,7 +183,7 @@ const handleSaveMosaic = async (data: {
     settings: MosaicDisplaySettings;
 }) => {
     try {
-        await router.patch(route('mosaics.update', props.mosaic.id), {
+        await router.patch(route('mosaics.update', props.Mosaic.id), {
             title: data.title,
             description: data.description,
             display_settings: { ...data.settings }
