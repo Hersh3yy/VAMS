@@ -42,6 +42,7 @@ class EntryController extends BaseApiController
         $entryTypeIds = $allowedEntryTypes->pluck('id');
         $entries = $user->entries()
             ->whereIn('entry_type_id', $entryTypeIds)
+            ->published()
             ->with(['entryType', 'images'])
             ->orderBy('order')
             ->get();
@@ -79,6 +80,7 @@ class EntryController extends BaseApiController
         // Get entries of this type
         $entries = $user->entries()
             ->where('entry_type_id', $entryType->id)
+            ->published()
             ->with(['entryType', 'images'])
             ->orderBy('order')
             ->get();
@@ -103,6 +105,7 @@ class EntryController extends BaseApiController
         $user = $request->user();
 
         $entry = $user->entries()
+            ->published()
             ->with(['entryType', 'images'])
             ->find($id);
 

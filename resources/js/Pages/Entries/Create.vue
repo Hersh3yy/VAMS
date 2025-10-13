@@ -49,6 +49,8 @@
                                 </div>
                             </div>
 
+                            <!-- Status field hidden but defaults to published -->
+                            <!-- Uncomment to re-enable draft/published selector
                             <div>
                                 <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Status
@@ -65,6 +67,7 @@
                                     {{ form.errors.status }}
                                 </div>
                             </div>
+                            -->
 
                             <div class="flex justify-end space-x-3">
                                 <Link :href="route('entries.index', { type: entryType.slug })" 
@@ -99,7 +102,7 @@ const props = defineProps({
 const form = useForm({
     title: '',
     content: '',
-    status: 'draft',
+    status: 'published',
     entry_type_id: ''
 })
 

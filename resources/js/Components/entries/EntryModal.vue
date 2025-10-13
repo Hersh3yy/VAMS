@@ -44,6 +44,7 @@
                                         ></textarea>
                                     </div>
 
+                                    <!-- Status field hidden - uncomment to re-enable
                                     <div v-if="isEditing">
                                         <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Status
@@ -57,11 +58,14 @@
                                             <option value="published">Published</option>
                                         </select>
                                     </div>
+                                    -->
 
-                                    <div v-else class="text-sm text-gray-500 dark:text-gray-400">
+                                    <div v-if="!isEditing" class="text-sm text-gray-500 dark:text-gray-400">
+                                        <!-- Status badge hidden - uncomment to re-enable
                                         <span class="inline-block bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs mr-2">
                                             {{ entry?.status }}
                                         </span>
+                                        -->
                                         Created {{ formatDate(entry?.created_at || '') }}
                                     </div>
                                 </form>

@@ -167,14 +167,16 @@ class EntryController extends BaseEntityController
             ->where('entry_type_id', $entryType->id)
             ->max('order') ?? -1;
 
+        $newStatus = $validated['status'] ?? 'published';
+
         $entry = $user->entries()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'content' => ['statement' => $validated['content']], // Store as JSON
             'entry_type_id' => $entryType->id,
-            'status' => $validated['status'] ?? 'draft',
+            'status' => $newStatus,
             'order' => $maxOrder + 1,
-            'published_at' => $validated['status'] === 'published' ? now() : null,
+            'published_at' => $newStatus === 'published' ? now() : null,
         ]);
 
         return redirect()->route('entries.index', ['type' => $entryType->slug])
@@ -194,11 +196,16 @@ class EntryController extends BaseEntityController
             'status' => ['nullable', 'string', 'in:draft,published'],
         ]);
 
+        $newStatus = $validated['status'] ?? $entry->status;
+
         $entry->update([
             'title' => $validated['title'],
             'content' => ['statement' => $validated['content']], // Store as JSON
-            'status' => $validated['status'] ?? 'draft',
-            'published_at' => $validated['status'] === 'published' ? now() : null,
+            'status' => $newStatus,
+            // Preserve published_at if already set, set to now() if transitioning to published, null if draft
+            'published_at' => $newStatus === 'published'
+                ? ($entry->published_at ?? now())
+                : null,
         ]);
 
         return redirect()->route('entries.index', ['type' => $entry->entryType->slug])

@@ -42,6 +42,7 @@
                                 <div class="rounded-lg border p-4 transition-shadow hover:shadow-md dark:border-gray-700">
                                     <div class="mb-2 flex items-start justify-between">
                                         <h3 class="flex-1 text-lg font-medium">{{ entry.title }}</h3>
+                                        <!-- Status badge hidden - uncomment to re-enable
                                         <span 
                                             class="ml-2 inline-block rounded bg-gray-100 px-2 py-1 text-xs dark:bg-gray-700"
                                             :class="{
@@ -51,6 +52,7 @@
                                         >
                                             {{ entry.status }}
                                         </span>
+                                        -->
                                     </div>
                                     <p class="mb-3 whitespace-pre-wrap text-gray-600 dark:text-gray-400">
                                         {{ getEntryContent(entry) }}
@@ -64,6 +66,12 @@
                                             class="text-sm text-blue-500 hover:text-blue-700"
                                         >
                                             View
+                                        </button>
+                                        <button
+                                            @click="deleteEntry(entry.id)"
+                                            class="text-sm text-red-500 hover:text-red-700"
+                                        >
+                                            Delete
                                         </button>
                                     </div>
                                 </div>
@@ -192,6 +200,19 @@ const handleEntryUpdate = (updatedEntry: Entry) => {
     if (index !== -1) {
         localEntries.value[index] = { ...updatedEntry, order: localEntries.value[index].order }
     }
+}
+
+const deleteEntry = (id: string) => {
+    if (!confirm('Are you sure you want to delete this I AM? This action cannot be undone.')) {
+        return
+    }
+
+    router.delete(route('entries.destroy', id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            localEntries.value = localEntries.value.filter(e => e.id !== id)
+        }
+    })
 }
 
 onUnmounted(() => {
