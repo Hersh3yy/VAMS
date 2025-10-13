@@ -13,15 +13,15 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('spaces');
-    
+
     $this->user = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
-    
+
     $this->otherUser = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
 });
 
@@ -36,9 +36,8 @@ it('allows authenticated user to view albums index', function () {
     $response = $this->get(route('albums.index'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Albums/Index')
-             ->has('albums', 3) // Only user's albums
+    $response->assertInertia(fn ($page) => $page->component('Albums/Index')
+        ->has('albums', 3) // Only user's albums
     );
 });
 
@@ -53,8 +52,7 @@ it('allows authenticated user to view create album page', function () {
     $response = $this->get(route('albums.create'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Albums/Create')
+    $response->assertInertia(fn ($page) => $page->component('Albums/Create')
     );
 });
 
@@ -69,7 +67,7 @@ it('allows authenticated user to create album', function () {
     $response = $this->post(route('albums.store'), $albumData);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('albums', [
         'title' => 'Test Album',
         'description' => 'This is a test album description.',
@@ -102,19 +100,18 @@ it('allows authenticated user to view album', function () {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
-    
+
     // Add some images to the album
     AlbumImage::factory()->count(3)->forAlbum($album)->create();
 
     $response = $this->get(route('albums.show', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Albums/Show')
-             ->has('album')
-             ->where('album.id', $album->id)
-             ->where('album.title', $album->title)
-             ->has('album.images', 3)
+    $response->assertInertia(fn ($page) => $page->component('Albums/Show')
+        ->has('album')
+        ->where('album.id', $album->id)
+        ->where('album.title', $album->title)
+        ->has('album.images', 3)
     );
 });
 
@@ -136,10 +133,9 @@ it('allows authenticated user to view edit album page', function () {
     $response = $this->get(route('albums.edit', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Albums/Edit')
-             ->has('album')
-             ->where('album.id', $album->id)
+    $response->assertInertia(fn ($page) => $page->component('Albums/Edit')
+        ->has('album')
+        ->where('album.id', $album->id)
     );
 });
 
@@ -169,7 +165,7 @@ it('allows authenticated user to update album', function () {
     $response = $this->patch(route('albums.update', $album), $updateData);
 
     $response->assertRedirect();
-    
+
     $album->refresh();
     expect($album->title)->toBe('Updated Title');
     expect($album->description)->toBe('Updated Description');
@@ -215,7 +211,7 @@ it('allows authenticated user to upload cover image', function () {
     ]);
 
     $response->assertRedirect();
-    
+
     $album->refresh();
     expect($album->cover_image_path)->not->toBeNull();
 });
@@ -269,7 +265,7 @@ it('deletes album images when deleting album', function () {
 
     $response->assertRedirect();
     $this->assertModelMissing($album);
-    
+
     foreach ($images as $image) {
         $this->assertModelMissing($image);
     }
@@ -279,7 +275,7 @@ it('shows album with correct image ordering', function () {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
-    
+
     // Create images with specific order
     $image1 = AlbumImage::factory()->forAlbum($album)->withOrder(2)->create();
     $image2 = AlbumImage::factory()->forAlbum($album)->withOrder(0)->create();
@@ -288,10 +284,9 @@ it('shows album with correct image ordering', function () {
     $response = $this->get(route('albums.show', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->has('album.images', 3)
-             ->where('album.images.0.id', $image2->id) // order 0
-             ->where('album.images.1.id', $image3->id) // order 1  
-             ->where('album.images.2.id', $image1->id) // order 2
+    $response->assertInertia(fn ($page) => $page->has('album.images', 3)
+        ->where('album.images.0.id', $image2->id) // order 0
+        ->where('album.images.1.id', $image3->id) // order 1
+        ->where('album.images.2.id', $image1->id) // order 2
     );
 });

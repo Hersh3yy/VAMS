@@ -2,17 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
 use App\Services\ImageService;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class StrapiImport extends Command
 {
@@ -40,7 +36,6 @@ class StrapiImport extends Command
     /**
      * Create a new command instance.
      *
-     * @param \App\Services\ImageService $imageService
      * @return void
      */
     public function __construct(ImageService $imageService)
@@ -58,39 +53,40 @@ class StrapiImport extends Command
         $albums = $this->argument('albums');
         $userId = $this->option('user');
         $chunkSize = $this->option('chunk');
-        
-        $this->info("Import parameters:");
+
+        $this->info('Import parameters:');
         $this->info("- Base URL: {$baseUrl}");
-        $this->info("- Albums: " . implode(', ', $albums));
+        $this->info('- Albums: '.implode(', ', $albums));
         $this->info("- User ID/Email: {$userId}");
         $this->info("- Chunk size: {$chunkSize}");
-        $this->info("----------------------------");
-        
+        $this->info('----------------------------');
+
         // Find user
         $user = $this->findUser($userId);
-        if (!$user) {
+        if (! $user) {
             return 1;
         }
 
         // Process albums in chunks
         $chunks = array_chunk($albums, $chunkSize);
         foreach ($chunks as $index => $albumChunk) {
-            $this->info("\nProcessing chunk " . ($index + 1) . " of " . count($chunks));
-            
+            $this->info("\nProcessing chunk ".($index + 1).' of '.count($chunks));
+
             foreach ($albumChunk as $albumName) {
                 $this->info("\nImporting album: {$albumName}");
-                
+
                 try {
                     $this->processAlbum($baseUrl, $albumName, $user);
                 } catch (\Exception $e) {
                     $this->error("Failed to import album {$albumName}: {$e->getMessage()}");
+
                     continue;
                 }
-                
+
                 // Clear some memory
                 gc_collect_cycles();
             }
-            
+
             if ($index < count($chunks) - 1) {
                 $this->info("\nWaiting 5 seconds before next chunk...");
                 sleep(5);
@@ -103,25 +99,27 @@ class StrapiImport extends Command
     protected function findUser($userId)
     {
         $this->info("Attempting to find user with ID/Email: {$userId}");
-        
+
         if (filter_var($userId, FILTER_VALIDATE_EMAIL)) {
-            $this->info("Looking up user by email");
+            $this->info('Looking up user by email');
             $user = User::where('email', $userId)->first();
         } else {
-            $this->info("Looking up user by ID");
+            $this->info('Looking up user by ID');
             $user = User::find($userId);
         }
-        
-        if (!$user) {
-            $this->error("User not found");
-            $this->info("Available users:");
+
+        if (! $user) {
+            $this->error('User not found');
+            $this->info('Available users:');
             User::all(['id', 'name', 'email'])->each(function ($user) {
                 $this->info("ID: {$user->id}, Name: {$user->name}, Email: {$user->email}");
             });
+
             return null;
         }
-        
+
         $this->info("Found user: {$user->name} (ID: {$user->id})");
+
         return $user;
     }
 
@@ -129,17 +127,17 @@ class StrapiImport extends Command
     {
         $url = "{$baseUrl}/{$albumName}";
         $this->info("Fetching from: {$url}");
-        
+
         $response = Http::get($url);
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception("Failed to get album data. Status: {$response->status()}");
         }
-        
+
         $data = $response->json();
         if (empty($data)) {
-            throw new \Exception("No data returned from API");
+            throw new \Exception('No data returned from API');
         }
-        
+
         // Create or update album without activity logging
         // We'll use DB transaction to bypass model events temporarily
         $album = Album::withoutEvents(function () use ($user, $albumName, $url) {
@@ -152,14 +150,14 @@ class StrapiImport extends Command
                 ]
             );
         });
-        
+
         $this->info("Processing album: {$albumName} (ID: {$album->id})");
         $albumDirectory = "albums/{$album->id}";
-        
+
         // Process media items
         $mediaCount = 0;
         $firstImageObject = null;
-        
+
         foreach ($data as $item) {
             try {
                 $mediaLinks = $this->extractMediaLinks($item);
@@ -169,38 +167,36 @@ class StrapiImport extends Command
                 }
             } catch (\Exception $e) {
                 $this->warn("Error processing item in {$albumName}: {$e->getMessage()}");
+
                 continue;
             }
         }
-        
+
         // Update album cover if needed (also without events)
-        if ($firstImageObject && !$album->cover_image_path) {
+        if ($firstImageObject && ! $album->cover_image_path) {
             Album::withoutEvents(function () use ($album, $firstImageObject) {
                 $album->cover_image_path = $firstImageObject['url'];
                 $album->save();
             });
         }
-        
+
         $this->info("Imported {$mediaCount} items into '{$albumName}'");
     }
 
     /**
      * Extract all media links from an item recursively
-     * 
-     * @param array $item
-     * @return array
      */
     protected function extractMediaLinks(array $item): array
     {
         $links = [];
-        
+
         // Direct link fields (most common cases)
         $possibleLinkFields = ['link', 'url', 'path', 'VideoLink', 'Link'];
-        
+
         foreach ($possibleLinkFields as $field) {
-            if (isset($item[$field]) && !empty($item[$field]) && is_string($item[$field])) {
+            if (isset($item[$field]) && ! empty($item[$field]) && is_string($item[$field])) {
                 $url = $item[$field];
-                
+
                 // Check if it's a link we can use
                 if (filter_var($url, FILTER_VALIDATE_URL) || $this->imageService->isVideoLink($url)) {
                     $links[] = [
@@ -213,11 +209,11 @@ class StrapiImport extends Command
                 }
             }
         }
-        
+
         // Handle nested Image objects - Strapi specific structure
         if (isset($item['Image']) && is_array($item['Image'])) {
             // Prefer the root URL for Strapi images
-            if (isset($item['Image']['url']) && !empty($item['Image']['url'])) {
+            if (isset($item['Image']['url']) && ! empty($item['Image']['url'])) {
                 $links[] = [
                     'url' => $item['Image']['url'],
                     'title' => $item['Name'] ?? $item['name'] ?? null,
@@ -241,7 +237,7 @@ class StrapiImport extends Command
                 } else {
                     $url = null;
                 }
-                
+
                 if ($url) {
                     $links[] = [
                         'url' => $url,
@@ -254,11 +250,11 @@ class StrapiImport extends Command
                 }
             }
         }
-        
+
         // Also handle lowercase 'image'
         if (isset($item['image']) && is_array($item['image'])) {
             // Prefer the root URL for Strapi images
-            if (isset($item['image']['url']) && !empty($item['image']['url'])) {
+            if (isset($item['image']['url']) && ! empty($item['image']['url'])) {
                 $links[] = [
                     'url' => $item['image']['url'],
                     'title' => $item['Name'] ?? $item['name'] ?? null,
@@ -282,7 +278,7 @@ class StrapiImport extends Command
                 } else {
                     $url = null;
                 }
-                
+
                 if ($url) {
                     $links[] = [
                         'url' => $url,
@@ -295,12 +291,12 @@ class StrapiImport extends Command
                 }
             }
         }
-        
+
         // Check for Media array
         if (isset($item['Media']) && is_array($item['Media'])) {
             foreach ($item['Media'] as $mediaItem) {
                 // Check directly for Link field in the media item
-                if (isset($mediaItem['Link']) && !empty($mediaItem['Link'])) {
+                if (isset($mediaItem['Link']) && ! empty($mediaItem['Link'])) {
                     $url = $mediaItem['Link'];
                     if (filter_var($url, FILTER_VALIDATE_URL) || $this->imageService->isVideoLink($url)) {
                         $links[] = [
@@ -310,16 +306,17 @@ class StrapiImport extends Command
                             'order' => $mediaItem['Order'] ?? $mediaItem['order'] ?? null,
                             'year' => $item['Year'] ?? $item['year'] ?? null,
                         ];
+
                         continue; // Skip further processing for this item
                     }
                 }
-                
+
                 // Process the rest of the media item
                 $mediaLinks = $this->extractMediaLinks($mediaItem);
                 $links = array_merge($links, $mediaLinks);
             }
         }
-        
+
         // Recursively process any nested arrays
         foreach ($item as $key => $value) {
             if (is_array($value) && $key !== 'Image' && $key !== 'image' && $key !== 'Media' && $key !== 'formats') {
@@ -327,7 +324,7 @@ class StrapiImport extends Command
                 $links = array_merge($links, $nestedLinks);
             }
         }
-        
+
         return $links;
     }
 
@@ -337,18 +334,18 @@ class StrapiImport extends Command
     protected function processMediaItem($albumModel, $media, $albumDirectory, &$mediaCount, &$firstImageObject)
     {
         $imageUrl = $media['url'];
-        
+
         // Determine the order - use provided order or fallback to media count
         $order = $media['order'] ?? $mediaCount;
-        
+
         // Check if it's a video link
         if ($this->imageService->isVideoLink($imageUrl)) {
             $this->info("Processing video: {$imageUrl}");
-            
+
             // Get video ID for YouTube/Vimeo
             $videoId = null;
             $videoType = null;
-            
+
             if (strpos($imageUrl, 'youtube.com') !== false) {
                 parse_str(parse_url($imageUrl, PHP_URL_QUERY), $params);
                 $videoId = $params['v'] ?? null;
@@ -362,14 +359,14 @@ class StrapiImport extends Command
                 $videoId = ltrim($path, '/');
                 $videoType = 'vimeo';
             }
-            
+
             // Try to get a thumbnail
             $thumbnailResult = null;
-            
+
             if ($videoId && $videoType == 'youtube') {
                 // First try high-res thumbnail
                 $hdThumbnailUrl = "https://img.youtube.com/vi/{$videoId}/maxresdefault.jpg";
-                
+
                 try {
                     $thumbnailResult = $this->imageService->storeImage($hdThumbnailUrl, $albumDirectory, true);
                 } catch (\Exception $e) {
@@ -395,7 +392,7 @@ class StrapiImport extends Command
                 // For other video types or when video ID extraction fails
                 $thumbnailResult = ['url' => '/images/video-placeholder.svg'];
             }
-            
+
             // Store the video info even if thumbnail download fails
             $properties = [
                 'type' => 'video',
@@ -403,11 +400,11 @@ class StrapiImport extends Command
                 'video_type' => $videoType,
                 'year' => $media['year'] ?? null,
             ];
-            
+
             if ($thumbnailResult) {
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
-            
+
             $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $order, $properties) {
                 return $albumModel->images()->create([
                     'id' => (string) Str::uuid(),
@@ -423,10 +420,10 @@ class StrapiImport extends Command
                     'order' => $order,
                 ]);
             });
-            
+
             // If this is our first media and we still don't have a cover image,
             // use the video thumbnail as the album cover
-            if (!$firstImageObject && $thumbnailResult) {
+            if (! $firstImageObject && $thumbnailResult) {
                 $firstImageObject = $thumbnailResult;
             }
         } else {
@@ -435,25 +432,25 @@ class StrapiImport extends Command
                 // Use WebP conversion
                 $result = $this->imageService->storeImage($imageUrl, $albumDirectory, true, true);
                 $publicUrl = $result['url'];
-                
+
                 // Keep track of the first non-video image for cover
-                if (!$firstImageObject) {
+                if (! $firstImageObject) {
                     $firstImageObject = $result;
                 }
-                
+
                 // Create album image
                 $properties = [];
-                
+
                 // Add WebP URL if available
                 if (isset($result['webp_url'])) {
                     $properties['webp_url'] = $result['webp_url'];
                 }
-                
+
                 // Add year if available
                 if (isset($media['year'])) {
                     $properties['year'] = $media['year'];
                 }
-                
+
                 $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $order, $properties) {
                     return $albumModel->images()->create([
                         'id' => (string) Str::uuid(),
@@ -469,7 +466,7 @@ class StrapiImport extends Command
                         'order' => $order,
                     ]);
                 });
-                
+
                 $title = $media['title'] ?? 'Untitled';
                 $this->info("Processed: {$title} (order: {$order})");
             } catch (\Exception $e) {
@@ -477,4 +474,4 @@ class StrapiImport extends Command
             }
         }
     }
-} 
+}

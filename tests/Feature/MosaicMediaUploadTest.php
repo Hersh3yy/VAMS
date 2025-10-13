@@ -12,14 +12,14 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('spaces');
-    
+
     $this->user = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
-    
+
     $this->mosaic = Mosaic::factory()->create([
-        'user_id' => $this->user->id
+        'user_id' => $this->user->id,
     ]);
 });
 
@@ -29,23 +29,23 @@ it('allows authenticated user to upload media to mosaic', function () {
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $file
+        'media' => $file,
     ]);
 
     $response->assertSuccessful()
-            ->assertJson([
-                'success' => true
-            ])
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    'path',
-                    'type',
-                    'mime_type',
-                    'original_name',
-                    'size'
-                ]
-            ]);
+        ->assertJson([
+            'success' => true,
+        ])
+        ->assertJsonStructure([
+            'success',
+            'data' => [
+                'path',
+                'type',
+                'mime_type',
+                'original_name',
+                'size',
+            ],
+        ]);
 });
 
 it('can upload video to mosaic', function () {
@@ -54,17 +54,17 @@ it('can upload video to mosaic', function () {
     $video = UploadedFile::fake()->create('test-video.mp4', 5000, 'video/mp4');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $video
+        'media' => $video,
     ]);
 
     $response->assertSuccessful()
-            ->assertJson([
-                'success' => true,
-                'data' => [
-                    'type' => 'video',
-                    'mime_type' => 'video/mp4'
-                ]
-            ]);
+        ->assertJson([
+            'success' => true,
+            'data' => [
+                'type' => 'video',
+                'mime_type' => 'video/mp4',
+            ],
+        ]);
 });
 
 it('prevents unauthorized user from uploading to mosaic', function () {
@@ -74,7 +74,7 @@ it('prevents unauthorized user from uploading to mosaic', function () {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $file
+        'media' => $file,
     ]);
 
     $response->assertForbidden();
@@ -84,7 +84,7 @@ it('prevents guest from uploading media', function () {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $file
+        'media' => $file,
     ]);
 
     $response->assertUnauthorized();
@@ -96,11 +96,11 @@ it('validates file types on upload', function () {
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $invalidFile
+        'media' => $invalidFile,
     ]);
 
     $response->assertStatus(422)
-            ->assertJsonValidationErrors(['media']);
+        ->assertJsonValidationErrors(['media']);
 });
 
 it('validates file size on upload', function () {
@@ -110,11 +110,11 @@ it('validates file size on upload', function () {
     $largeFile = UploadedFile::fake()->image('large.jpg')->size(31 * 1024); // 31MB
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $largeFile
+        'media' => $largeFile,
     ]);
 
     $response->assertStatus(422)
-            ->assertJsonValidationErrors(['media']);
+        ->assertJsonValidationErrors(['media']);
 });
 
 it('requires media file for upload', function () {
@@ -123,7 +123,7 @@ it('requires media file for upload', function () {
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), []);
 
     $response->assertStatus(422)
-            ->assertJsonValidationErrors(['media']);
+        ->assertJsonValidationErrors(['media']);
 });
 
 it('handles upload errors gracefully', function () {
@@ -132,20 +132,20 @@ it('handles upload errors gracefully', function () {
     // Mock ImageService to throw an exception
     $this->mock(\App\Services\ImageService::class, function ($mock) {
         $mock->shouldReceive('storeImage')
-             ->andThrow(new \Exception('Storage failed'));
+            ->andThrow(new \Exception('Storage failed'));
     });
 
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $file
+        'media' => $file,
     ]);
 
     $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Upload failed: Storage failed'
-            ]);
+        ->assertJson([
+            'success' => false,
+            'message' => 'Upload failed: Storage failed',
+        ]);
 });
 
 it('returns webp url when available', function () {
@@ -154,18 +154,18 @@ it('returns webp url when available', function () {
     // Mock ImageService to return WebP URL
     $this->mock(\App\Services\ImageService::class, function ($mock) {
         $mock->shouldReceive('storeImage')
-             ->andReturn([
-                 'url' => 'https://example.com/image.jpg',
-                 'webp_url' => 'https://example.com/image.webp'
-             ]);
+            ->andReturn([
+                'url' => 'https://example.com/image.jpg',
+                'webp_url' => 'https://example.com/image.webp',
+            ]);
     });
 
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
-        'media' => $file
+        'media' => $file,
     ]);
 
     $response->assertSuccessful()
-            ->assertJsonPath('data.webp_url', 'https://example.com/image.webp');
+        ->assertJsonPath('data.webp_url', 'https://example.com/image.webp');
 });

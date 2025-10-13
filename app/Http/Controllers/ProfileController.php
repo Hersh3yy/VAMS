@@ -25,7 +25,6 @@ class ProfileController
     /**
      * Create a new controller instance.
      *
-     * @param \App\Services\ImageService $imageService
      * @return void
      */
     public function __construct(ImageService $imageService)
@@ -108,13 +107,13 @@ class ProfileController
         $existingSettings = $user->album_display_settings ?? [];
 
         $user->album_display_settings = [
-            'caption' => isset($settings['caption']) ? (bool)$settings['caption'] : true,
-            'altText' => isset($settings['altText']) ? (bool)$settings['altText'] : false,
-            'dateCreated' => isset($settings['dateCreated']) ? (bool)$settings['dateCreated'] : false,
-            'location' => isset($settings['location']) ? (bool)$settings['location'] : false,
-            'tags' => isset($settings['tags']) ? (bool)$settings['tags'] : false,
-            'title' => isset($settings['title']) ? (bool)$settings['title'] : false,
-            'author' => isset($settings['author']) ? (bool)$settings['author'] : false,
+            'caption' => isset($settings['caption']) ? (bool) $settings['caption'] : true,
+            'altText' => isset($settings['altText']) ? (bool) $settings['altText'] : false,
+            'dateCreated' => isset($settings['dateCreated']) ? (bool) $settings['dateCreated'] : false,
+            'location' => isset($settings['location']) ? (bool) $settings['location'] : false,
+            'tags' => isset($settings['tags']) ? (bool) $settings['tags'] : false,
+            'title' => isset($settings['title']) ? (bool) $settings['title'] : false,
+            'author' => isset($settings['author']) ? (bool) $settings['author'] : false,
             'main_color' => $settings['main_color'] ?? $existingSettings['main_color'] ?? '#4F46E5',
             'secondary_color' => $settings['secondary_color'] ?? $existingSettings['secondary_color'] ?? '#10B981',
         ];
@@ -136,10 +135,10 @@ class ProfileController
         try {
             // Use ImageService to store the logo
             $result = $this->imageService->storeImage(
-                $request->file('logo'), 
+                $request->file('logo'),
                 "users/{$request->user()->id}/logos"
             );
-            
+
             // Update user with logo URL
             $request->user()->update([
                 'logo_url' => $result['url'],
@@ -147,7 +146,8 @@ class ProfileController
 
             return Redirect::route('profile.edit')->with('status', 'logo-updated');
         } catch (\Exception $e) {
-            Log::error('Error uploading logo: ' . $e->getMessage());
+            Log::error('Error uploading logo: '.$e->getMessage());
+
             return Redirect::route('profile.edit')->with('error', 'Failed to upload logo.');
         }
     }

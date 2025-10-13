@@ -5,12 +5,18 @@
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h2>
-                <div>
+                <div class="flex space-x-3">
                     <Link
                         :href="route('admin.users.index')"
                         class="hover:bg-primary/90 rounded bg-primary px-4 py-2 text-white"
                     >
                         Manage Users
+                    </Link>
+                    <Link
+                        :href="route('admin.entry-types.index')"
+                        class="hover:bg-green-600 rounded bg-green-500 px-4 py-2 text-white"
+                    >
+                        Manage Entry Types
                     </Link>
                 </div>
             </div>

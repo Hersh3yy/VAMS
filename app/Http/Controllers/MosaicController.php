@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreMosaicRequest;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
-use App\Services\ImageService;
 use App\Services\MosaicService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -19,89 +17,120 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class MosaicController extends BaseController
+class MosaicController extends BaseEntityController
 {
     public function __construct(
-        protected readonly MosaicService $mosaicService,
-        protected readonly ImageService $imageService
-    ) {}
+        protected readonly MosaicService $mosaicService
+    ) {
+        parent::__construct($mosaicService);
+    }
 
-    // Web Routes
-    public function index(): Response
+    /**
+     * Get the entity model class name
+     */
+    protected function getEntityModelClass(): string
     {
-        $mosaics = $this->mosaicService->getAllMosaics(false);
+        return Mosaic::class;
+    }
 
-        return Inertia::render('Mosaics/Index', [
-            'mosaics' => $mosaics,
+    /**
+     * Get the form request class for this entity
+     */
+    protected function getFormRequestClass(): string
+    {
+        return \App\Http\Requests\StoreMosaicRequest::class;
+    }
+
+    /**
+     * Get the view name for index page
+     */
+    protected function getIndexView(): string
+    {
+        return 'Mosaics/Index';
+    }
+
+    /**
+     * Get the view name for create page
+     */
+    protected function getCreateView(): string
+    {
+        return 'Mosaics/Create';
+    }
+
+    /**
+     * Get the view name for show page
+     */
+    protected function getShowView(): string
+    {
+        return 'Mosaics/Show';
+    }
+
+    /**
+     * Get the view name for edit page
+     */
+    protected function getEditView(): string
+    {
+        return 'Mosaics/Edit';
+    }
+
+    /**
+     * Get additional data to pass to views
+     */
+    protected function getAdditionalViewData(): array
+    {
+        return [
+            'albums' => $this->user()->albums()
+                ->with(['images' => function ($query) {
+                    $query->orderBy('order');
+                }])
+                ->get()
+                ->map(function ($album) {
+                    return [
+                        'id' => $album->id,
+                        'title' => $album->title,
+                        'cover_image_path' => $album->cover_image_path,
+                        'images_count' => $album->images->count(),
+                        'images' => $album->images->map(function ($image) {
+                            return [
+                                'id' => $image->id,
+                                'path' => $image->path,
+                                'order' => $image->order,
+                                'title' => $image->title,
+                                'caption' => $image->caption,
+                                'properties' => $image->properties,
+                            ];
+                        }),
+                    ];
+                }),
+        ];
+    }
+
+    /**
+     * Update the specified resource in storage
+     */
+    public function update(Request $request, $mosaic): JsonResponse|RedirectResponse
+    {
+        // Debug: Check what type $mosaic is
+        \Log::info('MosaicController@update - Parameter check:', [
+            'mosaic_type' => gettype($mosaic),
+            'mosaic_value' => $mosaic,
+            'is_object' => is_object($mosaic),
+            'is_string' => is_string($mosaic),
         ]);
-    }
-
-    public function create(): Response
-    {
-        return Inertia::render('Mosaics/Create');
-    }
-
-    public function store(StoreMosaicRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $mosaic = $this->user()->mosaics()->create([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'columns' => $validated['columns'],
-            'display_settings' => $validated['display_settings'] ?? null,
-        ]);
-
-        return $this->redirectWithSuccess('mosaics.show', $mosaic, 'Mosaic created successfully');
-    }
-
-    public function show(Mosaic $mosaic): Response
-    {
+        
+        // If $mosaic is a string (ID), resolve it to a model
+        if (is_string($mosaic)) {
+            $mosaic = Mosaic::findOrFail($mosaic);
+        }
+        
         // Check if user owns this mosaic
-        $this->authorizeOwnership($mosaic);
-
-        // Get mosaic with items using service
-        $mosaic = $this->mosaicService->getMosaicWithItems($mosaic, false);
-
-        // Get user's albums with their images
-        $albums = $this->user()->albums()
-            ->with(['images' => function ($query) {
-                $query->orderBy('order');
-            }])
-            ->get()
-            ->map(function ($album) {
-                return [
-                    'id' => $album->id,
-                    'title' => $album->title,
-                    'cover_image_path' => $album->cover_image_path,
-                    'images_count' => $album->images->count(),
-                    'images' => $album->images->map(function ($image) {
-                        return [
-                            'id' => $image->id,
-                            'path' => $image->path,
-                            'order' => $image->order,
-                            'title' => $image->title,
-                            'caption' => $image->caption,
-                            'properties' => $image->properties,
-                        ];
-                    }),
-                ];
-            });
-
-        return Inertia::render('Mosaics/Show', [
-            'mosaic' => $mosaic,
-            'albums' => $albums,
-        ]);
-    }
-
-    public function update(Request $request, Mosaic $mosaic)
-    {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             Log::warning('Unauthorized mosaic update attempt', [
                 'user_id' => Auth::id(),
+                'user_id_type' => gettype(Auth::id()),
                 'mosaic_id' => $mosaic->id,
                 'mosaic_owner' => $mosaic->user_id,
+                'mosaic_owner_type' => gettype($mosaic->user_id),
             ]);
             abort(403);
         }
@@ -239,27 +268,16 @@ class MosaicController extends BaseController
             ->with('success', 'Mosaic updated successfully');
     }
 
-    public function destroy(Mosaic $mosaic): RedirectResponse
-    {
-        // Check if user owns this mosaic
-        $this->authorizeOwnership($mosaic);
-
-        $mosaic->items()->delete();
-        $mosaic->delete();
-
-        return $this->redirectWithSuccess('mosaics.index', [], 'Mosaic deleted successfully');
-    }
-
     // API Routes
     public function showApi(Request $request, Mosaic $mosaic): JsonResponse
     {
-        $mosaic = $this->mosaicService->getMosaic($mosaic, true);
+        $mosaic = $this->mosaicService->getById($mosaic, true);
         if (! $mosaic) {
             return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
         }
 
         return response()->json(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            $this->mosaicService->formatWithMediaForApi($mosaic),
             200,
             [],
             JSON_UNESCAPED_UNICODE
@@ -317,7 +335,7 @@ class MosaicController extends BaseController
     public function storeItem(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -347,7 +365,7 @@ class MosaicController extends BaseController
     public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -372,7 +390,7 @@ class MosaicController extends BaseController
     public function destroyItem(Mosaic $mosaic, MosaicItem $item)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -390,7 +408,7 @@ class MosaicController extends BaseController
     public function reorderItems(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -420,7 +438,7 @@ class MosaicController extends BaseController
     public function storeMedia(Request $request, Mosaic $mosaic)
     {
         // Check if user owns this mosaic
-        if ($mosaic->user_id !== Auth::id()) {
+        if ($mosaic->user_id != Auth::id()) {
             abort(403);
         }
 
@@ -432,7 +450,7 @@ class MosaicController extends BaseController
             $file = $request->file('media');
 
             // Use ImageService to store the file (same as albums)
-            $result = $this->imageService->storeImage(
+            $result = app(\App\Services\ImageService::class)->storeImage(
                 $file,
                 "mosaics/{$mosaic->id}"
             );

@@ -39,6 +39,12 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'logo_url' => $request->user()->logo_url,
                     'is_admin' => $request->user()->is_admin,
+                    'allowed_entry_types' => $request->user()->allowedEntryTypes()->map(fn ($type) => [
+                        'id' => $type->id,
+                        'name' => $type->name,
+                        'slug' => $type->slug,
+                        'description' => $type->description,
+                    ]),
                 ] : null,
             ],
             'ziggy' => fn () => [

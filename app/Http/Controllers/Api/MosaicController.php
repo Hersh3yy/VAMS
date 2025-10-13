@@ -17,8 +17,7 @@ class MosaicController extends BaseApiController
 {
     public function __construct(
         private readonly MosaicService $mosaicService,
-    ) {
-    }
+    ) {}
 
     /**
      * Get all mosaics for the authenticated user (API key)
@@ -27,11 +26,11 @@ class MosaicController extends BaseApiController
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
-        
+
         $mosaics = $user->mosaics()->get();
-        
+
         return $this->success([
-            'mosaics' => $mosaics->map(fn(Mosaic $mosaic) => $this->mosaicService->formatMosaicForApi($mosaic))
+            'mosaics' => $mosaics->map(fn (Mosaic $mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
         ]);
     }
 
@@ -44,7 +43,7 @@ class MosaicController extends BaseApiController
         $user = $request->user();
 
         $mosaic = $user->mosaics()->find($id);
-        if (!$mosaic) {
+        if (! $mosaic) {
             return $this->notFound('Mosaic not found');
         }
 
@@ -60,14 +59,14 @@ class MosaicController extends BaseApiController
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
-        
+
         $mosaic = $user->mosaics()->where('title', $title)->first();
-        if (!$mosaic) {
+        if (! $mosaic) {
             return $this->notFound('Mosaic not found');
         }
-        
+
         return $this->success(
             $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
         );
     }
-} 
+}

@@ -1,7 +1,7 @@
 <template>
     <div class="content-grid-wrapper">
         <!-- Empty state -->
-        <div v-if="items.length === 0" class="py-12 text-center">
+        <div v-if="!items || items.length === 0" class="py-12 text-center">
             <img
                 src="/images/placeholder.svg"
                 alt="No items"

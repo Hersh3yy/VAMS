@@ -1,3 +1,10 @@
+export interface EntryType {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+}
+
 export interface User {
     id: string;
     name: string;
@@ -6,6 +13,7 @@ export interface User {
     logo_url?: string;
     api_key?: string;
     is_admin?: boolean;
+    allowed_entry_types?: EntryType[];
     album_display_settings?: {
         main_color?: string;
         secondary_color?: string;

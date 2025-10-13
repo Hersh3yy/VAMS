@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 abstract class BaseApiController
@@ -18,7 +17,7 @@ abstract class BaseApiController
     {
         $response = [
             'success' => true,
-            'message' => $message
+            'message' => $message,
         ];
 
         if ($data !== null) {
@@ -35,7 +34,7 @@ abstract class BaseApiController
     {
         $response = [
             'success' => false,
-            'message' => $message
+            'message' => $message,
         ];
 
         if ($errors !== null) {
@@ -83,6 +82,7 @@ abstract class BaseApiController
     protected function userOwnsModel(mixed $model, ?User $user = null): bool
     {
         $user = $user ?? Auth::user();
+
         return isset($model->user_id) && $model->user_id === $user->id;
     }
 
@@ -91,9 +91,10 @@ abstract class BaseApiController
      */
     protected function validateOwnership(mixed $model, ?User $user = null): ?JsonResponse
     {
-        if (!$this->userOwnsModel($model, $user)) {
+        if (! $this->userOwnsModel($model, $user)) {
             return $this->forbidden();
         }
+
         return null;
     }
 
@@ -104,4 +105,4 @@ abstract class BaseApiController
     {
         return Auth::user();
     }
-} 
+}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AlbumController;
+use App\Http\Controllers\Api\EntryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MosaicController;
 use Illuminate\Http\Request;
@@ -41,6 +42,13 @@ Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])
         Route::get('/', [MosaicController::class, 'indexWithApiKey']);
         Route::get('/by-title/{title}', [MosaicController::class, 'showByTitleWithApiKey']);
         Route::get('/{id}', [MosaicController::class, 'showWithApiKey']);
+    });
+
+    // READ-ONLY Entry access (I AMS, Recipes, etc.)
+    Route::prefix('entries')->group(function () {
+        Route::get('/', [EntryController::class, 'indexWithApiKey']);
+        Route::get('/by-type/{type}', [EntryController::class, 'indexByTypeWithApiKey']);
+        Route::get('/{id}', [EntryController::class, 'showWithApiKey']);
     });
 
 });

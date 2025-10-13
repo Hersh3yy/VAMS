@@ -43,7 +43,7 @@ abstract class BaseController
      */
     protected function userOwnsModel(mixed $model): bool
     {
-        return isset($model->user_id) && $model->user_id === Auth::id();
+        return isset($model->user_id) && $model->user_id == Auth::id();
     }
 
     /**
@@ -51,7 +51,7 @@ abstract class BaseController
      */
     protected function authorizeOwnership(mixed $model): void
     {
-        if (!$this->userOwnsModel($model)) {
+        if (! $this->userOwnsModel($model)) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }
@@ -71,4 +71,4 @@ abstract class BaseController
     {
         return Auth::user();
     }
-} 
+}

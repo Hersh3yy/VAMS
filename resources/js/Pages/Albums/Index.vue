@@ -11,7 +11,7 @@
         <div class="content-wrapper">
             <div class="content-container">
                 <AlbumContentWrapper
-                    :albums="albums"
+                    :albums="entities"
                     :create-route="route('albums.create')"
                     :get-item-route="(album: Album) => route('albums.show', album.id)"
                 />
@@ -27,6 +27,6 @@ import type { Album } from '@/types/album';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps<{
-    albums: Album[];
+    entities: Album[];
 }>();
 </script>

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Services\ImageService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -31,13 +31,13 @@ class MediaController
         try {
             $file = $request->file('file');
             $type = $request->input('type', 'image');
-            
+
             // Determine folder based on type
             $folder = $type === 'video' ? 'videos' : 'images';
-            
+
             $result = $this->imageService->storeImage(
                 $file,
-                "uploads/{$folder}/" . Auth::user()->id
+                "uploads/{$folder}/".Auth::user()->id
             );
 
             return response()->json([
@@ -48,14 +48,14 @@ class MediaController
                     'type' => $type,
                     'size' => $file->getSize(),
                     'original_name' => $file->getClientOriginalName(),
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Media upload failed: ' . $e->getMessage());
-            
+            Log::error('Media upload failed: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage()
+                'message' => 'Upload failed: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -71,35 +71,35 @@ class MediaController
 
         try {
             $path = $request->input('path');
-            
+
             // Extract the actual file path from URL if needed
             if (str_contains($path, config('filesystems.disks.spaces.endpoint'))) {
                 $bucket = config('filesystems.disks.spaces.bucket');
                 $endpoint = config('filesystems.disks.spaces.endpoint');
                 $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
             }
-            
+
             // Delete from cloud storage
             $deleted = Storage::disk('spaces')->delete($path);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'File not found or could not be deleted'
+                    'message' => 'File not found or could not be deleted',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'File deleted successfully'
+                'message' => 'File deleted successfully',
             ]);
         } catch (\Exception $e) {
-            Log::error('Media deletion failed: ' . $e->getMessage());
-            
+            Log::error('Media deletion failed: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Deletion failed: ' . $e->getMessage()
+                'message' => 'Deletion failed: '.$e->getMessage(),
             ], 422);
         }
     }
-} 
+}

@@ -27,6 +27,18 @@
                         >
                             Albums
                         </NavLink>
+                        
+                        <!-- Dynamic Entry Type Links -->
+                        <NavLink
+                            v-for="entryType in $page.props.auth?.user?.allowed_entry_types || []"
+                            :key="entryType.slug"
+                            :href="route('entries.index', { type: entryType.slug })"
+                            :active="route().current('entries.index') && $page.url.includes(`type=${entryType.slug}`)"
+                            class="border-yellow-500 text-yellow-400 hover:text-yellow-300"
+                        >
+                            {{ entryType.name }}
+                        </NavLink>
+                        
                         <NavLink
                             v-if="$page.props.auth?.user?.is_admin"
                             :href="route('admin.dashboard')"

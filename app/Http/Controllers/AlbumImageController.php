@@ -22,11 +22,10 @@ class AlbumImageController
      * @var \App\Services\ImageService
      */
     protected $imageService;
-    
+
     /**
      * Create a new controller instance.
      *
-     * @param \App\Services\ImageService $imageService
      * @return void
      */
     public function __construct(ImageService $imageService)
@@ -61,16 +60,16 @@ class AlbumImageController
 
         try {
             Log::info('AlbumImageController@store - Starting validation');
-            
+
             $request->validate([
                 'images' => 'required|array',
                 'images.*' => 'required|image',
             ]);
-            
+
             Log::info('AlbumImageController@store - Validation passed');
 
             Log::info('AlbumImageController@store - Found album:', ['album_id' => $album->id, 'title' => $album->title]);
-            
+
             $this->authorize('update', $album);
             Log::info('AlbumImageController@store - Authorization passed');
 
@@ -84,30 +83,30 @@ class AlbumImageController
                     'index' => $index,
                     'name' => $image->getClientOriginalName(),
                     'size' => $image->getSize(),
-                    'mime' => $image->getMimeType()
+                    'mime' => $image->getMimeType(),
                 ]);
 
                 // Use ImageService to store the image
                 $result = $this->imageService->storeImage(
-                    $image, 
+                    $image,
                     "albums/{$album->id}"
                 );
-                
+
                 Log::info('AlbumImageController@store - Image stored:', $result);
 
                 $albumImage = $album->images()->create([
                     'id' => Str::uuid(),
                     'path' => $result['url'],
-                    'order' => $index
+                    'order' => $index,
                 ]);
-                
+
                 Log::info('AlbumImageController@store - AlbumImage created:', ['id' => $albumImage->id]);
-                
+
                 $uploadedImages[] = $albumImage;
             }
 
             Log::info('AlbumImageController@store - All images processed successfully', [
-                'count' => count($uploadedImages)
+                'count' => count($uploadedImages),
             ]);
 
             // Check if this is an AJAX request (for individual uploads)
@@ -115,32 +114,32 @@ class AlbumImageController
                 return response()->json([
                     'success' => true,
                     'message' => 'Image uploaded successfully',
-                    'images' => $uploadedImages
+                    'images' => $uploadedImages,
                 ]);
             }
 
             // Return Inertia response with updated album data
             return back()->with([
                 'message' => 'Images uploaded successfully',
-                'images' => $uploadedImages
+                'images' => $uploadedImages,
             ]);
         } catch (\Exception $e) {
             Log::error('AlbumImageController@store - Error occurred:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
             ]);
 
             // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error uploading image: ' . $e->getMessage()
+                    'message' => 'Error uploading image: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->with('error', 'Error uploading images: ' . $e->getMessage());
+            return back()->with('error', 'Error uploading images: '.$e->getMessage());
         }
     }
 
@@ -169,7 +168,7 @@ class AlbumImageController
         if ($image->album_id !== $album->id) {
             abort(404);
         }
-        
+
         $this->authorize('update', $album);
 
         $validated = $request->validate([
@@ -180,18 +179,18 @@ class AlbumImageController
             'dateCreated' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
-            'image' => 'nullable|image|max:5120', // 5MB max
+            'image' => 'nullable|image|max:15120', // 5MB max
         ]);
 
         // The mutators in the model will handle mapping to the appropriate columns
-        
+
         if ($request->hasFile('image')) {
             // Use ImageService to store the replacement image
             $result = $this->imageService->storeImage(
-                $request->file('image'), 
+                $request->file('image'),
                 "albums/{$image->album_id}"
             );
-            
+
             $validated['path'] = $result['url'];
         }
 
@@ -209,53 +208,50 @@ class AlbumImageController
         if ($image->album_id !== $album->id) {
             abort(404);
         }
-        
+
         $this->authorize('delete', $album);
-        
+
         try {
             // Delete the image from storage if it's a local file
-            if (!$this->isVideoLink($image->path) && strpos($image->path, '/storage/') !== false) {
+            if (! $this->isVideoLink($image->path) && strpos($image->path, '/storage/') !== false) {
                 // Extract the path relative to the storage directory
                 $path = str_replace('/storage/', '', parse_url($image->path, PHP_URL_PATH));
                 if ($path) {
                     Storage::disk('public')->delete($path);
                 }
             }
-            
+
             // Delete the image record from the database
             $image->delete();
 
             return back()->with('message', 'Item deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Failed to delete image: ' . $e->getMessage());
+            Log::error('Failed to delete image: '.$e->getMessage());
+
             return back()->withErrors([
-                'message' => 'Failed to delete item: ' . $e->getMessage()
+                'message' => 'Failed to delete item: '.$e->getMessage(),
             ]);
         }
     }
 
     /**
      * Check if a URL is a video link (YouTube, Vimeo, etc.)
-     *
-     * @param string $url
-     * @return bool
      */
     private function isVideoLink(string $url): bool
     {
-        return (
-            strpos($url, 'youtube.com') !== false || 
-            strpos($url, 'youtu.be') !== false || 
-            strpos($url, 'vimeo.com') !== false
-        );
+        return
+            strpos($url, 'youtube.com') !== false ||
+            strpos($url, 'youtu.be') !== false ||
+            strpos($url, 'vimeo.com') !== false;
     }
 
-    public function reorder(Request $request, Album $album = null)
+    public function reorder(Request $request, ?Album $album = null)
     {
         // Support both nested and non-nested routes
-        if (!$album && $request->has('album_id')) {
+        if (! $album && $request->has('album_id')) {
             $album = Album::findOrFail($request->album_id);
         }
-        
+
         $request->validate([
             'from_index' => 'required|integer|min:0',
             'to_index' => 'required|integer|min:0',
@@ -263,15 +259,15 @@ class AlbumImageController
 
         $fromIndex = $request->from_index;
         $toIndex = $request->to_index;
-        
+
         // Get the album ID from the route or request
         $albumId = $album ? $album->id : $request->album_id;
-        
+
         // Get all images for this album ordered by current order
         $images = AlbumImage::where('album_id', $albumId)
             ->orderBy('order')
             ->get();
-            
+
         if ($fromIndex >= $images->count() || $toIndex >= $images->count()) {
             return back()->withErrors(['message' => 'Invalid index provided']);
         }
@@ -279,7 +275,7 @@ class AlbumImageController
         // Reorder the collection
         $item = $images->splice($fromIndex, 1)->first();
         $images->splice($toIndex, 0, [$item]);
-        
+
         // Update the order for all affected images
         DB::transaction(function () use ($images) {
             foreach ($images as $index => $image) {
@@ -309,42 +305,42 @@ class AlbumImageController
 
             // Shift all existing images down to make room at the top
             $album->images()->increment('order', 1);
-            
+
             // Store video thumbnail using ImageService
             $thumbnailResult = $this->imageService->storeVideoThumbnail(
-                $request->url, 
+                $request->url,
                 "albums/{$album->id}"
             );
-            
+
             // Create properties JSON with video metadata
             $properties = [
                 'type' => 'video',
                 'video_url' => $request->url,
             ];
-            
+
             // Add thumbnail URL if available
             if ($thumbnailResult) {
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
-            
+
             // Create the album image entry
             $albumImage = $album->images()->create([
                 'path' => $request->url,
                 'title' => $request->title,
                 'caption' => $request->caption,
                 'properties' => json_encode($properties),
-                'order' => 0
+                'order' => 0,
             ]);
 
             return back()->with('message', 'Video added successfully');
         } catch (\Exception $e) {
             Log::error('Error in AlbumImageController@storeVideo:', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()->withErrors([
-                'message' => 'Error adding video: ' . $e->getMessage()
+                'message' => 'Error adding video: '.$e->getMessage(),
             ]);
         }
     }

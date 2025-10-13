@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\Album;
-use App\Models\AlbumImage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 
@@ -15,14 +14,14 @@ beforeEach(function () {
 
 it('allows user to add image to their album', function () {
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600);
-    
+
     $response = $this->post(route('albums.images.store', $this->album->id), [
         'images' => [$file],
     ]);
 
     $response->assertRedirect();
     $response->assertSessionHasNoErrors();
-    
+
     $this->assertDatabaseHas('album_images', [
         'album_id' => $this->album->id,
     ]);
@@ -43,9 +42,9 @@ it('requires image file when adding to album', function () {
 it('prevents adding images to other users albums', function () {
     $otherUser = User::factory()->create();
     $otherAlbum = Album::factory()->create(['user_id' => $otherUser->id]);
-    
+
     $file = \Illuminate\Http\UploadedFile::fake()->image('test-image.jpg', 800, 600);
-    
+
     $response = $this->post(route('albums.images.store', $otherAlbum->id), [
         'images' => [$file],
     ]);

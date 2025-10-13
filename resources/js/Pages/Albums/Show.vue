@@ -1,17 +1,17 @@
 <template>
-    <Head :title="album.title" />
+    <Head :title="Album.title" />
 
     <AuthenticatedLayout>
         <template #header>
             <AlbumHeader
-                :album="album"
+                :album="Album"
                 @delete="confirmDeleteAlbum"
                 @upload="handleFileUpload"
                 @add-video="openAddVideoModal"
             />
         </template>
 
-        <AlbumCover :album="album" />
+        <AlbumCover :album="Album" />
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -28,7 +28,7 @@
                     />
 
                     <AlbumGrid
-                        :items="album.images || []"
+                        :items="Album.images || []"
                         @item-click="openModal"
                         @item-delete="confirmDeleteImage"
                         @reorder="handleReorder"
@@ -90,12 +90,17 @@ import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps<{
-    album: Album;
+    Album: Album;
     album_display_settings: NonNullable<User['album_display_settings']>;
     auth: {
         user: User;
     };
 }>();
+
+// Add null check for album
+if (!props.Album) {
+    throw new Error('Album data is required');
+}
 
 const {
     uploading,
@@ -118,7 +123,7 @@ const {
     showConfirmationDialog,
     confirmAction,
     cancelConfirmation
-} = useAlbum(props.album.id);
+} = useAlbum(props.Album.id);
 
 const showModal = ref(false);
 const selectedImage = ref<AlbumImage | null>(null);
@@ -150,10 +155,10 @@ const closeVideoModal = () => {
 };
 
 const handleImageUpdate = (updatedImage: AlbumImage) => {
-    if (!props.album.images) return;
-    const index = props.album.images.findIndex(img => img.id === updatedImage.id);
+    if (!props.Album.images) return;
+    const index = props.Album.images.findIndex(img => img.id === updatedImage.id);
     if (index !== -1) {
-        props.album.images[index] = updatedImage;
+        props.Album.images[index] = updatedImage;
     }
 };
 

@@ -6,8 +6,16 @@ use App\Models\Mosaic;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class MosaicPolicy
+class MosaicPolicy extends BaseEntityPolicy
 {
+    /**
+     * Get the entity model class name
+     */
+    protected function getEntityModelClass(): string
+    {
+        return Mosaic::class;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -19,9 +27,9 @@ class MosaicPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Mosaic $mosaic): Response
+    public function view(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }
@@ -37,9 +45,9 @@ class MosaicPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Mosaic $mosaic): Response
+    public function update(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }
@@ -47,9 +55,9 @@ class MosaicPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Mosaic $mosaic): Response
+    public function delete(User $user, $mosaic): Response
     {
-        return $user->id === $mosaic->user_id
+        return $user->id == $mosaic->user_id
             ? Response::allow()
             : Response::deny('You do not own this mosaic.');
     }
@@ -57,7 +65,7 @@ class MosaicPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Mosaic $mosaic): bool
+    public function restore(User $user, $mosaic): bool
     {
         return false;
     }
@@ -65,7 +73,7 @@ class MosaicPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Mosaic $mosaic): bool
+    public function forceDelete(User $user, $mosaic): bool
     {
         return false;
     }

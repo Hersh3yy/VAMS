@@ -3,9 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\Activity;
-use App\Models\User;
 use App\Models\Album;
 use App\Models\Mosaic;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,7 +24,7 @@ class ActivityFactory extends Factory
     {
         $subjectTypes = [Album::class, Mosaic::class];
         $subjectType = fake()->randomElement($subjectTypes);
-        
+
         return [
             'type' => fake()->randomElement(['create', 'update', 'delete']),
             'description' => $this->faker->sentence(),
@@ -49,7 +49,7 @@ class ActivityFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'create',
-            'description' => 'Created ' . class_basename($attributes['subject_type']),
+            'description' => 'Created '.class_basename($attributes['subject_type']),
         ]);
     }
 
@@ -60,7 +60,7 @@ class ActivityFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'update',
-            'description' => 'Updated ' . class_basename($attributes['subject_type']),
+            'description' => 'Updated '.class_basename($attributes['subject_type']),
         ]);
     }
 
@@ -71,7 +71,7 @@ class ActivityFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'delete',
-            'description' => 'Deleted ' . class_basename($attributes['subject_type']),
+            'description' => 'Deleted '.class_basename($attributes['subject_type']),
         ]);
     }
 
@@ -84,4 +84,4 @@ class ActivityFactory extends Factory
             'user_id' => $user->id,
         ]);
     }
-} 
+}

@@ -13,14 +13,14 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('spaces');
-    
+
     $this->user = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
-    
+
     $this->album = Album::factory()->create([
-        'user_id' => $this->user->id
+        'user_id' => $this->user->id,
     ]);
 });
 
@@ -30,18 +30,18 @@ it('allows authenticated user to upload images to album', function () {
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
 
     $response = $this->postJson(route('albums.images.store', $this->album), [
-        'images' => [$file]
+        'images' => [$file],
     ]);
 
     $response->assertSuccessful()
-            ->assertJson([
-                'success' => true,
-                'message' => 'Image uploaded successfully'
-            ]);
+        ->assertJson([
+            'success' => true,
+            'message' => 'Image uploaded successfully',
+        ]);
 
     $this->assertDatabaseHas('album_images', [
         'album_id' => $this->album->id,
-        'order' => 0
+        'order' => 0,
     ]);
 });
 
@@ -55,13 +55,13 @@ it('can upload multiple images at once', function () {
     ];
 
     $response = $this->postJson(route('albums.images.store', $this->album), [
-        'images' => $files
+        'images' => $files,
     ]);
 
     $response->assertSuccessful();
 
     expect($this->album->fresh()->images()->count())->toBe(3);
-    
+
     // Check order is correct
     $images = $this->album->fresh()->images()->orderBy('order')->get();
     expect($images[0]->order)->toBe(0);
@@ -76,7 +76,7 @@ it('prevents unauthorized user from uploading to album', function () {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->actingAs($this->user)->postJson(route('albums.images.store', $otherAlbum), [
-        'images' => [$file]
+        'images' => [$file],
     ]);
 
     // In this specific case, the validation/authorization flow returns 422
@@ -88,7 +88,7 @@ it('prevents guest from uploading images', function () {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('albums.images.store', $this->album), [
-        'images' => [$file]
+        'images' => [$file],
     ]);
 
     $response->assertUnauthorized();
@@ -98,7 +98,7 @@ it('validates file types on upload', function () {
     $invalidFile = UploadedFile::fake()->create('document.pdf', 100);
 
     $response = $this->actingAs($this->user)->postJson(route('albums.images.store', $this->album), [
-        'images' => [$invalidFile]
+        'images' => [$invalidFile],
     ]);
 
     // The controller validates with 'images.*' => 'required|image'
@@ -117,17 +117,17 @@ it('can update image metadata', function () {
         'album_id' => $this->album->id,
         'title' => 'Original Title',
         'caption' => 'Original caption',
-        'alt_text' => 'Original alt text'
+        'alt_text' => 'Original alt text',
     ]);
 
     $response = $this->actingAs($this->user)->patch(route('albums.images.update', [$this->album, $albumImage]), [
         'title' => 'New Title',
         'caption' => 'Updated caption',
-        'alt_text' => 'Updated alt text'
+        'alt_text' => 'Updated alt text',
     ]);
 
     $response->assertRedirect();
-    
+
     $albumImage->refresh();
     expect($albumImage->title)->toBe('New Title');
     expect($albumImage->caption)->toBe('Updated caption');
@@ -146,7 +146,7 @@ it('can reorder images', function () {
     // Move first image to last position
     $response = $this->patchJson(route('albums.images.reorder', $this->album), [
         'from_index' => 0,
-        'to_index' => 2
+        'to_index' => 2,
     ]);
 
     $response->assertRedirect();
@@ -165,7 +165,7 @@ it('can delete image', function () {
     $this->actingAs($this->user);
 
     $albumImage = AlbumImage::factory()->create([
-        'album_id' => $this->album->id
+        'album_id' => $this->album->id,
     ]);
 
     $response = $this->deleteJson(
@@ -184,7 +184,7 @@ it('can add video url to album', function () {
         [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             'title' => 'Test Video',
-            'caption' => 'Test video caption'
+            'caption' => 'Test video caption',
         ]
     );
 
@@ -194,7 +194,7 @@ it('can add video url to album', function () {
         'album_id' => $this->album->id,
         'path' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         'title' => 'Test Video',
-        'caption' => 'Test video caption'
+        'caption' => 'Test video caption',
     ]);
 
     $image = $this->album->fresh()->images()->first();
@@ -208,7 +208,7 @@ it('validates url for video upload', function () {
         route('albums.images.store-video', $this->album),
         [
             'url' => 'invalid-url',
-            'title' => 'Test Video'
+            'title' => 'Test Video',
         ]
     );
 

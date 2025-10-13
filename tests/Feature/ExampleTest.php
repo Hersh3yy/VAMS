@@ -13,7 +13,7 @@ it('redirects unauthenticated users to login', function () {
 it('allows authenticated users to access dashboard', function () {
     $user = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
 
     $response = $this->actingAs($user)->get('/');

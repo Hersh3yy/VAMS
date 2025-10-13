@@ -2,27 +2,26 @@
 
 declare(strict_types=1);
 
+use App\Models\Album;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
-use App\Models\Album;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('spaces');
-    
+
     $this->user = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
-    
+
     $this->otherUser = User::factory()->create([
         'is_approved' => true,
-        'email_verified_at' => now()
+        'email_verified_at' => now(),
     ]);
 });
 
@@ -37,9 +36,8 @@ it('allows authenticated user to view mosaics index', function () {
     $response = $this->get(route('mosaics.index'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Mosaics/Index')
-             ->has('mosaics', 3) // Only user's mosaics
+    $response->assertInertia(fn ($page) => $page->component('Mosaics/Index')
+        ->has('mosaics', 3) // Only user's mosaics
     );
 });
 
@@ -54,8 +52,7 @@ it('allows authenticated user to view create mosaic page', function () {
     $response = $this->get(route('mosaics.create'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Mosaics/Create')
+    $response->assertInertia(fn ($page) => $page->component('Mosaics/Create')
     );
 });
 
@@ -75,7 +72,7 @@ it('allows authenticated user to create mosaic', function () {
     $response = $this->post(route('mosaics.store'), $mosaicData);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('mosaics', [
         'title' => 'Test Mosaic',
         'description' => 'This is a test mosaic description.',
@@ -119,19 +116,18 @@ it('allows authenticated user to view mosaic', function () {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
-    
+
     // Add some items to the mosaic
     MosaicItem::factory()->count(3)->forMosaic($mosaic)->create();
 
     $response = $this->get(route('mosaics.show', $mosaic));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Mosaics/Show')
-             ->has('mosaic')
-             ->where('mosaic.id', $mosaic->id)
-             ->where('mosaic.title', $mosaic->title)
-             ->has('mosaic.items', 3)
+    $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
+        ->has('mosaic')
+        ->where('mosaic.id', $mosaic->id)
+        ->where('mosaic.title', $mosaic->title)
+        ->has('mosaic.items', 3)
     );
 });
 
@@ -153,10 +149,9 @@ it('allows authenticated user to view mosaic show page for editing', function ()
     $response = $this->get(route('mosaics.show', $mosaic));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => 
-        $page->component('Mosaics/Show')
-             ->has('mosaic')
-             ->where('mosaic.id', $mosaic->id)
+    $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
+        ->has('mosaic')
+        ->where('mosaic.id', $mosaic->id)
     );
 });
 
@@ -178,15 +173,15 @@ it('allows authenticated user to update mosaic', function () {
                 'type' => 'album',
                 'column_index' => 0,
                 'order' => 0,
-                'properties' => []
-            ]
-        ]
+                'properties' => [],
+            ],
+        ],
     ];
 
     $response = $this->patch(route('mosaics.update', $mosaic), $updateData);
 
     $response->assertRedirect(route('mosaics.show', $mosaic));
-    
+
     $this->assertDatabaseHas('mosaics', [
         'id' => $mosaic->id,
         'title' => 'Updated Title',
@@ -208,7 +203,7 @@ it('prevents user from updating other users mosaics', function () {
     $response = $this->patch(route('mosaics.update', $otherMosaic), $updateData);
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseMissing('mosaics', [
         'id' => $otherMosaic->id,
         'title' => 'Hacked Title',
@@ -223,7 +218,7 @@ it('allows authenticated user to delete mosaic', function () {
     $response = $this->delete(route('mosaics.destroy', $mosaic));
 
     $response->assertRedirect(route('mosaics.index'));
-    
+
     $this->assertDatabaseMissing('mosaics', [
         'id' => $mosaic->id,
     ]);
@@ -237,7 +232,7 @@ it('prevents user from deleting other users mosaics', function () {
     $response = $this->delete(route('mosaics.destroy', $otherMosaic));
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseHas('mosaics', [
         'id' => $otherMosaic->id,
     ]);
@@ -259,7 +254,7 @@ it('allows user to add items to mosaic', function () {
     $response = $this->post(route('mosaics.items.store', $mosaic), $itemData);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('mosaic_items', [
         'mosaic_id' => $mosaic->id,
         'type' => 'album',
@@ -279,13 +274,13 @@ it('allows user to reorder mosaic items', function () {
         'type' => 'album',
         'properties' => ['album_id' => $album1->id],
         'order' => 1,
-        'column_index' => 0
+        'column_index' => 0,
     ]);
     $item2 = MosaicItem::factory()->forMosaic($mosaic)->create([
         'type' => 'album',
         'properties' => ['album_id' => $album2->id],
         'order' => 2,
-        'column_index' => 0
+        'column_index' => 0,
     ]);
 
     $reorderData = [
@@ -298,12 +293,12 @@ it('allows user to reorder mosaic items', function () {
     $response = $this->patch(route('mosaics.items.reorder', $mosaic), $reorderData);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item1->id,
         'order' => 2,
     ]);
-    
+
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item2->id,
         'order' => 1,

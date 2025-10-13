@@ -35,7 +35,7 @@ class AlbumFactory extends Factory
     public function withCoverImage(): static
     {
         return $this->state(fn (array $attributes) => [
-            'cover_image_path' => 'albums/covers/' . $this->faker->uuid . '.jpg',
+            'cover_image_path' => 'albums/covers/'.$this->faker->uuid.'.jpg',
         ]);
     }
 
@@ -48,4 +48,4 @@ class AlbumFactory extends Factory
             'user_id' => $user->id,
         ]);
     }
-} 
+}

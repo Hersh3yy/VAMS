@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Album;
 use App\Models\User;
 
 it('allows authenticated user to create an album', function () {
@@ -17,7 +16,7 @@ it('allows authenticated user to create an album', function () {
 
     $response->assertRedirect();
     $response->assertSessionHasNoErrors();
-    
+
     $this->assertDatabaseHas('albums', [
         'title' => 'My Test Album',
         'description' => 'This is a test album description',
@@ -28,7 +27,7 @@ it('allows authenticated user to create an album', function () {
 it('requires title when creating an album', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
-    
+
     $albumData = [
         'description' => 'This is a test album description',
     ];
@@ -43,7 +42,7 @@ it('requires title when creating an album', function () {
 
 it('prevents guest users from creating albums', function () {
     $this->assertGuest();
-    
+
     $albumData = [
         'title' => 'Unauthorized Album',
         'description' => 'This should not be created',

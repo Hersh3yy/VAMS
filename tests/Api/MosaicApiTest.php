@@ -23,12 +23,12 @@ it('retrieves mosaic via API with valid API key', function () {
     ])->getJson("/api/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(200);
-    
+
     // Let's just check basic structure for now
     $response->assertJsonStructure([
         'success',
         'message',
-        'data'
+        'data',
     ]);
 });
 
@@ -37,7 +37,7 @@ it('returns 401 for mosaic API request without API key', function () {
 
     $response->assertStatus(401)
         ->assertJson([
-            'error' => 'API key is required'
+            'error' => 'API key is required',
         ]);
 });
 
@@ -48,7 +48,7 @@ it('returns 401 for mosaic API request with invalid API key', function () {
 
     $response->assertStatus(401)
         ->assertJson([
-            'error' => 'Invalid API key'
+            'error' => 'Invalid API key',
         ]);
 });
 
