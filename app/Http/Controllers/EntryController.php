@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,7 +91,7 @@ class EntryController extends BaseEntityController
         }
 
         // Validate that user has permission for this entry type
-        if (! auth()->user()->hasEntryTypePermission($type)) {
+        if (! $this->user()->hasEntryTypePermission($type)) {
             abort(403, 'You do not have permission to access this entry type');
         }
 
@@ -101,7 +102,7 @@ class EntryController extends BaseEntityController
         }
 
         // Get entries of this type for the user
-        $entries = auth()->user()->entries()
+        $entries = $this->user()->entries()
             ->where('entry_type_id', $entryType->id)
             ->with(['entryType', 'images'])
             ->orderBy('order')
@@ -126,7 +127,7 @@ class EntryController extends BaseEntityController
         }
 
         // Validate that user has permission for this entry type
-        if (! auth()->user()->hasEntryTypePermission($type)) {
+        if (! $this->user()->hasEntryTypePermission($type)) {
             abort(403, 'You do not have permission to access this entry type');
         }
 
@@ -156,7 +157,7 @@ class EntryController extends BaseEntityController
         $entryType = EntryType::find($validated['entry_type_id']);
 
         // Validate user has permission for this entry type
-        if (! auth()->user()->hasEntryTypePermission($entryType->slug)) {
+        if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
             return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
         }
 
@@ -213,6 +214,23 @@ class EntryController extends BaseEntityController
     }
 
     /**
+     * Remove the specified entry from storage
+     */
+    public function destroy(Model $entry): RedirectResponse
+    {
+        // Check if user owns this entry
+        $this->authorizeOwnership($entry);
+
+        // Store the entry type slug before deletion for redirect
+        $entryTypeSlug = $entry->entryType->slug;
+
+        $entry->delete();
+
+        return redirect()->route('entries.index', ['type' => $entryTypeSlug])
+            ->with('success', 'Entry deleted successfully');
+    }
+
+    /**
      * Reorder entries
      */
     public function reorder(Request $request): RedirectResponse
@@ -227,7 +245,7 @@ class EntryController extends BaseEntityController
         $entryType = EntryType::find($validated['entry_type_id']);
         $entries = Entry::whereIn('id', $validated['orderedIds'])
             ->where('entry_type_id', $entryType->id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', $this->userId())
             ->get();
 
         if ($entries->count() !== count($validated['orderedIds'])) {
