@@ -8,7 +8,6 @@ use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -185,6 +184,62 @@ class EntryController extends BaseEntityController
     }
 
     /**
+     * Display the specified entry
+     *
+     * @override
+     */
+    public function show(string $entityId): Response|RedirectResponse
+    {
+        $entry = Entry::find($entityId);
+
+        if (! $entry) {
+            return $this->redirectWithError(
+                'entries.index',
+                [],
+                'Entry not found. You have been redirected to your entries.'
+            );
+        }
+
+        // Check if user owns this entry
+        $this->authorizeOwnership($entry);
+
+        // Load the entry with its relationships
+        $entry->load(['entryType', 'images']);
+
+        return Inertia::render('Entries/Show', [
+            'entry' => $entry,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified entry
+     *
+     * @override
+     */
+    public function edit(string $entityId): Response|RedirectResponse
+    {
+        $entry = Entry::find($entityId);
+
+        if (! $entry) {
+            return $this->redirectWithError(
+                'entries.index',
+                [],
+                'Entry not found. You have been redirected to your entries.'
+            );
+        }
+
+        // Check if user owns this entry
+        $this->authorizeOwnership($entry);
+
+        // Load the entry with its relationships
+        $entry->load(['entryType', 'images']);
+
+        return Inertia::render('Entries/Edit', [
+            'entry' => $entry,
+        ]);
+    }
+
+    /**
      * Update an existing entry
      */
     public function updateEntry(Request $request, Entry $entry): RedirectResponse
@@ -215,9 +270,14 @@ class EntryController extends BaseEntityController
 
     /**
      * Remove the specified entry from storage
+     *
+     * @override
      */
-    public function destroy(Model $entry): RedirectResponse
+    public function destroy(Model $entity): RedirectResponse
     {
+        // Cast to Entry model
+        $entry = $entity;
+
         // Check if user owns this entry
         $this->authorizeOwnership($entry);
 

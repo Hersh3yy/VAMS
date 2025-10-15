@@ -59,7 +59,7 @@ abstract class BaseController
     /**
      * Get the authenticated user's ID
      */
-    protected function userId(): int
+    protected function userId(): string
     {
         return Auth::id();
     }

@@ -26,6 +26,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Entry Frontend Pages
     Route::get('/entries', [\App\Http\Controllers\EntryController::class, 'index'])->name('entries.index');
     Route::get('/entries/create', [\App\Http\Controllers\EntryController::class, 'create'])->name('entries.create');
+    Route::get('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'show'])->name('entries.show');
+    Route::get('/entries/{entry}/edit', [\App\Http\Controllers\EntryController::class, 'edit'])->name('entries.edit');
 
     // Profile Frontend Pages
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
