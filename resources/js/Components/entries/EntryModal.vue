@@ -8,7 +8,7 @@
                     <div>
                         <div class="mt-3 text-center sm:mt-0 sm:text-left">
                             <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
-                                {{ isEditing ? 'Edit I AM' : 'View I AM' }}
+                                {{ isEditing ? `Edit ${props.entryType?.name || 'Entry'}` : `View ${props.entryType?.name || 'Entry'}` }}
                             </h3>
                             <div class="mt-4">
                                 <form @submit.prevent="saveChanges" class="space-y-4">
@@ -23,14 +23,14 @@
                                             :readonly="!isEditing"
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                                             :class="{ 'bg-gray-100 dark:bg-gray-600': !isEditing }"
-                                            placeholder="Give your I AM a title..."
+                                            :placeholder="`Give your ${props.entryType?.name || 'entry'} a title...`"
                                             required
                                         />
                                     </div>
 
                                     <div>
                                         <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            I AM...
+                                            Content
                                         </label>
                                         <textarea
                                             id="content"
@@ -39,7 +39,7 @@
                                             :readonly="!isEditing"
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                                             :class="{ 'bg-gray-100 dark:bg-gray-600': !isEditing }"
-                                            placeholder="I AM..."
+                                            :placeholder="`Enter ${props.entryType?.name?.toLowerCase() || 'entry'} content...`"
                                             required
                                         ></textarea>
                                     </div>
@@ -136,9 +136,16 @@ interface Entry {
     order: number
 }
 
+interface EntryType {
+    id: string
+    name: string
+    slug: string
+}
+
 const props = defineProps<{
     show: boolean
     entry: Entry | null
+    entryType?: EntryType | null
 }>()
 
 const emit = defineEmits<{
@@ -233,7 +240,8 @@ const saveChanges = async () => {
 const deleteEntry = () => {
     if (!props.entry) return
     
-    if (confirm('Are you sure you want to delete this I AM? This action cannot be undone.')) {
+    const entryName = props.entryType?.name || 'entry'
+    if (confirm(`Are you sure you want to delete this ${entryName}? This action cannot be undone.`)) {
         router.delete(route('entries.destroy', props.entry.id), {
             preserveScroll: true,
             onSuccess: () => {

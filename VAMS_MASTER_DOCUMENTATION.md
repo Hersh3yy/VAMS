@@ -28,6 +28,7 @@
 - **Permission System**: Subscription-based access control
 - **Browser Testing**: End-to-end testing with Pest v4
 - **Performance Optimization**: Database indexing and caching
+- **Dynamic Entry Types**: Complex field types with nested configurations
 
 ---
 
@@ -316,6 +317,7 @@ Follow the comprehensive guide in `ENTITY_MANAGEMENT_GUIDE.md`:
    - Portfolio management
    - Advanced analytics
    - Export/import functionality
+   - User usage for admins (size of their content, amount of content, access statistics)
 
 ### **Long Term (3 months)**
 1. **Multi-tenancy**
