@@ -2,9 +2,8 @@
     <Head :title="`Create ${entryType.name}`" />
 
     <AuthenticatedLayout>
-        
         <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between items-center mb-6">
@@ -14,7 +13,17 @@
                             </Link>
                         </div>
 
-                        <form @submit.prevent="submitForm" class="space-y-6">
+                        <!-- Use Dynamic Form for complex entry types, fallback to simple form for I AM -->
+                        <DynamicEntryForm
+                            v-if="isComplexEntryType"
+                            :entryType="entryType"
+                            submitText="Create"
+                            @cancel="router.visit(route('entries.index', { type: entryType.slug }))"
+                            @submit="handleDynamicSubmit"
+                        />
+                        
+                        <!-- Simple form for I AM entries (backward compatibility) -->
+                        <form v-else @submit.prevent="submitForm" class="space-y-6">
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Title
@@ -49,26 +58,6 @@
                                 </div>
                             </div>
 
-                            <!-- Status field hidden but defaults to published -->
-                            <!-- Uncomment to re-enable draft/published selector
-                            <div>
-                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Status
-                                </label>
-                                <select
-                                    id="status"
-                                    v-model="form.status"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                >
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                </select>
-                                <div v-if="form.errors.status" class="text-red-600 text-sm mt-1">
-                                    {{ form.errors.status }}
-                                </div>
-                            </div>
-                            -->
-
                             <div class="flex justify-end space-x-3">
                                 <Link :href="route('entries.index', { type: entryType.slug })" 
                                       class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -93,10 +82,19 @@
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import DynamicEntryForm from '@/Components/entries/DynamicEntryForm.vue'
+import { Head, Link, useForm, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
     entryType: Object
+});
+
+// Check if this is a complex entry type (has complex field types)
+const isComplexEntryType = computed(() => {
+    return props.entryType.field_config.some(field => 
+        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
+    )
 });
 
 const form = useForm({
@@ -112,4 +110,13 @@ const submitForm = () => {
     
     form.post(route('entries.store'));
 }
+
+const handleDynamicSubmit = (dynamicForm) => {
+    dynamicForm.post(route('entries.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Redirect will be handled by the controller
+        }
+    });
+};
 </script>

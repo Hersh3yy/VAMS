@@ -89,6 +89,13 @@
                                     <ul class="list-disc list-inside ml-2">
                                         <li v-for="field in entryType.field_config" :key="field.name">
                                             {{ field.label }} ({{ field.type }})
+                                            <span v-if="field.type === 'repeatable' && field.fields" class="text-gray-400">
+                                                - {{ field.fields.length }} nested fields
+                                            </span>
+                                            <span v-if="field.type === 'image_collection'" class="text-gray-400">
+                                                - Max: {{ field.max || 'unlimited' }}
+                                            </span>
+                                            <span v-if="field.required" class="text-red-500">*</span>
                                         </li>
                                     </ul>
                                 </div>

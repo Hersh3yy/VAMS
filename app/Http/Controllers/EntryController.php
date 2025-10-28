@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
+use App\Services\EntryValidationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,8 +17,10 @@ use Inertia\Response;
 
 class EntryController extends BaseEntityController
 {
-    public function __construct(EntryService $entryService)
-    {
+    public function __construct(
+        EntryService $entryService,
+        private readonly EntryValidationService $validationService
+    ) {
         parent::__construct($entryService);
     }
 
@@ -148,7 +151,7 @@ class EntryController extends BaseEntityController
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
+            'content' => ['nullable'], // Can be string or array
             'status' => ['nullable', 'string', 'in:draft,published'],
             'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
         ]);
@@ -158,6 +161,23 @@ class EntryController extends BaseEntityController
         // Validate user has permission for this entry type
         if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
             return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
+        }
+
+        // Handle content: if it's a string (old simple format), convert to object
+        // Otherwise it's already an array from the dynamic form
+        $content = $validated['content'] ?? [];
+        if (is_string($validated['content'])) {
+            // Legacy format for simple text content (backward compatibility)
+            $content = ['statement' => $validated['content']];
+        }
+
+        // Validate content against entry type's field_config if it's an array
+        if (is_array($content) && !empty($content)) {
+            try {
+                $content = $this->validationService->validateContent($entryType, $content);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return back()->withErrors($e->errors());
+            }
         }
 
         $user = $this->user();
@@ -172,7 +192,7 @@ class EntryController extends BaseEntityController
         $entry = $user->entries()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
-            'content' => ['statement' => $validated['content']], // Store as JSON
+            'content' => $content, // Store as JSON (can be simple object or complex structure)
             'entry_type_id' => $entryType->id,
             'status' => $newStatus,
             'order' => $maxOrder + 1,
@@ -248,15 +268,32 @@ class EntryController extends BaseEntityController
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
+            'content' => ['nullable'], // Can be string or array
             'status' => ['nullable', 'string', 'in:draft,published'],
         ]);
+
+        // Handle content: if it's a string (old simple format), convert to object
+        // Otherwise it's already an array from the dynamic form
+        $content = $validated['content'] ?? [];
+        if (is_string($validated['content'])) {
+            // Legacy format for simple text content (backward compatibility)
+            $content = ['statement' => $validated['content']];
+        }
+
+        // Validate content against entry type's field_config if it's an array
+        if (is_array($content) && !empty($content)) {
+            try {
+                $content = $this->validationService->validateContent($entry->entryType, $content);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return back()->withErrors($e->errors());
+            }
+        }
 
         $newStatus = $validated['status'] ?? $entry->status;
 
         $entry->update([
             'title' => $validated['title'],
-            'content' => ['statement' => $validated['content']], // Store as JSON
+            'content' => $content, // Store as JSON (can be simple object or complex structure)
             'status' => $newStatus,
             // Preserve published_at if already set, set to now() if transitioning to published, null if draft
             'published_at' => $newStatus === 'published'
