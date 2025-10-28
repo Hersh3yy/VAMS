@@ -134,7 +134,13 @@
                     <span v-if="field.required" class="text-red-500">*</span>
                 </label>
                 
-                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                <div 
+                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center transition-colors"
+                    :class="{ 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900': isDragging[field.name] }"
+                    @dragover.prevent="isDragging[field.name] = true"
+                    @dragleave.prevent="isDragging[field.name] = false"
+                    @drop.prevent="handleImageDrop($event, field.name)"
+                >
                     <input
                         type="file"
                         multiple
@@ -142,42 +148,71 @@
                         @change="handleImageCollectionUpload($event, field.name)"
                         class="hidden"
                         :id="`${field.name}_upload`"
+                        :ref="`${field.name}_input`"
                     />
                     <label :for="`${field.name}_upload`" class="cursor-pointer">
                         <div class="text-gray-500 dark:text-gray-400">
-                            <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
-                            Click to upload images or drag and drop
+                            <p class="text-sm font-medium mb-1">Click to upload images or drag and drop</p>
+                            <p class="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
                         </div>
                     </label>
                 </div>
                 
-                <div v-if="form.content[field.name] && form.content[field.name].length > 0" class="grid grid-cols-3 gap-4">
-                    <div v-for="(image, imageIndex) in form.content[field.name]" :key="imageIndex" 
-                         class="relative group border rounded-lg overflow-hidden">
-                        <img :src="getImageUrl(image)" :alt="image.alt || 'Image'" class="w-full h-32 object-cover" />
-                        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div 
+                    v-if="form.content[field.name] && form.content[field.name].length > 0" 
+                    :ref="`imageGrid_${field.name}`"
+                    class="grid grid-cols-3 gap-4"
+                >
+                    <div 
+                        v-for="(image, imageIndex) in form.content[field.name]" 
+                        :key="imageIndex" 
+                        :data-index="imageIndex"
+                        class="relative group border rounded-lg overflow-hidden cursor-move hover:shadow-lg transition-shadow"
+                    >
+                        <div class="aspect-square bg-gray-100 dark:bg-gray-700">
+                            <img 
+                                v-if="image.url || image.path" 
+                                :src="image.url || getImagePublicUrl(image.path)" 
+                                :alt="image.alt || 'Image'" 
+                                class="w-full h-full object-cover" 
+                            />
+                            <div v-else class="w-full h-full flex items-center justify-center">
+                                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                                 type="button"
                                 @click="removeImage(field.name, imageIndex)"
-                                class="text-white hover:text-red-300"
+                                class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
                             >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </button>
                         </div>
-                        <div class="p-2 bg-gray-50 dark:bg-gray-700">
+                        <div class="absolute top-2 left-2 bg-gray-800 bg-opacity-75 text-white px-2 py-1 rounded text-xs">
+                            {{ imageIndex + 1 }}
+                        </div>
+                        <div class="p-2 bg-white dark:bg-gray-800">
                             <input
                                 v-model="image.alt"
                                 type="text"
                                 placeholder="Alt text..."
-                                class="w-full text-xs px-2 py-1 border rounded"
+                                class="w-full text-xs px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             />
                         </div>
                     </div>
                 </div>
+                
+                <p v-if="field.max && form.content[field.name]?.length >= field.max" class="text-sm text-amber-600">
+                    Maximum of {{ field.max }} images reached
+                </p>
             </div>
 
             <!-- Object/Group Fields -->
@@ -272,8 +307,10 @@
 </template>
 
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3'
-import { ref, reactive } from 'vue'
+import { useForm, router as inertiaRouter } from '@inertiajs/vue3'
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import Sortable from 'sortablejs'
+import axios from 'axios'
 
 interface Props {
     entryType: any
@@ -318,6 +355,9 @@ const form = useForm({
 })
 
 const collapsedObjects = reactive<Record<string, boolean>>({})
+const isDragging = reactive<Record<string, boolean>>({})
+const sortableInstances = ref<Record<string, any>>({})
+const uploading = ref(false)
 
 const addRepeatableItem = (field: any) => {
     const newItem: any = {}
@@ -340,17 +380,77 @@ const handleImageUpload = (event: Event, fieldName: string, itemIndex: number, n
     }
 }
 
-const handleImageCollectionUpload = (event: Event, fieldName: string) => {
+const handleImageCollectionUpload = async (event: Event, fieldName: string) => {
     const target = event.target as HTMLInputElement
     const files = target.files
-    if (files) {
-        Array.from(files).forEach(file => {
-            form.content[fieldName].push({
-                path: file.name, // In production, upload and get actual path
-                alt: '',
-                caption: ''
+    if (!files || files.length === 0) return
+    
+    uploading.value = true
+    
+    try {
+        for (const file of Array.from(files)) {
+            const formData = new FormData()
+            formData.append('file', file)
+            
+            const response = await axios.post('/api/media/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             })
-        })
+            
+            if (response.data.success) {
+                form.content[fieldName].push({
+                    path: response.data.data.path,
+                    url: response.data.data.url,
+                    alt: '',
+                    caption: ''
+                })
+            }
+        }
+    } catch (error) {
+        console.error('Image upload failed:', error)
+        alert('Failed to upload images. Please try again.')
+    } finally {
+        uploading.value = false
+        // Clear the input
+        target.value = ''
+    }
+}
+
+const handleImageDrop = async (event: DragEvent, fieldName: string) => {
+    isDragging[fieldName] = false
+    const files = event.dataTransfer?.files
+    if (!files || files.length === 0) return
+    
+    uploading.value = true
+    
+    try {
+        for (const file of Array.from(files)) {
+            if (!file.type.startsWith('image/')) continue
+            
+            const formData = new FormData()
+            formData.append('file', file)
+            
+            const response = await axios.post('/api/media/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            
+            if (response.data.success) {
+                form.content[fieldName].push({
+                    path: response.data.data.path,
+                    url: response.data.data.url,
+                    alt: '',
+                    caption: ''
+                })
+            }
+        }
+    } catch (error) {
+        console.error('Image upload failed:', error)
+        alert('Failed to upload images. Please try again.')
+    } finally {
+        uploading.value = false
     }
 }
 
@@ -358,10 +458,56 @@ const removeImage = (fieldName: string, imageIndex: number) => {
     form.content[fieldName].splice(imageIndex, 1)
 }
 
-const getImageUrl = (image: any) => {
-    // In production, return actual image URL
-    return '/images/placeholder.svg'
+const getImagePublicUrl = (path: string) => {
+    if (!path) return ''
+    // If it's already a full URL, return it
+    if (path.startsWith('http')) return path
+    // Otherwise, construct the public URL
+    return `/storage/${path}`
 }
+
+// Initialize Sortable for image grids
+const initializeSortable = () => {
+    props.entryType.field_config.forEach((field: any) => {
+        if (field.type === 'image_collection' && form.content[field.name]?.length > 0) {
+            nextTick(() => {
+                const gridElement = document.querySelector(`[ref="imageGrid_${field.name}"]`) as HTMLElement
+                if (gridElement && !sortableInstances.value[field.name]) {
+                    sortableInstances.value[field.name] = Sortable.create(gridElement, {
+                        animation: 150,
+                        ghostClass: 'opacity-50',
+                        onEnd: (evt: any) => {
+                            const oldIndex = evt.oldIndex
+                            const newIndex = evt.newIndex
+                            
+                            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+                                const images = form.content[field.name]
+                                const movedImage = images.splice(oldIndex, 1)[0]
+                                images.splice(newIndex, 0, movedImage)
+                            }
+                        }
+                    })
+                }
+            })
+        }
+    })
+}
+
+// Watch for changes in image collections to reinitialize sortable
+watch(() => form.content, () => {
+    initializeSortable()
+}, { deep: true })
+
+onMounted(() => {
+    initializeSortable()
+})
+
+onUnmounted(() => {
+    // Cleanup sortable instances
+    Object.values(sortableInstances.value).forEach((instance: any) => {
+        if (instance) instance.destroy()
+    })
+})
 
 const toggleObjectCollapse = (fieldName: string) => {
     collapsedObjects[fieldName] = !collapsedObjects[fieldName]
