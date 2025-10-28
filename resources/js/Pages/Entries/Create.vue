@@ -15,7 +15,7 @@
 
                         <!-- Use Dynamic Form for complex entry types, fallback to simple form for I AM -->
                         <DynamicEntryForm
-                            v-if="isComplexEntryType"
+                             v-if="isComplexEntryType"
                             :entryType="entryType"
                             submitText="Create"
                             @cancel="router.visit(route('entries.index', { type: entryType.slug }))"
@@ -43,14 +43,14 @@
 
                             <div>
                                 <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    I AM...
+                                    Content
                                 </label>
                                 <textarea
                                     id="content"
                                     v-model="form.content"
                                     rows="6"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                    placeholder="I AM..."
+                                    :placeholder="`Enter ${entryType.name.toLowerCase()} content...`"
                                     required
                                 ></textarea>
                                 <div v-if="form.errors.content" class="text-red-600 text-sm mt-1">
@@ -69,7 +69,7 @@
                                     class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
                                 >
                                     <span v-if="form.processing">Creating...</span>
-                                    <span v-else>Create I AM</span>
+                                    <span v-else>Create {{ entryType.name }}</span>
                                 </button>
                             </div>
                         </form>

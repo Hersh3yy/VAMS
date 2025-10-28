@@ -86,6 +86,7 @@
         <EntryModal
             :show="showModal"
             :entry="selectedEntry"
+            :entryType="entryType"
             @close="closeModal"
             @update="handleEntryUpdate"
         />
@@ -203,7 +204,8 @@ const handleEntryUpdate = (updatedEntry: Entry) => {
 }
 
 const deleteEntry = (id: string) => {
-    if (!confirm('Are you sure you want to delete this I AM? This action cannot be undone.')) {
+    const entryName = props.entryType?.name || 'entry'
+    if (!confirm(`Are you sure you want to delete this ${entryName}? This action cannot be undone.`)) {
         return
     }
 

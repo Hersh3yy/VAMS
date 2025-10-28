@@ -141,7 +141,8 @@ const formatDate = (dateString) => {
 }
 
 const deleteEntry = () => {
-    if (confirm('Are you sure you want to delete this I AM? This action cannot be undone.')) {
+    const entryName = props.entry.entry_type?.name || 'entry'
+    if (confirm(`Are you sure you want to delete this ${entryName}? This action cannot be undone.`)) {
         router.delete(route('entries.destroy', props.entry.id), {
             onSuccess: () => {
                 router.visit(route('entries.index', { type: props.entry.entry_type?.slug }))

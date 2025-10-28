@@ -239,22 +239,34 @@
             </select>
         </div>
         
-        <div class="flex justify-end space-x-3">
+        <div class="flex justify-between">
             <button
+                v-if="showDelete"
                 type="button"
-                @click="$emit('cancel')"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                @click="$emit('delete')"
+                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
-                Cancel
+                {{ deleteText || 'Delete' }}
             </button>
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-            >
-                <span v-if="form.processing">{{ submitText || 'Saving...' }}</span>
-                <span v-else>{{ submitText || 'Create' }}</span>
-            </button>
+            <div v-else></div>
+            
+            <div class="flex space-x-3">
+                <button
+                    type="button"
+                    @click="$emit('cancel')"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                >
+                    <span v-if="form.processing">{{ submitText || 'Saving...' }}</span>
+                    <span v-else>{{ submitText || 'Create' }}</span>
+                </button>
+            </div>
         </div>
     </form>
 </template>
@@ -268,10 +280,12 @@ interface Props {
     entry?: any
     showStatus?: boolean
     submitText?: string
+    showDelete?: boolean
+    deleteText?: string
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['cancel', 'submit'])
+const emit = defineEmits(['cancel', 'submit', 'delete'])
 
 // Initialize form content structure from field_config
 const initializeContent = () => {
@@ -282,11 +296,14 @@ const initializeContent = () => {
     }
     
     props.entryType.field_config.forEach((field: any) => {
-        content[field.name] = match (field.type) {
-            'repeatable', 'image_collection' => [],
-            'object' => {},
-            'checkbox' => false,
-            default => ''
+        if (field.type === 'repeatable' || field.type === 'image_collection') {
+            content[field.name] = []
+        } else if (field.type === 'object') {
+            content[field.name] = {}
+        } else if (field.type === 'checkbox') {
+            content[field.name] = false
+        } else {
+            content[field.name] = ''
         }
     })
     
