@@ -1,5 +1,5 @@
 <template>
-    <BaseModal v-if="show && video" size="4xl" closeable @close="$emit('close')">
+    <BaseModal v-if="show && video" :show="show && !!video" size="4xl" closeable @close="$emit('close')">
         <template #header>
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                 {{ video.title || 'Video' }}
