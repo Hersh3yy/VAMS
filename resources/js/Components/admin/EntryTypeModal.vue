@@ -268,6 +268,7 @@
                             Active
                         </label>
                     </div>
+            </form>
 
         </template>
 
