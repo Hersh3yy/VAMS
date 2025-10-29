@@ -152,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import FilterButton from '@/Components/atoms/FilterButton.vue';
+import FilterButton from '@/Components/Base/FilterButton.vue';
 import { Link } from '@inertiajs/vue3';
 
 interface User {

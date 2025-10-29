@@ -1,39 +1,11 @@
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-        <div
-            class="flex min-h-screen items-center justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
-        >
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75" />
-            </div>
+    <BaseModal :show="show" size="lg" closeable @close="closeModal">
+        <template #header>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Image Properties</h3>
+        </template>
 
-            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
-                >&#8203;</span
-            >
-
-            <div
-                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle"
-            >
-                <div class="flex items-center justify-between border-b p-4">
-                    <h3 class="text-lg font-medium">Image Properties</h3>
-                    <button
-                        type="button"
-                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        @click="closeModal"
-                    >
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="p-6">
-                    <div v-if="localItem" class="space-y-4">
+        <template #body>
+            <div v-if="localItem" class="space-y-4">
                         <!-- Link URL -->
                         <ImagePropertyField
                             v-model="editableProperties.linkUrl"
@@ -69,34 +41,26 @@
                             >
                         </div>
                     </div>
-                    <div v-else class="py-4 text-center">
-                        <p>No image item selected.</p>
-                    </div>
-                </div>
-
-                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button
-                        type="button"
-                        class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-                        @click="saveProperties"
-                    >
-                        Save Changes
-                    </button>
-                    <button
-                        type="button"
-                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:mt-0 sm:w-auto sm:text-sm"
-                        @click="closeModal"
-                    >
-                        Cancel
-                    </button>
-                </div>
+            <div v-else class="py-4 text-center text-gray-500 dark:text-gray-400">
+                <p>No image item selected.</p>
             </div>
-        </div>
-    </div>
+        </template>
+
+        <template #footer>
+            <BaseButton variant="primary" @click="saveProperties">
+                Save Changes
+            </BaseButton>
+            <BaseButton variant="secondary" @click="closeModal">
+                Cancel
+            </BaseButton>
+        </template>
+    </BaseModal>
 </template>
 
 <script setup>
 import ImagePropertyField from '@/Components/molecules/ImagePropertyField.vue';
+import BaseModal from '@/Components/Base/Modal.vue';
+import BaseButton from '@/Components/Base/Button.vue';
 import { reactive, ref, watch } from 'vue';
 
 const props = defineProps({

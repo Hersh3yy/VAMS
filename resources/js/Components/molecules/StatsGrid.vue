@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import StatCard from '@/Components/atoms/StatCard.vue';
+import StatCard from '@/Components/Base/StatCard.vue';
 
 interface Stats {
     totalAlbums: number;

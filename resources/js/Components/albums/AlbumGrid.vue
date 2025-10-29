@@ -33,11 +33,28 @@ const gridContainer = ref<HTMLElement | null>(null);
 const localItems = ref([...props.items]);
 let sortableInstance: any = null;
 
-// Watch for prop changes
+// Watch for prop changes - but be careful not to reset during drag operations
+let isDragging = false;
+
 watch(
     () => props.items,
-    newItems => {
-        localItems.value = [...newItems];
+    (newItems, oldItems) => {
+        // Only update if:
+        // 1. Not currently dragging
+        // 2. The items array structure actually changed (not just a reorder we already handled)
+        if (!isDragging && newItems.length === oldItems?.length) {
+            // Check if items changed beyond just position (e.g., new items added, items removed)
+            const idsChanged = newItems.some((item, index) => {
+                return !oldItems?.[index] || item.id !== oldItems[index].id;
+            });
+            
+            if (idsChanged) {
+                localItems.value = [...newItems];
+            }
+        } else if (!isDragging) {
+            // Items were added/removed, always sync
+            localItems.value = [...newItems];
+        }
     },
     { deep: true }
 );
@@ -51,11 +68,18 @@ const handleItemDelete = (item: AlbumImage) => {
 };
 
 const handleStart = () => {
-    // Track drag start
+    isDragging = true;
 };
 
 const handleEnd = (evt: any) => {
-    if (evt.oldIndex !== evt.newIndex) {
+    isDragging = false;
+    
+    if (evt.oldIndex !== evt.newIndex && evt.oldIndex !== undefined && evt.newIndex !== undefined) {
+        // Update local state IMMEDIATELY to prevent snap-back
+        const movedItem = localItems.value.splice(evt.oldIndex, 1)[0];
+        localItems.value.splice(evt.newIndex, 0, movedItem);
+        
+        // Then emit to trigger the API call
         emit('reorder', evt.oldIndex, evt.newIndex);
     }
 };

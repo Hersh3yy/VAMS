@@ -255,7 +255,7 @@
 </template>
 
 <script setup>
-import FlashMessage from '@/Components/atoms/FlashMessage.vue';
+import FlashMessage from '@/Components/Base/FlashMessage.vue';
 import BaseButton from '@/Components/Base/Button.vue';
 import Modal from '@/Components/Base/Modal.vue';
 import PageHeader from '@/Components/molecules/PageHeader.vue';

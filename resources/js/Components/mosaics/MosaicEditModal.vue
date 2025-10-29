@@ -1,48 +1,11 @@
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-        <div
-            class="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0"
-        >
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75" />
-            </div>
+    <BaseModal :show="show" size="lg" closeable @close="$emit('close')">
+        <template #header>
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Edit Mosaic</h3>
+        </template>
 
-            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true"
-                >&#8203;</span
-            >
-
-            <div
-                class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle"
-            >
-                <div class="absolute right-0 top-0 pr-4 pt-4">
-                    <button
-                        type="button"
-                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        @click="$emit('close')"
-                    >
-                        <span class="sr-only">Close</span>
-                        <svg
-                            class="h-6 w-6"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 w-full text-center sm:mt-0 sm:text-left">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900">Edit Mosaic</h3>
-
-                        <div class="mt-4 space-y-4">
+        <template #body>
+            <div class="mt-4 space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Title</label>
                                 <input
@@ -128,33 +91,24 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button
-                        type="button"
-                        class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-                        @click="handleSave"
-                    >
-                        Save Changes
-                    </button>
-                    <button
-                        type="button"
-                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                        @click="$emit('close')"
-                    >
-                        Cancel
-                    </button>
-                </div>
             </div>
-        </div>
-    </div>
+        </template>
+
+        <template #footer>
+            <BaseButton variant="primary" @click="handleSave">
+                Save Changes
+            </BaseButton>
+            <BaseButton variant="secondary" @click="$emit('close')">
+                Cancel
+            </BaseButton>
+        </template>
+    </BaseModal>
 </template>
 
 <script setup lang="ts">
 import type { Mosaic, MosaicDisplaySettings } from '@/types/mosaic';
+import BaseModal from '@/Components/Base/Modal.vue';
+import BaseButton from '@/Components/Base/Button.vue';
 import { reactive, watch } from 'vue';
 
 const props = defineProps<{

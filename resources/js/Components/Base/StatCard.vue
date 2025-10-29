@@ -1,6 +1,6 @@
 <template>
-    <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
-        <h3 class="mb-2 text-lg font-semibold text-gray-700">{{ title }}</h3>
+    <div class="overflow-hidden bg-white dark:bg-gray-800 p-6 shadow-sm sm:rounded-lg">
+        <h3 class="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300">{{ title }}</h3>
         <p class="text-3xl font-bold" :class="valueClass">
             {{ value }}
         </p>

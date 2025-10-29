@@ -1,5 +1,5 @@
 <template>
-    <Modal :show="show" @update:show="value => !value && handleClose()" size="2xl">
+    <Modal :show="show" @update:show="(value: boolean) => !value && handleClose()" size="2xl">
         <template #title>
             <div class="flex items-center justify-between">
                 <span>Select Album Image</span>

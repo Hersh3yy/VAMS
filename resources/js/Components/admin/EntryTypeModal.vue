@@ -1,29 +1,14 @@
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex min-h-screen items-center justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75" />
-            </div>
+    <BaseModal :show="show" size="2xl" closeable @close="closeModal">
+        <template #header>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                {{ entryType ? 'Edit Entry Type' : 'Create Entry Type' }}
+            </h3>
+        </template>
 
-            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+        <template #body>
 
-            <div class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 sm:align-middle">
-                <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-lg font-medium">
-                        {{ entryType ? 'Edit Entry Type' : 'Create Entry Type' }}
-                    </h3>
-                    <button
-                        type="button"
-                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        @click="closeModal"
-                    >
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <form @submit.prevent="saveEntryType" class="mt-6 space-y-6">
+            <form id="entry-type-form" @submit.prevent="saveEntryType" class="mt-6 space-y-6">
                     <!-- Name -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
@@ -284,40 +269,42 @@
                         </label>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                        <button
-                            type="submit"
-                            :disabled="saving"
-                            class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                        >
-                            {{ saving ? 'Saving...' : (entryType ? 'Update' : 'Create') }}
-                        </button>
-                        <button
-                            type="button"
-                            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:mt-0 sm:w-auto sm:text-sm"
-                            @click="closeModal"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            v-if="entryType"
-                            type="button"
-                            @click="deleteEntryType"
-                            class="mt-3 inline-flex w-full justify-center rounded-md border border-red-300 bg-white px-4 py-2 text-base font-medium text-red-700 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        </template>
+
+        <template #footer>
+            <BaseButton
+                type="submit"
+                :disabled="saving"
+                :loading="saving"
+                variant="primary"
+                form="entry-type-form"
+            >
+                {{ entryType ? 'Update' : 'Create' }}
+            </BaseButton>
+            <BaseButton
+                type="button"
+                variant="secondary"
+                @click="closeModal"
+            >
+                Cancel
+            </BaseButton>
+            <BaseButton
+                v-if="entryType"
+                type="button"
+                variant="danger"
+                @click="deleteEntryType"
+            >
+                Delete
+            </BaseButton>
+        </template>
+    </BaseModal>
 </template>
 
 <script setup>
 import { router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
+import BaseModal from '@/Components/Base/Modal.vue'
+import BaseButton from '@/Components/Base/Button.vue'
 
 const props = defineProps({
     show: {

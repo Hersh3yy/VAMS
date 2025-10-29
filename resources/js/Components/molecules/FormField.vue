@@ -4,6 +4,7 @@
 
         <div :class="inputWrapperClass">
             <BaseInput
+                v-if="type !== 'textarea'"
                 :id="id"
                 :type="type"
                 :model-value="modelValue"
@@ -15,6 +16,19 @@
                 :has-error="!!error"
                 :size="size"
                 @update:model-value="$emit('update:modelValue', $event)"
+            />
+            
+            <textarea
+                v-else
+                :id="id"
+                :value="modelValue"
+                :required="required"
+                :autofocus="autofocus"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :rows="rows"
+                :class="textareaClasses"
+                @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
             />
 
             <slot name="append" />
@@ -29,9 +43,9 @@
 </template>
 
 <script setup lang="ts">
-import BaseErrorMessage from '@/Components/atoms/BaseErrorMessage.vue';
-import BaseInput from '@/Components/atoms/BaseInput.vue';
-import BaseLabel from '@/Components/atoms/BaseLabel.vue';
+import BaseErrorMessage from '@/Components/Base/ErrorMessage.vue';
+import BaseInput from '@/Components/Base/Input.vue';
+import BaseLabel from '@/Components/Base/Label.vue';
 import { computed } from 'vue';
 
 interface Props {
@@ -48,6 +62,7 @@ interface Props {
     hint?: string;
     size?: 'sm' | 'md' | 'lg';
     spacing?: 'sm' | 'md' | 'lg';
+    rows?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -56,7 +71,8 @@ const props = withDefaults(defineProps<Props>(), {
     autofocus: false,
     disabled: false,
     size: 'md',
-    spacing: 'md'
+    spacing: 'md',
+    rows: 4
 });
 
 const emit = defineEmits<{
@@ -74,5 +90,15 @@ const containerClass = computed(() => {
 
 const inputWrapperClass = computed(() => {
     return props.label ? 'mt-1' : '';
+});
+
+const textareaClasses = computed(() => {
+    const baseClasses = 'block w-full rounded-md border shadow-sm transition-colors duration-200 focus:ring-2 focus:outline-none';
+    const errorClasses = props.error
+        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600'
+        : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
+    const disabledClasses = props.disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'dark:bg-gray-700 dark:text-white dark:placeholder-gray-400';
+    
+    return `${baseClasses} ${errorClasses} ${disabledClasses} px-3 py-2`;
 });
 </script>

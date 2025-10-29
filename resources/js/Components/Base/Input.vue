@@ -3,16 +3,18 @@
         <input
             :id="id"
             :type="type"
+            :class="inputClass"
             :value="modelValue"
+            :required="required"
+            :autofocus="autofocus"
+            :autocomplete="autocomplete"
             :placeholder="placeholder"
             :disabled="disabled"
-            :required="required"
-            :class="inputClasses"
             @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
             @blur="$emit('blur', $event)"
             @focus="$emit('focus', $event)"
-        >
-        <div v-if="error" class="absolute inset-y-0 right-0 flex items-center pr-3">
+        />
+        <div v-if="error" class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                 <path
                     fill-rule="evenodd"
@@ -29,35 +31,51 @@
 import { computed } from 'vue';
 
 interface Props {
-    modelValue: string;
     id?: string;
-    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'datetime-local';
+    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'datetime-local' | string;
+    modelValue: string;
+    required?: boolean;
+    autofocus?: boolean;
+    autocomplete?: string;
     placeholder?: string;
     disabled?: boolean;
-    required?: boolean;
+    hasError?: boolean;
     error?: string;
+    size?: 'sm' | 'md' | 'lg';
 }
 
 const props = withDefaults(defineProps<Props>(), {
     type: 'text',
+    required: false,
+    autofocus: false,
     disabled: false,
-    required: false
+    hasError: false,
+    size: 'md'
 });
 
-defineEmits<{
+const emit = defineEmits<{
     'update:modelValue': [value: string];
     blur: [event: FocusEvent];
     focus: [event: FocusEvent];
 }>();
 
-const inputClasses = computed(() => {
-    const baseClasses =
-        'block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
-    const errorClasses = props.error
-        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:focus:border-red-400 dark:focus:ring-red-400'
-        : '';
-    const disabledClasses = props.disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : '';
+const inputClass = computed(() => {
+    const baseClass =
+        'block w-full rounded-md border shadow-sm transition-colors duration-200 focus:ring-2';
+    const sizeClasses = {
+        sm: 'px-2 py-1 text-sm',
+        md: 'px-3 py-2',
+        lg: 'px-4 py-3 text-lg'
+    };
 
-    return `${baseClasses} ${errorClasses} ${disabledClasses}`;
+    // Use error prop if provided, otherwise fall back to hasError
+    const showError = !!props.error || props.hasError;
+    const stateClasses = showError
+        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400'
+        : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
+
+    const disabledClass = props.disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : '';
+
+    return `${baseClass} ${sizeClasses[props.size]} ${stateClasses} ${disabledClass}`;
 });
 </script>

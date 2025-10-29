@@ -1,55 +1,43 @@
 <template>
-    <div
-        v-if="show && video"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-    >
-        <div class="w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl">
-            <div class="flex items-center justify-between border-b p-4">
-                <h3 class="text-lg font-medium">
-                    {{ video.title || 'Video' }}
-                </h3>
-                <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
+    <BaseModal v-if="show && video" size="4xl" closeable @close="$emit('close')">
+        <template #header>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                {{ video.title || 'Video' }}
+            </h3>
+        </template>
+
+        <template #body>
+            <div class="aspect-video">
+                <iframe
+                    v-if="videoEmbedUrl"
+                    :src="videoEmbedUrl"
+                    class="h-full w-full"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                />
             </div>
-            <div class="p-4">
-                <div class="aspect-video">
-                    <iframe
-                        v-if="videoEmbedUrl"
-                        :src="videoEmbedUrl"
-                        class="h-full w-full"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen
-                    />
-                </div>
-                <div v-if="video.caption" class="mt-4 rounded bg-gray-100 p-4">
-                    <p>{{ video.caption }}</p>
-                </div>
+            <div v-if="video.caption" class="mt-4 rounded bg-gray-100 dark:bg-gray-700 p-4">
+                <p class="text-gray-900 dark:text-gray-100">{{ video.caption }}</p>
             </div>
-            <div class="flex justify-end border-t p-4">
-                <button
-                    @click="$emit('delete', video)"
-                    class="mr-4 text-red-600 hover:text-red-800"
-                >
-                    Delete Video
-                </button>
-                <button @click="$emit('close')" class="btn-primary">Close</button>
-            </div>
-        </div>
-    </div>
+        </template>
+
+        <template #footer>
+            <BaseButton variant="danger" @click="$emit('delete', video)">
+                Delete Video
+            </BaseButton>
+            <BaseButton variant="secondary" @click="$emit('close')">
+                Close
+            </BaseButton>
+        </template>
+    </BaseModal>
 </template>
 
 <script setup lang="ts">
 import type { AlbumImage } from '@/types/album';
 import { computed } from 'vue';
+import BaseModal from '@/Components/Base/Modal.vue';
+import BaseButton from '@/Components/Base/Button.vue';
 
 const props = defineProps<{
     show: boolean;
