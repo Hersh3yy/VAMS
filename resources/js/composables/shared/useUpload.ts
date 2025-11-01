@@ -226,10 +226,36 @@ export function useUpload() {
                 } else if (xhr.status === 422) {
                     try {
                         const errorData = JSON.parse(xhr.responseText);
-                        const errorMessage = errorData?.message || 'Upload failed';
+                        // Extract user-friendly error message
+                        let errorMessage = 'Upload failed';
+                        
+                        if (errorData?.message) {
+                            errorMessage = errorData.message;
+                        } else if (errorData?.errors) {
+                            // Laravel validation errors are in errors object
+                            const errors = errorData.errors;
+                            // Check for specific field errors
+                            if (errors['images'] && Array.isArray(errors['images'])) {
+                                errorMessage = errors['images'][0];
+                            } else if (errors['images.*'] && Array.isArray(errors['images.*'])) {
+                                errorMessage = errors['images.*'][0];
+                            } else {
+                                // Get first error message from any field
+                                const firstErrorKey = Object.keys(errors)[0];
+                                if (firstErrorKey && Array.isArray(errors[firstErrorKey])) {
+                                    errorMessage = errors[firstErrorKey][0];
+                                }
+                            }
+                        }
+                        
                         throw new Error(errorMessage);
                     } catch (parseError) {
-                        throw new Error('Upload failed with validation errors');
+                        // If JSON parsing fails, try to extract error from response text
+                        const responseText = xhr.responseText;
+                        if (responseText.includes('exceed') || responseText.includes('max')) {
+                            throw new Error('File size exceeds the maximum limit of 20MB. Please compress or resize your image before uploading.');
+                        }
+                        throw new Error('Upload failed with validation errors. Please check your file and try again.');
                     }
                 } else {
                     throw new Error(`Upload failed with status ${xhr.status}`);

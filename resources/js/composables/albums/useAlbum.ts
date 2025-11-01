@@ -31,6 +31,22 @@ export function useAlbum(albumId: string) {
         if (!input.files?.length) return;
 
         const files = Array.from(input.files);
+        const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+
+        // Validate file sizes before upload
+        const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
+        
+        if (oversizedFiles.length > 0) {
+            const fileNames = oversizedFiles.map(f => f.name).join(', ');
+            const fileSizes = oversizedFiles.map(f => 
+                `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`
+            ).join(', ');
+            
+            showError(
+                `The following files exceed the 20MB limit: ${fileSizes}. Please compress or resize these images before uploading.`
+            );
+            return;
+        }
 
         // Use the generic upload system with album-specific configuration
         await uploadFiles(files, {

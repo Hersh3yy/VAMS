@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AlbumImageController
 {
@@ -61,10 +62,19 @@ class AlbumImageController
         try {
             Log::info('AlbumImageController@store - Starting validation');
 
-            $request->validate([
-                'images' => 'required|array',
-                'images.*' => 'required|image',
-            ]);
+            $request->validate(
+                [
+                    'images' => 'required|array',
+                    'images.*' => 'required|image|max:20480', // 20MB max
+                ],
+                [
+                    'images.required' => 'Please select at least one image to upload.',
+                    'images.array' => 'Images must be provided as an array.',
+                    'images.*.required' => 'One or more image files are missing.',
+                    'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
+                    'images.*.max' => 'One or more images exceed the maximum file size of 20MB. Please compress or resize your images before uploading.',
+                ]
+            );
 
             Log::info('AlbumImageController@store - Validation passed');
 
@@ -123,6 +133,32 @@ class AlbumImageController
                 'message' => 'Images uploaded successfully',
                 'images' => $uploadedImages,
             ]);
+        } catch (ValidationException $e) {
+            Log::warning('AlbumImageController@store - Validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+
+            // Check if this is an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                // Get the first error message for a user-friendly response
+                $errors = $e->errors();
+                $firstError = '';
+                foreach ($errors as $field => $messages) {
+                    if (is_array($messages) && count($messages) > 0) {
+                        $firstError = $messages[0];
+                        break;
+                    }
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $firstError ?: 'Validation failed. Please check your files and try again.',
+                    'errors' => $errors,
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('AlbumImageController@store - Error occurred:', [
                 'message' => $e->getMessage(),
