@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Request;
 
 trait LogsActivity
 {
-    public static function bootLogsActivity()
+    /**
+     * Boot the activity logging trait
+     */
+    public static function bootLogsActivity(): void
     {
         static::created(function ($model) {
             $model->logActivity(ActivityType::CREATE, 'Created '.class_basename($model));
@@ -121,8 +124,12 @@ trait LogsActivity
         return $this->logActivity(ActivityType::RESTORE, 'Restored '.class_basename($this), $properties);
     }
 
-    // Get recent activities for this model
-    public function getRecentActivities(int $limit = 10)
+    /**
+     * Get recent activities for this model
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Activity>
+     */
+    public function getRecentActivities(int $limit = 10): \Illuminate\Database\Eloquent\Collection
     {
         return $this->activities()
             ->latest()
@@ -130,8 +137,12 @@ trait LogsActivity
             ->get();
     }
 
-    // Get activities by type
-    public function getActivitiesByType(string $type)
+    /**
+     * Get activities by type
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Activity>
+     */
+    public function getActivitiesByType(string $type): \Illuminate\Database\Eloquent\Collection
     {
         return $this->activities()
             ->where('type', $type)

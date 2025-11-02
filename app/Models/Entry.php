@@ -22,13 +22,21 @@ class Entry extends BaseEntity
         'order',
     ];
 
-    protected $casts = [
-        'content' => 'json', // Store as JSON but can be simple key-value
-        'published_at' => 'datetime',
-        'order' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'content' => 'json', // Store as JSON but can be simple key-value
+            'published_at' => 'datetime',
+            'order' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the type this entry belongs to
@@ -110,6 +118,9 @@ class Entry extends BaseEntity
 
     /**
      * Scope for published entries
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<Entry> $query
+     * @return \Illuminate\Database\Eloquent\Builder<Entry>
      */
     public function scopePublished($query)
     {
@@ -119,6 +130,9 @@ class Entry extends BaseEntity
 
     /**
      * Scope for draft entries
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<Entry> $query
+     * @return \Illuminate\Database\Eloquent\Builder<Entry>
      */
     public function scopeDraft($query)
     {

@@ -21,12 +21,20 @@ class Mosaic extends BaseEntity
         'display_settings',
     ];
 
-    protected $casts = [
-        'columns' => 'integer',
-        'display_settings' => 'array',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'columns' => 'integer',
+            'display_settings' => 'array',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get validation rules for this entity type

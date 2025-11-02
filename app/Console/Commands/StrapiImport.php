@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\Album;
@@ -27,27 +29,17 @@ class StrapiImport extends Command
     protected $description = 'Import multiple albums from Strapi CMS with chunking';
 
     /**
-     * The image service instance.
-     *
-     * @var \App\Services\ImageService
-     */
-    protected $imageService;
-
-    /**
      * Create a new command instance.
-     *
-     * @return void
      */
-    public function __construct(ImageService $imageService)
+    public function __construct(protected ImageService $imageService)
     {
         parent::__construct();
-        $this->imageService = $imageService;
     }
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $baseUrl = $this->option('base-url');
         $albums = $this->argument('albums');
@@ -96,7 +88,12 @@ class StrapiImport extends Command
         return 0;
     }
 
-    protected function findUser($userId)
+    /**
+     * Find user by ID or email
+     *
+     * @return User|null
+     */
+    protected function findUser(string $userId): ?User
     {
         $this->info("Attempting to find user with ID/Email: {$userId}");
 
@@ -123,7 +120,10 @@ class StrapiImport extends Command
         return $user;
     }
 
-    protected function processAlbum($baseUrl, $albumName, $user)
+    /**
+     * Process a single album import
+     */
+    protected function processAlbum(string $baseUrl, string $albumName, User $user): void
     {
         $url = "{$baseUrl}/{$albumName}";
         $this->info("Fetching from: {$url}");
@@ -185,6 +185,8 @@ class StrapiImport extends Command
 
     /**
      * Extract all media links from an item recursively
+     *
+     * @return array<int, array<string, mixed>>
      */
     protected function extractMediaLinks(array $item): array
     {
@@ -330,8 +332,14 @@ class StrapiImport extends Command
 
     /**
      * Process a single media item
+     *
+     * @param Album $albumModel
+     * @param array<string, mixed> $media
+     * @param string $albumDirectory
+     * @param int $mediaCount
+     * @param array<string, mixed>|null $firstImageObject
      */
-    protected function processMediaItem($albumModel, $media, $albumDirectory, &$mediaCount, &$firstImageObject)
+    protected function processMediaItem(Album $albumModel, array $media, string $albumDirectory, int &$mediaCount, ?array &$firstImageObject): void
     {
         $imageUrl = $media['url'];
 
@@ -346,15 +354,15 @@ class StrapiImport extends Command
             $videoId = null;
             $videoType = null;
 
-            if (strpos($imageUrl, 'youtube.com') !== false) {
+            if (str_contains($imageUrl, 'youtube.com')) {
                 parse_str(parse_url($imageUrl, PHP_URL_QUERY), $params);
                 $videoId = $params['v'] ?? null;
                 $videoType = 'youtube';
-            } elseif (strpos($imageUrl, 'youtu.be') !== false) {
+            } elseif (str_contains($imageUrl, 'youtu.be')) {
                 $path = parse_url($imageUrl, PHP_URL_PATH);
                 $videoId = ltrim($path, '/');
                 $videoType = 'youtube';
-            } elseif (strpos($imageUrl, 'vimeo.com') !== false) {
+            } elseif (str_contains($imageUrl, 'vimeo.com')) {
                 $path = parse_url($imageUrl, PHP_URL_PATH);
                 $videoId = ltrim($path, '/');
                 $videoType = 'vimeo';
@@ -416,7 +424,7 @@ class StrapiImport extends Command
                     'date_created' => null,
                     'location' => null,
                     'tags' => null,
-                    'properties' => json_encode($properties),
+                    'properties' => $properties,
                     'order' => $order,
                 ]);
             });
@@ -462,7 +470,7 @@ class StrapiImport extends Command
                         'date_created' => null,
                         'location' => null,
                         'tags' => null,
-                        'properties' => json_encode($properties),
+                        'properties' => $properties,
                         'order' => $order,
                     ]);
                 });

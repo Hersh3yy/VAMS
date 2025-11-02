@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\EntryType;
 
 class User extends Authenticatable
 {
@@ -75,25 +77,42 @@ class User extends Authenticatable
         });
     }
 
-    public function mosaics()
+    /**
+     * Get the user's mosaics
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Mosaic>
+     */
+    public function mosaics(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Mosaic::class);
     }
 
-    public function albums()
+    /**
+     * Get the user's albums
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Album>
+     */
+    public function albums(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Album::class);
     }
 
-    public function entries()
+    /**
+     * Get the user's entries
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Entry>
+     */
+    public function entries(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Entry::class);
     }
 
     /**
      * Get allowed entry types for this user based on permissions
+     *
+     * @return Collection<int, EntryType>
      */
-    public function allowedEntryTypes()
+    public function allowedEntryTypes(): Collection
     {
         $permissions = $this->entry_type_permissions ?? [];
 
@@ -102,7 +121,7 @@ class User extends Authenticatable
             return collect();
         }
 
-        return \App\Models\EntryType::active()
+        return EntryType::active()
             ->whereIn('slug', $permissions)
             ->get();
     }
@@ -122,12 +141,20 @@ class User extends Authenticatable
         return in_array($slug, $permissions);
     }
 
-    public function activities()
+    /**
+     * Get the user's activities
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Activity>
+     */
+    public function activities(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Activity::class);
     }
 
-    public function generateNewApiKey()
+    /**
+     * Generate a new API key for the user
+     */
+    public function generateNewApiKey(): string
     {
         $this->api_key = Str::random(32);
         $this->save();
@@ -135,7 +162,10 @@ class User extends Authenticatable
         return $this->api_key;
     }
 
-    public function regenerateApiKey()
+    /**
+     * Regenerate the user's API key
+     */
+    public function regenerateApiKey(): string
     {
         $this->api_key = Str::random(32);
         $this->save();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\AlbumImage;
@@ -23,27 +25,17 @@ class FixVideoProperties extends Command
     protected $description = 'Fix properties for video entries in the database';
 
     /**
-     * The image service instance.
-     *
-     * @var \App\Services\ImageService
-     */
-    protected $imageService;
-
-    /**
      * Create a new command instance.
-     *
-     * @return void
      */
-    public function __construct(ImageService $imageService)
+    public function __construct(protected ImageService $imageService)
     {
         parent::__construct();
-        $this->imageService = $imageService;
     }
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Fixing video properties...');
         $force = $this->option('force');
@@ -64,8 +56,8 @@ class FixVideoProperties extends Command
         foreach ($videos as $video) {
             $this->info("Processing video: {$video->path}");
 
-            // Parse the properties
-            $properties = json_decode($video->properties, true) ?: [];
+            // Parse the properties (properties is cast to array in model)
+            $properties = is_array($video->properties) ? $video->properties : [];
 
             // Skip if already has type=video and not in force mode
             if (! $force && isset($properties['type']) && $properties['type'] === 'video' && isset($properties['thumbnail_url'])) {
@@ -82,15 +74,15 @@ class FixVideoProperties extends Command
             $videoType = null;
             $url = $video->path;
 
-            if (strpos($url, 'youtube.com') !== false) {
+            if (str_contains($url, 'youtube.com')) {
                 parse_str(parse_url($url, PHP_URL_QUERY), $params);
                 $videoId = $params['v'] ?? null;
                 $videoType = 'youtube';
-            } elseif (strpos($url, 'youtu.be') !== false) {
+            } elseif (str_contains($url, 'youtu.be')) {
                 $path = parse_url($url, PHP_URL_PATH);
                 $videoId = ltrim($path, '/');
                 $videoType = 'youtube';
-            } elseif (strpos($url, 'vimeo.com') !== false) {
+            } elseif (str_contains($url, 'vimeo.com')) {
                 $path = parse_url($url, PHP_URL_PATH);
                 $videoId = ltrim($path, '/');
                 $videoType = 'vimeo';
@@ -143,8 +135,8 @@ class FixVideoProperties extends Command
                 }
             }
 
-            // Update the record
-            $video->properties = json_encode($properties);
+            // Update the record (properties is cast to array, so assign directly)
+            $video->properties = $properties;
             $video->save();
 
             $this->info('  Updated properties: '.json_encode($properties));

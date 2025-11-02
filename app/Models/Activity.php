@@ -22,18 +22,36 @@ class Activity extends Model
         'properties',
     ];
 
-    protected $casts = [
-        'properties' => 'array',
-        'user_id' => 'string',
-        'type' => ActivityType::class,
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'properties' => 'array',
+            'user_id' => 'string',
+            'type' => ActivityType::class,
+        ];
+    }
 
-    public function user()
+    /**
+     * Get the user that created this activity
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<User, Activity>
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function subject()
+    /**
+     * Get the subject of this activity (polymorphic)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     */
+    public function subject(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
         return $this->morphTo();
     }

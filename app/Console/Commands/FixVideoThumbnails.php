@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\AlbumImage;
@@ -36,7 +38,7 @@ class FixVideoThumbnails extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Starting video thumbnail generation...');
 
@@ -78,7 +80,7 @@ class FixVideoThumbnails extends Command
     /**
      * Process a single video entry
      */
-    private function processVideo(AlbumImage $video, bool $force, bool $missingOnly)
+    private function processVideo(AlbumImage $video, bool $force, bool $missingOnly): void
     {
         try {
             // Parse the properties
@@ -120,8 +122,8 @@ class FixVideoThumbnails extends Command
                     $properties['is_placeholder_thumbnail'] = true;
                 }
 
-                // Update the record
-                $video->properties = json_encode($properties);
+                // Update the record (properties is cast to array, so assign directly)
+                $video->properties = $properties;
                 $video->save();
 
                 Log::info("Generated thumbnail for video: {$video->id}", [
@@ -149,18 +151,18 @@ class FixVideoThumbnails extends Command
     private function extractVideoId(string $url): ?string
     {
         // YouTube
-        if (strpos($url, 'youtube.com') !== false) {
+        if (str_contains($url, 'youtube.com')) {
             parse_str(parse_url($url, PHP_URL_QUERY), $params);
 
             return $params['v'] ?? null;
-        } elseif (strpos($url, 'youtu.be') !== false) {
+        } elseif (str_contains($url, 'youtu.be')) {
             $path = parse_url($url, PHP_URL_PATH);
 
             return ltrim($path, '/');
         }
 
         // Vimeo
-        if (strpos($url, 'vimeo.com') !== false) {
+        if (str_contains($url, 'vimeo.com')) {
             $path = parse_url($url, PHP_URL_PATH);
 
             return ltrim($path, '/');
@@ -174,11 +176,11 @@ class FixVideoThumbnails extends Command
      */
     private function getVideoType(string $url): ?string
     {
-        if (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) {
+        if (str_contains($url, 'youtube.com') || str_contains($url, 'youtu.be')) {
             return 'youtube';
         }
 
-        if (strpos($url, 'vimeo.com') !== false) {
+        if (str_contains($url, 'vimeo.com')) {
             return 'vimeo';
         }
 

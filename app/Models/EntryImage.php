@@ -25,12 +25,20 @@ class EntryImage extends Model
         'properties',
     ];
 
-    protected $casts = [
-        'properties' => 'array',
-        'order' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'properties' => 'array',
+            'order' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the entry this image belongs to
@@ -51,8 +59,8 @@ class EntryImage extends Model
 
         // Legacy check based on path
         return
-            strpos($this->path, 'youtube.com') !== false ||
-            strpos($this->path, 'youtu.be') !== false ||
-            strpos($this->path, 'vimeo.com') !== false;
+            str_contains($this->path, 'youtube.com') ||
+            str_contains($this->path, 'youtu.be') ||
+            str_contains($this->path, 'vimeo.com');
     }
 }

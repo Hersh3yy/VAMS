@@ -23,12 +23,20 @@ class EntryType extends Model
         'is_active',
     ];
 
-    protected $casts = [
-        'field_config' => 'array',
-        'is_active' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'field_config' => 'array',
+            'is_active' => 'boolean',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get all entries of this type
@@ -92,6 +100,9 @@ class EntryType extends Model
 
     /**
      * Scope for active entry types
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<EntryType> $query
+     * @return \Illuminate\Database\Eloquent\Builder<EntryType>
      */
     public function scopeActive($query)
     {
