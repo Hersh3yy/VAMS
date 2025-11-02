@@ -27,10 +27,33 @@ class AlbumController extends BaseApiController
         // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        $albums = $user->albums()->with('images')->get();
+        // Check if we should include images
+        $withImages = $request->boolean('with_images', false);
+
+        // Build query with count
+        $query = $user->albums()->withCount('images');
+
+        // Optionally load images if requested
+        if ($withImages) {
+            $query->with('images');
+        }
+
+        $albums = $query->get();
+
+        // Format albums with or without images based on request
+        $formattedAlbums = $albums->map(function (Album $album) use ($withImages) {
+            $albumData = $this->albumService->formatAlbumForApi($album);
+
+            // Include images if requested
+            if ($withImages && $album->relationLoaded('images')) {
+                $albumData['images'] = $album->images->map(fn ($image) => $this->albumService->formatImageForApi($image));
+            }
+
+            return $albumData;
+        });
 
         return $this->success([
-            'albums' => $albums->map(fn (Album $album) => $this->albumService->formatAlbumForApi($album)),
+            'albums' => $formattedAlbums,
         ]);
     }
 
