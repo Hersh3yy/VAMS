@@ -65,7 +65,7 @@ class AlbumImageController
             $request->validate(
                 [
                     'images' => 'required|array',
-                    'images.*' => 'required|image|max:20480', // 20MB max
+                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:20480', // 20MB max, includes HEIC/HEIF
                 ],
                 [
                     'images.required' => 'Please select at least one image to upload.',
@@ -215,7 +215,7 @@ class AlbumImageController
             'dateCreated' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
-            'image' => 'nullable|image|max:15120', // 5MB max
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:20480', // 20MB max, includes HEIC/HEIF
         ]);
 
         // The mutators in the model will handle mapping to the appropriate columns

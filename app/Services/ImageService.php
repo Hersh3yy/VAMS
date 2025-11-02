@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
@@ -8,6 +10,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Service for storing images in cloud storage
+ * 
+ * Note: Image transformations are handled by ImageProcessor service
+ * This service focuses on storage operations only
+ */
 class ImageService
 {
     /**

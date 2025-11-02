@@ -24,21 +24,13 @@ class FixVideoThumbnails extends Command
     protected $description = 'Fix and generate thumbnails for video entries in albums';
 
     /**
-     * The image service instance.
-     *
-     * @var \App\Services\ImageService
-     */
-    protected $imageService;
-
-    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct(ImageService $imageService)
+    public function __construct(protected ImageService $imageService)
     {
         parent::__construct();
-        $this->imageService = $imageService;
     }
 
     /**
@@ -90,7 +82,7 @@ class FixVideoThumbnails extends Command
     {
         try {
             // Parse the properties
-            $properties = json_decode($video->properties, true) ?: [];
+            $properties = is_array($video->properties) ? $video->properties : (json_decode((string) $video->properties, true) ?: []);
 
             // Skip if already has thumbnail and not in force mode
             if (! $force && ! $missingOnly && isset($properties['thumbnail_url']) && ! empty($properties['thumbnail_url'])) {

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex space-x-3">
+    <div class="flex flex-wrap gap-2 md:gap-3">
         <Button variant="danger" @click="$emit('delete')"> Delete {{ entityType }} </Button>
 
         <Button variant="secondary" as="a" :href="editUrl"> Edit {{ entityType }} </Button>
@@ -10,7 +10,7 @@
                 type="file"
                 multiple
                 @change="$emit('upload', $event)"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 class="hidden"
             >
         </Button>
