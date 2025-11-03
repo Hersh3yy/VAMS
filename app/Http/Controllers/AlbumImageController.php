@@ -55,134 +55,66 @@ class AlbumImageController
      */
     public function store(Request $request, Album $album)
     {
-        Log::info('AlbumImageController@store - Request received', [
-            'method' => $request->method(),
-            'content_type' => $request->header('Content-Type'),
-            'content_length' => $request->header('Content-Length'),
-            'user_agent' => $request->userAgent(),
-            'ip' => $request->ip(),
-        ]);
-
-        // Log PHP upload settings
+        // Check and log PHP upload settings (IMPORTANT: Verify .user.ini is working)
         $uploadMaxFilesize = ini_get('upload_max_filesize');
         $postMaxSize = ini_get('post_max_size');
-        $maxFileUploads = ini_get('max_file_uploads');
-        $memoryLimit = ini_get('memory_limit');
-        $maxExecutionTime = ini_get('max_execution_time');
-
-        Log::info('AlbumImageController@store - PHP Upload Settings', [
-            'upload_max_filesize' => $uploadMaxFilesize,
-            'post_max_size' => $postMaxSize,
-            'max_file_uploads' => $maxFileUploads,
-            'memory_limit' => $memoryLimit,
-            'max_execution_time' => $maxExecutionTime,
-        ]);
-
-        // Convert to bytes for comparison (handles K, M, G suffixes)
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
         $postMaxBytes = $this->convertToBytes($postMaxSize);
         $requiredBytes = 20 * 1024 * 1024; // 20MB required
 
-        // Warn if settings are too low
-        if ($uploadMaxBytes < $requiredBytes || $postMaxBytes < $requiredBytes) {
-            Log::error('AlbumImageController@store - PHP upload limits too low!', [
+        Log::info('📤 Upload Request', [
+            'PHP Settings' => [
                 'upload_max_filesize' => $uploadMaxFilesize,
                 'post_max_size' => $postMaxSize,
-                'required' => '20M',
-                'issue' => 'Uploads will fail for files larger than '.$uploadMaxFilesize.'. Please increase upload_max_filesize and post_max_size in php.ini to at least 20M.',
-            ]);
-        }
-
-        // Log raw $_FILES superglobal to see what PHP actually received
-        if (isset($_FILES['images'])) {
-            $phpFiles = [];
-            if (is_array($_FILES['images']['name'])) {
-                // Multiple files
-                foreach ($_FILES['images']['name'] as $index => $name) {
-                    $phpFiles[] = [
-                        'index' => $index,
-                        'name' => $name,
-                        'type' => $_FILES['images']['type'][$index] ?? null,
-                        'tmp_name' => $_FILES['images']['tmp_name'][$index] ?? null,
-                        'error' => $_FILES['images']['error'][$index] ?? null,
-                        'size' => $_FILES['images']['size'][$index] ?? null,
-                        'error_code_description' => $this->getUploadErrorMessage($_FILES['images']['error'][$index] ?? null),
-                    ];
-                }
-            } else {
-                // Single file
-                $phpFiles[] = [
-                    'name' => $_FILES['images']['name'],
-                    'type' => $_FILES['images']['type'] ?? null,
-                    'tmp_name' => $_FILES['images']['tmp_name'] ?? null,
-                    'error' => $_FILES['images']['error'] ?? null,
-                    'size' => $_FILES['images']['size'] ?? null,
-                    'error_code_description' => $this->getUploadErrorMessage($_FILES['images']['error'] ?? null),
-                ];
-            }
-            Log::info('AlbumImageController@store - Raw $_FILES data', $phpFiles);
-        } else {
-            Log::warning('AlbumImageController@store - No $_FILES["images"] found', [
-                'available_keys' => array_keys($_FILES ?? []),
-            ]);
-        }
-
-        // Log raw request data
-        Log::info('AlbumImageController@store - Raw request data:', $request->except(['images']));
-        
-        // Log files with detailed information BEFORE validation
-        if ($request->hasFile('images')) {
-            $files = $request->file('images');
-            Log::info('AlbumImageController@store - Files detected in request', [
-                'count' => is_array($files) ? count($files) : 1,
-                'is_array' => is_array($files),
-            ]);
-
-            $fileDetails = [];
-            foreach (is_array($files) ? $files : [$files] as $index => $file) {
-                if ($file) {
-                    $fileDetails[] = [
-                        'index' => $index,
-                        'original_name' => $file->getClientOriginalName(),
-                        'mime_type' => $file->getMimeType(),
-                        'client_mime_type' => $file->getClientMimeType(),
-                        'size' => $file->getSize(),
-                        'size_mb' => round($file->getSize() / 1024 / 1024, 2),
-                        'extension' => $file->getClientOriginalExtension(),
-                        'is_valid' => $file->isValid(),
-                        'error' => $file->getError(),
-                        'error_message' => $file->getErrorMessage(),
-                        'path' => $file->getRealPath(),
-                        'pathname' => $file->getPathname(),
-                        'tmp_name' => $file->getRealPath(),
-                        'is_file' => $file instanceof \Illuminate\Http\UploadedFile,
-                    ];
-                } else {
-                    $fileDetails[] = [
-                        'index' => $index,
-                        'status' => 'NULL or empty',
-                    ];
-                }
-            }
-            Log::info('AlbumImageController@store - Detailed file information', $fileDetails);
-        } else {
-            Log::warning('AlbumImageController@store - No files found in request', [
-                'has_images' => $request->has('images'),
-                'has_file_images' => $request->hasFile('images'),
-                'all_input_keys' => array_keys($request->all()),
-            ]);
-        }
-
-        // Log headers
-        Log::info('AlbumImageController@store - Request headers:', [
-            'content-type' => $request->header('Content-Type'),
-            'content-length' => $request->header('Content-Length'),
-            'user-agent' => $request->userAgent(),
+                'memory_limit' => ini_get('memory_limit'),
+            ],
+            'Status' => ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes)
+                ? '✅ OK (≥20MB)'
+                : '⚠️  TOO LOW (<20MB)',
         ]);
 
-        try {
-            Log::info('AlbumImageController@store - Starting validation');
+        // Warn if settings are too low
+        if ($uploadMaxBytes < $requiredBytes || $postMaxBytes < $requiredBytes) {
+            Log::error('❌ PHP upload limits too low!', [
+                'Current' => "upload_max_filesize={$uploadMaxFilesize}, post_max_size={$postMaxSize}",
+                'Required' => '20M minimum',
+                'Fix' => 'Ensure .user.ini exists in project root with: post_max_size=20M and upload_max_filesize=20M',
+            ]);
+        }
 
+        // Log file details if files are present
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            $filesArray = is_array($files) ? $files : [$files];
+            $fileCount = count($filesArray);
+            
+            $fileSummary = [];
+            foreach ($filesArray as $index => $file) {
+                if ($file) {
+                    $sizeMB = round($file->getSize() / 1024 / 1024, 2);
+                    $fileSummary[] = sprintf(
+                        '#%d: %s (%.2f MB, %s, %s)',
+                        $index + 1,
+                        $file->getClientOriginalName(),
+                        $sizeMB,
+                        $file->getClientMimeType(),
+                        $file->isValid() ? '✓ valid' : '✗ invalid: '.$file->getErrorMessage()
+                    );
+                }
+            }
+            
+            Log::info('📎 Files Detected', [
+                'Count' => $fileCount,
+                'Files' => implode(' | ', $fileSummary),
+            ]);
+        } else {
+            Log::warning('⚠️  No files detected in request', [
+                'Has images key' => $request->has('images'),
+                'Has file images' => $request->hasFile('images'),
+            ]);
+        }
+
+        try {
             $request->validate(
                 [
                     'images' => 'required|array',
@@ -199,33 +131,19 @@ class AlbumImageController
                 ]
             );
 
-            Log::info('AlbumImageController@store - Validation passed');
-
-            Log::info('AlbumImageController@store - Found album:', ['album_id' => $album->id, 'title' => $album->title]);
-
             $this->authorize('update', $album);
-            Log::info('AlbumImageController@store - Authorization passed');
 
             // Shift all existing images down to make room at the top
-            $album->images()->increment('order', count($request->file('images')));
-            Log::info('AlbumImageController@store - Shifted existing images down');
+            $fileCount = count($request->file('images'));
+            $album->images()->increment('order', $fileCount);
 
             $uploadedImages = [];
             foreach ($request->file('images') as $index => $image) {
-                Log::info('AlbumImageController@store - Processing image:', [
-                    'index' => $index,
-                    'name' => $image->getClientOriginalName(),
-                    'size' => $image->getSize(),
-                    'mime' => $image->getMimeType(),
-                ]);
-
                 // Use ImageService to store the image
                 $result = $this->imageService->storeImage(
                     $image,
                     "albums/{$album->id}"
                 );
-
-                Log::info('AlbumImageController@store - Image stored:', $result);
 
                 $albumImage = $album->images()->create([
                     'id' => Str::uuid(),
@@ -233,13 +151,12 @@ class AlbumImageController
                     'order' => $index,
                 ]);
 
-                Log::info('AlbumImageController@store - AlbumImage created:', ['id' => $albumImage->id]);
-
                 $uploadedImages[] = $albumImage;
             }
 
-            Log::info('AlbumImageController@store - All images processed successfully', [
-                'count' => count($uploadedImages),
+            Log::info('✅ Upload Successful', [
+                'Album' => $album->title,
+                'Images uploaded' => count($uploadedImages),
             ]);
 
             // Check if this is an AJAX request (for individual uploads)
@@ -284,14 +201,21 @@ class AlbumImageController
                 }
             }
 
-            Log::warning('AlbumImageController@store - Validation failed', [
-                'all_errors' => $errors,
-                'file_specific_errors' => $fileErrors,
-                'validation_rules' => [
-                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:20480',
-                ],
-                'request_has_files' => $request->hasFile('images'),
-                'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+            // Format errors for readability
+            $errorSummary = [];
+            foreach ($fileErrors as $field => $errorData) {
+                $errorSummary[] = sprintf(
+                    '%s: %s (size: %s MB, error: %s)',
+                    $errorData['file_info']['original_name'] ?? $field,
+                    implode('; ', $errorData['messages']),
+                    $errorData['file_info']['size_mb'] ?? 'unknown',
+                    $errorData['file_info']['error_message'] ?? 'none'
+                );
+            }
+
+            Log::warning('❌ Validation Failed', [
+                'Errors' => $errorSummary,
+                'Files received' => $request->hasFile('images') ? count($request->file('images')) : 0,
             ]);
 
             // Check if this is an AJAX request
