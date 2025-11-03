@@ -55,9 +55,109 @@ class AlbumImageController
      */
     public function store(Request $request, Album $album)
     {
-        Log::info('AlbumImageController@store - Raw request data:', $request->all());
-        Log::info('AlbumImageController@store - Request files:', $request->allFiles());
-        Log::info('AlbumImageController@store - Request headers:', $request->headers->all());
+        Log::info('AlbumImageController@store - Request received', [
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'content_length' => $request->header('Content-Length'),
+            'user_agent' => $request->userAgent(),
+            'ip' => $request->ip(),
+        ]);
+
+        // Log PHP upload settings
+        Log::info('AlbumImageController@store - PHP Upload Settings', [
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'post_max_size' => ini_get('post_max_size'),
+            'max_file_uploads' => ini_get('max_file_uploads'),
+            'memory_limit' => ini_get('memory_limit'),
+            'max_execution_time' => ini_get('max_execution_time'),
+        ]);
+
+        // Log raw $_FILES superglobal to see what PHP actually received
+        if (isset($_FILES['images'])) {
+            $phpFiles = [];
+            if (is_array($_FILES['images']['name'])) {
+                // Multiple files
+                foreach ($_FILES['images']['name'] as $index => $name) {
+                    $phpFiles[] = [
+                        'index' => $index,
+                        'name' => $name,
+                        'type' => $_FILES['images']['type'][$index] ?? null,
+                        'tmp_name' => $_FILES['images']['tmp_name'][$index] ?? null,
+                        'error' => $_FILES['images']['error'][$index] ?? null,
+                        'size' => $_FILES['images']['size'][$index] ?? null,
+                        'error_code_description' => $this->getUploadErrorMessage($_FILES['images']['error'][$index] ?? null),
+                    ];
+                }
+            } else {
+                // Single file
+                $phpFiles[] = [
+                    'name' => $_FILES['images']['name'],
+                    'type' => $_FILES['images']['type'] ?? null,
+                    'tmp_name' => $_FILES['images']['tmp_name'] ?? null,
+                    'error' => $_FILES['images']['error'] ?? null,
+                    'size' => $_FILES['images']['size'] ?? null,
+                    'error_code_description' => $this->getUploadErrorMessage($_FILES['images']['error'] ?? null),
+                ];
+            }
+            Log::info('AlbumImageController@store - Raw $_FILES data', $phpFiles);
+        } else {
+            Log::warning('AlbumImageController@store - No $_FILES["images"] found', [
+                'available_keys' => array_keys($_FILES ?? []),
+            ]);
+        }
+
+        // Log raw request data
+        Log::info('AlbumImageController@store - Raw request data:', $request->except(['images']));
+        
+        // Log files with detailed information BEFORE validation
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            Log::info('AlbumImageController@store - Files detected in request', [
+                'count' => is_array($files) ? count($files) : 1,
+                'is_array' => is_array($files),
+            ]);
+
+            $fileDetails = [];
+            foreach (is_array($files) ? $files : [$files] as $index => $file) {
+                if ($file) {
+                    $fileDetails[] = [
+                        'index' => $index,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'client_mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                        'size_mb' => round($file->getSize() / 1024 / 1024, 2),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'is_valid' => $file->isValid(),
+                        'error' => $file->getError(),
+                        'error_message' => $file->getErrorMessage(),
+                        'path' => $file->getRealPath(),
+                        'pathname' => $file->getPathname(),
+                        'tmp_name' => $file->getRealPath(),
+                        'is_file' => $file instanceof \Illuminate\Http\UploadedFile,
+                    ];
+                } else {
+                    $fileDetails[] = [
+                        'index' => $index,
+                        'status' => 'NULL or empty',
+                    ];
+                }
+            }
+            Log::info('AlbumImageController@store - Detailed file information', $fileDetails);
+        } else {
+            Log::warning('AlbumImageController@store - No files found in request', [
+                'has_images' => $request->has('images'),
+                'has_file_images' => $request->hasFile('images'),
+                'all_input_keys' => array_keys($request->all()),
+            ]);
+        }
+
+        // Log headers
+        Log::info('AlbumImageController@store - Request headers:', [
+            'content-type' => $request->header('Content-Type'),
+            'content-length' => $request->header('Content-Length'),
+            'user-agent' => $request->userAgent(),
+        ]);
 
         try {
             Log::info('AlbumImageController@store - Starting validation');
@@ -71,6 +171,8 @@ class AlbumImageController
                     'images.required' => 'Please select at least one image to upload.',
                     'images.array' => 'Images must be provided as an array.',
                     'images.*.required' => 'One or more image files are missing.',
+                    'images.*.file' => 'The uploaded file failed to upload. This may be due to file size limits, network issues, or unsupported file type.',
+                    'images.*.mimes' => 'The file must be one of: jpeg, png, jpg, gif, webp, heic, heif. Detected type: :attribute',
                     'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
                     'images.*.max' => 'One or more images exceed the maximum file size of 20MB. Please compress or resize your images before uploading.',
                 ]
@@ -134,9 +236,41 @@ class AlbumImageController
                 'images' => $uploadedImages,
             ]);
         } catch (ValidationException $e) {
-            Log::warning('AlbumImageController@store - Validation failed:', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all(),
+            // Log detailed validation failure
+            $errors = $e->errors();
+            $fileErrors = [];
+            
+            // Extract detailed file errors
+            foreach ($errors as $field => $messages) {
+                if (str_starts_with($field, 'images.')) {
+                    $index = str_replace('images.', '', $field);
+                    if ($request->hasFile('images') && isset($request->file('images')[$index])) {
+                        $file = $request->file('images')[$index];
+                        $fileErrors[$field] = [
+                            'messages' => $messages,
+                            'file_info' => [
+                                'original_name' => $file->getClientOriginalName(),
+                                'mime_type' => $file->getMimeType(),
+                                'size' => $file->getSize(),
+                                'size_mb' => round($file->getSize() / 1024 / 1024, 2),
+                                'extension' => $file->getClientOriginalExtension(),
+                                'is_valid' => $file->isValid(),
+                                'error_code' => $file->getError(),
+                                'error_message' => $file->getErrorMessage(),
+                            ],
+                        ];
+                    }
+                }
+            }
+
+            Log::warning('AlbumImageController@store - Validation failed', [
+                'all_errors' => $errors,
+                'file_specific_errors' => $fileErrors,
+                'validation_rules' => [
+                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:20480',
+                ],
+                'request_has_files' => $request->hasFile('images'),
+                'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
             ]);
 
             // Check if this is an AJAX request
@@ -233,6 +367,24 @@ class AlbumImageController
         $image->update($validated);
 
         return back()->with('message', 'Image updated successfully');
+    }
+
+    /**
+     * Get human-readable upload error message from PHP error code
+     */
+    private function getUploadErrorMessage(?int $errorCode): string
+    {
+        return match ($errorCode) {
+            UPLOAD_ERR_OK => 'UPLOAD_ERR_OK - No error',
+            UPLOAD_ERR_INI_SIZE => 'UPLOAD_ERR_INI_SIZE - File exceeds upload_max_filesize',
+            UPLOAD_ERR_FORM_SIZE => 'UPLOAD_ERR_FORM_SIZE - File exceeds MAX_FILE_SIZE in form',
+            UPLOAD_ERR_PARTIAL => 'UPLOAD_ERR_PARTIAL - File only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'UPLOAD_ERR_NO_FILE - No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'UPLOAD_ERR_NO_TMP_DIR - Missing temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'UPLOAD_ERR_CANT_WRITE - Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'UPLOAD_ERR_EXTENSION - PHP extension stopped the upload',
+            default => "Unknown error code: {$errorCode}",
+        };
     }
 
     /**
