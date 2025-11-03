@@ -64,13 +64,34 @@ class AlbumImageController
         ]);
 
         // Log PHP upload settings
+        $uploadMaxFilesize = ini_get('upload_max_filesize');
+        $postMaxSize = ini_get('post_max_size');
+        $maxFileUploads = ini_get('max_file_uploads');
+        $memoryLimit = ini_get('memory_limit');
+        $maxExecutionTime = ini_get('max_execution_time');
+
         Log::info('AlbumImageController@store - PHP Upload Settings', [
-            'upload_max_filesize' => ini_get('upload_max_filesize'),
-            'post_max_size' => ini_get('post_max_size'),
-            'max_file_uploads' => ini_get('max_file_uploads'),
-            'memory_limit' => ini_get('memory_limit'),
-            'max_execution_time' => ini_get('max_execution_time'),
+            'upload_max_filesize' => $uploadMaxFilesize,
+            'post_max_size' => $postMaxSize,
+            'max_file_uploads' => $maxFileUploads,
+            'memory_limit' => $memoryLimit,
+            'max_execution_time' => $maxExecutionTime,
         ]);
+
+        // Convert to bytes for comparison (handles K, M, G suffixes)
+        $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
+        $postMaxBytes = $this->convertToBytes($postMaxSize);
+        $requiredBytes = 20 * 1024 * 1024; // 20MB required
+
+        // Warn if settings are too low
+        if ($uploadMaxBytes < $requiredBytes || $postMaxBytes < $requiredBytes) {
+            Log::error('AlbumImageController@store - PHP upload limits too low!', [
+                'upload_max_filesize' => $uploadMaxFilesize,
+                'post_max_size' => $postMaxSize,
+                'required' => '20M',
+                'issue' => 'Uploads will fail for files larger than '.$uploadMaxFilesize.'. Please increase upload_max_filesize and post_max_size in php.ini to at least 20M.',
+            ]);
+        }
 
         // Log raw $_FILES superglobal to see what PHP actually received
         if (isset($_FILES['images'])) {
@@ -367,6 +388,27 @@ class AlbumImageController
         $image->update($validated);
 
         return back()->with('message', 'Image updated successfully');
+    }
+
+    /**
+     * Convert PHP ini size format to bytes (handles K, M, G)
+     */
+    private function convertToBytes(string $size): int
+    {
+        $size = trim($size);
+        if (empty($size)) {
+            return 0;
+        }
+        
+        $last = strtolower($size[strlen($size) - 1]);
+        $value = (int) $size;
+
+        return match ($last) {
+            'g' => $value * 1024 * 1024 * 1024,
+            'm' => $value * 1024 * 1024,
+            'k' => $value * 1024,
+            default => $value,
+        };
     }
 
     /**
