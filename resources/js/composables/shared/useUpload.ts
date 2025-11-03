@@ -72,6 +72,20 @@ export function useUpload() {
         const fieldName = config.fieldName || 'images[]';
         formData.append(fieldName, file);
 
+        // Helper function to handle errors properly
+        const handleError = (errorMessage: string) => {
+            console.error('Upload error:', errorMessage, {
+                file_name: file.name,
+                retry_count: retryCount,
+                timestamp: new Date().toISOString()
+            });
+            uploadItem.status = 'error';
+            uploadItem.error = errorMessage;
+            if (config.onError) {
+                config.onError(errorMessage);
+            }
+        };
+
         // Get CSRF token using the composable
         let token = getCsrfToken();
         if (!token) {
@@ -95,9 +109,7 @@ export function useUpload() {
                         error: refreshError,
                         timestamp: new Date().toISOString()
                     });
-                    uploadItem.status = 'error';
-                    uploadItem.error =
-                        'Security token not found. Please refresh the page and try again.';
+                    handleError('Security token not found. Please refresh the page and try again.');
                     return;
                 }
             } else {
@@ -106,9 +118,7 @@ export function useUpload() {
                     retry_count: retryCount,
                     timestamp: new Date().toISOString()
                 });
-                uploadItem.status = 'error';
-                uploadItem.error =
-                    'Security token not found. Please refresh the page and try again.';
+                handleError('Security token not found. Please refresh the page and try again.');
                 return;
             }
         }
@@ -122,30 +132,32 @@ export function useUpload() {
             timestamp: new Date().toISOString()
         });
 
-        try {
-            // Create XMLHttpRequest for progress tracking
-            const xhr = new XMLHttpRequest();
+        // Create XMLHttpRequest for progress tracking
+        const xhr = new XMLHttpRequest();
 
-            // Set a timeout for the request (100 seconds for large files)
-            xhr.timeout = 100000; // 100 seconds
+        // Set a timeout for the request (100 seconds for large files)
+        xhr.timeout = 100000; // 100 seconds
 
-            // Track upload start time for smart retry logic
-            const uploadStartTime = Date.now();
+        // Track upload start time for smart retry logic
+        const uploadStartTime = Date.now();
 
-            // Track upload progress (limit to 80% to save room for processing stage)
-            xhr.upload.addEventListener('progress', e => {
-                if (e.lengthComputable && uploadItem.status === 'uploading') {
-                    uploadItem.progress = Math.round((e.loaded / e.total) * 80);
-                }
-            });
+        // Track upload progress (limit to 80% to save room for processing stage)
+        xhr.upload.addEventListener('progress', e => {
+            if (e.lengthComputable && uploadItem.status === 'uploading') {
+                uploadItem.progress = Math.round((e.loaded / e.total) * 80);
+            }
+        });
 
-            // When upload completes, switch to processing stage
-            xhr.upload.addEventListener('load', () => {
+        // When upload completes, switch to processing stage
+        xhr.upload.addEventListener('load', () => {
+            if (uploadItem.status === 'uploading') {
                 uploadItem.status = 'processing';
                 uploadItem.progress = 85;
-            });
+            }
+        });
 
-            // Handle response
+        // Handle response - wrap in Promise to properly handle errors
+        const responsePromise = new Promise<void>((resolve, reject) => {
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200 || xhr.status === 201) {
                     uploadItem.status = 'complete';
@@ -173,6 +185,7 @@ export function useUpload() {
                     } catch (e) {
                         console.warn('Could not parse response:', e);
                     }
+                    resolve();
                 } else if (xhr.status === 419) {
                     // CSRF token mismatch - try to refresh token and retry
                     console.warn('CSRF token mismatch detected', {
@@ -204,25 +217,12 @@ export function useUpload() {
                                     error: refreshError,
                                     timestamp: new Date().toISOString()
                                 });
-                                uploadItem.status = 'error';
-                                uploadItem.error =
-                                    'Session expired. Please refresh the page and try again.';
-                                if (config.onError) {
-                                    config.onError(
-                                        'Session expired. Please refresh the page and try again.'
-                                    );
-                                }
+                                handleError('Session expired. Please refresh the page and try again.');
                             });
                     } else {
-                        uploadItem.status = 'error';
-                        uploadItem.error =
-                            'Session expired after multiple retries. Please refresh the page and try again.';
-                        if (config.onError) {
-                            config.onError(
-                                'Session expired after multiple retries. Please refresh the page and try again.'
-                            );
-                        }
+                        handleError('Session expired after multiple retries. Please refresh the page and try again.');
                     }
+                    resolve(); // Don't reject, we've handled the error
                 } else if (xhr.status === 422) {
                     try {
                         const errorData = JSON.parse(xhr.responseText);
@@ -248,40 +248,46 @@ export function useUpload() {
                             }
                         }
                         
-                        throw new Error(errorMessage);
+                        handleError(errorMessage);
+                        resolve(); // Don't reject, we've handled the error
                     } catch (parseError) {
                         // If JSON parsing fails, try to extract error from response text
                         const responseText = xhr.responseText;
                         if (responseText.includes('exceed') || responseText.includes('max')) {
-                            throw new Error('File size exceeds the maximum limit of 20MB. Please compress or resize your image before uploading.');
+                            handleError('File size exceeds the maximum limit of 1.99MB. Please compress or resize your image before uploading.');
+                        } else {
+                            handleError('Upload failed with validation errors. Please check your file and try again.');
                         }
-                        throw new Error('Upload failed with validation errors. Please check your file and try again.');
+                        resolve(); // Don't reject, we've handled the error
                     }
                 } else if (xhr.status === 413) {
                     // Payload Too Large - server rejected before reaching Laravel (Nginx limit)
-                    throw new Error(
-                        `File "${file.name}" exceeds the server's maximum file size limit (20MB). Please compress or resize your image before uploading.`
+                    handleError(
+                        `File "${file.name}" exceeds the server's maximum file size limit (1.99MB). Please compress or resize your image before uploading.`
                     );
+                    resolve(); // Don't reject, we've handled the error
                 } else {
                     // Provide more context for other HTTP errors
                     let errorMessage = `Upload failed (HTTP ${xhr.status})`;
                     if (xhr.status >= 500) {
                         errorMessage = 'Server error occurred. Please try again in a moment.';
                     } else if (xhr.status === 0) {
-                        errorMessage = `File "${file.name}" may be too large or network connection was lost. Maximum size is 20MB.`;
+                        errorMessage = `File "${file.name}" may be too large or network connection was lost. Maximum size is 1.99MB.`;
                     } else {
                         errorMessage = `Upload failed with status ${xhr.status}. Please try again.`;
                     }
-                    throw new Error(errorMessage);
+                    handleError(errorMessage);
+                    resolve(); // Don't reject, we've handled the error
                 }
             });
 
             xhr.addEventListener('error', () => {
                 // Network-level error (not HTTP response error)
                 // This often happens with file size issues at the server level
-                throw new Error(
-                    `Network error uploading "${file.name}". This may be due to file size exceeding 20MB, network issues, or server limits. Please check your file size and connection.`
+                handleError(
+                    `Network error uploading "${file.name}". This may be due to file size exceeding 1.99MB, network issues, or server limits. Please check your file size and connection.`
                 );
+                resolve(); // Don't reject, we've handled the error
             });
 
             // Handle timeout - if it's been more than 40 seconds with no progress, try CSRF refresh
@@ -308,30 +314,26 @@ export function useUpload() {
                             }, 1000);
                         })
                         .catch(() => {
-                            throw new Error('Upload timeout and failed to refresh token');
+                            handleError('Upload timeout and failed to refresh token');
                         });
                 } else {
-                    throw new Error('Upload timeout');
+                    handleError('Upload timeout. The file may be too large or the connection is too slow.');
                 }
+                resolve(); // Don't reject, we've handled the error
             });
+        });
 
-            // Set up the request
-            xhr.open('POST', config.endpoint);
-            xhr.setRequestHeader('X-CSRF-TOKEN', token);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Accept', 'application/json');
+        // Set up the request
+        xhr.open('POST', config.endpoint);
+        xhr.setRequestHeader('X-CSRF-TOKEN', token);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Accept', 'application/json');
 
-            // Send the request
-            xhr.send(formData);
-        } catch (error) {
-            console.error('Upload failed:', error);
-            uploadItem.status = 'error';
-            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-            uploadItem.error = errorMessage;
-            if (config.onError) {
-                config.onError(errorMessage);
-            }
-        }
+        // Send the request
+        xhr.send(formData);
+
+        // Wait for response (or error/timeout handlers)
+        await responsePromise;
     };
 
     const retryUpload = async (uploadItem: UploadItem, config: UploadConfig) => {

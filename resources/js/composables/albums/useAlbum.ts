@@ -1,4 +1,5 @@
 import { useUpload, type UploadConfig, type UploadItem } from '@/composables/shared/useUpload';
+import { processImagesForUpload } from '@/utils/imageConverter';
 import { router } from '@inertiajs/vue3';
 import { inject, ref } from 'vue';
 
@@ -11,6 +12,7 @@ export function useAlbum(albumId: string) {
     const confirmationMessage = ref('');
     const confirmationAction = ref<(() => void) | null>(null);
     const showError = inject('showError', (message: string) => console.error(message));
+    const processingImages = ref(false);
 
     // Use the generic upload system
     const {
@@ -31,38 +33,60 @@ export function useAlbum(albumId: string) {
         if (!input.files?.length) return;
 
         const files = Array.from(input.files);
-        const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+        const MAX_FILE_SIZE = 1.99 * 1024 * 1024; // 1.99MB in bytes
 
-        // Validate file sizes before upload
-        const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
-        
-        if (oversizedFiles.length > 0) {
-            const fileNames = oversizedFiles.map(f => f.name).join(', ');
-            const fileSizes = oversizedFiles.map(f => 
-                `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`
-            ).join(', ');
-            
-            showError(
-                `The following files exceed the 20MB limit: ${fileSizes}. Please compress or resize these images before uploading.`
+        // Show processing state
+        processingImages.value = true;
+
+        try {
+            // Process images: convert to WebP and compress to under 2MB
+            const processedFiles = await processImagesForUpload(
+                files,
+                MAX_FILE_SIZE,
+                (processed, total) => {
+                    console.log(`Processing images: ${processed}/${total}`);
+                }
             );
-            return;
-        }
 
-        // Use the generic upload system with album-specific configuration
-        await uploadFiles(files, {
-            endpoint: route('albums.images.store', albumId),
-            fieldName: 'images[]',
-            entityId: albumId,
-            refreshRoute: 'albums.show',
-            refreshParams: { album: albumId },
-            onError: error => {
-                showError(error);
+            if (processedFiles.length === 0) {
+                showError('No images could be processed. Please check your files and try again.');
+                processingImages.value = false;
+                return;
             }
-        });
 
-        // Clear the file input
-        if (input) {
-            input.value = '';
+            // Log conversion stats
+            const originalTotal = files.reduce((sum, f) => sum + f.size, 0);
+            const processedTotal = processedFiles.reduce((sum, f) => sum + f.size, 0);
+            const savings = ((1 - processedTotal / originalTotal) * 100).toFixed(1);
+            console.log(
+                `Image processing complete: ${files.length} files, ${(originalTotal / 1024 / 1024).toFixed(2)}MB → ${(processedTotal / 1024 / 1024).toFixed(2)}MB (${savings}% reduction)`
+            );
+
+            // Use the generic upload system with album-specific configuration
+            await uploadFiles(processedFiles, {
+                endpoint: route('albums.images.store', albumId),
+                fieldName: 'images[]',
+                entityId: albumId,
+                refreshRoute: 'albums.show',
+                refreshParams: { album: albumId },
+                onError: error => {
+                    showError(error);
+                }
+            });
+        } catch (error) {
+            console.error('Error processing images:', error);
+            showError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to process images. Please try again.'
+            );
+        } finally {
+            processingImages.value = false;
+
+            // Clear the file input
+            if (input) {
+                input.value = '';
+            }
         }
     };
 
@@ -170,6 +194,7 @@ export function useAlbum(albumId: string) {
         errorCount,
         pendingCount,
         overallProgress,
+        processingImages,
         showConfirmation,
         confirmationTitle,
         confirmationMessage,
