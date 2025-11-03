@@ -80,7 +80,7 @@ export function useAlbum(albumId: string) {
             await router.delete(route('albums.images.destroy', [albumId, imageId]), {
                 preserveScroll: true,
                 preserveState: false,
-                only: ['album']
+                only: ['Album']
             });
         } catch (error) {
             console.error('Delete failed:', error);
@@ -99,7 +99,7 @@ export function useAlbum(albumId: string) {
                 {
                     preserveScroll: true,
                     preserveState: false,
-                    only: ['album']
+                    only: ['Album']
                 }
             );
         } catch (error) {
@@ -120,7 +120,7 @@ export function useAlbum(albumId: string) {
                 {
                     preserveScroll: true,
                     preserveState: false,
-                    only: ['album']
+                    only: ['Album']
                 }
             );
         } catch (error) {

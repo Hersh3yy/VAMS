@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Models\AlbumImage;
+use App\Services\AlbumService;
 use App\Services\ImageService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -25,13 +26,21 @@ class AlbumImageController
     protected $imageService;
 
     /**
+     * The album service instance.
+     *
+     * @var \App\Services\AlbumService
+     */
+    protected $albumService;
+
+    /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct(ImageService $imageService)
+    public function __construct(ImageService $imageService, AlbumService $albumService)
     {
         $this->imageService = $imageService;
+        $this->albumService = $albumService;
     }
 
     /**
@@ -55,63 +64,17 @@ class AlbumImageController
      */
     public function store(Request $request, Album $album)
     {
-        // Check and log PHP upload settings (IMPORTANT: Verify .user.ini is working)
+        // Quick PHP settings check (verify .user.ini is working)
         $uploadMaxFilesize = ini_get('upload_max_filesize');
         $postMaxSize = ini_get('post_max_size');
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
         $postMaxBytes = $this->convertToBytes($postMaxSize);
         $requiredBytes = 20 * 1024 * 1024; // 20MB required
-
-        Log::info('📤 Upload Request', [
-            'PHP Settings' => [
-                'upload_max_filesize' => $uploadMaxFilesize,
-                'post_max_size' => $postMaxSize,
-                'memory_limit' => ini_get('memory_limit'),
-            ],
-            'Status' => ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes)
-                ? '✅ OK (≥20MB)'
-                : '⚠️  TOO LOW (<20MB)',
-        ]);
-
-        // Warn if settings are too low
-        if ($uploadMaxBytes < $requiredBytes || $postMaxBytes < $requiredBytes) {
-            Log::error('❌ PHP upload limits too low!', [
-                'Current' => "upload_max_filesize={$uploadMaxFilesize}, post_max_size={$postMaxSize}",
-                'Required' => '20M minimum',
-                'Fix' => 'Ensure .user.ini exists in project root with: post_max_size=20M and upload_max_filesize=20M',
-            ]);
-        }
-
-        // Log file details if files are present
-        if ($request->hasFile('images')) {
-            $files = $request->file('images');
-            $filesArray = is_array($files) ? $files : [$files];
-            $fileCount = count($filesArray);
-            
-            $fileSummary = [];
-            foreach ($filesArray as $index => $file) {
-                if ($file) {
-                    $sizeMB = round($file->getSize() / 1024 / 1024, 2);
-                    $fileSummary[] = sprintf(
-                        '#%d: %s (%.2f MB, %s, %s)',
-                        $index + 1,
-                        $file->getClientOriginalName(),
-                        $sizeMB,
-                        $file->getClientMimeType(),
-                        $file->isValid() ? '✓ valid' : '✗ invalid: '.$file->getErrorMessage()
-                    );
-                }
-            }
-            
-            Log::info('📎 Files Detected', [
-                'Count' => $fileCount,
-                'Files' => implode(' | ', $fileSummary),
-            ]);
-        } else {
-            Log::warning('⚠️  No files detected in request', [
-                'Has images key' => $request->has('images'),
-                'Has file images' => $request->hasFile('images'),
-            ]);
+        
+        $settingsOK = ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes);
+        
+        if (!$settingsOK) {
+            Log::error('PHP limits too low: upload_max_filesize='.$uploadMaxFilesize.', post_max_size='.$postMaxSize.' (need 20M)');
         }
 
         try {
@@ -138,26 +101,19 @@ class AlbumImageController
             $album->images()->increment('order', $fileCount);
 
             $uploadedImages = [];
+            $fileNames = [];
             foreach ($request->file('images') as $index => $image) {
-                // Use ImageService to store the image
-                $result = $this->imageService->storeImage(
-                    $image,
-                    "albums/{$album->id}"
-                );
-
+                $result = $this->imageService->storeImage($image, "albums/{$album->id}");
                 $albumImage = $album->images()->create([
                     'id' => Str::uuid(),
                     'path' => $result['url'],
                     'order' => $index,
                 ]);
-
                 $uploadedImages[] = $albumImage;
+                $fileNames[] = $image->getClientOriginalName().' ('.round($image->getSize() / 1024 / 1024, 2).' MB)';
             }
 
-            Log::info('✅ Upload Successful', [
-                'Album' => $album->title,
-                'Images uploaded' => count($uploadedImages),
-            ]);
+            Log::info('✅ Uploaded '.count($uploadedImages).' image(s): '.implode(', ', $fileNames));
 
             // Check if this is an AJAX request (for individual uploads)
             if ($request->ajax() || $request->wantsJson()) {
@@ -177,7 +133,7 @@ class AlbumImageController
             // Log detailed validation failure
             $errors = $e->errors();
             $fileErrors = [];
-            
+
             // Extract detailed file errors
             foreach ($errors as $field => $messages) {
                 if (str_starts_with($field, 'images.')) {
@@ -201,22 +157,18 @@ class AlbumImageController
                 }
             }
 
-            // Format errors for readability
-            $errorSummary = [];
+            // Get first error message for quick logging
+            $firstError = '';
+            $firstFileName = '';
             foreach ($fileErrors as $field => $errorData) {
-                $errorSummary[] = sprintf(
-                    '%s: %s (size: %s MB, error: %s)',
-                    $errorData['file_info']['original_name'] ?? $field,
-                    implode('; ', $errorData['messages']),
-                    $errorData['file_info']['size_mb'] ?? 'unknown',
-                    $errorData['file_info']['error_message'] ?? 'none'
-                );
+                if (empty($firstError)) {
+                    $firstFileName = $errorData['file_info']['original_name'] ?? $field;
+                    $firstError = implode('; ', $errorData['messages']);
+                    break;
+                }
             }
 
-            Log::warning('❌ Validation Failed', [
-                'Errors' => $errorSummary,
-                'Files received' => $request->hasFile('images') ? count($request->file('images')) : 0,
-            ]);
+            Log::warning('❌ Upload failed: '.$firstFileName.' - '.$firstError);
 
             // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
@@ -239,12 +191,7 @@ class AlbumImageController
 
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('AlbumImageController@store - Error occurred:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
+            Log::error('Upload error: '.$e->getMessage());
 
             // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
@@ -323,7 +270,7 @@ class AlbumImageController
         if (empty($size)) {
             return 0;
         }
-        
+
         $last = strtolower($size[strlen($size) - 1]);
         $value = (int) $size;
 
@@ -378,7 +325,13 @@ class AlbumImageController
             // Delete the image record from the database
             $image->delete();
 
-            return back()->with('message', 'Item deleted successfully');
+            // Reload the album with its updated images
+            $album = $this->albumService->getAlbum($album, false);
+
+            return back()->with([
+                'Album' => $album,
+                'message' => 'Item deleted successfully',
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to delete image: '.$e->getMessage());
 
@@ -438,7 +391,13 @@ class AlbumImageController
             }
         });
 
-        return back()->with('message', 'Image order updated successfully');
+        // Reload the album with its updated images
+        $album = $this->albumService->getAlbum($albumId, false);
+
+        return back()->with([
+            'Album' => $album,
+            'message' => 'Image order updated successfully',
+        ]);
     }
 
     /**
@@ -486,7 +445,13 @@ class AlbumImageController
                 'order' => 0,
             ]);
 
-            return back()->with('message', 'Video added successfully');
+            // Reload the album with its updated images
+            $album = $this->albumService->getAlbum($album, false);
+
+            return back()->with([
+                'Album' => $album,
+                'message' => 'Video added successfully',
+            ]);
         } catch (\Exception $e) {
             Log::error('Error in AlbumImageController@storeVideo:', [
                 'message' => $e->getMessage(),
