@@ -257,13 +257,31 @@ export function useUpload() {
                         }
                         throw new Error('Upload failed with validation errors. Please check your file and try again.');
                     }
+                } else if (xhr.status === 413) {
+                    // Payload Too Large - server rejected before reaching Laravel (Nginx limit)
+                    throw new Error(
+                        `File "${file.name}" exceeds the server's maximum file size limit (20MB). Please compress or resize your image before uploading.`
+                    );
                 } else {
-                    throw new Error(`Upload failed with status ${xhr.status}`);
+                    // Provide more context for other HTTP errors
+                    let errorMessage = `Upload failed (HTTP ${xhr.status})`;
+                    if (xhr.status >= 500) {
+                        errorMessage = 'Server error occurred. Please try again in a moment.';
+                    } else if (xhr.status === 0) {
+                        errorMessage = `File "${file.name}" may be too large or network connection was lost. Maximum size is 20MB.`;
+                    } else {
+                        errorMessage = `Upload failed with status ${xhr.status}. Please try again.`;
+                    }
+                    throw new Error(errorMessage);
                 }
             });
 
             xhr.addEventListener('error', () => {
-                throw new Error('Network error during upload');
+                // Network-level error (not HTTP response error)
+                // This often happens with file size issues at the server level
+                throw new Error(
+                    `Network error uploading "${file.name}". This may be due to file size exceeding 20MB, network issues, or server limits. Please check your file size and connection.`
+                );
             });
 
             // Handle timeout - if it's been more than 40 seconds with no progress, try CSRF refresh
