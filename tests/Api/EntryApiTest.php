@@ -18,6 +18,7 @@ it('returns only published entries for the user via API', function () {
         'name' => 'I AMS',
         'slug' => 'i-ams',
         'description' => 'Affirmations',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -63,6 +64,7 @@ it('returns only published entries by type via API', function () {
         'name' => 'I AMS',
         'slug' => 'i-ams',
         'description' => 'Affirmations',
+        'field_config' => [],
         'is_active' => true,
     ]);
 

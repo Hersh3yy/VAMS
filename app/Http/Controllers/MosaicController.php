@@ -74,6 +74,44 @@ class MosaicController extends BaseEntityController
     }
 
     /**
+     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
+     */
+    protected function getRouteNamePrefix(): string
+    {
+        return 'mosaics';
+    }
+
+    /**
+     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
+     */
+    protected function getRelationshipName(): string
+    {
+        return 'mosaics';
+    }
+
+    /**
+     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
+     */
+    protected function getEntityName(): string
+    {
+        return 'Mosaic';
+    }
+
+    /**
+     * Display a listing of mosaics for the authenticated user
+     */
+    public function index(Request $request): Response
+    {
+        $mosaics = $this->entityService->getAll(false);
+
+        return Inertia::render($this->getIndexView(), [
+            'entities' => $mosaics,
+            'mosaics' => $mosaics,
+            ...$this->getAdditionalViewData(),
+        ]);
+    }
+
+    /**
      * Get additional data to pass to views
      */
     protected function getAdditionalViewData(): array
@@ -111,7 +149,7 @@ class MosaicController extends BaseEntityController
     public function update(Request $request, $mosaic): JsonResponse|RedirectResponse
     {
         // Debug: Check what type $mosaic is
-        \Log::info('MosaicController@update - Parameter check:', [
+        Log::info('MosaicController@update - Parameter check:', [
             'mosaic_type' => gettype($mosaic),
             'mosaic_value' => $mosaic,
             'is_object' => is_object($mosaic),
@@ -225,8 +263,17 @@ class MosaicController extends BaseEntityController
 
         // Update items (only if items are provided)
         if (isset($validated['items']) && ! empty($validated['items'])) {
+            $syncItems = collect($validated['items'])
+                ->sortBy('order')
+                ->values()
+                ->map(function ($itemData, $index) {
+                    $itemData['order'] = $index;
+
+                    return $itemData;
+                });
+
             $mosaic->items()->delete(); // Remove old items
-            foreach ($validated['items'] as $index => $item) {
+            foreach ($syncItems as $item) {
                 try {
                     $mosaic->items()->create([
                         'column_index' => $item['column_index'],
@@ -240,13 +287,15 @@ class MosaicController extends BaseEntityController
                     Log::error('Failed to create mosaic item', [
                         'user_id' => Auth::id(),
                         'mosaic_id' => $mosaic->id,
-                        'item_index' => $index,
+                        'item_index' => $item['order'],
                         'item_data' => $item,
                         'error' => $e->getMessage(),
                     ]);
                     throw $e;
                 }
             }
+
+            $validated['items'] = $syncItems->toArray();
         }
 
         Log::info('Mosaic update completed successfully', [
@@ -353,13 +402,8 @@ class MosaicController extends BaseEntityController
             'column_index' => $validated['column_index'],
         ]);
 
-        // Load the updated mosaic with items for Inertia response
-        $mosaic->load('items');
-
-        return back()->with([
-            'mosaic' => $mosaic,
-            'new_item' => $item,
-        ]);
+        return redirect()->route('mosaics.show', $mosaic->id)
+            ->with('success', 'Item added successfully');
     }
 
     public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
@@ -378,13 +422,8 @@ class MosaicController extends BaseEntityController
 
         $item->update($validated);
 
-        // Load the updated mosaic with items for Inertia response
-        $mosaic->load('items');
-
-        return back()->with([
-            'mosaic' => $mosaic,
-            'updated_item' => $item,
-        ]);
+        return redirect()->route('mosaics.show', $mosaic->id)
+            ->with('success', 'Item updated successfully');
     }
 
     public function destroyItem(Mosaic $mosaic, MosaicItem $item)
@@ -396,13 +435,8 @@ class MosaicController extends BaseEntityController
 
         $item->delete();
 
-        // Load the updated mosaic with items for Inertia response
-        $mosaic->load('items');
-
-        return back()->with([
-            'mosaic' => $mosaic,
-            'deleted_item_id' => $item->id,
-        ]);
+        return redirect()->route('mosaics.show', $mosaic->id)
+            ->with('success', 'Item deleted successfully');
     }
 
     public function reorderItems(Request $request, Mosaic $mosaic)
@@ -413,26 +447,36 @@ class MosaicController extends BaseEntityController
         }
 
         $validated = $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|string|exists:mosaic_items,id',
-            'items.*.order' => 'required|integer',
-            'items.*.column_index' => 'required|integer|min:0',
+            'from_id' => 'required|string|exists:mosaic_items,id',
+            'to_id' => 'required|string|exists:mosaic_items,id',
         ]);
 
-        foreach ($validated['items'] as $item) {
-            $mosaic->items()->where('id', $item['id'])->update([
-                'order' => $item['order'],
-                'column_index' => $item['column_index'],
-            ]);
+        // Get all items for this mosaic ordered by current order
+        $items = MosaicItem::where('mosaic_id', $mosaic->id)
+            ->orderBy('column_index')
+            ->orderBy('order')
+            ->get();
+
+        // Find the from and to positions
+        $fromIndex = $items->search(fn ($item) => $item->id === $validated['from_id']);
+        $toIndex = $items->search(fn ($item) => $item->id === $validated['to_id']);
+
+        if ($fromIndex === false || $toIndex === false) {
+            return back()->withErrors(['message' => 'Invalid item IDs provided']);
         }
 
-        // Load the updated mosaic with items for Inertia response
-        $mosaic->load('items');
+        // Reorder the collection
+        $item = $items->splice($fromIndex, 1)->first();
+        $items->splice($toIndex, 0, [$item]);
 
-        return back()->with([
-            'mosaic' => $mosaic,
-            'reordered' => true,
-        ]);
+        // Update the order for all affected items
+        foreach ($items as $index => $item) {
+            $item->order = $index;
+            $item->save();
+        }
+
+        return redirect()->route('mosaics.show', $mosaic->id)
+            ->with('success', 'Items reordered successfully');
     }
 
     public function storeMedia(Request $request, Mosaic $mosaic)
@@ -445,7 +489,7 @@ class MosaicController extends BaseEntityController
         // Note: Images are converted to WebP client-side and should be under 1.99MB
         // Videos may still be larger, so we validate per file type
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:30720', // 30MB max for videos, images should be <2MB from client
+            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp',
         ]);
 
         try {

@@ -54,7 +54,7 @@ class AlbumController extends BaseApiController
 
         return $this->success([
             'albums' => $formattedAlbums,
-        ]);
+        ], 'Albums retrieved successfully');
     }
 
     /**
@@ -71,7 +71,8 @@ class AlbumController extends BaseApiController
         }
 
         return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album)
+            $this->albumService->formatAlbumWithImagesForApi($album),
+            'Album retrieved successfully'
         );
     }
 
@@ -89,7 +90,8 @@ class AlbumController extends BaseApiController
         }
 
         return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album)
+            $this->albumService->formatAlbumWithImagesForApi($album),
+            'Album retrieved successfully'
         );
     }
 }

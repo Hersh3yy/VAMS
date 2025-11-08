@@ -22,6 +22,7 @@ it('displays the entry index page for authorized users with correct entry type',
         'name' => 'I AM',
         'slug' => 'i-ams',
         'description' => 'Affirmations',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -54,6 +55,7 @@ it('allows authorized users to create a new entry', function () {
         'name' => 'I AM',
         'slug' => 'i-ams',
         'description' => 'Affirmations',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -83,6 +85,7 @@ it('defaults to published status when status is not provided', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -111,6 +114,7 @@ it('allows users to update their own entries', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -147,6 +151,7 @@ it('allows users to delete their own entries', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -176,6 +181,7 @@ it('allows users to reorder their entries', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -223,6 +229,7 @@ it('prevents unauthorized users from accessing entry types', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -239,6 +246,7 @@ it('prevents users from creating entries for unauthorized entry types', function
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -265,6 +273,7 @@ it('requires title when creating an entry', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -285,6 +294,7 @@ it('requires content when creating an entry', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -319,6 +329,7 @@ it('validates status must be draft or published', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -344,6 +355,7 @@ it('prevents users from updating entries they do not own', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -384,6 +396,7 @@ it('prevents users from deleting entries they do not own', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -444,6 +457,7 @@ it('prevents guests from accessing entries', function () {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
@@ -461,12 +475,14 @@ it('prevents reordering entries from different entry types', function () {
     $type1 = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
+        'field_config' => [],
         'is_active' => true,
     ]);
 
     $type2 = EntryType::create([
         'name' => 'Gratitude',
         'slug' => 'gratitude',
+        'field_config' => [],
         'is_active' => true,
     ]);
 

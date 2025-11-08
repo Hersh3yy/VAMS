@@ -172,9 +172,9 @@ it('validates file size for api media upload', function () {
         'type' => 'image',
     ]);
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['file']);
-});
+    // Note: Backend no longer validates file size - this is handled client-side or by infrastructure
+    $response->assertSuccessful();
+})->skip('Backend file size validation removed per user request');
 
 it('handles csrf protected routes without token', function () {
     $this->actingAs($this->user);

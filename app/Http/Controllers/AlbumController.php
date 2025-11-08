@@ -6,14 +6,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Services\AlbumService;
+use App\Services\ImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AlbumController extends BaseEntityController
 {
     public function __construct(
-        protected readonly AlbumService $albumService
+        protected readonly AlbumService $albumService,
+        protected readonly ImageService $imageService
     ) {
         parent::__construct($albumService);
     }
@@ -67,6 +71,44 @@ class AlbumController extends BaseEntityController
     }
 
     /**
+     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
+     */
+    protected function getRouteNamePrefix(): string
+    {
+        return 'albums';
+    }
+
+    /**
+     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
+     */
+    protected function getRelationshipName(): string
+    {
+        return 'albums';
+    }
+
+    /**
+     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
+     */
+    protected function getEntityName(): string
+    {
+        return 'Album';
+    }
+
+    /**
+     * Display a listing of the authenticated user's albums
+     */
+    public function index(Request $request): Response
+    {
+        $albums = $this->entityService->getAll(false);
+
+        return Inertia::render($this->getIndexView(), [
+            'entities' => $albums,
+            'albums' => $albums,
+            ...$this->getAdditionalViewData(),
+        ]);
+    }
+
+    /**
      * Get additional data to pass to views
      */
     protected function getAdditionalViewData(): array
@@ -114,7 +156,7 @@ class AlbumController extends BaseEntityController
         $rules = $formRequest->rules();
 
         // Add additional validation rules specific to album updates
-        $rules['cover_image'] = ['nullable', 'image', 'max:10240', 'mimes:jpeg,png,jpg,gif'];
+        $rules['cover_image'] = ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'];
         $rules['selected_cover_image_id'] = ['nullable', 'exists:album_images,id'];
 
         $validated = $request->validate($rules);
@@ -122,15 +164,35 @@ class AlbumController extends BaseEntityController
         Log::info('AlbumController@update - Validated data:', $validated);
 
         // Update album basic info
-        $album->update([
+        $updateData = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-        ]);
+        ];
+
+        $album->update($updateData);
+
+        if (! empty($validated['selected_cover_image_id'])) {
+            $selectedImage = $album->images()->where('id', $validated['selected_cover_image_id'])->first();
+            if ($selectedImage) {
+                $album->update([
+                    'cover_image_path' => $selectedImage->path,
+                ]);
+            }
+        } elseif ($request->hasFile('cover_image')) {
+            $result = $this->imageService->storeImage(
+                $request->file('cover_image'),
+                "albums/{$album->id}/cover"
+            );
+
+            $album->update([
+                'cover_image_path' => $result['url'],
+            ]);
+        }
 
         Log::info('AlbumController@update - Album updated successfully');
 
         return $this->redirectWithSuccess(
-            $this->entityRouteNamePlural.'.show',
+            'albums.show',
             $album,
             'Album updated successfully'
         );

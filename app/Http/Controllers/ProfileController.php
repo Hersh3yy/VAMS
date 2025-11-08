@@ -129,7 +129,7 @@ class ProfileController
     public function updateLogo(Request $request): RedirectResponse
     {
         $request->validate([
-            'logo' => 'required|image|max:2048', // 2MB max
+            'logo' => 'required|image',
         ]);
 
         try {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Album;
 use App\Models\Mosaic;
@@ -58,7 +59,7 @@ it('can create activity with minimal data', function () {
     $user = User::factory()->create();
 
     $activity = Activity::create([
-        'type' => 'test',
+        'type' => ActivityType::CREATE->value,
         'description' => 'Test activity',
         'user_id' => $user->id,
         'subject_type' => User::class,
@@ -66,7 +67,7 @@ it('can create activity with minimal data', function () {
     ]);
 
     expect($activity->exists)->toBeTrue();
-    expect($activity->type)->toBe('test');
+    expect($activity->type)->toBe(ActivityType::CREATE);
     expect($activity->description)->toBe('Test activity');
     expect($activity->user_id)->toBe($user->id);
 });
@@ -80,7 +81,7 @@ it('can create activity with properties', function () {
     ];
 
     $activity = Activity::create([
-        'type' => 'update',
+        'type' => ActivityType::UPDATE->value,
         'description' => 'Updated something',
         'user_id' => $user->id,
         'subject_type' => User::class,
@@ -219,9 +220,9 @@ it('creates multiple activities for different operations', function () {
         ->get();
 
     expect($activities)->toHaveCount(3);
-    expect($activities[0]->type)->toBe('create');
-    expect($activities[1]->type)->toBe('update');
-    expect($activities[2]->type)->toBe('delete');
+    expect($activities[0]->type)->toBe(ActivityType::CREATE);
+    expect($activities[1]->type)->toBe(ActivityType::UPDATE);
+    expect($activities[2]->type)->toBe(ActivityType::DELETE);
 });
 
 it('associates activities with correct user', function () {
@@ -253,8 +254,9 @@ it('can retrieve activities through model relationship', function () {
     $activities = $album->activities;
 
     expect($activities)->toHaveCount(2);
-    expect($activities->pluck('type')->toArray())->toContain('create');
-    expect($activities->pluck('type')->toArray())->toContain('update');
+    $types = $activities->pluck('type')->map(fn ($type) => $type instanceof ActivityType ? $type->value : $type)->toArray();
+    expect($types)->toContain('create');
+    expect($types)->toContain('update');
 });
 
 it('can retrieve user activities through user relationship', function () {

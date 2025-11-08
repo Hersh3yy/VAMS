@@ -124,10 +124,10 @@ it('allows authenticated user to view mosaic', function () {
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
-        ->has('mosaic')
-        ->where('mosaic.id', $mosaic->id)
-        ->where('mosaic.title', $mosaic->title)
-        ->has('mosaic.items', 3)
+        ->has('Mosaic')
+        ->where('Mosaic.id', $mosaic->id)
+        ->where('Mosaic.title', $mosaic->title)
+        ->has('Mosaic.items', 3)
     );
 });
 
@@ -150,8 +150,8 @@ it('allows authenticated user to view mosaic show page for editing', function ()
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
-        ->has('mosaic')
-        ->where('mosaic.id', $mosaic->id)
+        ->has('Mosaic')
+        ->where('Mosaic.id', $mosaic->id)
     );
 });
 
@@ -284,10 +284,8 @@ it('allows user to reorder mosaic items', function () {
     ]);
 
     $reorderData = [
-        'items' => [
-            ['id' => $item2->id, 'order' => 1, 'column_index' => 0],
-            ['id' => $item1->id, 'order' => 2, 'column_index' => 0],
-        ],
+        'from_id' => $item1->id,
+        'to_id' => $item2->id,
     ];
 
     $response = $this->patch(route('mosaics.items.reorder', $mosaic), $reorderData);

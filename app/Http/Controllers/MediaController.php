@@ -18,7 +18,7 @@ class MediaController
     public function upload(Request $request)
     {
         $request->validate([
-            'media' => 'required|file|image|max:30720', // 30MB max
+            'media' => 'required|file|image',
         ]);
 
         try {

@@ -31,7 +31,7 @@ class MosaicController extends BaseApiController
 
         return $this->success([
             'mosaics' => $mosaics->map(fn (Mosaic $mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
-        ]);
+        ], 'Mosaics retrieved successfully');
     }
 
     /**
@@ -48,7 +48,8 @@ class MosaicController extends BaseApiController
         }
 
         return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            'Mosaic retrieved successfully'
         );
     }
 
@@ -66,7 +67,8 @@ class MosaicController extends BaseApiController
         }
 
         return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic)
+            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            'Mosaic retrieved successfully'
         );
     }
 }

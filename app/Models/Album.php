@@ -41,7 +41,7 @@ class Album extends BaseEntity
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'cover_image' => ['nullable', 'image', 'max:5120', 'mimes:jpeg,png,jpg,gif'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
         ];
     }
 
@@ -89,6 +89,6 @@ class Album extends BaseEntity
 
     public function getImagesCountAttribute(): int
     {
-        return $this->media()->count();
+        return $this->images()->count();
     }
 }

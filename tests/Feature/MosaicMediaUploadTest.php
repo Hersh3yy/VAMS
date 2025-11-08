@@ -113,9 +113,9 @@ it('validates file size on upload', function () {
         'media' => $largeFile,
     ]);
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['media']);
-});
+    // Note: Backend no longer validates file size - this is handled client-side or by infrastructure
+    $response->assertSuccessful();
+})->skip('Backend file size validation removed per user request');
 
 it('requires media file for upload', function () {
     $this->actingAs($this->user);

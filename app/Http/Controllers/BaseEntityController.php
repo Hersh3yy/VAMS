@@ -20,21 +20,9 @@ use Inertia\Response;
  */
 abstract class BaseEntityController extends BaseController
 {
-    protected string $entityName;
-
-    protected string $entityNamePlural;
-
-    protected string $entityRouteName;
-
-    protected string $entityRouteNamePlural;
-
     public function __construct(
         protected readonly EntityServiceContract $entityService
     ) {
-        $this->entityName = $this->getEntityName();
-        $this->entityNamePlural = $this->getEntityNamePlural();
-        $this->entityRouteName = Str::kebab($this->entityName);
-        $this->entityRouteNamePlural = Str::kebab($this->entityNamePlural);
     }
 
     /**
@@ -68,37 +56,26 @@ abstract class BaseEntityController extends BaseController
     abstract protected function getEditView(): string;
 
     /**
+     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
+     */
+    abstract protected function getRouteNamePrefix(): string;
+
+    /**
+     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
+     */
+    abstract protected function getRelationshipName(): string;
+
+    /**
+     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
+     */
+    abstract protected function getEntityName(): string;
+
+    /**
      * Get additional data to pass to views
      */
     protected function getAdditionalViewData(): array
     {
         return [];
-    }
-
-    /**
-     * Get the entity name for this controller
-     */
-    protected function getEntityName(): string
-    {
-        $className = class_basename($this->getEntityModelClass());
-
-        return $className;
-    }
-
-    /**
-     * Get the entity name plural for this controller
-     */
-    protected function getEntityNamePlural(): string
-    {
-        return $this->entityName.'s';
-    }
-
-    /**
-     * Get the relationship name for this entity (lowercase, for use with User model relationships)
-     */
-    protected function getRelationshipName(): string
-    {
-        return strtolower($this->entityNamePlural);
     }
 
     /**
@@ -143,9 +120,9 @@ abstract class BaseEntityController extends BaseController
         ]);
 
         return $this->redirectWithSuccess(
-            $this->entityRouteNamePlural.'.show',
+            $this->getRouteNamePrefix().'.show',
             $entity,
-            ucfirst($this->entityName).' created successfully'
+            ucfirst($this->getEntityName()).' created successfully'
         );
     }
 
@@ -159,9 +136,9 @@ abstract class BaseEntityController extends BaseController
 
         if (! $entity) {
             return $this->redirectWithError(
-                $this->entityRouteNamePlural.'.index',
+                $this->getRouteNamePrefix().'.index',
                 [],
-                ucfirst($this->entityName).' not found. You have been redirected to your '.$this->entityNamePlural.'.'
+                ucfirst($this->getEntityName()).' not found. You have been redirected to your '.$this->getRouteNamePrefix().'.'
             );
         }
 
@@ -172,7 +149,7 @@ abstract class BaseEntityController extends BaseController
         $entity = $this->entityService->getById($entity, false);
 
         return Inertia::render($this->getShowView(), [
-            $this->entityName => $entity,
+            $this->getEntityName() => $entity,
             ...$this->getAdditionalViewData(),
         ]);
     }
@@ -187,9 +164,9 @@ abstract class BaseEntityController extends BaseController
 
         if (! $entity) {
             return $this->redirectWithError(
-                $this->entityRouteNamePlural.'.index',
+                $this->getRouteNamePrefix().'.index',
                 [],
-                ucfirst($this->entityName).' not found. You have been redirected to your '.$this->entityNamePlural.'.'
+                ucfirst($this->getEntityName()).' not found. You have been redirected to your '.$this->getRouteNamePrefix().'.'
             );
         }
 
@@ -200,7 +177,7 @@ abstract class BaseEntityController extends BaseController
         $entity = $this->entityService->getById($entity, false);
 
         return Inertia::render($this->getEditView(), [
-            $this->entityName => $entity,
+            $this->getEntityName() => $entity,
             ...$this->getAdditionalViewData(),
         ]);
     }
@@ -210,7 +187,7 @@ abstract class BaseEntityController extends BaseController
      */
     public function update(Request $request, Model|int|string $entity): RedirectResponse|JsonResponse
     {
-        Log::info($this->entityName.'Controller@update - Incoming request data:', $request->all());
+        Log::info($this->getEntityName().'Controller@update - Incoming request data:', $request->all());
 
         $entityModel = $this->resolveEntity($entity);
 
@@ -223,7 +200,7 @@ abstract class BaseEntityController extends BaseController
 
         $validated = $request->validate($rules);
 
-        Log::info($this->entityName.'Controller@update - Validated data:', $validated);
+        Log::info($this->getEntityName().'Controller@update - Validated data:', $validated);
 
         // Update entity basic info
         $entityModel->update([
@@ -231,12 +208,12 @@ abstract class BaseEntityController extends BaseController
             'description' => $validated['description'] ?? null,
         ]);
 
-        Log::info($this->entityName.'Controller@update - '.ucfirst($this->entityName).' updated successfully');
+        Log::info($this->getEntityName().'Controller@update - '.ucfirst($this->getEntityName()).' updated successfully');
 
         return $this->redirectWithSuccess(
-            $this->entityRouteNamePlural.'.show',
+            $this->getRouteNamePrefix().'.show',
             $entityModel,
-            ucfirst($this->entityName).' updated successfully'
+            ucfirst($this->getEntityName()).' updated successfully'
         );
     }
 
@@ -253,9 +230,9 @@ abstract class BaseEntityController extends BaseController
         $entityModel->delete();
 
         return $this->redirectWithSuccess(
-            $this->entityRouteNamePlural.'.index',
+            $this->getRouteNamePrefix().'.index',
             [],
-            ucfirst($this->entityName).' deleted successfully'
+            ucfirst($this->getEntityName()).' deleted successfully'
         );
     }
 

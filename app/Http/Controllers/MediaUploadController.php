@@ -28,7 +28,7 @@ class MediaUploadController
             'entity_type' => 'required|string|in:album,blog,news,mosaic',
             'entity_id' => 'required|string',
             'media' => 'required|array',
-            'media.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi|max:30720', // 30MB
+            'media.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi',
         ]);
 
         try {

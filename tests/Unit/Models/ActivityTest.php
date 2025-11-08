@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Album;
 use App\Models\User;
@@ -45,14 +46,14 @@ it('has subject relationship method', function () {
 
 it('can be created with minimal data', function () {
     $activity = new Activity([
-        'type' => 'test',
+        'type' => ActivityType::CREATE->value,
         'description' => 'Test activity',
         'user_id' => '123e4567-e89b-12d3-a456-426614174000',
         'subject_type' => User::class,
         'subject_id' => '123e4567-e89b-12d3-a456-426614174000',
     ]);
 
-    expect($activity->type)->toBe('test');
+    expect($activity->type)->toBe(ActivityType::CREATE);
     expect($activity->description)->toBe('Test activity');
     expect($activity->user_id)->toBe('123e4567-e89b-12d3-a456-426614174000');
     expect($activity->subject_type)->toBe(User::class);
@@ -67,7 +68,7 @@ it('can be created with properties', function () {
     ];
 
     $activity = new Activity([
-        'type' => 'update',
+        'type' => ActivityType::UPDATE->value,
         'description' => 'Updated something',
         'user_id' => '123e4567-e89b-12d3-a456-426614174000',
         'subject_type' => Album::class,

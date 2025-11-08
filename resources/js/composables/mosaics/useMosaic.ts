@@ -85,11 +85,7 @@ export function useMosaic(mosaicId: string) {
 
     const deleteItem = async (itemId: string) => {
         try {
-            await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]), {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['mosaic']
-            });
+            await router.delete(route('mosaics.items.destroy', [mosaicId, itemId]));
         } catch (error) {
             console.error('Delete failed:', error);
         }
@@ -102,11 +98,9 @@ export function useMosaic(mosaicId: string) {
                 {
                     from_id: fromId,
                     to_id: toId
-                },
+                }, 
                 {
-                    preserveScroll: true,
-                    preserveState: false,
-                    only: ['mosaic']
+                    preserveScroll: true
                 }
             );
         } catch (error) {
@@ -122,11 +116,7 @@ export function useMosaic(mosaicId: string) {
                 order: item.order || 0,
                 column_index: item.column_index || 0
             } as any;
-            await router.post(route('mosaics.items.store', mosaicId), payload, {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['mosaic']
-            });
+            await router.post(route('mosaics.items.store', mosaicId), payload);
         } catch (error) {
             console.error('Add item failed:', error);
         }
@@ -140,11 +130,7 @@ export function useMosaic(mosaicId: string) {
                 order: updates.order || 0,
                 column_index: updates.column_index || 0
             } as any;
-            await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload, {
-                preserveScroll: true,
-                preserveState: false,
-                only: ['mosaic']
-            });
+            await router.put(route('mosaics.items.update', [mosaicId, itemId]), payload);
         } catch (error) {
             console.error('Update item failed:', error);
         }

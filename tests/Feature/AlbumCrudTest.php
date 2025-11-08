@@ -108,10 +108,10 @@ it('allows authenticated user to view album', function () {
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Albums/Show')
-        ->has('album')
-        ->where('album.id', $album->id)
-        ->where('album.title', $album->title)
-        ->has('album.images', 3)
+        ->has('Album')
+        ->where('Album.id', $album->id)
+        ->where('Album.title', $album->title)
+        ->has('Album.images', 3)
     );
 });
 
@@ -134,8 +134,8 @@ it('allows authenticated user to view edit album page', function () {
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Albums/Edit')
-        ->has('album')
-        ->where('album.id', $album->id)
+        ->has('Album')
+        ->where('Album.id', $album->id)
     );
 });
 
@@ -284,9 +284,9 @@ it('shows album with correct image ordering', function () {
     $response = $this->get(route('albums.show', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->has('album.images', 3)
-        ->where('album.images.0.id', $image2->id) // order 0
-        ->where('album.images.1.id', $image3->id) // order 1
-        ->where('album.images.2.id', $image1->id) // order 2
+    $response->assertInertia(fn ($page) => $page->has('Album.images', 3)
+        ->where('Album.images.0.id', $image2->id) // order 0
+        ->where('Album.images.1.id', $image3->id) // order 1
+        ->where('Album.images.2.id', $image1->id) // order 2
     );
 });

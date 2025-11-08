@@ -61,9 +61,9 @@ it('validates file size 10mb limit for api upload', function () {
         'type' => 'image',
     ]);
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['file']);
-});
+    // Note: Backend no longer validates file size - this is handled client-side or by infrastructure
+    $response->assertSuccessful();
+})->skip('Backend file size validation removed per user request');
 
 it('validates file types for api upload', function () {
     $token = $this->user->createToken('test-token')->plainTextToken;

@@ -73,6 +73,30 @@ class EntryController extends BaseEntityController
     }
 
     /**
+     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
+     */
+    protected function getRouteNamePrefix(): string
+    {
+        return 'entries';
+    }
+
+    /**
+     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
+     */
+    protected function getRelationshipName(): string
+    {
+        return 'entries';
+    }
+
+    /**
+     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
+     */
+    protected function getEntityName(): string
+    {
+        return 'entry';
+    }
+
+    /**
      * Get additional data to pass to views
      */
     protected function getAdditionalViewData(): array
@@ -151,7 +175,7 @@ class EntryController extends BaseEntityController
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable'], // Can be string or array
+            'content' => ['required'], // Can be string or array
             'status' => ['nullable', 'string', 'in:draft,published'],
             'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
         ]);
@@ -310,13 +334,17 @@ class EntryController extends BaseEntityController
      *
      * @override
      */
-    public function destroy(Model $entity): RedirectResponse
+    public function destroy(Model|int|string $entity): RedirectResponse
     {
-        // Cast to Entry model
-        $entry = $entity;
+        /** @var Entry $entry */
+        $entry = $entity instanceof Model
+            ? $entity
+            : Entry::query()->findOrFail($entity);
 
         // Check if user owns this entry
         $this->authorizeOwnership($entry);
+
+        $entry->loadMissing('entryType');
 
         // Store the entry type slug before deletion for redirect
         $entryTypeSlug = $entry->entryType->slug;

@@ -81,7 +81,7 @@ class AlbumImageController
             $request->validate(
                 [
                     'images' => 'required|array',
-                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:2037', // 1.99MB max (2037KB), includes HEIC/HEIF
+                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
                 ],
                 [
                     'images.required' => 'Please select at least one image to upload.',
@@ -90,7 +90,6 @@ class AlbumImageController
                     'images.*.file' => 'The uploaded file failed to upload. This may be due to file size limits, network issues, or unsupported file type.',
                     'images.*.mimes' => 'The file must be one of: jpeg, png, jpg, gif, webp, heic, heif. Detected type: :attribute',
                     'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
-                    'images.*.max' => 'One or more images exceed the maximum file size of 1.99MB. Please compress or resize your images before uploading.',
                 ]
             );
 
@@ -241,7 +240,7 @@ class AlbumImageController
             'dateCreated' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:2037', // 1.99MB max (2037KB), includes HEIC/HEIF
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
         ]);
 
         // The mutators in the model will handle mapping to the appropriate columns

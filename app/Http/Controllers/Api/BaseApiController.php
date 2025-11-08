@@ -13,12 +13,15 @@ abstract class BaseApiController
     /**
      * Return a successful response
      */
-    protected function success(mixed $data = null, string $message = 'Operation successful', int $status = 200): JsonResponse
+    protected function success(mixed $data = null, ?string $message = null, int $status = 200): JsonResponse
     {
         $response = [
             'success' => true,
-            'message' => $message,
         ];
+
+        if ($message !== null) {
+            $response['message'] = $message;
+        }
 
         if ($data !== null) {
             $response['data'] = $data;
