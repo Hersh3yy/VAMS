@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -67,7 +68,7 @@ abstract class BaseController
     /**
      * Get the authenticated user
      */
-    protected function user(): \App\Models\User
+    protected function user(): User
     {
         return Auth::user();
     }

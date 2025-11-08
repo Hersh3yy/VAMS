@@ -151,42 +151,72 @@ onUnmounted(() => {
 
 const handleUpload = async (files: File[]) => {
     const uploadedImages: Image[] = []
+    const MAX_FILE_SIZE = 1.99 * 1024 * 1024; // 1.99MB in bytes
     
-    for (const file of files) {
-        const formData = new FormData()
-        formData.append('file', file)
-        
-        try {
-            const token = getCsrfToken()
-            const response = await fetch('/api/media/upload', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': token || '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                credentials: 'include'
-            })
-            
-            if (!response.ok) {
-                throw new Error(`Upload failed with status ${response.status}`)
+    try {
+        // Process images: convert to WebP and compress to under 1.99MB
+        const { processImagesForUpload } = await import('@/utils/imageConverter')
+        const processedFiles = await processImagesForUpload(
+            files,
+            MAX_FILE_SIZE,
+            (processed, total) => {
+                console.log(`Processing images: ${processed}/${total}`)
             }
-            
-            const data = await response.json()
-            
-            if (data.success) {
-                uploadedImages.push({
-                    path: data.data.path,
-                    url: data.data.url,
-                    alt: '',
-                    caption: ''
-                })
-            }
-        } catch (error) {
-            console.error('Image upload failed:', error)
-            alert('Failed to upload images. Please try again.')
+        )
+
+        if (processedFiles.length === 0) {
+            alert('No images could be processed. Please check your files and try again.')
+            return
         }
+
+        // Log conversion stats
+        const originalTotal = files.reduce((sum, f) => sum + f.size, 0)
+        const processedTotal = processedFiles.reduce((sum, f) => sum + f.size, 0)
+        const savings = ((1 - processedTotal / originalTotal) * 100).toFixed(1)
+        console.log(
+            `Image processing complete: ${files.length} files, ${(originalTotal / 1024 / 1024).toFixed(2)}MB → ${(processedTotal / 1024 / 1024).toFixed(2)}MB (${savings}% reduction)`
+        )
+        
+        for (const file of processedFiles) {
+            const formData = new FormData()
+            formData.append('file', file)
+            
+            try {
+                const token = getCsrfToken()
+                const response = await fetch('/api/media/upload', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': token || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                })
+                
+                if (!response.ok) {
+                    throw new Error(`Upload failed with status ${response.status}`)
+                }
+                
+                const data = await response.json()
+                
+                if (data.success) {
+                    uploadedImages.push({
+                        path: data.data.path,
+                        url: data.data.url,
+                        alt: '',
+                        caption: ''
+                    })
+                }
+            } catch (error) {
+                console.error('Image upload failed:', error)
+                alert(`Failed to upload ${file.name}. Please try again.`)
+            }
+        }
+    } catch (error) {
+        console.error('Error processing images:', error)
+        alert('Failed to process images. Please try again.')
+        return
     }
     
     if (uploadedImages.length > 0) {

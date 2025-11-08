@@ -117,12 +117,12 @@ class MosaicController extends BaseEntityController
             'is_object' => is_object($mosaic),
             'is_string' => is_string($mosaic),
         ]);
-        
+
         // If $mosaic is a string (ID), resolve it to a model
         if (is_string($mosaic)) {
             $mosaic = Mosaic::findOrFail($mosaic);
         }
-        
+
         // Check if user owns this mosaic
         if ($mosaic->user_id != Auth::id()) {
             Log::warning('Unauthorized mosaic update attempt', [
@@ -442,8 +442,10 @@ class MosaicController extends BaseEntityController
             abort(403);
         }
 
+        // Note: Images are converted to WebP client-side and should be under 1.99MB
+        // Videos may still be larger, so we validate per file type
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:30720', // 30MB max like albums
+            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:30720', // 30MB max for videos, images should be <2MB from client
         ]);
 
         try {

@@ -100,7 +100,7 @@ class AlbumController extends BaseEntityController
             'is_object' => is_object($album),
             'is_string' => is_string($album),
         ]);
-        
+
         // If $album is a string (ID), resolve it to a model
         if (is_string($album)) {
             $album = \App\Models\Album::findOrFail($album);
@@ -130,7 +130,7 @@ class AlbumController extends BaseEntityController
         Log::info('AlbumController@update - Album updated successfully');
 
         return $this->redirectWithSuccess(
-            'albums.show',
+            $this->entityRouteNamePlural.'.show',
             $album,
             'Album updated successfully'
         );

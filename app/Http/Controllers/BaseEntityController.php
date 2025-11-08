@@ -24,11 +24,17 @@ abstract class BaseEntityController extends BaseController
 
     protected string $entityNamePlural;
 
+    protected string $entityRouteName;
+
+    protected string $entityRouteNamePlural;
+
     public function __construct(
         protected readonly EntityServiceContract $entityService
     ) {
         $this->entityName = $this->getEntityName();
         $this->entityNamePlural = $this->getEntityNamePlural();
+        $this->entityRouteName = Str::kebab($this->entityName);
+        $this->entityRouteNamePlural = Str::kebab($this->entityNamePlural);
     }
 
     /**
@@ -88,6 +94,14 @@ abstract class BaseEntityController extends BaseController
     }
 
     /**
+     * Get the relationship name for this entity (lowercase, for use with User model relationships)
+     */
+    protected function getRelationshipName(): string
+    {
+        return strtolower($this->entityNamePlural);
+    }
+
+    /**
      * Display a listing of the resource
      */
     public function index(Request $request): Response
@@ -122,14 +136,14 @@ abstract class BaseEntityController extends BaseController
         $validated = $request->validate($rules);
 
         $entityModelClass = $this->getEntityModelClass();
-        $entity = $this->user()->{$this->entityNamePlural}()->create([
+        $entity = $this->user()->{$this->getRelationshipName()}()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
         ]);
 
         return $this->redirectWithSuccess(
-            $this->entityNamePlural.'.show',
+            $this->entityRouteNamePlural.'.show',
             $entity,
             ucfirst($this->entityName).' created successfully'
         );
@@ -145,7 +159,7 @@ abstract class BaseEntityController extends BaseController
 
         if (! $entity) {
             return $this->redirectWithError(
-                $this->entityNamePlural.'.index',
+                $this->entityRouteNamePlural.'.index',
                 [],
                 ucfirst($this->entityName).' not found. You have been redirected to your '.$this->entityNamePlural.'.'
             );
@@ -173,7 +187,7 @@ abstract class BaseEntityController extends BaseController
 
         if (! $entity) {
             return $this->redirectWithError(
-                $this->entityNamePlural.'.index',
+                $this->entityRouteNamePlural.'.index',
                 [],
                 ucfirst($this->entityName).' not found. You have been redirected to your '.$this->entityNamePlural.'.'
             );
@@ -194,12 +208,14 @@ abstract class BaseEntityController extends BaseController
     /**
      * Update the specified resource in storage
      */
-    public function update(Request $request, $entity): RedirectResponse|JsonResponse
+    public function update(Request $request, Model|int|string $entity): RedirectResponse|JsonResponse
     {
         Log::info($this->entityName.'Controller@update - Incoming request data:', $request->all());
 
+        $entityModel = $this->resolveEntity($entity);
+
         // Check if user owns this entity
-        $this->authorizeOwnership($entity);
+        $this->authorizeOwnership($entityModel);
 
         $formRequestClass = $this->getFormRequestClass();
         $formRequest = new $formRequestClass;
@@ -210,7 +226,7 @@ abstract class BaseEntityController extends BaseController
         Log::info($this->entityName.'Controller@update - Validated data:', $validated);
 
         // Update entity basic info
-        $entity->update([
+        $entityModel->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
         ]);
@@ -218,8 +234,8 @@ abstract class BaseEntityController extends BaseController
         Log::info($this->entityName.'Controller@update - '.ucfirst($this->entityName).' updated successfully');
 
         return $this->redirectWithSuccess(
-            $this->entityNamePlural.'.show',
-            $entity,
+            $this->entityRouteNamePlural.'.show',
+            $entityModel,
             ucfirst($this->entityName).' updated successfully'
         );
     }
@@ -227,17 +243,34 @@ abstract class BaseEntityController extends BaseController
     /**
      * Remove the specified resource from storage
      */
-    public function destroy(Model $entity): RedirectResponse
+    public function destroy(Model|int|string $entity): RedirectResponse
     {
-        // Check if user owns this entity
-        $this->authorizeOwnership($entity);
+        $entityModel = $this->resolveEntity($entity);
 
-        $entity->delete();
+        // Check if user owns this entity
+        $this->authorizeOwnership($entityModel);
+
+        $entityModel->delete();
 
         return $this->redirectWithSuccess(
-            $this->entityNamePlural.'.index',
+            $this->entityRouteNamePlural.'.index',
             [],
             ucfirst($this->entityName).' deleted successfully'
         );
+    }
+
+    /**
+     * Resolve an entity identifier to its corresponding model instance
+     */
+    protected function resolveEntity(Model|int|string $entity): Model
+    {
+        if ($entity instanceof Model) {
+            return $entity;
+        }
+
+        /** @var class-string<Model> $entityModelClass */
+        $entityModelClass = $this->getEntityModelClass();
+
+        return $entityModelClass::query()->findOrFail($entity);
     }
 }

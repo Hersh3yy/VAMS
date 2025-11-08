@@ -23,8 +23,9 @@ class MediaController
      */
     public function upload(Request $request): JsonResponse
     {
+        // Note: Images are converted to WebP client-side and should be under 1.99MB
         $request->validate([
-            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi|max:10240', // 10MB
+            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi,webp|max:2037', // 1.99MB for images (client-side converts), videos may be larger but this endpoint is primarily for images
             'type' => 'sometimes|string|in:image,video',
         ]);
 

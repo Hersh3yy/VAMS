@@ -1,3 +1,4 @@
+import { processImagesForUpload } from '@/utils/imageConverter';
 import type { MosaicItem } from '@/types/mosaic';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -5,6 +6,7 @@ import { ref } from 'vue';
 export function useMosaic(mosaicId: string) {
     const uploading = ref(false);
     const uploadProgress = ref(0);
+    const processingImages = ref(false);
     const showConfirmation = ref(false);
     const confirmationTitle = ref('');
     const confirmationMessage = ref('');
@@ -14,15 +16,43 @@ export function useMosaic(mosaicId: string) {
         const input = event.target as HTMLInputElement;
         if (!input.files?.length) return;
 
-        uploading.value = true;
-        uploadProgress.value = 0;
+        const files = Array.from(input.files);
+        const MAX_FILE_SIZE = 1.99 * 1024 * 1024; // 1.99MB in bytes
 
-        const formData = new FormData();
-        Array.from(input.files).forEach(file => {
-            formData.append('media[]', file);
-        });
+        // Show processing state
+        processingImages.value = true;
 
         try {
+            // Process images: convert to WebP and compress to under 1.99MB
+            const processedFiles = await processImagesForUpload(
+                files,
+                MAX_FILE_SIZE,
+                (processed, total) => {
+                    console.log(`Processing images: ${processed}/${total}`);
+                }
+            );
+
+            if (processedFiles.length === 0) {
+                console.error('No images could be processed');
+                return;
+            }
+
+            // Log conversion stats
+            const originalTotal = files.reduce((sum, f) => sum + f.size, 0);
+            const processedTotal = processedFiles.reduce((sum, f) => sum + f.size, 0);
+            const savings = ((1 - processedTotal / originalTotal) * 100).toFixed(1);
+            console.log(
+                `Image processing complete: ${files.length} files, ${(originalTotal / 1024 / 1024).toFixed(2)}MB → ${(processedTotal / 1024 / 1024).toFixed(2)}MB (${savings}% reduction)`
+            );
+
+            uploading.value = true;
+            uploadProgress.value = 0;
+
+            const formData = new FormData();
+            processedFiles.forEach(file => {
+                formData.append('media[]', file);
+            });
+
             await router.post(route('mosaics.media.store', mosaicId), formData, {
                 forceFormData: true,
                 onProgress: progress => {
@@ -36,6 +66,12 @@ export function useMosaic(mosaicId: string) {
         } finally {
             uploading.value = false;
             uploadProgress.value = 0;
+            processingImages.value = false;
+
+            // Clear the file input
+            if (input) {
+                input.value = '';
+            }
         }
     };
 
@@ -136,6 +172,7 @@ export function useMosaic(mosaicId: string) {
     return {
         uploading,
         uploadProgress,
+        processingImages,
         showConfirmation,
         confirmationTitle,
         confirmationMessage,
