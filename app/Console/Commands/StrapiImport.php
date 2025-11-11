@@ -90,8 +90,6 @@ class StrapiImport extends Command
 
     /**
      * Find user by ID or email
-     *
-     * @return User|null
      */
     protected function findUser(string $userId): ?User
     {
@@ -333,11 +331,8 @@ class StrapiImport extends Command
     /**
      * Process a single media item
      *
-     * @param Album $albumModel
-     * @param array<string, mixed> $media
-     * @param string $albumDirectory
-     * @param int $mediaCount
-     * @param array<string, mixed>|null $firstImageObject
+     * @param  array<string, mixed>  $media
+     * @param  array<string, mixed>|null  $firstImageObject
      */
     protected function processMediaItem(Album $albumModel, array $media, string $albumDirectory, int &$mediaCount, ?array &$firstImageObject): void
     {

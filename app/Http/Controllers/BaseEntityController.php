@@ -22,8 +22,7 @@ abstract class BaseEntityController extends BaseController
 {
     public function __construct(
         protected readonly EntityServiceContract $entityService
-    ) {
-    }
+    ) {}
 
     /**
      * Get the entity model class name

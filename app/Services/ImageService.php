@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 /**
  * Service for storing images in cloud storage
- * 
+ *
  * Note: Image transformations are handled by ImageProcessor service
  * This service focuses on storage operations only
  */
@@ -73,7 +74,7 @@ class ImageService
         $response = Http::timeout(30)->get($url);
 
         if (! $response->successful()) {
-            throw new \Exception("Failed to download image from URL: $url");
+            throw new Exception("Failed to download image from URL: $url");
         }
 
         // Generate a unique filename
@@ -109,7 +110,7 @@ class ImageService
                     $result['webp_path'] = $webpResult['path'];
                     $result['webp_url'] = $webpResult['url'];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error("WebP conversion failed: {$e->getMessage()}");
                 // Fail gracefully, original image is still available
             }
@@ -166,7 +167,7 @@ class ImageService
                 'path' => $webpPath,
                 'url' => $this->getPublicUrl($webpPath),
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("WebP conversion failed: {$e->getMessage()}");
 
             return null;
@@ -224,7 +225,7 @@ class ImageService
                 'path' => $webpPath,
                 'url' => $this->getPublicUrl($webpPath),
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("WebP conversion failed: {$e->getMessage()}");
 
             return null;
@@ -261,7 +262,7 @@ class ImageService
 
         try {
             return $this->storeImageFromUrl($thumbnailUrl, $folder);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("Failed to store video thumbnail: {$e->getMessage()}");
 
             // Try fallback for YouTube
@@ -270,7 +271,7 @@ class ImageService
                 if ($fallbackThumbnail) {
                     try {
                         return $this->storeImageFromUrl($fallbackThumbnail, $folder);
-                    } catch (\Exception $fallbackException) {
+                    } catch (Exception $fallbackException) {
                         Log::error("Fallback thumbnail also failed: {$fallbackException->getMessage()}");
                     }
                 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -118,11 +119,8 @@ class Entry extends BaseEntity
 
     /**
      * Scope for published entries
-     *
-     * @param \Illuminate\Database\Eloquent\Builder<Entry> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Entry>
      */
-    public function scopePublished($query)
+    public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published')
             ->whereNotNull('published_at');
@@ -130,11 +128,8 @@ class Entry extends BaseEntity
 
     /**
      * Scope for draft entries
-     *
-     * @param \Illuminate\Database\Eloquent\Builder<Entry> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Entry>
      */
-    public function scopeDraft($query)
+    public function scopeDraft(Builder $query): Builder
     {
         return $query->where('status', 'draft');
     }

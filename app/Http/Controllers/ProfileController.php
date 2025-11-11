@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\ImageService;
+use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,24 +16,11 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ProfileController
+final class ProfileController
 {
-    /**
-     * The image service instance.
-     *
-     * @var \App\Services\ImageService
-     */
-    protected $imageService;
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct(ImageService $imageService)
-    {
-        $this->imageService = $imageService;
-    }
+    public function __construct(
+        private readonly ImageService $imageService
+    ) {}
 
     /**
      * Display the user's profile form.
@@ -145,7 +135,7 @@ class ProfileController
             ]);
 
             return Redirect::route('profile.edit')->with('status', 'logo-updated');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error uploading logo: '.$e->getMessage());
 
             return Redirect::route('profile.edit')->with('error', 'Failed to upload logo.');

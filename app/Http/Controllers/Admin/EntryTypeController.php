@@ -95,7 +95,7 @@ class EntryTypeController
         \Log::info('EntryType Update Request:', [
             'entry_type_id' => $entryType->id,
             'field_config_count' => count($request->input('field_config', [])),
-            'field_config' => $request->input('field_config', [])
+            'field_config' => $request->input('field_config', []),
         ]);
 
         $validated = $request->validate([

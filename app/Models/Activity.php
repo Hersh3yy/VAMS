@@ -48,8 +48,6 @@ class Activity extends Model
 
     /**
      * Get the subject of this activity (polymorphic)
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
     public function subject(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {

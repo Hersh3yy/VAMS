@@ -515,4 +515,3 @@ it('prevents reordering entries from different entry types', function () {
     $response->assertRedirect();
     $response->assertSessionHasErrors();
 });
-

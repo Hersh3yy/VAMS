@@ -52,8 +52,6 @@ class AlbumImage extends Model
      *
      * Note: AlbumImageVariant model will be created in Phase 1
      * This method is prepared now for backwards compatibility planning
-     *
-     * @return HasMany
      */
     public function variants(): HasMany
     {
@@ -86,8 +84,6 @@ class AlbumImage extends Model
 
     /**
      * Check if this image has been migrated to variant system
-     *
-     * @return bool
      */
     public function hasVariants(): bool
     {

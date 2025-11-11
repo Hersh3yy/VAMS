@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
 use App\Services\ImageService;
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,39 +19,19 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class AlbumImageController
+final class AlbumImageController
 {
     use AuthorizesRequests;
 
-    /**
-     * The image service instance.
-     *
-     * @var \App\Services\ImageService
-     */
-    protected $imageService;
-
-    /**
-     * The album service instance.
-     *
-     * @var \App\Services\AlbumService
-     */
-    protected $albumService;
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct(ImageService $imageService, AlbumService $albumService)
-    {
-        $this->imageService = $imageService;
-        $this->albumService = $albumService;
-    }
+    public function __construct(
+        private readonly ImageService $imageService,
+        private readonly AlbumService $albumService
+    ) {}
 
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -54,7 +39,7 @@ class AlbumImageController
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -62,18 +47,18 @@ class AlbumImageController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Album $album)
+    public function store(Request $request, Album $album): JsonResponse|RedirectResponse
     {
         // Quick PHP settings check (verify .user.ini is working)
-        $uploadMaxFilesize = ini_get('upload_max_filesize');
-        $postMaxSize = ini_get('post_max_size');
+        $uploadMaxFilesize = (string) ini_get('upload_max_filesize');
+        $postMaxSize = (string) ini_get('post_max_size');
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
         $postMaxBytes = $this->convertToBytes($postMaxSize);
         $requiredBytes = 1.99 * 1024 * 1024; // 1.99MB required
-        
+
         $settingsOK = ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes);
-        
-        if (!$settingsOK) {
+
+        if (! $settingsOK) {
             Log::error('PHP limits too low: upload_max_filesize='.$uploadMaxFilesize.', post_max_size='.$postMaxSize.' (need 1.99M)');
         }
 
@@ -189,7 +174,7 @@ class AlbumImageController
             }
 
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Upload error: '.$e->getMessage());
 
             // Check if this is an AJAX request
@@ -207,7 +192,7 @@ class AlbumImageController
     /**
      * Display the specified resource.
      */
-    public function show(AlbumImage $albumImage)
+    public function show(AlbumImage $albumImage): void
     {
         //
     }
@@ -215,7 +200,7 @@ class AlbumImageController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AlbumImage $albumImage)
+    public function edit(AlbumImage $albumImage): void
     {
         //
     }
@@ -223,7 +208,7 @@ class AlbumImageController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Album $album, AlbumImage $image)
+    public function update(Request $request, Album $album, AlbumImage $image): RedirectResponse
     {
         // Ensure the image belongs to the album and user owns the album
         if ($image->album_id !== $album->id) {
@@ -302,7 +287,7 @@ class AlbumImageController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Album $album, AlbumImage $image)
+    public function destroy(Album $album, AlbumImage $image): RedirectResponse
     {
         // Ensure the image belongs to the album and user owns the album
         if ($image->album_id !== $album->id) {
@@ -331,7 +316,7 @@ class AlbumImageController
                 'Album' => $album,
                 'message' => 'Item deleted successfully',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to delete image: '.$e->getMessage());
 
             return back()->withErrors([
@@ -351,7 +336,7 @@ class AlbumImageController
             strpos($url, 'vimeo.com') !== false;
     }
 
-    public function reorder(Request $request, ?Album $album = null)
+    public function reorder(Request $request, ?Album $album = null): RedirectResponse
     {
         // Support both nested and non-nested routes
         if (! $album && $request->has('album_id')) {
@@ -402,7 +387,7 @@ class AlbumImageController
     /**
      * Store a video URL as an album image
      */
-    public function storeVideo(Request $request, Album $album)
+    public function storeVideo(Request $request, Album $album): RedirectResponse
     {
         Log::info('Incoming video request data:', $request->all());
 
@@ -451,7 +436,7 @@ class AlbumImageController
                 'Album' => $album,
                 'message' => 'Video added successfully',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error in AlbumImageController@storeVideo:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),

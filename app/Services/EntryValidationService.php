@@ -47,7 +47,7 @@ final class EntryValidationService
                 default => $fieldRules[] = 'string',
             };
 
-            if (!empty($fieldRules)) {
+            if (! empty($fieldRules)) {
                 $rules[$field['name']] = $fieldRules;
             }
         }
@@ -145,4 +145,3 @@ final class EntryValidationService
         }
     }
 }
-

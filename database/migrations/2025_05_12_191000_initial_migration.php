@@ -56,7 +56,7 @@ return new class extends Migration
             $table->json('properties')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
-            
+
             $table->foreign('album_id')->references('id')->on('albums')->onDelete('cascade');
         });
 
@@ -86,7 +86,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
-        
+
         // Jobs table for queues
         Schema::create('jobs', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -227,4 +227,4 @@ return new class extends Migration
         Schema::dropIfExists('cache');
         Schema::dropIfExists('users');
     }
-}; 
+};

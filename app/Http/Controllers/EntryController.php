@@ -196,7 +196,7 @@ class EntryController extends BaseEntityController
         }
 
         // Validate content against entry type's field_config if it's an array
-        if (is_array($content) && !empty($content)) {
+        if (is_array($content) && ! empty($content)) {
             try {
                 $content = $this->validationService->validateContent($entryType, $content);
             } catch (\Illuminate\Validation\ValidationException $e) {
@@ -305,7 +305,7 @@ class EntryController extends BaseEntityController
         }
 
         // Validate content against entry type's field_config if it's an array
-        if (is_array($content) && !empty($content)) {
+        if (is_array($content) && ! empty($content)) {
             try {
                 $content = $this->validationService->validateContent($entry->entryType, $content);
             } catch (\Illuminate\Validation\ValidationException $e) {

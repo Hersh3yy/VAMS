@@ -1,21 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Services\ImageService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
-class MediaController
+final class MediaController
 {
-    protected $imageService;
+    public function __construct(
+        private readonly ImageService $imageService
+    ) {}
 
-    public function __construct(ImageService $imageService)
-    {
-        $this->imageService = $imageService;
-    }
-
-    public function upload(Request $request)
+    public function upload(Request $request): JsonResponse
     {
         $request->validate([
             'media' => 'required|file|image',
@@ -24,14 +24,14 @@ class MediaController
         try {
             $result = $this->imageService->storeImage(
                 $request->file('media'),
-                'uploads/'.Auth::user()->id
+                'uploads/'.(string) $request->user()->id
             );
 
             return response()->json([
                 'success' => true,
                 'data' => $result,
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Upload failed: '.$e->getMessage(),
