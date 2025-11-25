@@ -19,27 +19,22 @@ class MosaicService extends BaseEntityService
     }
 
     /**
-     * Get relationships to load for web context
-     */
-    protected function getWebRelationships(): array
-    {
-        return ['items'];
-    }
-
-    /**
-     * Get relationships to load for API context
-     */
-    protected function getApiRelationships(): array
-    {
-        return ['items'];
-    }
-
-    /**
      * Get a specific mosaic with its items
      */
     public function getMosaicWithItems(string|Mosaic $mosaic, bool $forApi = false): ?Mosaic
     {
-        return $this->getById($mosaic, $forApi);
+        if (is_string($mosaic)) {
+            $mosaic = Mosaic::findOrFail($mosaic);
+        }
+
+        if (! $mosaic instanceof Mosaic) {
+            return null;
+        }
+
+        // Load relationships
+        $mosaic->load('items');
+
+        return $mosaic;
     }
 
     /**

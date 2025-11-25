@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -17,6 +18,7 @@ class Album extends BaseEntity
         'order',
         'cover_image_path',
         'user_id',
+        'published',
     ];
 
     /**
@@ -28,6 +30,7 @@ class Album extends BaseEntity
     {
         return [
             'order' => 'integer',
+            'published' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -42,6 +45,7 @@ class Album extends BaseEntity
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
+            'published' => ['nullable', 'boolean'],
         ];
     }
 
@@ -90,5 +94,13 @@ class Album extends BaseEntity
     public function getImagesCountAttribute(): int
     {
         return $this->images()->count();
+    }
+
+    /**
+     * Scope for published albums
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('published', true);
     }
 }

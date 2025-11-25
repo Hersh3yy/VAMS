@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,7 @@ class AlbumImage extends Model
         'tags',
         'order',
         'properties',
+        'published',
     ];
 
     /**
@@ -39,6 +41,7 @@ class AlbumImage extends Model
         return [
             'properties' => 'json',
             'order' => 'integer',
+            'published' => 'boolean',
         ];
     }
 
@@ -88,5 +91,13 @@ class AlbumImage extends Model
     public function hasVariants(): bool
     {
         return $this->variants()->exists();
+    }
+
+    /**
+     * Scope for published album images
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('published', true);
     }
 }

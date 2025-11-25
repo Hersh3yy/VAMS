@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -79,9 +80,9 @@ class User extends Authenticatable
     /**
      * Get the user's mosaics
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Mosaic>
+     * @return HasMany<Mosaic>
      */
-    public function mosaics(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function mosaics(): HasMany
     {
         return $this->hasMany(Mosaic::class);
     }
@@ -89,9 +90,9 @@ class User extends Authenticatable
     /**
      * Get the user's albums
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Album>
+     * @return HasMany<Album>
      */
-    public function albums(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function albums(): HasMany
     {
         return $this->hasMany(Album::class);
     }
@@ -99,9 +100,9 @@ class User extends Authenticatable
     /**
      * Get the user's entries
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Entry>
+     * @return HasMany<Entry>
      */
-    public function entries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function entries(): HasMany
     {
         return $this->hasMany(Entry::class);
     }
@@ -143,9 +144,9 @@ class User extends Authenticatable
     /**
      * Get the user's activities
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Activity>
+     * @return HasMany<Activity>
      */
-    public function activities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function activities(): HasMany
     {
         return $this->hasMany(Activity::class);
     }

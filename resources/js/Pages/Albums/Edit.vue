@@ -61,6 +61,14 @@
                                 </div>
                             </div>
 
+                            <!-- Published Toggle -->
+                            <Checkbox
+                                id="published"
+                                v-model="form.published"
+                                label="Published"
+                                hint="Published albums are visible in the API"
+                            />
+
                             <!-- Cover Image Selector -->
                             <AlbumCoverImageSelector
                                 :album="Album"
@@ -108,6 +116,7 @@
 <script setup lang="ts">
 import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
 import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
+import Checkbox from '@/Components/atoms/Checkbox.vue';
 import BackLink from '@/Components/Base/BackLink.vue';
 import BaseButton from '@/Components/Base/Button.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -123,7 +132,8 @@ const form = useForm({
     title: props.Album.title,
     description: props.Album.description || '',
     cover_image: null as File | null,
-    selected_cover_image_id: null as string | null
+    selected_cover_image_id: null as string | null,
+    published: props.Album.published !== undefined ? props.Album.published : true
 });
 
 const coverImagePreview = ref<string | null>(null);

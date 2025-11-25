@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Entry;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,39 +20,31 @@ class EntryService extends BaseEntityService
     }
 
     /**
-     * Get relationships to load for web context
-     */
-    protected function getWebRelationships(): array
-    {
-        return [
-            'entryType',
-            'images' => function ($query) {
-                $query->orderBy('field_name')->orderBy('order');
-            },
-        ];
-    }
-
-    /**
-     * Get relationships to load for API context
-     */
-    protected function getApiRelationships(): array
-    {
-        return [
-            'entryType',
-            'images' => function ($query) {
-                $query->orderBy('field_name')->orderBy('order');
-            },
-        ];
-    }
-
-    /**
      * Get all entries for the current user
      */
     public function getAllEntries(bool $forApi = false): Collection
     {
-        return $this->getAll($forApi)
-            ->load('entryType')
-            ->sortBy('order');
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return new Collection;
+        }
+
+        $query = $user->entries();
+
+        if ($forApi) {
+            // For API, only return published entries
+            $query = $query->published();
+        }
+
+        return $query
+            ->with([
+                'entryType',
+                'images' => fn ($query) => $query->orderBy('field_name')->orderBy('order'),
+            ])
+            ->orderBy('order')
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 
     /**
@@ -59,19 +52,7 @@ class EntryService extends BaseEntityService
      */
     public function getAll(bool $forApi = false): Collection
     {
-        $user = Auth::user();
-
-        if (! $user) {
-            return new Collection;
-        }
-
-        $relationships = $forApi ? $this->getApiRelationships() : $this->getWebRelationships();
-
-        return $user->entries()
-            ->with($relationships)
-            ->orderBy('order')
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        return $this->getAllEntries($forApi);
     }
 
     /**
@@ -79,7 +60,26 @@ class EntryService extends BaseEntityService
      */
     public function getEntry(string|Entry $entry, bool $forApi = false): ?Entry
     {
-        return $this->getById($entry, $forApi);
+        if (is_string($entry)) {
+            $entry = Entry::findOrFail($entry);
+        }
+
+        if (! $entry instanceof Entry) {
+            return null;
+        }
+
+        // For API, only return if published (has published_at and status is published)
+        if ($forApi && ($entry->status !== 'published' || ! $entry->published_at)) {
+            return null;
+        }
+
+        // Load relationships
+        $entry->load([
+            'entryType',
+            'images' => fn ($query) => $query->orderBy('field_name')->orderBy('order'),
+        ]);
+
+        return $entry;
     }
 
     /**
@@ -112,7 +112,7 @@ class EntryService extends BaseEntityService
     {
         $user = Auth::user();
 
-        if (! $user) {
+        if (! $user instanceof User) {
             return;
         }
 

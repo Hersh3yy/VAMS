@@ -113,6 +113,16 @@
                             />
                         </template>
 
+                        <!-- Published Toggle (for both images and videos) -->
+                        <div class="border-t border-gray-200 pt-4 dark:border-gray-700">
+                            <Checkbox
+                                id="published"
+                                v-model="formData.published"
+                                label="Published"
+                                hint="Published items are visible in the API"
+                            />
+                        </div>
+
                     </div>
         </template>
 
@@ -128,6 +138,7 @@
 </template>
 
 <script setup>
+import Checkbox from '@/Components/atoms/Checkbox.vue';
 import ImageFormField from '@/Components/molecules/ImageFormField.vue';
 import BaseModal from '@/Components/Base/Modal.vue';
 import BaseButton from '@/Components/Base/Button.vue';
@@ -167,7 +178,8 @@ const formData = ref({
     location: '',
     tags: '',
     author: '',
-    videoUrl: ''
+    videoUrl: '',
+    published: true
 });
 
 const isVideo = computed(() => {
@@ -226,7 +238,8 @@ watch(
                 location: newImage.location || '',
                 tags: newImage.tags || '',
                 author: newImage.author || '',
-                videoUrl: properties?.video_url || newImage.path || ''
+                videoUrl: properties?.video_url || newImage.path || '',
+                published: newImage.published !== undefined ? newImage.published : true
             };
         }
     },
@@ -238,7 +251,8 @@ const saveChanges = async () => {
         const updateData = isVideo.value
             ? {
                   title: formData.value.title,
-                  caption: formData.value.caption
+                  caption: formData.value.caption,
+                  published: formData.value.published
               }
             : {
                   title: formData.value.title,
@@ -247,7 +261,8 @@ const saveChanges = async () => {
                   dateCreated: formData.value.dateCreated,
                   location: formData.value.location,
                   tags: formData.value.tags,
-                  author: formData.value.author
+                  author: formData.value.author,
+                  published: formData.value.published
               };
 
         await router.patch(

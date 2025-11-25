@@ -22,49 +22,68 @@ class AlbumService extends BaseEntityService
     }
 
     /**
-     * Get relationships to load for web context
-     */
-    protected function getWebRelationships(): array
-    {
-        return [
-            'images' => function ($query) {
-                $query->orderBy('order');
-            },
-        ];
-    }
-
-    /**
-     * Get relationships to load for API context
-     */
-    protected function getApiRelationships(): array
-    {
-        return [
-            'images' => function ($query) {
-                $query->orderBy('order');
-            },
-        ];
-    }
-
-    /**
      * Get all albums for the current user or for the API
      */
-    public function getAllAlbums(bool $forApi = false): Collection
+    public function getAll(bool $forApi = false): Collection
     {
-        $albums = $this->getAll($forApi);
-
         if ($forApi) {
-            $albums->loadCount('images');
+            // For API, only return published albums
+            return Album::published()
+                ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
+                ->withCount(['images' => fn ($query) => $query->published()])
+                ->orderBy('updated_at', 'desc')
+                ->get();
         }
 
-        return $albums;
+        // For web, return all user's albums (published and unpublished)
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            return new Collection;
+        }
+
+        return $user->albums()
+            ->with(['images' => fn ($query) => $query->orderBy('order')])
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 
     /**
      * Get a specific album with its images
      */
-    public function getAlbum(string|Album $album, bool $forApi = false): ?Album
+    public function getById(string|Model $entity, bool $forApi = false): ?Model
     {
-        return $this->getById($album, $forApi);
+        $album = $entity instanceof Album ? $entity : (string) $entity;
+
+        if ($forApi) {
+            // For API, only return if published
+            if (is_string($album)) {
+                $album = Album::published()->find($album);
+            } elseif ($album instanceof Album && ! $album->published) {
+                return null;
+            }
+
+            if (! $album) {
+                return null;
+            }
+
+            // Load relationships - only published images for API
+            $album->load(['images' => fn ($query) => $query->published()->orderBy('order')]);
+
+            return $album;
+        }
+
+        // For web, return regardless of published status
+        if (is_string($album)) {
+            $album = Album::findOrFail($album);
+        }
+
+        if (! $album instanceof Album) {
+            return null;
+        }
+
+        $album->load(['images' => fn ($query) => $query->orderBy('order')]);
+
+        return $album;
     }
 
     /**
@@ -79,6 +98,7 @@ class AlbumService extends BaseEntityService
             'cover_image_path' => $album->cover_image_path,
             'images_count' => $album->images_count ?? $album->images->count(),
             'user_id' => $album->user_id,
+            'published' => $album->published,
             'created_at' => $album->created_at?->toISOString(),
             'updated_at' => $album->updated_at?->toISOString(),
         ];
@@ -103,6 +123,7 @@ class AlbumService extends BaseEntityService
             'webp_url' => $properties['webp_url'] ?? null,
             'caption' => $image->caption,
             'order' => $image->order,
+            'published' => $image->published,
             'properties' => $properties,
             'created_at' => $image->created_at?->toISOString(),
             'updated_at' => $image->updated_at?->toISOString(),
@@ -128,30 +149,24 @@ class AlbumService extends BaseEntityService
         return $album->images()
             ->orderBy('order')
             ->get()
-            ->map(function (AlbumImage $image) {
-                $properties = is_string($image->properties) ?
-                    json_decode($image->properties, true) :
-                    ($image->properties ?? []);
-
-                return [
+            ->map(fn (AlbumImage $image) => [
+                'id' => $image->id,
+                'created_at' => $image->created_at?->toISOString(),
+                'updated_at' => $image->updated_at?->toISOString(),
+                'Name' => $image->title ?? 'Untitled',
+                'Order' => $image->order ?? 0,
+                'Caption' => $image->caption ?? '',
+                'Year' => (is_string($image->properties) ? json_decode($image->properties, true) : ($image->properties ?? []))['year'] ?? null,
+                'Image' => [
                     'id' => $image->id,
-                    'created_at' => $image->created_at?->toISOString(),
-                    'updated_at' => $image->updated_at?->toISOString(),
-                    'Name' => $image->title ?? 'Untitled',
-                    'Order' => $image->order ?? 0,
-                    'Caption' => $image->caption ?? '',
-                    'Year' => $properties['year'] ?? null,
-                    'Image' => [
-                        'id' => $image->id,
-                        'url' => $image->path,
-                        'formats' => [
-                            'thumbnail' => [
-                                'url' => $image->path,
-                            ],
+                    'url' => $image->path,
+                    'formats' => [
+                        'thumbnail' => [
+                            'url' => $image->path,
                         ],
                     ],
-                ];
-            })
+                ],
+            ])
             ->toArray();
     }
 

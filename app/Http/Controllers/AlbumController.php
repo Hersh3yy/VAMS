@@ -169,6 +169,11 @@ class AlbumController extends BaseEntityController
             'description' => $validated['description'] ?? null,
         ];
 
+        // Handle published field if provided
+        if (isset($validated['published'])) {
+            $updateData['published'] = (bool) $validated['published'];
+        }
+
         $album->update($updateData);
 
         if (! empty($validated['selected_cover_image_id'])) {

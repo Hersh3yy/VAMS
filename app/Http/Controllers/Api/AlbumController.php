@@ -30,12 +30,12 @@ class AlbumController extends BaseApiController
         // Check if we should include images
         $withImages = $request->boolean('with_images', false);
 
-        // Build query with count
-        $query = $user->albums()->withCount('images');
+        // Build query with count - only published albums for API
+        $query = $user->albums()->published()->withCount(['images' => fn ($query) => $query->published()]);
 
-        // Optionally load images if requested
+        // Optionally load images if requested (only published)
         if ($withImages) {
-            $query->with('images');
+            $query->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
         }
 
         $albums = $query->get();
@@ -65,7 +65,7 @@ class AlbumController extends BaseApiController
         // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        $album = $user->albums()->with('images')->find($id);
+        $album = $user->albums()->published()->with(['images' => fn ($query) => $query->published()->orderBy('order')])->find($id);
         if (! $album) {
             return $this->notFound('Album not found');
         }
@@ -84,7 +84,7 @@ class AlbumController extends BaseApiController
         // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        $album = $user->albums()->where('title', $title)->with('images')->first();
+        $album = $user->albums()->published()->where('title', $title)->with(['images' => fn ($query) => $query->published()->orderBy('order')])->first();
         if (! $album) {
             return $this->notFound('Album not found');
         }

@@ -42,11 +42,18 @@ class ImageService
      */
     private function storeUploadedFile(UploadedFile $file, string $folder, bool $convertToWebp = false): array
     {
+        $originalSize = round($file->getSize() / 1024 / 1024, 2);
+        $fileName = $file->getClientOriginalName();
+
+        Log::info("📤 Storing image: {$fileName} ({$originalSize}MB) to folder: {$folder}");
+
         // Store the file in DigitalOcean Spaces
         $path = $file->store($folder, 'spaces');
 
         // Generate the full URL
         $url = $this->getPublicUrl($path);
+
+        Log::info("✅ Image stored successfully: {$fileName} → {$url}");
 
         $result = [
             'path' => $path,
@@ -55,10 +62,15 @@ class ImageService
 
         // Convert to WebP if requested
         if ($convertToWebp) {
+            Log::info("🔄 Converting to WebP: {$fileName}");
             $webpResult = $this->convertToWebp($file, $folder);
             if ($webpResult) {
+                $webpSize = round(Storage::disk('spaces')->size($webpResult['path']) / 1024 / 1024, 2);
+                Log::info("✅ WebP conversion successful: {$fileName} → {$webpResult['url']} ({$webpSize}MB)");
                 $result['webp_path'] = $webpResult['path'];
                 $result['webp_url'] = $webpResult['url'];
+            } else {
+                Log::warning("⚠️ WebP conversion failed or skipped: {$fileName}");
             }
         }
 
@@ -125,9 +137,14 @@ class ImageService
     private function convertToWebp(UploadedFile $file, string $folder): ?array
     {
         try {
+            $fileName = $file->getClientOriginalName();
+            $originalSize = round($file->getSize() / 1024 / 1024, 2);
+            $mime = $file->getMimeType();
+
+            Log::debug("🔄 Starting WebP conversion: {$fileName} ({$mime}, {$originalSize}MB)");
+
             // Convert the image to WebP using GD
             $image = null;
-            $mime = $file->getMimeType();
 
             if ($mime === 'image/jpeg' || $mime === 'image/jpg') {
                 $image = imagecreatefromjpeg($file->getPathname());
@@ -139,10 +156,14 @@ class ImageService
             } elseif ($mime === 'image/gif') {
                 $image = imagecreatefromgif($file->getPathname());
             } else {
+                Log::debug("⏭️ WebP conversion skipped: {$fileName} (unsupported format: {$mime})");
+
                 return null; // Unsupported format
             }
 
             if (! $image) {
+                Log::warning("⚠️ Failed to create image resource: {$fileName}");
+
                 return null;
             }
 
@@ -153,6 +174,11 @@ class ImageService
             // Save as WebP
             imagewebp($image, $tempPath, 80);
             imagedestroy($image);
+
+            $webpSize = round(filesize($tempPath) / 1024 / 1024, 2);
+            $reduction = round((1 - ($webpSize / $originalSize)) * 100, 1);
+
+            Log::debug("📊 WebP conversion stats: {$fileName} → {$originalSize}MB → {$webpSize}MB ({$reduction}% reduction)");
 
             // Upload to storage
             $webpPath = "$folder/$webpFilename";
@@ -168,7 +194,9 @@ class ImageService
                 'url' => $this->getPublicUrl($webpPath),
             ];
         } catch (Exception $e) {
-            Log::error("WebP conversion failed: {$e->getMessage()}");
+            Log::error("❌ WebP conversion failed: {$file->getClientOriginalName()} - {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return null;
         }
@@ -183,6 +211,11 @@ class ImageService
     private function convertToWebpFromPath(string $path, string $folder): ?array
     {
         try {
+            $fileName = basename($path);
+            $originalSize = round(filesize($path) / 1024 / 1024, 2);
+
+            Log::debug("🔄 Starting WebP conversion from path: {$fileName} ({$originalSize}MB)");
+
             // Convert the image to WebP using GD
             $image = null;
             $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
@@ -197,10 +230,14 @@ class ImageService
             } elseif ($extension === 'gif') {
                 $image = imagecreatefromgif($path);
             } else {
+                Log::debug("⏭️ WebP conversion skipped: {$fileName} (unsupported format: {$extension})");
+
                 return null; // Unsupported format
             }
 
             if (! $image) {
+                Log::warning("⚠️ Failed to create image resource from path: {$fileName}");
+
                 return null;
             }
 
@@ -211,6 +248,11 @@ class ImageService
             // Save as WebP
             imagewebp($image, $tempPath, 80);
             imagedestroy($image);
+
+            $webpSize = round(filesize($tempPath) / 1024 / 1024, 2);
+            $reduction = round((1 - ($webpSize / $originalSize)) * 100, 1);
+
+            Log::debug("📊 WebP conversion stats: {$fileName} → {$originalSize}MB → {$webpSize}MB ({$reduction}% reduction)");
 
             // Upload to storage
             $webpPath = "$folder/$webpFilename";
@@ -226,7 +268,9 @@ class ImageService
                 'url' => $this->getPublicUrl($webpPath),
             ];
         } catch (Exception $e) {
-            Log::error("WebP conversion failed: {$e->getMessage()}");
+            Log::error("❌ WebP conversion failed from path: {$path} - {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return null;
         }

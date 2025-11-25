@@ -92,6 +92,7 @@ final class AlbumImageController
                     'id' => Str::uuid(),
                     'path' => $result['url'],
                     'order' => $index,
+                    'published' => true,
                 ]);
                 $uploadedImages[] = $albumImage;
                 $fileNames[] = $image->getClientOriginalName().' ('.round($image->getSize() / 1024 / 1024, 2).' MB)';
@@ -99,17 +100,24 @@ final class AlbumImageController
 
             Log::info('✅ Uploaded '.count($uploadedImages).' image(s): '.implode(', ', $fileNames));
 
+            // Reload album with images for response
+            $album = $this->albumService->getById($album, false);
+
+            Log::info('📸 Album after upload has '.($album->images->count() ?? 0).' images');
+
             // Check if this is an AJAX request (for individual uploads)
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Image uploaded successfully',
                     'images' => $uploadedImages,
+                    'album' => $album,
                 ]);
             }
 
             // Return Inertia response with updated album data
             return back()->with([
+                'Album' => $album,
                 'message' => 'Images uploaded successfully',
                 'images' => $uploadedImages,
             ]);
@@ -226,6 +234,7 @@ final class AlbumImageController
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
+            'published' => 'nullable|boolean',
         ]);
 
         // The mutators in the model will handle mapping to the appropriate columns
@@ -238,6 +247,11 @@ final class AlbumImageController
             );
 
             $validated['path'] = $result['url'];
+        }
+
+        // Handle published field if provided
+        if (isset($validated['published'])) {
+            $validated['published'] = (bool) $validated['published'];
         }
 
         $image->update($validated);
@@ -310,7 +324,7 @@ final class AlbumImageController
             $image->delete();
 
             // Reload the album with its updated images
-            $album = $this->albumService->getAlbum($album, false);
+            $album = $this->albumService->getById($album, false);
 
             return back()->with([
                 'Album' => $album,
@@ -376,7 +390,7 @@ final class AlbumImageController
         });
 
         // Reload the album with its updated images
-        $album = $this->albumService->getAlbum($albumId, false);
+        $album = $this->albumService->getById($albumId, false);
 
         return back()->with([
             'Album' => $album,
@@ -427,10 +441,11 @@ final class AlbumImageController
                 'caption' => $request->caption,
                 'properties' => json_encode($properties),
                 'order' => 0,
+                'published' => true,
             ]);
 
             // Reload the album with its updated images
-            $album = $this->albumService->getAlbum($album, false);
+            $album = $this->albumService->getById($album, false);
 
             return back()->with([
                 'Album' => $album,

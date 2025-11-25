@@ -5,6 +5,7 @@ export interface Album {
     created_at: string;
     updated_at: string;
     cover_image_path?: string;
+    published?: boolean;
     images?: AlbumImage[];
 }
 
@@ -26,6 +27,7 @@ export interface AlbumImage {
         [key: string]: any;
     } | null;
     order: number;
+    published?: boolean;
     created_at: string;
     updated_at: string;
 }

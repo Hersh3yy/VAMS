@@ -22,32 +22,20 @@ abstract class BaseEntityService implements EntityServiceContract
     abstract protected function getEntityModelClass(): string;
 
     /**
-     * Get relationships to load for web context
-     */
-    protected function getWebRelationships(): array
-    {
-        return [];
-    }
-
-    /**
-     * Get relationships to load for API context
-     */
-    protected function getApiRelationships(): array
-    {
-        return [];
-    }
-
-    /**
      * Get all entities for the current user or API context
      */
     public function getAll(bool $forApi = false): Collection
     {
         $entityModelClass = $this->getEntityModelClass();
-        $relationships = $forApi ? $this->getApiRelationships() : $this->getWebRelationships();
 
         if ($forApi) {
-            // For API, we return all published entities
-            return $entityModelClass::with($relationships)
+            // For API, we return all published entities (if they have published scope)
+            $query = $entityModelClass::query();
+            if (method_exists($entityModelClass, 'scopePublished')) {
+                $query = $query->published();
+            }
+
+            return $query
                 ->orderBy('updated_at', 'desc')
                 ->get();
         }
@@ -60,7 +48,6 @@ abstract class BaseEntityService implements EntityServiceContract
         }
 
         return $user->{$this->getEntityNamePlural()}()
-            ->with($relationships)
             ->orderBy('updated_at', 'desc')
             ->get();
     }
@@ -81,11 +68,9 @@ abstract class BaseEntityService implements EntityServiceContract
                 return null;
             }
 
-            $relationships = $forApi ? $this->getApiRelationships() : $this->getWebRelationships();
-
-            // Load relationships
-            if (! empty($relationships)) {
-                $entity->load($relationships);
+            // For API, check if entity is published (if it has published property)
+            if ($forApi && property_exists($entity, 'published') && ! $entity->published) {
+                return null;
             }
 
             return $entity;
