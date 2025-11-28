@@ -9,7 +9,6 @@ use App\Services\AlbumService;
 use App\Services\ImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,6 +35,14 @@ class AlbumController extends BaseEntityController
     protected function getFormRequestClass(): string
     {
         return \App\Http\Requests\StoreAlbumRequest::class;
+    }
+
+    /**
+     * Get the form request class for updating this entity
+     */
+    protected function getUpdateFormRequestClass(): string
+    {
+        return \App\Http\Requests\UpdateAlbumRequest::class;
     }
 
     /**
@@ -133,35 +140,15 @@ class AlbumController extends BaseEntityController
      */
     public function update(Request $request, $album): RedirectResponse
     {
-        Log::info('AlbumController@update - Incoming request data:', $request->all());
-
-        // Debug: Check what type $album is
-        \Log::info('AlbumController@update - Parameter check:', [
-            'album_type' => gettype($album),
-            'album_value' => $album,
-            'is_object' => is_object($album),
-            'is_string' => is_string($album),
-        ]);
-
-        // If $album is a string (ID), resolve it to a model
-        if (is_string($album)) {
-            $album = \App\Models\Album::findOrFail($album);
-        }
+        // Resolve album to model instance
+        $albumModel = $this->resolveEntity($album);
 
         // Check if user owns this album
-        $this->authorizeOwnership($album);
+        $this->authorizeOwnership($albumModel);
 
-        $formRequestClass = $this->getFormRequestClass();
-        $formRequest = new $formRequestClass;
-        $rules = $formRequest->rules();
-
-        // Add additional validation rules specific to album updates
-        $rules['cover_image'] = ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'];
-        $rules['selected_cover_image_id'] = ['nullable', 'exists:album_images,id'];
-
-        $validated = $request->validate($rules);
-
-        Log::info('AlbumController@update - Validated data:', $validated);
+        // Use UpdateAlbumRequest for validation
+        $formRequestClass = $this->getUpdateFormRequestClass();
+        $validated = $request->validate((new $formRequestClass)->rules());
 
         // Update album basic info
         $updateData = [
@@ -174,32 +161,48 @@ class AlbumController extends BaseEntityController
             $updateData['published'] = (bool) $validated['published'];
         }
 
-        $album->update($updateData);
+        $albumModel->update($updateData);
 
+        // Handle cover image: selected image takes precedence over uploaded file
         if (! empty($validated['selected_cover_image_id'])) {
-            $selectedImage = $album->images()->where('id', $validated['selected_cover_image_id'])->first();
+            $selectedImage = $albumModel->images()->where('id', $validated['selected_cover_image_id'])->first();
             if ($selectedImage) {
-                $album->update([
-                    'cover_image_path' => $selectedImage->path,
-                ]);
+                // Get thumbnail URL for videos, regular path for images
+                $coverPath = $this->getImagePathForCover($selectedImage);
+                $albumModel->update(['cover_image_path' => $coverPath]);
             }
         } elseif ($request->hasFile('cover_image')) {
             $result = $this->imageService->storeImage(
                 $request->file('cover_image'),
-                "albums/{$album->id}/cover"
+                "albums/{$albumModel->id}/cover"
             );
 
-            $album->update([
-                'cover_image_path' => $result['url'],
-            ]);
+            $albumModel->update(['cover_image_path' => $result['url']]);
         }
-
-        Log::info('AlbumController@update - Album updated successfully');
 
         return $this->redirectWithSuccess(
             'albums.show',
-            $album,
+            $albumModel,
             'Album updated successfully'
         );
+    }
+
+    /**
+     * Get the appropriate image path for cover (handles video thumbnails)
+     */
+    private function getImagePathForCover($image): string
+    {
+        if ($image->properties) {
+            $properties = is_string($image->properties)
+                ? json_decode($image->properties, true)
+                : $image->properties;
+
+            // Use thumbnail URL for videos if available
+            if (isset($properties['thumbnail_url'])) {
+                return $properties['thumbnail_url'];
+            }
+        }
+
+        return $image->path;
     }
 }

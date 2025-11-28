@@ -70,21 +70,16 @@
                             />
 
                             <!-- Cover Image Selector -->
-                            <AlbumCoverImageSelector
-                                :album="Album"
-                                :cover-image-preview="coverImagePreview"
-                                :error="form.errors.cover_image"
+                            <CoverImageSelector
+                                :current-cover-url="Album.cover_image_path"
+                                :album-images="Album.images"
+                                :selected-image-id="form.selected_cover_image_id"
+                                :upload-preview="coverImagePreview"
+                                :error="form.errors.cover_image || form.errors.selected_cover_image_id"
                                 @file-change="handleFileChange"
-                            />
-
-                            <!-- Album Image Grid -->
-                            <AlbumImageGrid
-                                :album="Album"
-                                :selected-cover-image-id="form.selected_cover_image_id"
-                                :show-selector="showImageSelector"
                                 @select-image="selectCoverImage"
                                 @clear-selection="clearSelectedCoverImage"
-                                @toggle-selector="showImageSelector = !showImageSelector"
+                                @clear-upload="clearUpload"
                             />
 
                             <!-- Form Actions -->
@@ -114,13 +109,12 @@
 </template>
 
 <script setup lang="ts">
-import AlbumCoverImageSelector from '@/Components/albums/AlbumCoverImageSelector.vue';
-import AlbumImageGrid from '@/Components/albums/AlbumImageGrid.vue';
+import CoverImageSelector from '@/Components/albums/CoverImageSelector.vue';
 import Checkbox from '@/Components/atoms/Checkbox.vue';
 import BackLink from '@/Components/Base/BackLink.vue';
 import BaseButton from '@/Components/Base/Button.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import type { Album } from '@/types/album';
+import type { Album, AlbumImage } from '@/types/album';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -137,12 +131,9 @@ const form = useForm({
 });
 
 const coverImagePreview = ref<string | null>(null);
-const showImageSelector = ref(false);
 
-const selectCoverImage = (image: any) => {
+const selectCoverImage = (image: AlbumImage) => {
     form.selected_cover_image_id = image.id;
-    showImageSelector.value = false;
-
     // Clear any uploaded cover image when selecting from album
     form.cover_image = null;
     coverImagePreview.value = null;
@@ -152,11 +143,23 @@ const clearSelectedCoverImage = () => {
     form.selected_cover_image_id = null;
 };
 
+const clearUpload = () => {
+    form.cover_image = null;
+    coverImagePreview.value = null;
+    // Reset file input
+    const fileInput = document.getElementById('cover_image') as HTMLInputElement;
+    if (fileInput) {
+        fileInput.value = '';
+    }
+};
+
 const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
     if (file) {
         form.cover_image = file;
+        // Clear selection when uploading
+        form.selected_cover_image_id = null;
         // Create preview URL
         const reader = new FileReader();
         reader.onload = (e: ProgressEvent<FileReader>) => {
@@ -179,6 +182,7 @@ const submit = () => {
             // Reset the file input and preview
             form.cover_image = null;
             coverImagePreview.value = null;
+            form.selected_cover_image_id = null;
         },
         onError: errors => {
             console.error('Form submission errors:', errors);

@@ -242,22 +242,42 @@ const props = defineProps<Props>()
 const emit = defineEmits(['cancel', 'submit', 'delete'])
 
 // Initialize form content structure from field_config
+// Merges existing entry content with field_config to ensure all fields are present
 const initializeContent = () => {
     const content: any = {}
+    const existingContent = props.entry?.content || {}
     
-    if (props.entry?.content) {
-        return props.entry.content
-    }
-    
+    // First, initialize all fields from field_config with default values
     props.entryType.field_config.forEach((field: any) => {
         if (field.type === 'repeatable' || field.type === 'image_collection') {
-            content[field.name] = []
+            // Use existing array if it exists, otherwise initialize empty array
+            content[field.name] = Array.isArray(existingContent[field.name]) 
+                ? existingContent[field.name] 
+                : []
         } else if (field.type === 'object') {
-            content[field.name] = {}
+            // Merge existing object with field defaults
+            const existingObject = existingContent[field.name] || {}
+            const defaultObject: any = {}
+            
+            // Initialize nested fields from field_config
+            field.fields?.forEach((nestedField: any) => {
+                defaultObject[nestedField.name] = existingObject[nestedField.name] ?? ''
+            })
+            
+            content[field.name] = { ...defaultObject, ...existingObject }
         } else if (field.type === 'checkbox') {
-            content[field.name] = false
+            content[field.name] = existingContent[field.name] ?? false
         } else {
-            content[field.name] = ''
+            // Use existing value if present, otherwise default to empty string
+            content[field.name] = existingContent[field.name] ?? ''
+        }
+    })
+    
+    // Preserve any additional fields that might exist in entry but not in field_config
+    // (for backward compatibility)
+    Object.keys(existingContent).forEach(key => {
+        if (!content.hasOwnProperty(key)) {
+            content[key] = existingContent[key]
         }
     })
     
