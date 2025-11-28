@@ -78,13 +78,37 @@ class AlbumController extends BaseApiController
 
     /**
      * Get specific album by title (API key)
+     *
+     * Supports:
+     * - Exact title match: /albums/by-title/Live%20Music (URL-encoded)
+     * - Exact title match: /albums/by-title/Live Music (Laravel auto-decodes)
+     * - Case-insensitive matching for better UX
      */
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        $album = $user->albums()->published()->where('title', $title)->with(['images' => fn ($query) => $query->published()->orderBy('order')])->first();
+        // Laravel automatically URL-decodes route parameters, but we'll ensure it's decoded
+        // This handles cases like "Live%20Music" -> "Live Music"
+        $decodedTitle = urldecode($title);
+
+        // Try exact match first (case-sensitive for precision)
+        $album = $user->albums()
+            ->published()
+            ->where('title', $decodedTitle)
+            ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
+            ->first();
+
+        // If no exact match, try case-insensitive match as fallback
+        if (! $album) {
+            $album = $user->albums()
+                ->published()
+                ->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])
+                ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
+                ->first();
+        }
+
         if (! $album) {
             return $this->notFound('Album not found');
         }
