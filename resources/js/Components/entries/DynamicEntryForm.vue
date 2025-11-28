@@ -41,6 +41,27 @@
                 :error="(form.errors as any)?.[`content.${field.name}`]"
             />
 
+            <!-- Checkbox Fields -->
+            <div v-else-if="field.type === 'checkbox'" class="flex items-center">
+                <input
+                    :id="field.name"
+                    type="checkbox"
+                    :checked="form.content[field.name] || false"
+                    @change="form.content[field.name] = ($event.target as HTMLInputElement).checked"
+                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                    :for="field.name"
+                    class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    {{ field.label }}
+                    <span v-if="field.required" class="text-red-500">*</span>
+                </label>
+                <p v-if="(form.errors as any)?.[`content.${field.name}`]" class="ml-2 text-sm text-red-600">
+                    {{ (form.errors as any)?.[`content.${field.name}`] }}
+                </p>
+            </div>
+
             <!-- Repeatable Sections -->
             <div v-else-if="field.type === 'repeatable'" class="space-y-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -245,12 +266,26 @@ const emit = defineEmits(['cancel', 'submit', 'delete'])
 // Merges existing entry content with field_config to ensure all fields are present
 const initializeContent = () => {
     const content: any = {}
-    const existingContent = props.entry?.content || {}
+    
+    // Normalize entry content - handle both object and string cases
+    let existingContent: any = {}
+    if (props.entry?.content) {
+        if (typeof props.entry.content === 'string') {
+            try {
+                existingContent = JSON.parse(props.entry.content)
+            } catch {
+                // If it's not valid JSON, treat as simple string content
+                existingContent = { statement: props.entry.content }
+            }
+        } else if (typeof props.entry.content === 'object') {
+            existingContent = props.entry.content
+        }
+    }
     
     // First, initialize all fields from field_config with default values
     props.entryType.field_config.forEach((field: any) => {
         if (field.type === 'repeatable' || field.type === 'image_collection') {
-            // Use existing array if it exists, otherwise initialize empty array
+            // Use existing array if it exists and is valid, otherwise initialize empty array
             content[field.name] = Array.isArray(existingContent[field.name]) 
                 ? existingContent[field.name] 
                 : []
@@ -293,6 +328,41 @@ const form = useForm({
 
 const collapsedObjects = reactive<Record<string, boolean>>({})
 const uploading = ref(false)
+const lastEntryId = ref<string | null>(props.entry?.id || null)
+const isInitialized = ref(false)
+
+// Initialize form on mount
+if (props.entry) {
+    form.title = props.entry.title || ''
+    form.status = props.entry.status || 'published'
+    form.content = initializeContent()
+    isInitialized.value = true
+}
+
+// Watch for entry changes and re-initialize form content
+// Only re-initialize if entry ID changed (different entry)
+watch(() => props.entry, (newEntry, oldEntry) => {
+    if (!newEntry) {
+        return
+    }
+
+    // Only re-initialize if entry ID changed (different entry)
+    // This prevents re-initialization after save when the same entry is being edited
+    if (newEntry.id !== lastEntryId.value) {
+        form.title = newEntry.title || ''
+        form.status = newEntry.status || 'published'
+        form.content = initializeContent()
+        lastEntryId.value = newEntry.id
+        isInitialized.value = true
+    } else if (!isInitialized.value) {
+        // If same entry but not initialized yet (e.g., switching from view to edit)
+        form.title = newEntry.title || ''
+        form.status = newEntry.status || 'published'
+        form.content = initializeContent()
+        isInitialized.value = true
+    }
+    // Otherwise, keep the current form state (user's edits are preserved)
+})
 
 const addRepeatableItem = (field: any) => {
     const newItem: any = {}
@@ -320,6 +390,10 @@ const toggleObjectCollapse = (fieldName: string) => {
 }
 
 const handleSubmit = () => {
+    // Update lastEntryId to prevent re-initialization after save
+    if (props.entry?.id) {
+        lastEntryId.value = props.entry.id
+    }
     emit('submit', form)
 }
 </script>

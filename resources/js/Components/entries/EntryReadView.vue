@@ -30,7 +30,23 @@ const displayFields = computed(() => {
 })
 
 const getFieldValue = (fieldName: string) => {
-    return props.entry.content?.[fieldName] || null
+    // Normalize content - handle both object and string cases
+    let content: any = {}
+    if (props.entry?.content) {
+        if (typeof props.entry.content === 'string') {
+            try {
+                content = JSON.parse(props.entry.content)
+            } catch {
+                // If it's not valid JSON, treat as simple string content
+                content = { statement: props.entry.content }
+            }
+        } else if (typeof props.entry.content === 'object') {
+            content = props.entry.content
+        }
+    }
+    
+    // Return the field value, or null if it doesn't exist
+    return content[fieldName] ?? null
 }
 
 const formatDate = (dateString: string): string => {

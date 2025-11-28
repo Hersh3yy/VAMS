@@ -4,9 +4,33 @@
             {{ label }}
         </label>
 
+        <!-- Checkbox Display -->
+        <div v-if="type === 'checkbox'" class="flex items-center">
+            <div
+                class="flex h-5 w-5 items-center justify-center rounded border-2"
+                :class="value ? 'border-green-500 bg-green-500' : 'border-gray-300 dark:border-gray-600'"
+            >
+                <svg
+                    v-if="value"
+                    class="h-3 w-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                    />
+                </svg>
+            </div>
+            <span class="ml-2 text-sm text-gray-900 dark:text-gray-100">
+                {{ value ? 'Yes' : 'No' }}
+            </span>
+        </div>
+
         <!-- Text/Textarea Display -->
         <div 
-            v-if="type === 'text' || type === 'textarea'"
+            v-else-if="type === 'text' || type === 'textarea'"
             class="text-sm text-gray-900 dark:text-gray-100"
             :class="{ 'whitespace-pre-wrap': type === 'textarea' }"
         >
@@ -75,8 +99,13 @@
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="!value || (Array.isArray(value) && value.length === 0)" class="text-sm text-gray-500">
+        <div v-else-if="value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)" class="text-sm text-gray-500 dark:text-gray-400">
             No data
+        </div>
+
+        <!-- Fallback for unknown types -->
+        <div v-else class="text-sm text-gray-900 dark:text-gray-100">
+            {{ JSON.stringify(value) }}
         </div>
     </div>
 </template>
@@ -85,7 +114,7 @@
 interface Props {
     label: string
     value: any
-    type: 'text' | 'textarea' | 'repeatable' | 'image_collection' | 'object'
+    type: 'text' | 'textarea' | 'repeatable' | 'image_collection' | 'object' | 'checkbox'
 }
 
 defineProps<Props>()

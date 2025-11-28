@@ -201,6 +201,11 @@ const handleEntryUpdate = (updatedEntry: Entry) => {
     if (index !== -1) {
         localEntries.value[index] = { ...updatedEntry, order: localEntries.value[index].order }
     }
+    
+    // Update selectedEntry if it's the same entry (so modal shows updated data)
+    if (selectedEntry.value?.id === updatedEntry.id) {
+        selectedEntry.value = { ...updatedEntry, order: selectedEntry.value.order }
+    }
 }
 
 const deleteEntry = (id: string) => {

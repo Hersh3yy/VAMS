@@ -181,13 +181,17 @@ const handleDynamicSubmit = (dynamicForm: any) => {
     dynamicForm.patch(route('entries.update', props.entry!.id), {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {
-            emit('update', {
+        onSuccess: (page: any) => {
+            // Update the entry with the saved data
+            const updatedEntry = {
                 ...props.entry!,
                 title: dynamicForm.title,
                 content: dynamicForm.content,
-                status: dynamicForm.status
-            })
+                status: dynamicForm.status,
+                updated_at: new Date().toISOString()
+            }
+            
+            emit('update', updatedEntry)
             isEditing.value = false
             saving.value = false
         },
