@@ -42,24 +42,13 @@
             />
 
             <!-- Checkbox Fields -->
-            <div v-else-if="field.type === 'checkbox'" class="flex items-center">
-                <input
+            <div v-else-if="field.type === 'checkbox'" class="space-y-1">
+                <Checkbox
                     :id="field.name"
-                    type="checkbox"
-                    :checked="form.content[field.name] || false"
-                    @change="form.content[field.name] = ($event.target as HTMLInputElement).checked"
-                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                    v-model="form.content[field.name]"
+                    :label="field.label + (field.required ? ' *' : '')"
                 />
-                <label
-                    :for="field.name"
-                    class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    {{ field.label }}
-                    <span v-if="field.required" class="text-red-500">*</span>
-                </label>
-                <p v-if="(form.errors as any)?.[`content.${field.name}`]" class="ml-2 text-sm text-red-600">
-                    {{ (form.errors as any)?.[`content.${field.name}`] }}
-                </p>
+                <BaseErrorMessage :error="(form.errors as any)?.[`content.${field.name}`]" />
             </div>
 
             <!-- Repeatable Sections -->
@@ -247,6 +236,8 @@ import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import Sortable from 'sortablejs'
 import axios from 'axios'
 import BaseButton from '@/Components/Base/Button.vue'
+import BaseErrorMessage from '@/Components/Base/ErrorMessage.vue'
+import Checkbox from '@/Components/atoms/Checkbox.vue'
 import FormField from '@/Components/molecules/FormField.vue'
 import ImageCollectionManager from '@/Components/molecules/ImageCollectionManager.vue'
 

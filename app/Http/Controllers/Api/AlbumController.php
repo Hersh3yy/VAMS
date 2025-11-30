@@ -86,28 +86,13 @@ class AlbumController extends BaseApiController
      */
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        // Laravel automatically URL-decodes route parameters, but we'll ensure it's decoded
-        // This handles cases like "Live%20Music" -> "Live Music"
-        $decodedTitle = urldecode($title);
-
-        // Try exact match first (case-sensitive for precision)
-        $album = $user->albums()
+        $query = $user->albums()
             ->published()
-            ->where('title', $decodedTitle)
-            ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
-            ->first();
+            ->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
 
-        // If no exact match, try case-insensitive match as fallback
-        if (! $album) {
-            $album = $user->albums()
-                ->published()
-                ->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])
-                ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
-                ->first();
-        }
+        $album = $this->findByTitle($title, $query);
 
         if (! $album) {
             return $this->notFound('Album not found');

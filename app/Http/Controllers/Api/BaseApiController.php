@@ -108,4 +108,27 @@ abstract class BaseApiController
     {
         return Auth::user();
     }
+
+    /**
+     * Find an entity by title with case-insensitive fallback
+     *
+     * @param string $title The title to search for (will be URL-decoded)
+     * @param \Illuminate\Database\Eloquent\Builder $query The query builder to search on
+     * @param bool $caseSensitive Whether to only match exact case (default: false)
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    protected function findByTitle(string $title, $query, bool $caseSensitive = false): ?\Illuminate\Database\Eloquent\Model
+    {
+        $decodedTitle = urldecode($title);
+
+        // Try exact match first
+        $entity = $query->where('title', $decodedTitle)->first();
+
+        // If no exact match and case-insensitive is enabled, try case-insensitive match
+        if (! $entity && ! $caseSensitive) {
+            $entity = $query->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])->first();
+        }
+
+        return $entity;
+    }
 }

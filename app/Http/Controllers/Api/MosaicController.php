@@ -63,24 +63,9 @@ class MosaicController extends BaseApiController
      */
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        // Laravel automatically URL-decodes route parameters, but we'll ensure it's decoded
-        // This handles cases like "Live%20Music" -> "Live Music"
-        $decodedTitle = urldecode($title);
-
-        // Try exact match first (case-sensitive for precision)
-        $mosaic = $user->mosaics()
-            ->where('title', $decodedTitle)
-            ->first();
-
-        // If no exact match, try case-insensitive match as fallback
-        if (! $mosaic) {
-            $mosaic = $user->mosaics()
-                ->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])
-                ->first();
-        }
+        $mosaic = $this->findByTitle($title, $user->mosaics());
 
         if (! $mosaic) {
             return $this->notFound('Mosaic not found');

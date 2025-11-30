@@ -112,26 +112,15 @@ class Activity extends Model
     }
 
     // Static helper methods
+    // @deprecated Use ActivityService instead
     public static function getActivityTypes(): array
     {
-        return collect(ActivityType::cases())
-            ->mapWithKeys(fn (ActivityType $type) => [$type->value => $type->label()])
-            ->toArray();
+        return app(\App\Services\ActivityService::class)->getActivityTypes();
     }
 
+    // @deprecated Use ActivityService instead
     public static function getActivityStats(User $user, int $days = 30): array
     {
-        $activities = self::byUser($user)
-            ->recent($days)
-            ->get();
-
-        return [
-            'total' => $activities->count(),
-            'by_type' => $activities->groupBy('type')->map->count(),
-            'by_subject' => $activities->groupBy('subject_type')->map->count(),
-            'recent_days' => $activities->groupBy(function ($activity) {
-                return $activity->created_at->format('Y-m-d');
-            })->map->count(),
-        ];
+        return app(\App\Services\ActivityService::class)->getActivityStats($user, $days);
     }
 }

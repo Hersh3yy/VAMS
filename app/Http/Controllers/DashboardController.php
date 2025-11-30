@@ -105,19 +105,11 @@ class DashboardController
             }),
         ])->sortByDesc('created_at')->take(6)->values();
 
-        // Get recent activities
-        $recentActivities = Activity::where('user_id', $user->id)
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'id' => $activity->id,
-                    'type' => $activity->type,
-                    'description' => $activity->description,
-                    'created_at' => $activity->created_at->diffForHumans(),
-                ];
-            });
+        // Get recent activities using ActivityService
+        $activityService = app(\App\Services\ActivityService::class);
+        $recentActivities = $activityService->formatActivitiesForDisplay(
+            $activityService->getRecentActivities($user, 5)
+        );
 
         return Inertia::render('Dashboard', [
             'user' => ['name' => $user->name],

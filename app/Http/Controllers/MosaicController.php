@@ -11,8 +11,6 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -148,97 +146,16 @@ class MosaicController extends BaseEntityController
      */
     public function update(Request $request, $mosaic): JsonResponse|RedirectResponse
     {
-        // Debug: Check what type $mosaic is
-        Log::info('MosaicController@update - Parameter check:', [
-            'mosaic_type' => gettype($mosaic),
-            'mosaic_value' => $mosaic,
-            'is_object' => is_object($mosaic),
-            'is_string' => is_string($mosaic),
-        ]);
+        $mosaic = $this->resolveEntity($mosaic);
 
-        // If $mosaic is a string (ID), resolve it to a model
-        if (is_string($mosaic)) {
-            $mosaic = Mosaic::findOrFail($mosaic);
-        }
+        $this->authorizeOwnership($mosaic);
 
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            Log::warning('Unauthorized mosaic update attempt', [
-                'user_id' => Auth::id(),
-                'user_id_type' => gettype(Auth::id()),
-                'mosaic_id' => $mosaic->id,
-                'mosaic_owner' => $mosaic->user_id,
-                'mosaic_owner_type' => gettype($mosaic->user_id),
-            ]);
-            abort(403);
-        }
-
-        Log::info('Mosaic update started', [
-            'user_id' => Auth::id(),
-            'mosaic_id' => $mosaic->id,
-            'request_data' => $request->all(),
-        ]);
-
-        try {
-            $validated = $request->validate([
-                'title' => 'nullable|string|max:255',
-                'description' => 'nullable|string',
-                'columns' => 'nullable|integer|min:2|max:5',
-                'items' => 'nullable|array',
-                'items.*.column_index' => 'required|integer|min:0',
-                'items.*.type' => 'required|string|in:album,media,color,text',
-                'items.*.content' => 'nullable',
-                'items.*.album_id' => 'nullable|uuid|exists:albums,id',
-                'items.*.properties' => 'nullable|array',
-                'items.*.order' => 'required|integer|min:0',
-            ]);
-        } catch (ValidationException $e) {
-            Log::error('Mosaic update validation failed', [
-                'user_id' => Auth::id(),
-                'mosaic_id' => $mosaic->id,
-                'validation_errors' => $e->errors(),
-                'request_data' => $request->all(),
-            ]);
-
-            // Return more user-friendly error messages
-            $errors = $e->errors();
-            $userFriendlyMessages = [];
-
-            if (isset($errors['items'])) {
-                $userFriendlyMessages['items'] = ['Please add at least one item to your mosaic before saving.'];
-            }
-
-            if (isset($errors['items.*.type'])) {
-                $userFriendlyMessages['items.*.type'] = ['Invalid item type. Please refresh the page and try again.'];
-            }
-
-            if (isset($errors['items.*.column_index'])) {
-                $userFriendlyMessages['items.*.column_index'] = ['Invalid column position. Please refresh the page and try again.'];
-            }
-
-            return response()->json([
-                'message' => 'Validation failed. Please check your mosaic items and try again.',
-                'errors' => $userFriendlyMessages ?: $errors,
-                'debug_info' => [
-                    'items_count' => is_array($request->get('items')) ? count($request->get('items')) : 0,
-                    'has_items' => ! empty($request->get('items')),
-                ],
-            ], 422);
-        }
-
-        Log::info('Mosaic update validation passed', [
-            'user_id' => Auth::id(),
-            'mosaic_id' => $mosaic->id,
-            'items_count' => isset($validated['items']) ? count($validated['items']) : 0,
-        ]);
+        // Use UpdateMosaicRequest for validation
+        $updateRequestClass = \App\Http\Requests\UpdateMosaicRequest::class;
+        $validated = $request->validate((new $updateRequestClass)->rules());
 
         // Check if items array is empty and handle accordingly (only if items are provided)
         if (isset($validated['items']) && empty($validated['items'])) {
-            Log::warning('Mosaic update attempted with empty items array', [
-                'user_id' => Auth::id(),
-                'mosaic_id' => $mosaic->id,
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'No items to save. Please add at least one item to your mosaic before saving.',
@@ -284,25 +201,12 @@ class MosaicController extends BaseEntityController
                         'order' => $item['order'],
                     ]);
                 } catch (Exception $e) {
-                    Log::error('Failed to create mosaic item', [
-                        'user_id' => Auth::id(),
-                        'mosaic_id' => $mosaic->id,
-                        'item_index' => $item['order'],
-                        'item_data' => $item,
-                        'error' => $e->getMessage(),
-                    ]);
                     throw $e;
                 }
             }
 
             $validated['items'] = $syncItems->toArray();
         }
-
-        Log::info('Mosaic update completed successfully', [
-            'user_id' => Auth::id(),
-            'mosaic_id' => $mosaic->id,
-            'items_created' => isset($validated['items']) ? count($validated['items']) : 0,
-        ]);
 
         // Return redirect for web requests, JSON for API requests
         if ($request->expectsJson()) {
@@ -383,10 +287,7 @@ class MosaicController extends BaseEntityController
 
     public function storeItem(Request $request, Mosaic $mosaic)
     {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         $validated = $request->validate([
             'type' => 'required|string|in:album,media,color,text',
@@ -408,10 +309,7 @@ class MosaicController extends BaseEntityController
 
     public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
     {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         $validated = $request->validate([
             'type' => 'required|string|in:album,media,color,text',
@@ -428,10 +326,7 @@ class MosaicController extends BaseEntityController
 
     public function destroyItem(Mosaic $mosaic, MosaicItem $item)
     {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         $item->delete();
 
@@ -441,10 +336,7 @@ class MosaicController extends BaseEntityController
 
     public function reorderItems(Request $request, Mosaic $mosaic)
     {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         $validated = $request->validate([
             'from_id' => 'required|string|exists:mosaic_items,id',
@@ -481,10 +373,7 @@ class MosaicController extends BaseEntityController
 
     public function storeMedia(Request $request, Mosaic $mosaic)
     {
-        // Check if user owns this mosaic
-        if ($mosaic->user_id != Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwnership($mosaic);
 
         // Note: Images are converted to WebP client-side and should be under 1.99MB
         // Videos may still be larger, so we validate per file type
