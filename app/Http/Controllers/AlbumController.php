@@ -150,18 +150,25 @@ class AlbumController extends BaseEntityController
         $formRequestClass = $this->getUpdateFormRequestClass();
         $validated = $request->validate((new $formRequestClass)->rules());
 
-        // Update album basic info
-        $updateData = [
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-        ];
+        // Update album basic info (only if provided)
+        $updateData = [];
+        
+        if (isset($validated['title'])) {
+            $updateData['title'] = $validated['title'];
+        }
+        
+        if (isset($validated['description'])) {
+            $updateData['description'] = $validated['description'];
+        }
 
         // Handle published field if provided
         if (isset($validated['published'])) {
             $updateData['published'] = (bool) $validated['published'];
         }
 
-        $albumModel->update($updateData);
+        if (! empty($updateData)) {
+            $albumModel->update($updateData);
+        }
 
         // Handle cover image: selected image takes precedence over uploaded file
         if (! empty($validated['selected_cover_image_id'])) {
