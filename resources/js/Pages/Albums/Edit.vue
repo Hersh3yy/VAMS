@@ -74,12 +74,9 @@
                                 :current-cover-url="Album.cover_image_path"
                                 :album-images="Album.images"
                                 :selected-image-id="form.selected_cover_image_id"
-                                :upload-preview="coverImagePreview"
-                                :error="form.errors.cover_image || form.errors.selected_cover_image_id"
-                                @file-change="handleFileChange"
+                                :error="form.errors.selected_cover_image_id"
                                 @select-image="selectCoverImage"
                                 @clear-selection="clearSelectedCoverImage"
-                                @clear-upload="clearUpload"
                             />
 
                             <!-- Form Actions -->
@@ -115,8 +112,7 @@ import BackLink from '@/Components/Base/BackLink.vue';
 import BaseButton from '@/Components/Base/Button.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { Album, AlbumImage } from '@/types/album';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
     Album: Album;
@@ -125,63 +121,22 @@ const props = defineProps<{
 const form = useForm({
     title: props.Album.title,
     description: props.Album.description || '',
-    cover_image: null as File | null,
     selected_cover_image_id: null as string | null,
     published: props.Album.published !== undefined ? props.Album.published : true
 });
 
-const coverImagePreview = ref<string | null>(null);
-
 const selectCoverImage = (image: AlbumImage) => {
     form.selected_cover_image_id = image.id;
-    // Clear any uploaded cover image when selecting from album
-    form.cover_image = null;
-    coverImagePreview.value = null;
 };
 
 const clearSelectedCoverImage = () => {
     form.selected_cover_image_id = null;
 };
 
-const clearUpload = () => {
-    form.cover_image = null;
-    coverImagePreview.value = null;
-    // Reset file input
-    const fileInput = document.getElementById('cover_image') as HTMLInputElement;
-    if (fileInput) {
-        fileInput.value = '';
-    }
-};
-
-const handleFileChange = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-        form.cover_image = file;
-        // Clear selection when uploading
-        form.selected_cover_image_id = null;
-        // Create preview URL
-        const reader = new FileReader();
-        reader.onload = (e: ProgressEvent<FileReader>) => {
-            if (e.target?.result) {
-                coverImagePreview.value = e.target.result as string;
-            }
-        };
-        reader.readAsDataURL(file);
-    } else {
-        form.cover_image = null;
-        coverImagePreview.value = null;
-    }
-};
-
 const submit = () => {
     form.patch(route('albums.update', props.Album.id), {
-        forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-            // Reset the file input and preview
-            form.cover_image = null;
-            coverImagePreview.value = null;
             form.selected_cover_image_id = null;
         },
         onError: errors => {
