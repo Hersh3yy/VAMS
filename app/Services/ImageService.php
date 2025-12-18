@@ -19,38 +19,49 @@ use Illuminate\Support\Str;
  */
 class ImageService
 {
-    /**
-     * Store an image file in the cloud storage
-     *
-     * @param  \Illuminate\Http\UploadedFile|string  $file  The file to store, either an UploadedFile or a URL/path
-     * @param  string  $folder  The folder to store the file in
-     * @param  bool  $isUrl  Whether the file is a URL to download
-     * @param  bool  $convertToWebp  Whether to convert the image to WebP format
-     * @return array Returns an array with keys 'path', 'url', and optionally 'webp_path' and 'webp_url'
-     */
-    public function storeImage($file, string $folder, bool $isUrl = false, bool $convertToWebp = false): array
+    private function shouldConvertToWebp(string $mimeType, int $fileSizeBytes): bool
+    {
+        if ($mimeType === 'image/gif') {
+            return false;
+        }
+
+        $twoMBInBytes = 2 * 1024 * 1024;
+        return str_starts_with($mimeType, 'image/') && $fileSizeBytes >= $twoMBInBytes;
+    }
+
+    private function handleWebpResult(array $result, bool $isWebp, ?array $webpResult): array
+    {
+        if ($isWebp) {
+            $result['webp_url'] = $result['url'];
+            $result['webp_path'] = $result['path'];
+        } elseif ($webpResult) {
+            $result['webp_path'] = $webpResult['path'];
+            $result['webp_url'] = $webpResult['url'];
+        }
+
+        return $result;
+    }
+
+    public function storeImage($file, string $folder, bool $isUrl = false): array
     {
         if ($isUrl) {
-            return $this->storeImageFromUrl($file, $folder, $convertToWebp);
+            return $this->storeImageFromUrl($file, $folder);
         } else {
-            return $this->storeUploadedFile($file, $folder, $convertToWebp);
+            return $this->storeUploadedFile($file, $folder);
         }
     }
 
-    /**
-     * Store an uploaded file in cloud storage
-     */
-    private function storeUploadedFile(UploadedFile $file, string $folder, bool $convertToWebp = false): array
+    private function storeUploadedFile(UploadedFile $file, string $folder): array
     {
         $originalSize = round($file->getSize() / 1024 / 1024, 2);
         $fileName = $file->getClientOriginalName();
+        $mimeType = $file->getMimeType();
+        $fileSizeBytes = $file->getSize();
+        $isWebp = $mimeType === 'image/webp';
 
-        Log::info("📤 Storing image: {$fileName} ({$originalSize}MB) to folder: {$folder}");
+        Log::info("📤 Storing image: {$fileName} ({$originalSize}MB, {$mimeType}) to folder: {$folder}");
 
-        // Store the file in DigitalOcean Spaces
         $path = $file->store($folder, 'spaces');
-
-        // Generate the full URL
         $url = $this->getPublicUrl($path);
 
         Log::info("✅ Image stored successfully: {$fileName} → {$url}");
@@ -60,75 +71,68 @@ class ImageService
             'url' => $url,
         ];
 
-        // Convert to WebP if requested
-        if ($convertToWebp) {
+        $webpResult = null;
+        if (! $isWebp && $this->shouldConvertToWebp($mimeType, $fileSizeBytes)) {
             Log::info("🔄 Converting to WebP: {$fileName}");
             $webpResult = $this->convertToWebp($file, $folder);
             if ($webpResult) {
                 $webpSize = round(Storage::disk('spaces')->size($webpResult['path']) / 1024 / 1024, 2);
                 Log::info("✅ WebP conversion successful: {$fileName} → {$webpResult['url']} ({$webpSize}MB)");
-                $result['webp_path'] = $webpResult['path'];
-                $result['webp_url'] = $webpResult['url'];
             } else {
                 Log::warning("⚠️ WebP conversion failed or skipped: {$fileName}");
             }
         }
 
-        return $result;
+        return $this->handleWebpResult($result, $isWebp, $webpResult);
     }
 
-    /**
-     * Store an image from a URL in cloud storage
-     */
-    private function storeImageFromUrl(string $url, string $folder, bool $convertToWebp = false): array
+    private function storeImageFromUrl(string $url, string $folder): array
     {
-        // Get file content
         $response = Http::timeout(30)->get($url);
 
         if (! $response->successful()) {
             throw new Exception("Failed to download image from URL: $url");
         }
 
-        // Generate a unique filename
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
         $filename = Str::uuid().'.'.$extension;
         $path = "$folder/$filename";
+        $fileSizeBytes = strlen($response->body());
 
-        // Store the file in DigitalOcean Spaces
         Storage::disk('spaces')->put($path, $response->body());
 
-        // Generate the full URL
-        $url = $this->getPublicUrl($path);
+        $publicUrl = $this->getPublicUrl($path);
 
         $result = [
             'path' => $path,
-            'url' => $url,
+            'url' => $publicUrl,
         ];
 
-        // Convert to WebP if requested
-        if ($convertToWebp && in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif'])) {
+        $mimeType = match (strtolower($extension)) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'image/jpeg',
+        };
+
+        $isWebp = $mimeType === 'image/webp';
+
+        $webpResult = null;
+        if (! $isWebp && $this->shouldConvertToWebp($mimeType, $fileSizeBytes) && in_array(strtolower($extension), ['jpg', 'jpeg', 'png'])) {
             try {
-                // Save the image locally first
                 $tempPath = storage_path('app/temp_'.$filename);
                 file_put_contents($tempPath, $response->body());
 
-                // Convert to WebP
                 $webpResult = $this->convertToWebpFromPath($tempPath, $folder);
 
-                // Clean up
                 @unlink($tempPath);
-
-                if ($webpResult) {
-                    $result['webp_path'] = $webpResult['path'];
-                    $result['webp_url'] = $webpResult['url'];
-                }
             } catch (Exception $e) {
                 Log::error("WebP conversion failed: {$e->getMessage()}");
-                // Fail gracefully, original image is still available
             }
         }
 
-        return $result;
+        return $this->handleWebpResult($result, $isWebp, $webpResult);
     }
 
     /**

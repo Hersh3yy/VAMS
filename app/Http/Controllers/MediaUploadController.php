@@ -113,6 +113,8 @@ class MediaUploadController
                 return "news/{$entityId}";
             case 'mosaic':
                 return "mosaics/{$entityId}";
+            case 'entry':
+                return "entries/{$entityId}";
             default:
                 return "uploads/{$entityType}/{$entityId}";
         }
@@ -126,6 +128,8 @@ class MediaUploadController
         switch ($entityType) {
             case 'album':
                 return $this->createAlbumImageRecord($entityId, $result, $file);
+            case 'entry':
+                return $this->createEntryImageRecord($entityId, $result, $file);
             case 'blog':
                 return $this->createBlogMediaRecord($entityId, $result, $file);
             case 'news':
@@ -156,6 +160,35 @@ class MediaUploadController
             'id' => Str::uuid(),
             'path' => $result['url'],
             'order' => 0,
+        ]);
+    }
+
+    /**
+     * Create an entry image record
+     */
+    private function createEntryImageRecord(string $entryId, array $result, $file)
+    {
+        $entry = \App\Models\Entry::findOrFail($entryId);
+
+        // Check authorization using Gate facade
+        if (! Gate::allows('update', $entry)) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Get the field name from request or default to 'images'
+        $fieldName = request()->input('field_name', 'images');
+
+        // Get the next order for this field
+        $maxOrder = $entry->images()
+            ->where('field_name', $fieldName)
+            ->max('order') ?? -1;
+
+        return $entry->images()->create([
+            'id' => Str::uuid(),
+            'field_name' => $fieldName,
+            'path' => $result['url'],
+            'order' => $maxOrder + 1,
+            'alt_text' => $file->getClientOriginalName(),
         ]);
     }
 
