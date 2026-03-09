@@ -7,8 +7,10 @@ namespace App\Services;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class AlbumService extends BaseEntityService
@@ -24,7 +26,7 @@ class AlbumService extends BaseEntityService
     /**
      * Get all albums for the current user or for the API
      */
-    public function getAll(bool $forApi = false): Collection
+    public function getAll(bool $forApi = false): EloquentCollection
     {
         if ($forApi) {
             // For API, only return published albums
@@ -38,7 +40,7 @@ class AlbumService extends BaseEntityService
         // For web, return all user's albums (published and unpublished)
         $user = Auth::user();
         if (! $user instanceof User) {
-            return new Collection;
+            return new EloquentCollection;
         }
 
         return $user->albums()
@@ -87,11 +89,70 @@ class AlbumService extends BaseEntityService
     }
 
     /**
-     * Format album data for API response
+     * Get published albums for API (user-scoped), formatted for response. Supports pagination.
+     * Fetches and formats in one call — no separate format method needed.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>|LengthAwarePaginator
      */
-    public function formatAlbumForApi(Album $album): array
+    public function getAlbumsForApi(User $user, bool $withImages = false, ?int $perPage = null): \Illuminate\Support\Collection|LengthAwarePaginator
     {
-        return [
+        $query = $user->albums()
+            ->published()
+            ->withCount(['images' => fn ($q) => $q->published()]);
+
+        if ($withImages) {
+            $query->with(['images' => fn ($q) => $q->published()->orderBy('order')]);
+        }
+
+        $query->orderBy('updated_at', 'desc');
+
+        $format = fn (Album $a) => $this->formatAlbumForApi($a, $withImages);
+
+        return $perPage !== null
+            ? $query->paginate($perPage)->through($format)
+            : $query->get()->map($format);
+    }
+
+    /**
+     * Get a single published album by ID for API (user-scoped), formatted with images.
+     */
+    public function getAlbumForApi(User $user, string $id): ?array
+    {
+        $album = $user->albums()
+            ->published()
+            ->with(['images' => fn ($q) => $q->published()->orderBy('order')])
+            ->find($id);
+
+        return $album ? $this->formatAlbumWithImagesForApi($album) : null;
+    }
+
+    /**
+     * Get a single published album by title for API (user-scoped). Case-insensitive fallback.
+     */
+    public function getAlbumByTitleForApi(User $user, string $title): ?array
+    {
+        $decoded = urldecode($title);
+        $album = $user->albums()->published()
+            ->with(['images' => fn ($q) => $q->published()->orderBy('order')])
+            ->where('title', $decoded)
+            ->first();
+
+        if (! $album) {
+            $album = $user->albums()->published()
+                ->with(['images' => fn ($q) => $q->published()->orderBy('order')])
+                ->whereRaw('LOWER(title) = LOWER(?)', [$decoded])
+                ->first();
+        }
+
+        return $album ? $this->formatAlbumWithImagesForApi($album) : null;
+    }
+
+    /**
+     * Format album data for API response (used by getAlbumsForApi and formatWithMediaForApi).
+     */
+    protected function formatAlbumForApi(Album $album, bool $withImages = false): array
+    {
+        $data = [
             'id' => $album->id,
             'title' => $album->title,
             'description' => $album->description,
@@ -102,12 +163,18 @@ class AlbumService extends BaseEntityService
             'created_at' => $album->created_at?->toISOString(),
             'updated_at' => $album->updated_at?->toISOString(),
         ];
+
+        if ($withImages && $album->relationLoaded('images')) {
+            $data['images'] = $album->images->map(fn (AlbumImage $img) => $this->formatImageForApi($img))->values()->all();
+        }
+
+        return $data;
     }
 
     /**
      * Format image data for API response
      */
-    public function formatImageForApi(AlbumImage $image): array
+    protected function formatImageForApi(AlbumImage $image): array
     {
         $properties = is_string($image->properties) ?
             json_decode($image->properties, true) :
@@ -131,13 +198,13 @@ class AlbumService extends BaseEntityService
     }
 
     /**
-     * Format album with images for API response
+     * Format album with images for API response (used by getAlbumForApi and formatWithMediaForApi).
      */
-    public function formatAlbumWithImagesForApi(Album $album): array
+    protected function formatAlbumWithImagesForApi(Album $album): array
     {
         return [
-            'album' => $this->formatAlbumForApi($album),
-            'images' => $album->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
+            'album' => $this->formatAlbumForApi($album, false),
+            'images' => $album->images->map(fn (AlbumImage $img) => $this->formatImageForApi($img))->values()->all(),
         ];
     }
 
@@ -263,13 +330,12 @@ class AlbumService extends BaseEntityService
     }
 
     /**
-     * Format entity with its media for API response
+     * Format entity with its media for API response (contract).
      */
     public function formatWithMediaForApi(Model $entity): array
     {
-        return [
-            'album' => $this->formatForApi($entity),
-            'images' => $entity->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
-        ];
+        return $entity instanceof Album
+            ? $this->formatAlbumWithImagesForApi($entity->loadMissing('images'))
+            : [];
     }
 }

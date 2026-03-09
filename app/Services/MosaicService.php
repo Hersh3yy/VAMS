@@ -6,7 +6,10 @@ namespace App\Services;
 
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class MosaicService extends BaseEntityService
 {
@@ -16,6 +19,20 @@ class MosaicService extends BaseEntityService
     protected function getEntityModelClass(): string
     {
         return Mosaic::class;
+    }
+
+    /**
+     * Get a specific entity with its relationships
+     */
+    public function getById(string|Model $entity, bool $forApi = false): ?Model
+    {
+        $mosaic = parent::getById($entity, $forApi);
+
+        if ($mosaic instanceof Mosaic && ! $forApi) {
+            $mosaic->load('items');
+        }
+
+        return $mosaic;
     }
 
     /**
@@ -38,20 +55,61 @@ class MosaicService extends BaseEntityService
     }
 
     /**
-     * Format entity with its media for API response
+     * Format entity with its media for API response (contract).
      */
     public function formatWithMediaForApi(Model $entity): array
     {
-        return [
-            'mosaic' => $this->formatForApi($entity),
-            'items' => $entity->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
-        ];
+        return $entity instanceof Mosaic
+            ? $this->formatMosaicWithItemsForApi($entity->loadMissing('items'))
+            : [];
     }
 
     /**
-     * Format mosaic for API response
+     * Get mosaics for API (user-scoped), formatted for response. Supports pagination.
+     * Fetches and formats in one call — no separate format method needed.
+     *
+     * @return Collection<int, array<string, mixed>>|LengthAwarePaginator
      */
-    public function formatMosaicForApi(Mosaic $mosaic): array
+    public function getMosaicsForApi(User $user, ?int $perPage = null): Collection|LengthAwarePaginator
+    {
+        $query = $user->mosaics()->orderBy('updated_at', 'desc');
+
+        $result = $perPage !== null
+            ? $query->paginate($perPage)->through(fn (Mosaic $m) => $this->formatMosaicForApi($m))
+            : $query->get()->map(fn (Mosaic $m) => $this->formatMosaicForApi($m));
+
+        return $result;
+    }
+
+    /**
+     * Get a single mosaic by ID for API (user-scoped), formatted with items.
+     */
+    public function getMosaicForApi(User $user, string $id): ?array
+    {
+        $mosaic = $user->mosaics()->find($id);
+
+        return $mosaic ? $this->formatMosaicWithItemsForApi($mosaic->load('items')) : null;
+    }
+
+    /**
+     * Get a single mosaic by title for API (user-scoped). Case-insensitive fallback.
+     */
+    public function getMosaicByTitleForApi(User $user, string $title): ?array
+    {
+        $decoded = urldecode($title);
+        $mosaic = $user->mosaics()->where('title', $decoded)->first();
+
+        if (! $mosaic) {
+            $mosaic = $user->mosaics()->whereRaw('LOWER(title) = LOWER(?)', [$decoded])->first();
+        }
+
+        return $mosaic ? $this->formatMosaicWithItemsForApi($mosaic->load('items')) : null;
+    }
+
+    /**
+     * Format mosaic for API response (used by getMosaicsForApi and formatWithMediaForApi).
+     */
+    protected function formatMosaicForApi(Mosaic $mosaic): array
     {
         return [
             'id' => $mosaic->id,
@@ -65,20 +123,20 @@ class MosaicService extends BaseEntityService
     }
 
     /**
-     * Format mosaic with items for API response
+     * Format mosaic with items for API response (used by getMosaicForApi and formatWithMediaForApi).
      */
-    public function formatMosaicWithItemsForApi(Mosaic $mosaic): array
+    protected function formatMosaicWithItemsForApi(Mosaic $mosaic): array
     {
         return [
             'mosaic' => $this->formatMosaicForApi($mosaic),
-            'items' => $mosaic->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
+            'items' => $mosaic->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item))->values()->all(),
         ];
     }
 
     /**
-     * Format mosaic item for API response
+     * Format mosaic item for API response (used by formatWithMediaForApi).
      */
-    public function formatMosaicItemForApi(MosaicItem $item): array
+    protected function formatMosaicItemForApi(MosaicItem $item): array
     {
         return [
             'id' => $item->id,

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Mosaic;
 use App\Services\MosaicService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,16 +21,24 @@ class MosaicController extends BaseApiController
 
     /**
      * Get all mosaics for the authenticated user (API key)
+     *
+     * Query params: per_page (int, optional for pagination)
      */
     public function indexWithApiKey(Request $request): JsonResponse
     {
-        // User is automatically set by the api.key middleware
         $user = $request->user();
+        $perPage = $request->filled('per_page')
+            ? min((int) $request->integer('per_page', 15), 100)
+            : null;
 
-        $mosaics = $user->mosaics()->get();
+        $result = $this->mosaicService->getMosaicsForApi($user, $perPage);
+
+        if ($result instanceof LengthAwarePaginator) {
+            return $this->successPaginated($result, 'mosaics', fn ($m) => $m, 'Mosaics retrieved successfully');
+        }
 
         return $this->success([
-            'mosaics' => $mosaics->map(fn (Mosaic $mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
+            'mosaics' => $result->values()->all(),
         ], 'Mosaics retrieved successfully');
     }
 
@@ -39,18 +47,12 @@ class MosaicController extends BaseApiController
      */
     public function showWithApiKey(Request $request, $id): JsonResponse
     {
-        // User is automatically set by the api.key middleware
-        $user = $request->user();
-
-        $mosaic = $user->mosaics()->find($id);
-        if (! $mosaic) {
+        $data = $this->mosaicService->getMosaicForApi($request->user(), (string) $id);
+        if (! $data) {
             return $this->notFound('Mosaic not found');
         }
 
-        return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
-            'Mosaic retrieved successfully'
-        );
+        return $this->success($data, 'Mosaic retrieved successfully');
     }
 
     /**
@@ -63,17 +65,11 @@ class MosaicController extends BaseApiController
      */
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        $mosaic = $this->findByTitle($title, $user->mosaics());
-
-        if (! $mosaic) {
+        $data = $this->mosaicService->getMosaicByTitleForApi($request->user(), $title);
+        if (! $data) {
             return $this->notFound('Mosaic not found');
         }
 
-        return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
-            'Mosaic retrieved successfully'
-        );
+        return $this->success($data, 'Mosaic retrieved successfully');
     }
 }

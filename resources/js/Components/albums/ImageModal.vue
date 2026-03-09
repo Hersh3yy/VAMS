@@ -1,4 +1,4 @@
-<!-- components/ImageModal.vue -->
+<!-- Size exception: domain component (image/video edit modal). -->
 <template>
     <BaseModal :show="show" size="2xl" closeable @close="$emit('close')">
         <template #header>

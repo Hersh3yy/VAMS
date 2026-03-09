@@ -1,3 +1,4 @@
+<!-- Size exception: domain component (entry view/edit modal). -->
 <template>
     <BaseModal :show="show" size="4xl" @close="closeModal">
         <template #header>

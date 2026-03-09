@@ -1,3 +1,4 @@
+<!-- Size exception: domain component (dynamic fields from entry type config). -->
 <template>
     <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Title is always present -->

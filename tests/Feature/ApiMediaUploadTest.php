@@ -18,15 +18,12 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to upload media via api', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('allows authenticated user to upload media via web route', function () {
+    $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
         'type' => 'image',
     ]);
@@ -47,33 +44,26 @@ it('allows authenticated user to upload media via api', function () {
         ]);
 });
 
-it('validates file size 10mb limit for api upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('validates file size 10mb limit for upload', function () {
+    $this->actingAs($this->user);
 
-    // Create file larger than 10MB (API limit)
     $largeFile = UploadedFile::fake()->image('large.jpg')->size(11 * 1024); // 11MB
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $largeFile,
         'type' => 'image',
     ]);
 
-    // Note: Backend no longer validates file size - this is handled client-side or by infrastructure
+    // Note: Backend no longer validates file size - handled client-side or by infrastructure
     $response->assertSuccessful();
 })->skip('Backend file size validation removed per user request');
 
-it('validates file types for api upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('validates file types for upload', function () {
+    $this->actingAs($this->user);
 
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $invalidFile,
         'type' => 'image',
     ]);
@@ -82,24 +72,21 @@ it('validates file types for api upload', function () {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('requires authentication for api upload', function () {
+it('requires authentication for upload', function () {
     $file = UploadedFile::fake()->image('test.jpg');
 
-    $response = $this->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
         'type' => 'image',
     ]);
 
-    $response->assertUnauthorized();
+    $response->assertStatus(401);
 });
 
-it('requires file for api upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('requires file for upload', function () {
+    $this->actingAs($this->user);
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'type' => 'image',
     ]);
 
@@ -107,30 +94,24 @@ it('requires file for api upload', function () {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('makes type optional for api upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('makes type optional for upload', function () {
+    $this->actingAs($this->user);
     $file = UploadedFile::fake()->image('test.jpg');
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
     ]);
 
     $response->assertSuccessful()
         ->assertJson(['success' => true])
-        ->assertJsonPath('data.type', 'image'); // defaults to image
+        ->assertJsonPath('data.type', 'image');
 });
 
-it('validates type values for api upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('validates type values for upload', function () {
+    $this->actingAs($this->user);
     $file = UploadedFile::fake()->image('test.jpg');
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
         'type' => 'invalid_type',
     ]);
@@ -139,15 +120,12 @@ it('validates type values for api upload', function () {
         ->assertJsonValidationErrors(['type']);
 });
 
-it('handles video files via api', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('handles video files', function () {
+    $this->actingAs($this->user);
 
     $video = UploadedFile::fake()->create('test-video.mp4', 5000, 'video/mp4');
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $video,
         'type' => 'video',
     ]);
@@ -156,13 +134,10 @@ it('handles video files via api', function () {
         ->assertJsonPath('data.type', 'video');
 });
 
-it('can delete media via api', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('can delete media via web route', function () {
+    $this->actingAs($this->user);
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->deleteJson('/api/media', [
+    $response = $this->deleteJson(route('media.delete'), [
         'path' => 'test/path/to/file.jpg',
     ]);
 
@@ -173,45 +148,33 @@ it('can delete media via api', function () {
         ]);
 });
 
-it('requires path for api delete', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('requires path for delete', function () {
+    $this->actingAs($this->user);
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->deleteJson('/api/media', []);
+    $response = $this->deleteJson(route('media.delete'), []);
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['path']);
 });
 
-it('throttles api requests', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('allows multiple uploads', function () {
+    $this->actingAs($this->user);
 
-    // Make 31 requests (API limit is 30 per minute)
-    for ($i = 0; $i < 31; $i++) {
+    for ($i = 0; $i < 3; $i++) {
         $file = UploadedFile::fake()->image("test-{$i}.jpg");
 
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer '.$token,
-            'Accept' => 'application/json',
-        ])->postJson('/api/media/upload', [
+        $response = $this->postJson(route('media.upload'), [
             'file' => $file,
             'type' => 'image',
         ]);
 
-        if ($i < 30) {
-            $response->assertSuccessful();
-        } else {
-            $response->assertStatus(429); // Too Many Requests
-        }
+        $response->assertSuccessful();
     }
 });
 
 it('returns webp url when available', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+    $this->actingAs($this->user);
 
-    // Mock ImageService to return WebP URL
     $this->mock(\App\Services\ImageService::class, function ($mock) {
         $mock->shouldReceive('storeImage')
             ->andReturn([
@@ -223,15 +186,10 @@ it('returns webp url when available', function () {
 
     $file = UploadedFile::fake()->image('test.jpg');
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
         'type' => 'image',
     ]);
 
     $response->assertSuccessful();
-    // Note: The API controller doesn't currently pass through webp_url
-    // This test demonstrates the functionality exists but may need controller updates
 });

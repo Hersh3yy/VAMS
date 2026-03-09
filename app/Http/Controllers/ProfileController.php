@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteAccountRequest;
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\UpdateLogoRequest;
+use App\Http\Requests\UpdateThemeRequest;
 use App\Services\ImageService;
 use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -75,23 +78,10 @@ final class ProfileController
     /**
      * Update the user's theme settings only.
      */
-    public function updateTheme(Request $request): RedirectResponse
+    public function updateTheme(UpdateThemeRequest $request): RedirectResponse
     {
-        $request->validate([
-            'album_display_settings' => ['required', 'array'],
-            'album_display_settings.caption' => ['nullable', 'boolean'],
-            'album_display_settings.altText' => ['nullable', 'boolean'],
-            'album_display_settings.dateCreated' => ['nullable', 'boolean'],
-            'album_display_settings.location' => ['nullable', 'boolean'],
-            'album_display_settings.tags' => ['nullable', 'boolean'],
-            'album_display_settings.title' => ['nullable', 'boolean'],
-            'album_display_settings.author' => ['nullable', 'boolean'],
-            'album_display_settings.main_color' => ['nullable', 'string'],
-            'album_display_settings.secondary_color' => ['nullable', 'string'],
-        ]);
-
         $user = $request->user();
-        $settings = $request->input('album_display_settings');
+        $settings = $request->validated()['album_display_settings'];
 
         // Get existing settings to preserve colors when they're not being updated
         $existingSettings = $user->album_display_settings ?? [];
@@ -116,12 +106,8 @@ final class ProfileController
     /**
      * Upload and update the user's logo.
      */
-    public function updateLogo(Request $request): RedirectResponse
+    public function updateLogo(UpdateLogoRequest $request): RedirectResponse
     {
-        $request->validate([
-            'logo' => 'required|image',
-        ]);
-
         try {
             // Use ImageService to store the logo
             $result = $this->imageService->storeImage(
@@ -158,12 +144,8 @@ final class ProfileController
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(DeleteAccountRequest $request): RedirectResponse
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
 
         Auth::logout();

@@ -23,9 +23,8 @@ class UpdateAlbumRequest extends BaseEntityRequest
     {
         $baseRules = parent::rules();
 
-        // For updates, make title and description nullable
-        // since user might only be updating cover image or published status
-        $baseRules['title'] = ['nullable', 'string', 'max:255'];
+        // For updates: title optional (omit for partial updates), but when provided must not be empty
+        $baseRules['title'] = ['sometimes', 'string', 'min:1', 'max:255'];
         $baseRules['description'] = ['nullable', 'string'];
 
         // Add update-specific rules

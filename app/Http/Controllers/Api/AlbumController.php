@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Album;
 use App\Services\AlbumService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,39 +21,25 @@ class AlbumController extends BaseApiController
 
     /**
      * Get all albums for the authenticated user (API key)
+     *
+     * Query params: with_images (bool), per_page (int, optional for pagination)
      */
     public function indexWithApiKey(Request $request): JsonResponse
     {
-        // User is automatically set by the api.key middleware
         $user = $request->user();
-
-        // Check if we should include images
         $withImages = $request->boolean('with_images', false);
+        $perPage = $request->filled('per_page')
+            ? min((int) $request->integer('per_page', 15), 100)
+            : null;
 
-        // Build query with count - only published albums for API
-        $query = $user->albums()->published()->withCount(['images' => fn ($query) => $query->published()]);
+        $result = $this->albumService->getAlbumsForApi($user, $withImages, $perPage);
 
-        // Optionally load images if requested (only published)
-        if ($withImages) {
-            $query->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
+        if ($result instanceof LengthAwarePaginator) {
+            return $this->successPaginated($result, 'albums', fn ($a) => $a, 'Albums retrieved successfully');
         }
 
-        $albums = $query->get();
-
-        // Format albums with or without images based on request
-        $formattedAlbums = $albums->map(function (Album $album) use ($withImages) {
-            $albumData = $this->albumService->formatAlbumForApi($album);
-
-            // Include images if requested
-            if ($withImages && $album->relationLoaded('images')) {
-                $albumData['images'] = $album->images->map(fn ($image) => $this->albumService->formatImageForApi($image));
-            }
-
-            return $albumData;
-        });
-
         return $this->success([
-            'albums' => $formattedAlbums,
+            'albums' => $result->values()->all(),
         ], 'Albums retrieved successfully');
     }
 
@@ -62,18 +48,12 @@ class AlbumController extends BaseApiController
      */
     public function showWithApiKey(Request $request, string $id): JsonResponse
     {
-        // User is automatically set by the api.key middleware
-        $user = $request->user();
-
-        $album = $user->albums()->published()->with(['images' => fn ($query) => $query->published()->orderBy('order')])->find($id);
-        if (! $album) {
+        $data = $this->albumService->getAlbumForApi($request->user(), $id);
+        if (! $data) {
             return $this->notFound('Album not found');
         }
 
-        return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album),
-            'Album retrieved successfully'
-        );
+        return $this->success($data, 'Album retrieved successfully');
     }
 
     /**
@@ -86,21 +66,11 @@ class AlbumController extends BaseApiController
      */
     public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        $query = $user->albums()
-            ->published()
-            ->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
-
-        $album = $this->findByTitle($title, $query);
-
-        if (! $album) {
+        $data = $this->albumService->getAlbumByTitleForApi($request->user(), $title);
+        if (! $data) {
             return $this->notFound('Album not found');
         }
 
-        return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album),
-            'Album retrieved successfully'
-        );
+        return $this->success($data, 'Album retrieved successfully');
     }
 }

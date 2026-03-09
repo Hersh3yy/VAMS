@@ -1,35 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MediaDeleteRequest;
+use App\Http\Requests\MediaUploadRequest;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class MediaUploadController
+final class MediaUploadController
 {
-    protected $imageService;
-
-    public function __construct(ImageService $imageService)
-    {
-        $this->imageService = $imageService;
-    }
+    public function __construct(
+        private readonly ImageService $imageService
+    ) {}
 
     /**
-     * Generic media upload endpoint that can handle uploads for any entity
+     * Generic media upload endpoint. Supports two payloads:
+     * 1. SPA (ImageCollectionManager): file + type → returns API-style JSON
+     * 2. Entity: entity_type + entity_id + media[] → returns media records
      */
-    public function upload(Request $request): JsonResponse|RedirectResponse
+    public function upload(MediaUploadRequest $request): JsonResponse|RedirectResponse
     {
-        $request->validate([
-            'entity_type' => 'required|string|in:album,blog,news,mosaic',
-            'entity_id' => 'required|string',
-            'media' => 'required|array',
-            'media.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi',
-        ]);
+        if ($request->hasFile('file') || $request->has('type')) {
+            return $this->handleSpaUpload($request);
+        }
 
         try {
             $entityType = $request->input('entity_type');
@@ -96,6 +98,76 @@ class MediaUploadController
             }
 
             return back()->with('error', 'Error uploading media: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * SPA upload: single file + type. Returns same JSON shape as former API.
+     */
+    private function handleSpaUpload(MediaUploadRequest $request): JsonResponse
+    {
+        try {
+            $file = $request->file('file');
+            $type = $request->input('type', 'image');
+            $folder = $type === 'video' ? 'videos' : 'images';
+            $folder = "uploads/{$folder}/".Auth::id();
+
+            $result = $this->imageService->storeImage($file, $folder);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'url' => $result['url'],
+                    'path' => $result['path'],
+                    'type' => $type,
+                    'size' => $file->getSize(),
+                    'original_name' => $file->getClientOriginalName(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Media upload failed: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: '.$e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Delete media file from storage (used by SPA when removing uploaded images).
+     */
+    public function delete(MediaDeleteRequest $request): JsonResponse
+    {
+        try {
+            $path = $request->input('path');
+
+            if (str_contains($path, config('filesystems.disks.spaces.endpoint'))) {
+                $bucket = config('filesystems.disks.spaces.bucket');
+                $endpoint = config('filesystems.disks.spaces.endpoint');
+                $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
+            }
+
+            $deleted = Storage::disk('spaces')->delete($path);
+
+            if (! $deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File not found or could not be deleted',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Media deletion failed: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Deletion failed: '.$e->getMessage(),
+            ], 422);
         }
     }
 

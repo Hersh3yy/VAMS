@@ -1,0 +1,55 @@
+# Git
+.git
+.github
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Testing
+tests/
+.phpunit.result.cache
+coverage/
+.pest/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Storage (will be mounted)
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+storage/app/public/*
+
+# Build artifacts
+bootstrap/cache/*.php
+public/hot
+public/build/
+public/storage
+
+# Development tools
+vendor/bin/
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+

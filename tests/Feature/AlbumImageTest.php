@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 use App\Models\Album;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Storage::fake('spaces');
     $this->user = User::factory()->create();
     $this->album = Album::factory()->create(['user_id' => $this->user->id]);
     $this->actingAs($this->user);

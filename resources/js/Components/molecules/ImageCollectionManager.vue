@@ -183,7 +183,7 @@ const handleUpload = async (files: File[]) => {
             
             try {
                 const token = getCsrfToken()
-                const response = await fetch('/api/media/upload', {
+                const response = await fetch(route('media.upload'), {
                     method: 'POST',
                     body: formData,
                     headers: {

@@ -1,3 +1,4 @@
+<!-- Size exception: domain component (admin entry type CRUD). Consider splitting into EntryTypeForm + EntryTypeModal. -->
 <template>
     <BaseModal :show="show" size="2xl" closeable @close="closeModal">
         <template #header>

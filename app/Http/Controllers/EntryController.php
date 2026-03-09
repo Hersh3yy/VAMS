@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderEntriesRequest;
+use App\Http\Requests\StoreEntryRequest;
+use App\Http\Requests\UpdateEntryRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
@@ -173,13 +176,7 @@ class EntryController extends BaseEntityController
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required'], // Can be string or array
-            'status' => ['nullable', 'string', 'in:draft,published'],
-            'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
-        ]);
-
+        $validated = $request->validate((new StoreEntryRequest)->rules());
         $entryType = EntryType::find($validated['entry_type_id']);
 
         // Validate user has permission for this entry type
@@ -286,15 +283,11 @@ class EntryController extends BaseEntityController
     /**
      * Update an existing entry
      */
-    public function updateEntry(Request $request, Entry $entry): RedirectResponse
+    public function updateEntry(UpdateEntryRequest $request, Entry $entry): RedirectResponse
     {
         $this->authorizeOwnership($entry);
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['nullable'], // Can be string or array
-            'status' => ['nullable', 'string', 'in:draft,published'],
-        ]);
+        $validated = $request->validated();
 
         // Handle content: if it's a string (old simple format), convert to object
         // Otherwise it's already an array from the dynamic form
@@ -358,13 +351,9 @@ class EntryController extends BaseEntityController
     /**
      * Reorder entries
      */
-    public function reorder(Request $request): RedirectResponse
+    public function reorder(ReorderEntriesRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'orderedIds' => ['required', 'array'],
-            'orderedIds.*' => ['required', 'uuid', 'exists:entries,id'],
-            'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
-        ]);
+        $validated = $request->validated();
 
         // Validate that all entries belong to the specified entry type
         $entryType = EntryType::find($validated['entry_type_id']);

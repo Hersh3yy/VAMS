@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderAlbumImagesRequest;
+use App\Http\Requests\StoreAlbumImageRequest;
+use App\Http\Requests\StoreAlbumVideoRequest;
+use App\Http\Requests\UpdateAlbumImageRequest;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
@@ -47,37 +51,19 @@ final class AlbumImageController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Album $album): JsonResponse|RedirectResponse
+    public function store(StoreAlbumImageRequest $request, Album $album): JsonResponse|RedirectResponse
     {
-        // Quick PHP settings check (verify .user.ini is working)
         $uploadMaxFilesize = (string) ini_get('upload_max_filesize');
         $postMaxSize = (string) ini_get('post_max_size');
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
         $postMaxBytes = $this->convertToBytes($postMaxSize);
-        $requiredBytes = 1.99 * 1024 * 1024; // 1.99MB required
+        $requiredBytes = (int) (1.99 * 1024 * 1024);
 
-        $settingsOK = ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes);
-
-        if (! $settingsOK) {
+        if ($uploadMaxBytes < $requiredBytes || $postMaxBytes < $requiredBytes) {
             Log::error('PHP limits too low: upload_max_filesize='.$uploadMaxFilesize.', post_max_size='.$postMaxSize.' (need 1.99M)');
         }
 
         try {
-            $request->validate(
-                [
-                    'images' => 'required|array',
-                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
-                ],
-                [
-                    'images.required' => 'Please select at least one image to upload.',
-                    'images.array' => 'Images must be provided as an array.',
-                    'images.*.required' => 'One or more image files are missing.',
-                    'images.*.file' => 'The uploaded file failed to upload. This may be due to file size limits, network issues, or unsupported file type.',
-                    'images.*.mimes' => 'The file must be one of: jpeg, png, jpg, gif, webp, heic, heif. Detected type: :attribute',
-                    'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
-                ]
-            );
-
             $this->authorize('update', $album);
 
             // Shift all existing images down to make room at the top
@@ -216,28 +202,15 @@ final class AlbumImageController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Album $album, AlbumImage $image): RedirectResponse
+    public function update(UpdateAlbumImageRequest $request, Album $album, AlbumImage $image): RedirectResponse
     {
-        // Ensure the image belongs to the album and user owns the album
         if ($image->album_id !== $album->id) {
             abort(404);
         }
 
         $this->authorize('update', $album);
 
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'altText' => 'nullable|string|max:255',
-            'caption' => 'nullable|string',
-            'author' => 'nullable|string|max:255',
-            'dateCreated' => 'nullable|date',
-            'location' => 'nullable|string|max:255',
-            'tags' => 'nullable|string',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
-            'published' => 'nullable|boolean',
-        ]);
-
-        // The mutators in the model will handle mapping to the appropriate columns
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             // Use ImageService to store the replacement image
@@ -350,20 +323,15 @@ final class AlbumImageController
             strpos($url, 'vimeo.com') !== false;
     }
 
-    public function reorder(Request $request, ?Album $album = null): RedirectResponse
+    public function reorder(ReorderAlbumImagesRequest $request, ?Album $album = null): RedirectResponse
     {
-        // Support both nested and non-nested routes
         if (! $album && $request->has('album_id')) {
             $album = Album::findOrFail($request->album_id);
         }
 
-        $request->validate([
-            'from_index' => 'required|integer|min:0',
-            'to_index' => 'required|integer|min:0',
-        ]);
-
-        $fromIndex = $request->from_index;
-        $toIndex = $request->to_index;
+        $validated = $request->validated();
+        $fromIndex = $validated['from_index'];
+        $toIndex = $validated['to_index'];
 
         // Get the album ID from the route or request
         $albumId = $album ? $album->id : $request->album_id;
@@ -401,17 +369,12 @@ final class AlbumImageController
     /**
      * Store a video URL as an album image
      */
-    public function storeVideo(Request $request, Album $album): RedirectResponse
+    public function storeVideo(StoreAlbumVideoRequest $request, Album $album): RedirectResponse
     {
-        Log::info('Incoming video request data:', $request->all());
+        $validated = $request->validated();
+        Log::info('Incoming video request data:', $validated);
 
         try {
-            $request->validate([
-                'url' => 'required|url',
-                'title' => 'nullable|string|max:255',
-                'caption' => 'nullable|string',
-            ]);
-
             $this->authorize('update', $album);
 
             // Shift all existing images down to make room at the top
@@ -419,14 +382,14 @@ final class AlbumImageController
 
             // Store video thumbnail using ImageService
             $thumbnailResult = $this->imageService->storeVideoThumbnail(
-                $request->url,
+                $validated['url'],
                 "albums/{$album->id}"
             );
 
             // Create properties JSON with video metadata
             $properties = [
                 'type' => 'video',
-                'video_url' => $request->url,
+                'video_url' => $validated['url'],
             ];
 
             // Add thumbnail URL if available
@@ -435,10 +398,10 @@ final class AlbumImageController
             }
 
             // Create the album image entry
-            $albumImage = $album->images()->create([
-                'path' => $request->url,
-                'title' => $request->title,
-                'caption' => $request->caption,
+            $album->images()->create([
+                'path' => $validated['url'],
+                'title' => $validated['title'] ?? null,
+                'caption' => $validated['caption'] ?? null,
                 'properties' => json_encode($properties),
                 'order' => 0,
                 'published' => true,

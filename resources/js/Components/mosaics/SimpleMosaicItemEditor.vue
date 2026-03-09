@@ -1,3 +1,4 @@
+<!-- Size exception: domain component (mosaic item add/edit). Consider extracting ImageSourceSelector, VideoSourceForm. -->
 <template>
     <div
         v-if="show"

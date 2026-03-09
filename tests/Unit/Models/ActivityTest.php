@@ -6,7 +6,7 @@ use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Album;
 use App\Models\User;
-use Mockery;
+use Mockery as M;
 
 it('has correct fillable attributes', function () {
     $activity = new Activity;
@@ -82,7 +82,7 @@ it('can be created with properties', function () {
 });
 
 it('can access user through relationship', function () {
-    $user = Mockery::mock(User::class);
+    $user = M::mock(User::class);
     $user->shouldReceive('getAttribute')
         ->with('id')
         ->andReturn('123e4567-e89b-12d3-a456-426614174000');
@@ -102,7 +102,7 @@ it('can access user through relationship', function () {
 });
 
 it('can access subject through relationship', function () {
-    $album = Mockery::mock(Album::class);
+    $album = M::mock(Album::class);
     $album->shouldReceive('getAttribute')
         ->with('id')
         ->andReturn('456e7890-e89b-12d3-a456-426614174001');

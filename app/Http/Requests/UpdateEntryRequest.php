@@ -6,7 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\Entry;
 
-class StoreEntryRequest extends BaseEntityRequest
+class UpdateEntryRequest extends BaseEntityRequest
 {
     protected function getEntityModelClass(): string
     {
@@ -19,10 +19,9 @@ class StoreEntryRequest extends BaseEntityRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required'],
+            'title' => ['sometimes', 'string', 'min:1', 'max:255'],
+            'content' => ['sometimes'],
             'status' => ['nullable', 'string', 'in:draft,published'],
-            'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
         ];
     }
 }

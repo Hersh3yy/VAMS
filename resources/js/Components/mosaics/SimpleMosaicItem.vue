@@ -1,3 +1,4 @@
+<!-- Size exception: domain component (album/entry/video mosaic item display). -->
 <template>
     <div
         class="group relative cursor-pointer overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"

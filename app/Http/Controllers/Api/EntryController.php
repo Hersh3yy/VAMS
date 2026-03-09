@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,77 +22,86 @@ class EntryController extends BaseApiController
 
     /**
      * Get all entries for the authenticated user (API key)
-     * Only returns entries from entry types the user has permission for
+     * Only returns entries from entry types the user has permission for.
+     *
+     * Query params: per_page (int, optional for pagination)
      */
     public function indexWithApiKey(Request $request): JsonResponse
     {
         $user = $request->user();
+        $allowedTypes = $user->allowedEntryTypes();
 
-        // Get user's allowed entry types
-        $allowedEntryTypes = $user->allowedEntryTypes();
-
-        if ($allowedEntryTypes->isEmpty()) {
+        if ($allowedTypes->isEmpty()) {
             return $this->success([
                 'entries' => [],
+                'entry_types' => [],
                 'message' => 'No entry types assigned to this user',
             ]);
         }
 
-        // Get entries from allowed types only
-        $entryTypeIds = $allowedEntryTypes->pluck('id');
-        $entries = $user->entries()
-            ->whereIn('entry_type_id', $entryTypeIds)
-            ->published()
-            ->with(['entryType', 'images'])
-            ->orderBy('order')
-            ->get();
+        $perPage = $request->filled('per_page')
+            ? min((int) $request->integer('per_page', 15), 100)
+            : null;
+
+        $result = $this->entryService->getEntriesForApi($user, null, $perPage);
+        $formatType = fn ($t) => $this->entryService->formatEntryTypeForApi($t);
+
+        if ($result instanceof LengthAwarePaginator) {
+            return $this->successPaginated(
+                $result,
+                'entries',
+                fn ($e) => $e,
+                null,
+                200,
+                ['entry_types' => $allowedTypes->map($formatType)->values()->all()]
+            );
+        }
 
         return $this->success([
-            'entries' => $entries->map(fn (Entry $entry) => $this->entryService->formatEntryForApi($entry)),
-            'entry_types' => $allowedEntryTypes->map(fn ($type) => [
-                'id' => $type->id,
-                'name' => $type->name,
-                'slug' => $type->slug,
-                'description' => $type->description,
-            ]),
+            'entries' => $result->values()->all(),
+            'entry_types' => $allowedTypes->map($formatType)->values()->all(),
         ]);
     }
 
     /**
      * Get entries by specific type (e.g., /api/entries/by-type/i-ams)
-     * Only returns entries if user has permission for that type
+     * Only returns entries if user has permission for that type.
+     *
+     * Query params: per_page (int, optional for pagination)
      */
     public function indexByTypeWithApiKey(Request $request, string $type): JsonResponse
     {
         $user = $request->user();
 
-        // Check if user has permission for this entry type
         if (! $user->hasEntryTypePermission($type)) {
             return $this->forbidden('You do not have permission to access this entry type');
         }
 
-        // Get the entry type
         $entryType = EntryType::where('slug', $type)->where('is_active', true)->first();
         if (! $entryType) {
             return $this->notFound('Entry type not found');
         }
 
-        // Get entries of this type
-        $entries = $user->entries()
-            ->where('entry_type_id', $entryType->id)
-            ->published()
-            ->with(['entryType', 'images'])
-            ->orderBy('order')
-            ->get();
+        $perPage = $request->filled('per_page')
+            ? min((int) $request->integer('per_page', 15), 100)
+            : null;
+
+        $result = $this->entryService->getEntriesForApi($user, $type, $perPage);
+
+        if ($result instanceof LengthAwarePaginator) {
+            return $this->successPaginated(
+                $result,
+                'entries',
+                fn ($e) => $e,
+                null,
+                200,
+                ['entry_type' => $this->entryService->formatEntryTypeForApi($entryType)]
+            );
+        }
 
         return $this->success([
-            'entries' => $entries->map(fn (Entry $entry) => $this->entryService->formatEntryForApi($entry)),
-            'entry_type' => [
-                'id' => $entryType->id,
-                'name' => $entryType->name,
-                'slug' => $entryType->slug,
-                'description' => $entryType->description,
-            ],
+            'entries' => $result->values()->all(),
+            'entry_type' => $this->entryService->formatEntryTypeForApi($entryType),
         ]);
     }
 
@@ -103,23 +112,16 @@ class EntryController extends BaseApiController
     public function showWithApiKey(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
-
-        $entry = $user->entries()
-            ->published()
-            ->with(['entryType', 'images'])
-            ->find($id);
+        $entry = $this->entryService->getEntryForApi($user, $id);
 
         if (! $entry) {
             return $this->notFound('Entry not found');
         }
 
-        // Check if user has permission for this entry's type
-        if (! $user->hasEntryTypePermission($entry->entryType->slug)) {
+        if (! $user->hasEntryTypePermission($entry['entry_type']['slug'] ?? '')) {
             return $this->forbidden('You do not have permission to access this entry');
         }
 
-        return $this->success(
-            $this->entryService->formatEntryForApi($entry)
-        );
+        return $this->success($entry);
     }
 }

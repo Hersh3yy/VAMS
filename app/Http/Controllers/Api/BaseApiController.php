@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,6 +26,50 @@ abstract class BaseApiController
 
         if ($data !== null) {
             $response['data'] = $data;
+        }
+
+        return response()->json($response, $status, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Return a successful paginated response with meta and links.
+     *
+     * @param  callable(mixed): array  $formatItem
+     * @param  array<string, mixed>  $extra
+     */
+    protected function successPaginated(
+        LengthAwarePaginator $paginator,
+        string $resourceKey,
+        callable $formatItem,
+        ?string $message = null,
+        int $status = 200,
+        array $extra = []
+    ): JsonResponse {
+        $data = [
+            $resourceKey => $paginator->items()->map($formatItem)->values()->all(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'from' => $paginator->firstItem(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'to' => $paginator->lastItem(),
+                'total' => $paginator->total(),
+            ],
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ];
+
+        $response = [
+            'success' => true,
+            'data' => array_merge($data, $extra),
+        ];
+
+        if ($message !== null) {
+            $response['message'] = $message;
         }
 
         return response()->json($response, $status, [], JSON_UNESCAPED_UNICODE);
@@ -112,10 +157,9 @@ abstract class BaseApiController
     /**
      * Find an entity by title with case-insensitive fallback
      *
-     * @param string $title The title to search for (will be URL-decoded)
-     * @param \Illuminate\Database\Eloquent\Builder $query The query builder to search on
-     * @param bool $caseSensitive Whether to only match exact case (default: false)
-     * @return \Illuminate\Database\Eloquent\Model|null
+     * @param  string  $title  The title to search for (will be URL-decoded)
+     * @param  \Illuminate\Database\Eloquent\Builder  $query  The query builder to search on
+     * @param  bool  $caseSensitive  Whether to only match exact case (default: false)
      */
     protected function findByTitle(string $title, $query, bool $caseSensitive = false): ?\Illuminate\Database\Eloquent\Model
     {

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Entry;
+use Illuminate\Foundation\Http\FormRequest;
 
-class StoreEntryRequest extends BaseEntityRequest
+final class ReorderEntriesRequest extends FormRequest
 {
-    protected function getEntityModelClass(): string
+    public function authorize(): bool
     {
-        return Entry::class;
+        return $this->user() !== null;
     }
 
     /**
@@ -19,9 +19,8 @@ class StoreEntryRequest extends BaseEntityRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required'],
-            'status' => ['nullable', 'string', 'in:draft,published'],
+            'orderedIds' => ['required', 'array'],
+            'orderedIds.*' => ['required', 'uuid', 'exists:entries,id'],
             'entry_type_id' => ['required', 'uuid', 'exists:entry_types,id'],
         ];
     }

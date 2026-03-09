@@ -40,7 +40,7 @@
                 <div class="space-y-4">
                     <!-- Get Albums -->
                     <div class="border rounded-lg p-4">
-                        <h3 class="font-medium mb-2">GET /api/public/albums/by-title/{title}</h3>
+                        <h3 class="font-medium mb-2">GET /api/v1/albums/by-title/{title}</h3>
                         <div class="flex items-center space-x-4">
                             <input 
                                 type="text" 
@@ -59,7 +59,7 @@
 
                     <!-- Get Mosaics -->
                     <div class="border rounded-lg p-4">
-                        <h3 class="font-medium mb-2">GET /api/public/mosaics/by-title/{title}</h3>
+                        <h3 class="font-medium mb-2">GET /api/v1/mosaics/by-title/{title}</h3>
                         <div class="flex items-center space-x-4">
                             <input 
                                 type="text" 
@@ -147,7 +147,7 @@
         }
         
         async function testConnection() {
-            await makeApiRequest('/public/test');
+            await makeApiRequest('/v1/test');
         }
         
         async function testGetAlbum() {
@@ -165,7 +165,7 @@
                 showError('Please enter a mosaic title');
                 return;
             }
-            await makeApiRequest(`/public/mosaics/by-title/${encodeURIComponent(title)}`);
+            await makeApiRequest(`/v1/mosaics/by-title/${encodeURIComponent(title)}`);
         }
     </script>
 </body>

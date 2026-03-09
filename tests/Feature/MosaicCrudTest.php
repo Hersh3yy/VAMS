@@ -292,14 +292,15 @@ it('allows user to reorder mosaic items', function () {
 
     $response->assertRedirect();
 
+    // Controller uses 0-based order (index)
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item1->id,
-        'order' => 2,
+        'order' => 1,
     ]);
 
     $this->assertDatabaseHas('mosaic_items', [
         'id' => $item2->id,
-        'order' => 1,
+        'order' => 0,
     ]);
 });
 

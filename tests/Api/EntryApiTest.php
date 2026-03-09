@@ -45,7 +45,7 @@ it('returns only published entries for the user via API', function () {
 
     $response = $this->withHeaders([
         'X-API-Key' => $user->api_key,
-    ])->getJson('/api/entries');
+    ])->getJson('/api/v1/entries');
 
     $response->assertSuccessful()
         ->assertJson(fn ($json) => $json
@@ -90,7 +90,7 @@ it('returns only published entries by type via API', function () {
 
     $response = $this->withHeaders([
         'X-API-Key' => $user->api_key,
-    ])->getJson('/api/entries/by-type/i-ams');
+    ])->getJson('/api/v1/entries/by-type/i-ams');
 
     $response->assertSuccessful()
         ->assertJson(fn ($json) => $json

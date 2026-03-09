@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\EntryType;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -51,23 +54,17 @@ class UserController
     /**
      * Store a newly created user.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'is_admin' => 'boolean',
-            'is_approved' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'is_admin' => $request->is_admin ?? false,
-            'is_approved' => $request->is_approved ?? false,
-            'approved_at' => $request->is_approved ? now() : null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'is_admin' => $validated['is_admin'] ?? false,
+            'is_approved' => $validated['is_approved'] ?? false,
+            'approved_at' => ($validated['is_approved'] ?? false) ? now() : null,
             'email_verified_at' => now(), // Auto-verify for admin-created users
             'remember_token' => Str::random(10),
             'album_display_settings' => [
@@ -111,29 +108,19 @@ class UserController
     /**
      * Update the user.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'password' => 'nullable|string|min:8',
-            'is_admin' => 'boolean',
-            'is_approved' => 'boolean',
-            'entry_type_permissions' => 'nullable|array',
-            'entry_type_permissions.*' => 'string|exists:entry_types,slug',
-        ]);
+        $validated = $request->validated();
 
-        // Only update password if provided
         $userData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_admin' => $request->is_admin,
-            'entry_type_permissions' => $request->entry_type_permissions,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'is_admin' => $validated['is_admin'],
+            'entry_type_permissions' => $validated['entry_type_permissions'] ?? null,
         ];
 
-        // Track if approval status changed
         $wasApproved = $user->is_approved;
-        $isApprovedNow = $request->is_approved;
+        $isApprovedNow = $validated['is_approved'] ?? false;
 
         $userData['is_approved'] = $isApprovedNow;
 
@@ -142,9 +129,8 @@ class UserController
             $userData['approved_at'] = now();
         }
 
-        // If password is being changed
-        if ($request->filled('password')) {
-            $userData['password'] = Hash::make($request->password);
+        if (! empty($validated['password'])) {
+            $userData['password'] = Hash::make($validated['password']);
         }
 
         $user->update($userData);

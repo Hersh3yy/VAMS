@@ -47,8 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/albums/{album}/images/{image}', [\App\Http\Controllers\AlbumImageController::class, 'destroy'])->name('albums.images.destroy');
     Route::patch('/albums/{album}/reorder', [\App\Http\Controllers\AlbumImageController::class, 'reorder'])->name('albums.images.reorder');
 
-    // Generic Media Upload (for future entities like blog posts, news articles, etc.)
+    // Generic Media Upload (canonical for Inertia SPA; supports file+type and entity_type+entity_id+media[])
     Route::post('/media/upload', [\App\Http\Controllers\MediaUploadController::class, 'upload'])->name('media.upload');
+    Route::delete('/media', [\App\Http\Controllers\MediaUploadController::class, 'delete'])->name('media.delete');
 
     // Entry CRUD operations
     Route::post('/entries', [\App\Http\Controllers\EntryController::class, 'store'])->name('entries.store');
@@ -104,10 +105,12 @@ Route::post('admin/stop-impersonating', [App\Http\Controllers\Admin\UserControll
     ->middleware(['auth'])
     ->name('admin.stop-impersonating');
 
-// API Testing route (for development)
-Route::get('/test-api', function () {
-    return view('test-api');
-})->middleware(['auth', 'admin'])->name('test-api');
+// API Testing route (development only)
+if (! app()->environment('production')) {
+    Route::get('/test-api', function () {
+        return view('test-api');
+    })->middleware(['auth', 'admin'])->name('test-api');
+}
 
 // CSRF Token refresh route
 Route::get('/csrf-token', function () {

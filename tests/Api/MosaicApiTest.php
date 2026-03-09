@@ -20,7 +20,7 @@ beforeEach(function () {
 it('retrieves mosaic via API with valid API key', function () {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson("/api/mosaics/{$this->mosaic->id}");
+    ])->getJson("/api/v1/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(200);
 
@@ -33,7 +33,7 @@ it('retrieves mosaic via API with valid API key', function () {
 });
 
 it('returns 401 for mosaic API request without API key', function () {
-    $response = $this->getJson("/api/mosaics/{$this->mosaic->id}");
+    $response = $this->getJson("/api/v1/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(401)
         ->assertJson([
@@ -44,7 +44,7 @@ it('returns 401 for mosaic API request without API key', function () {
 it('returns 401 for mosaic API request with invalid API key', function () {
     $response = $this->withHeaders([
         'X-API-Key' => 'invalid-key',
-    ])->getJson("/api/mosaics/{$this->mosaic->id}");
+    ])->getJson("/api/v1/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(401)
         ->assertJson([
@@ -55,7 +55,7 @@ it('returns 401 for mosaic API request with invalid API key', function () {
 it('returns 404 for non-existent mosaic via API', function () {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson('/api/mosaics/non-existent-id');
+    ])->getJson('/api/v1/mosaics/non-existent-id');
 
     $response->assertStatus(404);
 });
@@ -66,7 +66,7 @@ it('returns 404 when accessing other users mosaic via API', function () {
 
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson("/api/mosaics/{$otherMosaic->id}");
+    ])->getJson("/api/v1/mosaics/{$otherMosaic->id}");
 
     $response->assertStatus(404);
 });

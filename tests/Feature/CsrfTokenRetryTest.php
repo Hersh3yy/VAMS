@@ -139,15 +139,12 @@ it('validates entity type for generic media upload', function () {
         ->assertJsonValidationErrors(['entity_type']);
 });
 
-it('allows api media upload with sanctum auth', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('allows media upload with session auth', function () {
+    $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('test.jpg');
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $file,
         'type' => 'image',
     ]);
@@ -158,21 +155,17 @@ it('allows api media upload with sanctum auth', function () {
         ]);
 });
 
-it('validates file size for api media upload', function () {
-    $token = $this->user->createToken('test-token')->plainTextToken;
+it('validates file size for media upload', function () {
+    $this->actingAs($this->user);
 
-    // Create a file larger than 10MB (API limit)
     $largefile = UploadedFile::fake()->image('large.jpg')->size(11 * 1024); // 11MB
 
-    $response = $this->withHeaders([
-        'Authorization' => 'Bearer '.$token,
-        'Accept' => 'application/json',
-    ])->postJson('/api/media/upload', [
+    $response = $this->postJson(route('media.upload'), [
         'file' => $largefile,
         'type' => 'image',
     ]);
 
-    // Note: Backend no longer validates file size - this is handled client-side or by infrastructure
+    // Note: Backend no longer validates file size - handled client-side or by infrastructure
     $response->assertSuccessful();
 })->skip('Backend file size validation removed per user request');
 

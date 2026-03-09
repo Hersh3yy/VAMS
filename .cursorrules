@@ -1,0 +1,27 @@
+## Stack
+
+- **Backend:** Laravel 11, PHP 8.3
+- **GraphQL:** Lighthouse PHP v6
+
+---
+
+## Code Style & Best Practices
+
+- **Standard:** Follow [PSR-12](https://www.php-fig.org/psr/psr-12/) for all new code.
+- **Visibility:** Keep classes, methods, and properties as **private** as possible.
+- **Strictness:**
+    - Always declare `strict_types=1` in new PHP files.
+    - Use `final` and `readonly` for classes, methods, and properties when applicable.
+- **Type Safety:**
+    - Always typehint — including closures, constants.
+    - Use `mixed` only as a last resort.
+    - If scalar/union typehinting isn’t possible, fall back to PHPDoc.
+    - Add return types to all functions and methods.
+    - Ensure closures — including short functions (`fn() =>`) — have parameter and return types when possible.
+- **Patterns & Architecture:**
+    - Apply [KISS](https://en.wikipedia.org/wiki/KISS_principle), [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself), and [SOLID](https://en.wikipedia.org/wiki/SOLID) principles.
+    - Suggest applicable design patterns common in Laravel/PHP, linking to [refactoring.guru](https://refactoring.guru/design-patterns).
+- **Modern PHP:**
+    - Use modern PHP 8.3 features where beneficial (readonly classes, enums, promoted properties, etc.).
+    - Favor expressive, declarative code over imperative.
+    - Use **short functions** (`fn() =>`) where appropriate for simple logic.

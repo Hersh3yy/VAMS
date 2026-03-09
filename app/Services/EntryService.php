@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Entry;
+use App\Models\EntryType;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class EntryService extends BaseEntityService
@@ -22,12 +25,12 @@ class EntryService extends BaseEntityService
     /**
      * Get all entries for the current user
      */
-    public function getAllEntries(bool $forApi = false): Collection
+    public function getAllEntries(bool $forApi = false): EloquentCollection
     {
         $user = Auth::user();
 
         if (! $user instanceof User) {
-            return new Collection;
+            return new EloquentCollection;
         }
 
         $query = $user->entries();
@@ -50,7 +53,7 @@ class EntryService extends BaseEntityService
     /**
      * Override to use correct relationship name
      */
-    public function getAll(bool $forApi = false): Collection
+    public function getAll(bool $forApi = false): EloquentCollection
     {
         return $this->getAllEntries($forApi);
     }
@@ -83,9 +86,73 @@ class EntryService extends BaseEntityService
     }
 
     /**
-     * Format entry data for API response
+     * Get published entries for API (user-scoped, filtered by allowed entry types), formatted for response.
+     * When typeSlug is provided, returns only entries of that type.
+     * Fetches and formats in one call — no separate format method needed.
+     *
+     * @return Collection<int, array<string, mixed>>|LengthAwarePaginator
      */
-    public function formatEntryForApi(Entry $entry): array
+    public function getEntriesForApi(User $user, ?string $typeSlug = null, ?int $perPage = null): Collection|LengthAwarePaginator
+    {
+        $allowedTypes = $user->allowedEntryTypes();
+        if ($allowedTypes->isEmpty()) {
+            return new Collection;
+        }
+
+        $query = $user->entries()
+            ->whereIn('entry_type_id', $allowedTypes->pluck('id'))
+            ->published()
+            ->with(['entryType', 'images'])
+            ->orderBy('order')
+            ->orderBy('updated_at', 'desc');
+
+        if ($typeSlug !== null) {
+            $entryType = EntryType::where('slug', $typeSlug)->where('is_active', true)->first();
+            if (! $entryType) {
+                return new Collection;
+            }
+            $query->where('entry_type_id', $entryType->id);
+        }
+
+        $format = fn (Entry $e) => $this->formatEntryForApi($e);
+
+        return $perPage !== null
+            ? $query->paginate($perPage)->through($format)
+            : $query->get()->map($format);
+    }
+
+    /**
+     * Get a single published entry by ID for API (user-scoped), formatted.
+     */
+    public function getEntryForApi(User $user, string $id): ?array
+    {
+        $entry = $user->entries()
+            ->published()
+            ->with(['entryType', 'images'])
+            ->find($id);
+
+        return $entry ? $this->formatEntryForApi($entry) : null;
+    }
+
+    /**
+     * Format entry type for API response (minimal fields).
+     *
+     * @return array{id: string, name: string, slug: string, description: string|null}
+     */
+    public function formatEntryTypeForApi(EntryType $type): array
+    {
+        return [
+            'id' => $type->id,
+            'name' => $type->name,
+            'slug' => $type->slug,
+            'description' => $type->description,
+        ];
+    }
+
+    /**
+     * Format entry data for API response (used by getEntriesForApi and formatWithMediaForApi).
+     */
+    protected function formatEntryForApi(Entry $entry): array
     {
         return [
             'id' => $entry->id,

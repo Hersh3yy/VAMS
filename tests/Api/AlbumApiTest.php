@@ -17,7 +17,7 @@ beforeEach(function () {
 it('retrieves album via API with valid API key', function () {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson("/api/albums/{$this->album->id}");
+    ])->getJson("/api/v1/albums/{$this->album->id}");
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -55,7 +55,7 @@ it('retrieves album via API with valid API key', function () {
 });
 
 it('returns 401 for API requests without API key', function () {
-    $response = $this->getJson("/api/albums/{$this->album->id}");
+    $response = $this->getJson("/api/v1/albums/{$this->album->id}");
 
     $response->assertStatus(401);
 });
@@ -65,7 +65,7 @@ it('returns 404 when accessing other users album with API key', function () {
 
     $response = $this->withHeaders([
         'X-API-Key' => $otherUser->api_key,
-    ])->getJson("/api/albums/{$this->album->id}");
+    ])->getJson("/api/v1/albums/{$this->album->id}");
 
     $response->assertStatus(404);
 });
@@ -73,7 +73,7 @@ it('returns 404 when accessing other users album with API key', function () {
 it('returns 404 for non-existent album', function () {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson('/api/albums/99999');
+    ])->getJson('/api/v1/albums/99999');
 
     $response->assertStatus(404);
 });
@@ -85,7 +85,7 @@ it('retrieves all albums via API index with valid API key', function () {
 
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson('/api/albums');
+    ])->getJson('/api/v1/albums');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -126,7 +126,7 @@ it('retrieves all albums via API index with valid API key', function () {
 it('includes images when with_images parameter is true', function () {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
-    ])->getJson('/api/albums?with_images=true');
+    ])->getJson('/api/v1/albums?with_images=true');
 
     $response->assertStatus(200);
 
