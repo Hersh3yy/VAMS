@@ -67,11 +67,14 @@ it('validates file for media upload via API', function () {
 it('deletes media via API', function () {
     $token = $this->user->createToken('test')->plainTextToken;
 
+    $path = "uploads/images/{$this->user->id}/file.jpg";
+    Storage::disk('spaces')->put($path, 'fake-image-content');
+
     $response = $this->withHeaders([
         'Authorization' => 'Bearer '.$token,
         'Accept' => 'application/json',
     ])->deleteJson('/api/media', [
-        'path' => 'test/path/file.jpg',
+        'path' => $path,
     ]);
 
     $response->assertStatus(200)
@@ -79,6 +82,21 @@ it('deletes media via API', function () {
             'success' => true,
             'message' => 'File deleted successfully',
         ]);
+
+    Storage::disk('spaces')->assertMissing($path);
+});
+
+it('forbids deleting media outside the users own folders via API', function () {
+    $token = $this->user->createToken('test')->plainTextToken;
+
+    $response = $this->withHeaders([
+        'Authorization' => 'Bearer '.$token,
+        'Accept' => 'application/json',
+    ])->deleteJson('/api/media', [
+        'path' => 'test/path/file.jpg',
+    ]);
+
+    $response->assertForbidden();
 });
 
 it('requires path for media deletion via API', function () {

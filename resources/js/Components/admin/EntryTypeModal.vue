@@ -223,6 +223,17 @@
                                     </div>
                                 </div>
 
+                                <div v-if="field.type === 'select'" class="mt-3 ml-4">
+                                    <label class="text-xs text-gray-600">Options (comma separated):</label>
+                                    <input
+                                        type="text"
+                                        :value="(field.options || []).join(', ')"
+                                        @change="updateSelectOptions(field, $event)"
+                                        placeholder="e.g., website, webApplication"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                    />
+                                </div>
+
                                 <div v-if="field.type === 'entry_relation'" class="mt-3 ml-4">
                                     <label class="text-xs text-gray-600">Entry Type Slug:</label>
                                     <input
@@ -406,6 +417,13 @@ const removeNestedField = (field, nestedIndex) => {
     field.fields.splice(nestedIndex, 1)
 }
 
+const updateSelectOptions = (field, event) => {
+    field.options = event.target.value
+        .split(',')
+        .map((option) => option.trim())
+        .filter(Boolean)
+}
+
 const toggleJsonMode = () => {
     jsonMode.value = !jsonMode.value
     jsonError.value = ''
@@ -438,6 +456,15 @@ const saveEntryType = () => {
     errors.value = {}
     jsonError.value = ''
 
+    // In JSON mode, always parse the textarea first so stale form data is never submitted
+    if (jsonMode.value) {
+        parseJsonConfig()
+        if (jsonError.value) {
+            saving.value = false
+            return
+        }
+    }
+
     // Validate required fields before sending
     if (!formData.value.name.trim()) {
         errors.value.name = 'Name is required'
@@ -454,14 +481,17 @@ const saveEntryType = () => {
     // Validate each field
     const fieldErrors = {}
     formData.value.field_config.forEach((field, index) => {
-        if (!field.name.trim()) {
+        if (!field.name?.trim()) {
             fieldErrors[`field_config.${index}.name`] = 'Field name is required'
         }
-        if (!field.label.trim()) {
+        if (!field.label?.trim()) {
             fieldErrors[`field_config.${index}.label`] = 'Field label is required'
         }
         if (!field.type) {
             fieldErrors[`field_config.${index}.type`] = 'Field type is required'
+        }
+        if (field.type === 'select' && !(field.options || []).length) {
+            fieldErrors[`field_config.${index}.name`] = 'Select fields must define their options'
         }
     })
 

@@ -34,5 +34,7 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
     flash?: {
         success?: string;
         error?: string;
+        message?: string;
+        new_api_key?: string;
     };
 };

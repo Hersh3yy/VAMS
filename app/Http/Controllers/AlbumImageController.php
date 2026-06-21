@@ -357,6 +357,10 @@ final class AlbumImageController
             $album = Album::findOrFail($request->album_id);
         }
 
+        abort_unless($album instanceof Album, 404);
+
+        $this->authorize('update', $album);
+
         $request->validate([
             'from_index' => 'required|integer|min:0',
             'to_index' => 'required|integer|min:0',

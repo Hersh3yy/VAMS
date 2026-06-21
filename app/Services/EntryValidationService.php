@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\EntryType;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 final class EntryValidationService
@@ -37,9 +38,10 @@ final class EntryValidationService
             }
 
             match ($field['type']) {
-                'text', 'textarea' => $fieldRules[] = 'string',
+                'text', 'textarea', 'image' => $fieldRules[] = 'string',
                 'number' => $fieldRules[] = 'numeric',
                 'checkbox' => $fieldRules[] = 'boolean',
+                'select' => $this->addSelectRules($field, $fieldRules),
                 'repeatable' => $this->addRepeatableRules($rules, $field, $fieldRules),
                 'image_collection' => $this->addImageCollectionRules($rules, $field, $fieldRules),
                 'entry_relation' => $this->addEntryRelationRules($rules, $field, $fieldRules),
@@ -53,6 +55,38 @@ final class EntryValidationService
         }
 
         return $rules;
+    }
+
+    private function addSelectRules(array $field, array &$fieldRules): void
+    {
+        $fieldRules[] = 'string';
+
+        if (! empty($field['options'])) {
+            $fieldRules[] = Rule::in($field['options']);
+        }
+    }
+
+    /**
+     * Build the validation rule for a nested (single-level) field.
+     *
+     * @return array<int, mixed>
+     */
+    private function buildNestedFieldRules(array $nestedField): array
+    {
+        $nestedRules = ($nestedField['required'] ?? false) ? ['required'] : ['nullable'];
+
+        $nestedRules[] = match ($nestedField['type'] ?? 'text') {
+            'text', 'textarea', 'image', 'select' => 'string',
+            'number' => 'numeric',
+            'checkbox' => 'boolean',
+            default => 'string',
+        };
+
+        if (($nestedField['type'] ?? null) === 'select' && ! empty($nestedField['options'])) {
+            $nestedRules[] = Rule::in($nestedField['options']);
+        }
+
+        return $nestedRules;
     }
 
     private function addRepeatableRules(array &$rules, array $field, array &$fieldRules): void
@@ -70,15 +104,7 @@ final class EntryValidationService
         // Add rules for nested fields
         if (isset($field['fields'])) {
             foreach ($field['fields'] as $nestedField) {
-                $nestedName = "{$name}.*.{$nestedField['name']}";
-                $nestedRules = ($nestedField['required'] ?? false) ? ['required'] : ['nullable'];
-                $nestedRules[] = match ($nestedField['type']) {
-                    'text', 'textarea', 'image' => 'string',
-                    'number' => 'numeric',
-                    'checkbox' => 'boolean',
-                    default => 'string',
-                };
-                $rules[$nestedName] = $nestedRules;
+                $rules["{$name}.*.{$nestedField['name']}"] = $this->buildNestedFieldRules($nestedField);
             }
         }
     }
@@ -98,13 +124,7 @@ final class EntryValidationService
         // Add rules for image metadata fields
         if (isset($field['fields'])) {
             foreach ($field['fields'] as $nestedField) {
-                $nestedName = "{$name}.*.{$nestedField['name']}";
-                $nestedRules = ($nestedField['required'] ?? false) ? ['required'] : ['nullable'];
-                $nestedRules[] = match ($nestedField['type']) {
-                    'text', 'textarea' => 'string',
-                    default => 'string',
-                };
-                $rules[$nestedName] = $nestedRules;
+                $rules["{$name}.*.{$nestedField['name']}"] = $this->buildNestedFieldRules($nestedField);
             }
         }
     }
@@ -132,15 +152,7 @@ final class EntryValidationService
         if (isset($field['fields'])) {
             $name = $field['name'];
             foreach ($field['fields'] as $nestedField) {
-                $nestedName = "{$name}.{$nestedField['name']}";
-                $nestedRules = ($nestedField['required'] ?? false) ? ['required'] : ['nullable'];
-                $nestedRules[] = match ($nestedField['type']) {
-                    'text', 'textarea', 'image' => 'string',
-                    'number' => 'numeric',
-                    'checkbox' => 'boolean',
-                    default => 'string',
-                };
-                $rules[$nestedName] = $nestedRules;
+                $rules["{$name}.{$nestedField['name']}"] = $this->buildNestedFieldRules($nestedField);
             }
         }
     }

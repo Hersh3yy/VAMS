@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'is_approved' => true,
             'approved_at' => now(),
-            'api_key' => Str::random(32),
+            'api_key' => hash('sha256', Str::random(40)),
         ];
     }
 

@@ -11,7 +11,6 @@ export interface User {
     email: string;
     email_verified_at: string | undefined;
     logo_url?: string;
-    api_key?: string;
     is_admin?: boolean;
     allowed_entry_types?: EntryType[];
     album_display_settings?: {
@@ -30,6 +29,12 @@ export interface User {
 export interface PageProps {
     auth: {
         user: User;
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+        message?: string;
+        new_api_key?: string;
     };
     is_impersonating?: boolean;
     ziggy: {

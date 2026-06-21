@@ -1,7 +1,7 @@
 <template>
     <form @submit.prevent="handleSubmit" class="space-y-6">
-        <!-- Title is always present -->
-        <div>
+        <!-- Title is always present (hidden when field_config defines its own title field) -->
+        <div v-if="!hasCustomTitleField">
             <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Title <span class="text-red-500">*</span>
             </label>
@@ -40,6 +40,38 @@
                 :rows="4"
                 :error="(form.errors as any)?.[`content.${field.name}`]"
             />
+
+            <!-- Number Fields -->
+            <FormField
+                v-else-if="field.type === 'number'"
+                :id="field.name"
+                v-model="form.content[field.name]"
+                type="number"
+                :label="field.label"
+                :placeholder="field.placeholder || `Enter ${field.label.toLowerCase()}...`"
+                :required="field.required"
+                :error="(form.errors as any)?.[`content.${field.name}`]"
+            />
+
+            <!-- Select Fields -->
+            <div v-else-if="field.type === 'select'" class="space-y-1">
+                <label :for="field.name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ field.label }}
+                    <span v-if="field.required" class="text-red-500">*</span>
+                </label>
+                <select
+                    :id="field.name"
+                    v-model="form.content[field.name]"
+                    :required="field.required"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                    <option value="" disabled>{{ field.placeholder || `Select ${field.label.toLowerCase()}...` }}</option>
+                    <option v-for="option in field.options || []" :key="option" :value="option">
+                        {{ option }}
+                    </option>
+                </select>
+                <BaseErrorMessage :error="(form.errors as any)?.[`content.${field.name}`]" />
+            </div>
 
             <!-- Checkbox Fields -->
             <div v-else-if="field.type === 'checkbox'" class="space-y-1">
@@ -103,6 +135,38 @@
                                 rows="3"
                                 class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
                             ></textarea>
+
+                            <!-- Nested Number Field -->
+                            <input
+                                v-else-if="nestedField.type === 'number'"
+                                :id="`${field.name}_${itemIndex}_${nestedField.name}`"
+                                v-model="item[nestedField.name]"
+                                type="number"
+                                :placeholder="nestedField.placeholder || `Enter ${nestedField.label.toLowerCase()}...`"
+                                :required="nestedField.required"
+                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                            />
+
+                            <!-- Nested Select Field -->
+                            <select
+                                v-else-if="nestedField.type === 'select'"
+                                :id="`${field.name}_${itemIndex}_${nestedField.name}`"
+                                v-model="item[nestedField.name]"
+                                :required="nestedField.required"
+                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                            >
+                                <option value="" disabled>Select...</option>
+                                <option v-for="option in nestedField.options || []" :key="option" :value="option">
+                                    {{ option }}
+                                </option>
+                            </select>
+
+                            <!-- Nested Checkbox Field -->
+                            <Checkbox
+                                v-else-if="nestedField.type === 'checkbox'"
+                                :id="`${field.name}_${itemIndex}_${nestedField.name}`"
+                                v-model="item[nestedField.name]"
+                            />
                             
                             <!-- Nested Image Field -->
                             <div v-else-if="nestedField.type === 'image'" class="space-y-2">
@@ -180,6 +244,33 @@
                             rows="2"
                             class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
                         ></textarea>
+
+                        <input
+                            v-else-if="nestedField.type === 'number'"
+                            :id="`${field.name}_${nestedField.name}`"
+                            v-model="form.content[field.name][nestedField.name]"
+                            type="number"
+                            :placeholder="nestedField.placeholder || `Enter ${nestedField.label || nestedField.name}...`"
+                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                        />
+
+                        <select
+                            v-else-if="nestedField.type === 'select'"
+                            :id="`${field.name}_${nestedField.name}`"
+                            v-model="form.content[field.name][nestedField.name]"
+                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                        >
+                            <option value="" disabled>Select...</option>
+                            <option v-for="option in nestedField.options || []" :key="option" :value="option">
+                                {{ option }}
+                            </option>
+                        </select>
+
+                        <Checkbox
+                            v-else-if="nestedField.type === 'checkbox'"
+                            :id="`${field.name}_${nestedField.name}`"
+                            v-model="form.content[field.name][nestedField.name]"
+                        />
                     </div>
                 </div>
             </div>
@@ -232,7 +323,7 @@
 
 <script setup lang="ts">
 import { useForm, router as inertiaRouter } from '@inertiajs/vue3'
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import Sortable from 'sortablejs'
 import axios from 'axios'
 import BaseButton from '@/Components/Base/Button.vue'
@@ -252,6 +343,12 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits(['cancel', 'submit', 'delete'])
+
+// When the field_config defines its own "title" field (the modal's default config does),
+// that field drives both the entry title column and content.title, avoiding duplicate inputs.
+const hasCustomTitleField = computed(() =>
+    props.entryType.field_config.some((field: any) => field.name === 'title')
+)
 
 // Initialize form content structure from field_config
 // Merges existing entry content with field_config to ensure all fields are present
@@ -287,7 +384,8 @@ const initializeContent = () => {
             
             // Initialize nested fields from field_config
             field.fields?.forEach((nestedField: any) => {
-                defaultObject[nestedField.name] = existingObject[nestedField.name] ?? ''
+                defaultObject[nestedField.name] =
+                    existingObject[nestedField.name] ?? (nestedField.type === 'checkbox' ? false : '')
             })
             
             content[field.name] = { ...defaultObject, ...existingObject }
@@ -358,7 +456,7 @@ watch(() => props.entry, (newEntry, oldEntry) => {
 const addRepeatableItem = (field: any) => {
     const newItem: any = {}
     field.fields?.forEach((f: any) => {
-        newItem[f.name] = ''
+        newItem[f.name] = f.type === 'checkbox' ? false : ''
     })
     form.content[field.name].push(newItem)
 }
@@ -385,6 +483,12 @@ const handleSubmit = () => {
     if (props.entry?.id) {
         lastEntryId.value = props.entry.id
     }
+
+    // The backend requires a top-level title; mirror the config-defined title field into it
+    if (hasCustomTitleField.value) {
+        form.title = String(form.content.title ?? '')
+    }
+
     emit('submit', form)
 }
 </script>

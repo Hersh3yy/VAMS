@@ -117,6 +117,7 @@ import BaseModal from '@/Components/Base/Modal.vue'
 import BaseButton from '@/Components/Base/Button.vue'
 import DynamicEntryForm from './DynamicEntryForm.vue'
 import EntryReadView from './EntryReadView.vue'
+import { shouldUseDynamicEntryForm } from '@/types/entryField'
 
 interface Entry {
     id: string
@@ -169,12 +170,8 @@ const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString()
 }
 
-// Check if this is a complex entry type
-const isComplexEntryType = computed(() => {
-    return props.entryType?.field_config?.some((field: any) => 
-        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
-    )
-})
+// Use the dynamic form unless this is a legacy single-textarea type (e.g. "I AM")
+const isComplexEntryType = computed(() => shouldUseDynamicEntryForm(props.entryType?.field_config))
 
 const handleDynamicSubmit = (dynamicForm: any) => {
     saving.value = true

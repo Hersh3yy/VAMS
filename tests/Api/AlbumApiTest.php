@@ -8,6 +8,7 @@ use App\Models\User;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
+    $this->apiKey = $this->user->regenerateApiKey();
     $this->album = Album::factory()->create(['user_id' => $this->user->id]);
     $this->albumImages = AlbumImage::factory()->count(3)->create([
         'album_id' => $this->album->id,
@@ -16,7 +17,7 @@ beforeEach(function () {
 
 it('retrieves album via API with valid API key', function () {
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson("/api/albums/{$this->album->id}");
 
     $response->assertStatus(200)
@@ -62,9 +63,10 @@ it('returns 401 for API requests without API key', function () {
 
 it('returns 404 when accessing other users album with API key', function () {
     $otherUser = User::factory()->create();
+    $otherApiKey = $otherUser->regenerateApiKey();
 
     $response = $this->withHeaders([
-        'X-API-Key' => $otherUser->api_key,
+        'X-API-Key' => $otherApiKey,
     ])->getJson("/api/albums/{$this->album->id}");
 
     $response->assertStatus(404);
@@ -72,7 +74,7 @@ it('returns 404 when accessing other users album with API key', function () {
 
 it('returns 404 for non-existent album', function () {
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson('/api/albums/99999');
 
     $response->assertStatus(404);
@@ -84,7 +86,7 @@ it('retrieves all albums via API index with valid API key', function () {
     AlbumImage::factory()->count(2)->create(['album_id' => $album2->id]);
 
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson('/api/albums');
 
     $response->assertStatus(200)
@@ -125,7 +127,7 @@ it('retrieves all albums via API index with valid API key', function () {
 
 it('includes images when with_images parameter is true', function () {
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson('/api/albums?with_images=true');
 
     $response->assertStatus(200);

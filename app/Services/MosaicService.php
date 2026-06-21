@@ -19,6 +19,18 @@ class MosaicService extends BaseEntityService
     }
 
     /**
+     * Get a mosaic by id with its items eager loaded
+     */
+    public function getById(string|Model $entity, bool $forApi = false): ?Model
+    {
+        $mosaic = parent::getById($entity, $forApi);
+
+        $mosaic?->load('items');
+
+        return $mosaic;
+    }
+
+    /**
      * Get a specific mosaic with its items
      */
     public function getMosaicWithItems(string|Mosaic $mosaic, bool $forApi = false): ?Mosaic

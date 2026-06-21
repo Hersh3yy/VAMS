@@ -23,16 +23,10 @@ class AdminUserSeeder extends Seeder
         $existingUser = User::where('email', $adminEmail)->first();
 
         if (! $existingUser) {
-            // Create admin user
-            $admin = User::create([
+            $admin = User::query()->create([
                 'name' => $adminName,
                 'email' => $adminEmail,
-                'email_verified_at' => now(),
                 'password' => Hash::make($adminPassword),
-                'remember_token' => Str::random(10),
-                'is_admin' => true,
-                'is_approved' => true,
-                'approved_at' => now(),
                 'album_display_settings' => [
                     'caption' => true,
                     'altText' => true,
@@ -44,8 +38,15 @@ class AdminUserSeeder extends Seeder
                     'main_color' => '#4F46E5', // Default indigo color
                     'secondary_color' => '#10B981', // Default emerald color
                 ],
-                'api_key' => Str::random(64),
             ]);
+
+            $admin->forceFill([
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+                'is_admin' => true,
+                'is_approved' => true,
+                'approved_at' => now(),
+            ])->save();
 
             $this->command->info("Admin user '{$adminName}' created with email: {$adminEmail}");
         } else {

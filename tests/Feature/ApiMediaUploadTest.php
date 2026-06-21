@@ -156,14 +156,17 @@ it('handles video files via api', function () {
         ->assertJsonPath('data.type', 'video');
 });
 
-it('can delete media via api', function () {
+it('can delete own media via api', function () {
     $token = $this->user->createToken('test-token')->plainTextToken;
+
+    $path = "uploads/images/{$this->user->id}/file.jpg";
+    Storage::disk('spaces')->put($path, 'fake-image-content');
 
     $response = $this->withHeaders([
         'Authorization' => 'Bearer '.$token,
         'Accept' => 'application/json',
     ])->deleteJson('/api/media', [
-        'path' => 'test/path/to/file.jpg',
+        'path' => $path,
     ]);
 
     $response->assertSuccessful()
@@ -171,6 +174,40 @@ it('can delete media via api', function () {
             'success' => true,
             'message' => 'File deleted successfully',
         ]);
+
+    Storage::disk('spaces')->assertMissing($path);
+});
+
+it('forbids deleting files outside the users own upload folders', function () {
+    $token = $this->user->createToken('test-token')->plainTextToken;
+
+    $otherUser = User::factory()->create();
+    $path = "uploads/images/{$otherUser->id}/file.jpg";
+    Storage::disk('spaces')->put($path, 'fake-image-content');
+
+    $response = $this->withHeaders([
+        'Authorization' => 'Bearer '.$token,
+        'Accept' => 'application/json',
+    ])->deleteJson('/api/media', [
+        'path' => $path,
+    ]);
+
+    $response->assertForbidden();
+
+    Storage::disk('spaces')->assertExists($path);
+});
+
+it('forbids path traversal in media delete paths', function () {
+    $token = $this->user->createToken('test-token')->plainTextToken;
+
+    $response = $this->withHeaders([
+        'Authorization' => 'Bearer '.$token,
+        'Accept' => 'application/json',
+    ])->deleteJson('/api/media', [
+        'path' => "uploads/images/{$this->user->id}/../../../secret.txt",
+    ]);
+
+    $response->assertForbidden();
 });
 
 it('requires path for api delete', function () {

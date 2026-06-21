@@ -97,12 +97,6 @@
                                             scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                                         >
-                                            API Key
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                                        >
                                             Created
                                         </th>
                                         <th
@@ -155,28 +149,6 @@
                                             class="whitespace-nowrap px-6 py-4 text-sm text-gray-500"
                                         >
                                             {{ user.albums_count }}
-                                        </td>
-                                        <td
-                                            class="whitespace-nowrap px-6 py-4 text-sm text-gray-500"
-                                        >
-                                            <div class="flex items-center space-x-2">
-                                                <code class="rounded bg-gray-100 px-2 py-1 text-xs">
-                                                    {{
-                                                        user.api_key
-                                                            ? user.api_key.substring(0, 8) + '...'
-                                                            : 'None'
-                                                    }}
-                                                </code>
-                                                <BaseButton
-                                                    v-if="user.api_key"
-                                                    @click="copyApiKey(user.api_key)"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    title="Copy API Key"
-                                                >
-                                                    Copy
-                                                </BaseButton>
-                                            </div>
                                         </td>
                                         <td
                                             class="whitespace-nowrap px-6 py-4 text-sm text-gray-500"
@@ -338,14 +310,4 @@ const impersonateUser = userId => {
     actionForm.post(route('admin.users.impersonate', userId));
 };
 
-// Copy API key to clipboard
-const copyApiKey = async apiKey => {
-    try {
-        await navigator.clipboard.writeText(apiKey);
-        alert('API key copied to clipboard!');
-    } catch (err) {
-        console.error('Failed to copy API key:', err);
-        alert('Failed to copy API key to clipboard');
-    }
-};
 </script>

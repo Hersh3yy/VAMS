@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
@@ -50,6 +52,12 @@ class HandleInertiaRequests extends Middleware
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
+            ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'message' => $request->session()->get('message'),
+                'new_api_key' => $request->session()->get('new_api_key'),
             ],
             // Pass CSRF token refresh if available (for post-login synchronization)
             'csrf_token_refresh' => session('csrf_token_refresh'),

@@ -44,6 +44,24 @@ export interface ObjectField extends BaseField {
 
 export type EntryField = SimpleField | RepeatableField | ImageCollectionField | EntryRelationField | ObjectField
 
+export const COMPLEX_FIELD_TYPES = ['repeatable', 'image_collection', 'object', 'entry_relation'] as const
+
+/**
+ * Decide whether the dynamic, field_config-driven form should be used.
+ * Only legacy single-textarea types (e.g. "I AM") keep the simple title + content form.
+ */
+export function shouldUseDynamicEntryForm(fieldConfig?: EntryField[] | null): boolean {
+    if (!fieldConfig || fieldConfig.length === 0) {
+        return false
+    }
+
+    if (fieldConfig.some((field) => (COMPLEX_FIELD_TYPES as readonly string[]).includes(field.type))) {
+        return true
+    }
+
+    return !(fieldConfig.length === 1 && fieldConfig[0].type === 'textarea')
+}
+
 export interface EntryType {
     id: string
     name: string

@@ -13,6 +13,7 @@ it('returns only published entries for the user via API', function () {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
+    $apiKey = $user->regenerateApiKey();
 
     $type = EntryType::query()->create([
         'name' => 'I AMS',
@@ -44,7 +45,7 @@ it('returns only published entries for the user via API', function () {
     ]);
 
     $response = $this->withHeaders([
-        'X-API-Key' => $user->api_key,
+        'X-API-Key' => $apiKey,
     ])->getJson('/api/entries');
 
     $response->assertSuccessful()
@@ -59,6 +60,7 @@ it('returns only published entries by type via API', function () {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
+    $apiKey = $user->regenerateApiKey();
 
     $type = EntryType::query()->create([
         'name' => 'I AMS',
@@ -89,7 +91,7 @@ it('returns only published entries by type via API', function () {
     ]);
 
     $response = $this->withHeaders([
-        'X-API-Key' => $user->api_key,
+        'X-API-Key' => $apiKey,
     ])->getJson('/api/entries/by-type/i-ams');
 
     $response->assertSuccessful()

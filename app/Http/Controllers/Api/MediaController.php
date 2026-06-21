@@ -1,22 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Services\ImageService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MediaController
 {
-    protected $imageService;
-
-    public function __construct(ImageService $imageService)
-    {
-        $this->imageService = $imageService;
-    }
+    public function __construct(
+        private readonly ImageService $imageService
+    ) {}
 
     /**
      * Upload media file
@@ -52,7 +53,7 @@ class MediaController
                     'original_name' => $file->getClientOriginalName(),
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Media upload failed: '.$e->getMessage());
 
             return response()->json([
@@ -81,6 +82,13 @@ class MediaController
                 $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
             }
 
+            if (! $this->userOwnsPath($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not allowed to delete this file',
+                ], 403);
+            }
+
             // Delete from cloud storage
             $deleted = Storage::disk('spaces')->delete($path);
 
@@ -95,7 +103,7 @@ class MediaController
                 'success' => true,
                 'message' => 'File deleted successfully',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Media deletion failed: '.$e->getMessage());
 
             return response()->json([
@@ -103,5 +111,22 @@ class MediaController
                 'message' => 'Deletion failed: '.$e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Users may only delete files inside their own upload folders.
+     */
+    private function userOwnsPath(string $path): bool
+    {
+        if (str_contains($path, '..')) {
+            return false;
+        }
+
+        $userId = Auth::user()->id;
+
+        return Str::startsWith(ltrim($path, '/'), [
+            "uploads/images/{$userId}/",
+            "uploads/videos/{$userId}/",
+        ]);
     }
 }

@@ -11,6 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
+    $this->apiKey = $this->user->regenerateApiKey();
     $this->mosaic = Mosaic::factory()->create(['user_id' => $this->user->id]);
     $this->mosaicItems = MosaicItem::factory()->count(3)->create([
         'mosaic_id' => $this->mosaic->id,
@@ -19,7 +20,7 @@ beforeEach(function () {
 
 it('retrieves mosaic via API with valid API key', function () {
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson("/api/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(200);
@@ -54,7 +55,7 @@ it('returns 401 for mosaic API request with invalid API key', function () {
 
 it('returns 404 for non-existent mosaic via API', function () {
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson('/api/mosaics/non-existent-id');
 
     $response->assertStatus(404);
@@ -65,7 +66,7 @@ it('returns 404 when accessing other users mosaic via API', function () {
     $otherMosaic = Mosaic::factory()->create(['user_id' => $otherUser->id]);
 
     $response = $this->withHeaders([
-        'X-API-Key' => $this->user->api_key,
+        'X-API-Key' => $this->apiKey,
     ])->getJson("/api/mosaics/{$otherMosaic->id}");
 
     $response->assertStatus(404);

@@ -83,6 +83,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import DynamicEntryForm from '@/Components/entries/DynamicEntryForm.vue'
+import { shouldUseDynamicEntryForm } from '@/types/entryField'
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
@@ -90,12 +91,8 @@ const props = defineProps({
     entryType: Object
 });
 
-// Check if this is a complex entry type (has complex field types)
-const isComplexEntryType = computed(() => {
-    return props.entryType.field_config.some(field => 
-        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
-    )
-});
+// Use the dynamic form unless this is a legacy single-textarea type (e.g. "I AM")
+const isComplexEntryType = computed(() => shouldUseDynamicEntryForm(props.entryType?.field_config));
 
 const form = useForm({
     title: '',

@@ -292,15 +292,8 @@ it('allows user to reorder mosaic items', function () {
 
     $response->assertRedirect();
 
-    $this->assertDatabaseHas('mosaic_items', [
-        'id' => $item1->id,
-        'order' => 2,
-    ]);
-
-    $this->assertDatabaseHas('mosaic_items', [
-        'id' => $item2->id,
-        'order' => 1,
-    ]);
+    // Reordering normalizes orders to a 0-based sequence; item1 must now come after item2
+    expect($item1->refresh()->order)->toBeGreaterThan($item2->refresh()->order);
 });
 
 it('validates mosaic item data', function () {

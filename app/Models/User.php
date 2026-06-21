@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -29,11 +31,6 @@ class User extends Authenticatable
         'password',
         'album_display_settings',
         'logo_url',
-        'is_admin',
-        'is_approved',
-        'approved_at',
-        'api_key',
-        'entry_type_permissions',
     ];
 
     /**
@@ -44,6 +41,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'api_key',
     ];
 
     /**
@@ -66,13 +64,13 @@ class User extends Authenticatable
         ];
     }
 
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
-        static::creating(function ($user) {
+        static::creating(function (User $user): void {
             if (! $user->api_key) {
-                $user->api_key = Str::random(32);
+                $user->api_key = self::hashApiKey(Str::random(40));
             }
         });
     }
@@ -152,24 +150,24 @@ class User extends Authenticatable
     }
 
     /**
-     * Generate a new API key for the user
+     * Hash a plain-text API key for storage and lookup.
+     * Keys are stored hashed at rest; the plain-text key is only shown once.
      */
-    public function generateNewApiKey(): string
+    public static function hashApiKey(string $plainTextKey): string
     {
-        $this->api_key = Str::random(32);
-        $this->save();
-
-        return $this->api_key;
+        return hash('sha256', $plainTextKey);
     }
 
     /**
-     * Regenerate the user's API key
+     * Regenerate the user's API key and return the plain-text key.
+     * The plain-text key cannot be retrieved again afterwards.
      */
     public function regenerateApiKey(): string
     {
-        $this->api_key = Str::random(32);
-        $this->save();
+        $plainTextKey = Str::random(40);
 
-        return $this->api_key;
+        $this->forceFill(['api_key' => self::hashApiKey($plainTextKey)])->save();
+
+        return $plainTextKey;
     }
 }

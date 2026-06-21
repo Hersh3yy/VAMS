@@ -1,39 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\EntryType;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController
 {
     /**
      * Display a listing of users.
      */
-    public function index()
+    public function index(): Response
     {
-        $users = User::latest()
-            ->with('albums')
+        $users = User::query()
+            ->latest()
             ->withCount('albums')
             ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_admin' => $user->is_admin,
-                    'is_approved' => $user->is_approved,
-                    'created_at' => $user->created_at,
-                    'approved_at' => $user->approved_at,
-                    'albums_count' => $user->albums_count,
-                    'api_key' => $user->api_key,
-                ];
-            });
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => $user->is_admin,
+                'is_approved' => $user->is_approved,
+                'created_at' => $user->created_at,
+                'approved_at' => $user->approved_at,
+                'albums_count' => $user->albums_count,
+            ]);
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
@@ -43,7 +45,7 @@ class UserController
     /**
      * Show the form for creating a new user.
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Admin/Users/Create');
     }
@@ -51,25 +53,15 @@ class UserController
     /**
      * Store a newly created user.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'is_admin' => 'boolean',
-            'is_approved' => 'boolean',
-        ]);
+        $validated = $request->validated();
+        $isApproved = (bool) ($validated['is_approved'] ?? false);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'is_admin' => $request->is_admin ?? false,
-            'is_approved' => $request->is_approved ?? false,
-            'approved_at' => $request->is_approved ? now() : null,
-            'email_verified_at' => now(), // Auto-verify for admin-created users
-            'remember_token' => Str::random(10),
+        $user = User::query()->create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
             'album_display_settings' => [
                 'caption' => true,
                 'altText' => true,
@@ -83,6 +75,13 @@ class UserController
             ],
         ]);
 
+        $user->forceFill([
+            'is_admin' => (bool) ($validated['is_admin'] ?? false),
+            'is_approved' => $isApproved,
+            'approved_at' => $isApproved ? now() : null,
+            'email_verified_at' => now(),
+        ])->save();
+
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} created successfully.");
     }
@@ -90,7 +89,7 @@ class UserController
     /**
      * Show the form for editing the user.
      */
-    public function edit(User $user)
+    public function edit(User $user): Response
     {
         return Inertia::render('Admin/Users/Edit', [
             'user' => [
@@ -101,7 +100,7 @@ class UserController
                 'is_approved' => $user->is_approved,
                 'created_at' => $user->created_at,
                 'approved_at' => $user->approved_at,
-                'api_key' => $user->api_key,
+                'has_api_key' => filled($user->api_key),
                 'entry_type_permissions' => $user->entry_type_permissions,
             ],
             'entryTypes' => EntryType::active()->get(['id', 'name', 'slug', 'description']),
@@ -111,43 +110,32 @@ class UserController
     /**
      * Update the user.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'password' => 'nullable|string|min:8',
-            'is_admin' => 'boolean',
-            'is_approved' => 'boolean',
-            'entry_type_permissions' => 'nullable|array',
-            'entry_type_permissions.*' => 'string|exists:entry_types,slug',
+        $validated = $request->validated();
+
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
         ]);
 
-        // Only update password if provided
-        $userData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'is_admin' => $request->is_admin,
-            'entry_type_permissions' => $request->entry_type_permissions,
-        ];
-
-        // Track if approval status changed
-        $wasApproved = $user->is_approved;
-        $isApprovedNow = $request->is_approved;
-
-        $userData['is_approved'] = $isApprovedNow;
-
-        // Set approved_at timestamp if user is being approved now
-        if (! $wasApproved && $isApprovedNow) {
-            $userData['approved_at'] = now();
+        if (filled($validated['password'] ?? null)) {
+            $user->password = Hash::make($validated['password']);
         }
 
-        // If password is being changed
-        if ($request->filled('password')) {
-            $userData['password'] = Hash::make($request->password);
+        $isApprovedNow = (bool) ($validated['is_approved'] ?? false);
+
+        $user->forceFill([
+            'is_admin' => (bool) ($validated['is_admin'] ?? false),
+            'is_approved' => $isApprovedNow,
+            'entry_type_permissions' => $validated['entry_type_permissions'] ?? null,
+        ]);
+
+        if (! $user->getOriginal('is_approved') && $isApprovedNow) {
+            $user->forceFill(['approved_at' => now()]);
         }
 
-        $user->update($userData);
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} updated successfully.");
@@ -156,9 +144,8 @@ class UserController
     /**
      * Remove the user.
      */
-    public function destroy(User $user)
+    public function destroy(User $user): RedirectResponse
     {
-        // Prevent deleting self
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'You cannot delete your own account.');
@@ -173,12 +160,12 @@ class UserController
     /**
      * Approve a user account.
      */
-    public function approve(User $user)
+    public function approve(User $user): RedirectResponse
     {
-        $user->update([
+        $user->forceFill([
             'is_approved' => true,
             'approved_at' => now(),
-        ]);
+        ])->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} has been approved.");
@@ -187,12 +174,19 @@ class UserController
     /**
      * Impersonate a user.
      */
-    public function impersonate(User $user)
+    public function impersonate(User $user): RedirectResponse
     {
-        // Store the admin's ID in the session
-        session()->put('admin_id', Auth::id());
+        $admin = Auth::user();
 
-        // Log in as the target user
+        session()->put('admin_id', $admin->id);
+
+        Log::info('Admin started impersonating user', [
+            'admin_id' => $admin->id,
+            'admin_email' => $admin->email,
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+        ]);
+
         Auth::login($user);
 
         return redirect()->route('dashboard')
@@ -202,15 +196,18 @@ class UserController
     /**
      * Stop impersonating a user.
      */
-    public function stopImpersonating()
+    public function stopImpersonating(): RedirectResponse
     {
-        // Get the admin ID from session
         $adminId = session()->pull('admin_id');
 
         if ($adminId) {
-            $admin = User::findOrFail($adminId);
+            $admin = User::query()->findOrFail($adminId);
 
-            // Log back in as admin
+            Log::info('Admin stopped impersonating user', [
+                'admin_id' => $admin->id,
+                'impersonated_user_id' => Auth::id(),
+            ]);
+
             Auth::login($admin);
 
             return redirect()->route('admin.users.index')
@@ -221,13 +218,15 @@ class UserController
     }
 
     /**
-     * Regenerate API key for a user.
+     * Regenerate API key for a user. The plain-text key is flashed once and
+     * cannot be retrieved afterwards (only its hash is stored).
      */
-    public function regenerateApiKey(User $user)
+    public function regenerateApiKey(User $user): RedirectResponse
     {
-        $newApiKey = $user->regenerateApiKey();
+        $plainTextKey = $user->regenerateApiKey();
 
         return redirect()->back()
-            ->with('success', "API key regenerated successfully for {$user->name}.");
+            ->with('success', "API key regenerated successfully for {$user->name}. Copy it now - it will not be shown again.")
+            ->with('new_api_key', $plainTextKey);
     }
 }

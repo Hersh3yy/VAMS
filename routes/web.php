@@ -7,10 +7,10 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to dashboard (with auth protection)
-Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'approved'])->name('dashboard');
 
 // Authenticated routes - FRONTEND PAGES ONLY
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Album Frontend Pages
     Route::get('/albums', [AlbumController::class, 'index'])->name('albums.index');
@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // CRUD operations (for named routes needed by frontend)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     // Album CRUD operations
     Route::post('/albums', [AlbumController::class, 'store'])->name('albums.store');
     Route::patch('/albums/{album}', [AlbumController::class, 'update'])->name('albums.update');
@@ -61,10 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/mosaics/{mosaic}', [MosaicController::class, 'update'])->name('mosaics.update');
     Route::delete('/mosaics/{mosaic}', [MosaicController::class, 'destroy'])->name('mosaics.destroy');
 
-    // Mosaic Item Management
+    // Mosaic Item Management (scoped bindings ensure {item} belongs to {mosaic})
     Route::post('/mosaics/{mosaic}/items', [MosaicController::class, 'storeItem'])->name('mosaics.items.store');
-    Route::put('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'updateItem'])->name('mosaics.items.update');
-    Route::delete('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'destroyItem'])->name('mosaics.items.destroy');
+    Route::put('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'updateItem'])->name('mosaics.items.update')->scopeBindings();
+    Route::delete('/mosaics/{mosaic}/items/{item}', [MosaicController::class, 'destroyItem'])->name('mosaics.items.destroy')->scopeBindings();
     Route::patch('/mosaics/{mosaic}/items/reorder', [MosaicController::class, 'reorderItems'])->name('mosaics.items.reorder');
 
     // Mosaic Media Upload
@@ -72,15 +72,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Profile routes (these can stay as they are minimal)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'approved'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::patch('/theme', [ProfileController::class, 'updateTheme'])->name('theme.update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
 
         // Logo management
-        Route::post('/logo', [ProfileController::class, 'updateLogo'])->name('profile.logo.update');
-        Route::delete('/logo', [ProfileController::class, 'destroyLogo'])->name('profile.logo.destroy');
+        Route::post('/logo', [ProfileController::class, 'updateLogo'])->name('logo.update');
+        Route::delete('/logo', [ProfileController::class, 'destroyLogo'])->name('logo.destroy');
     });
 });
 

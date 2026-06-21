@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use App\Models\User;
@@ -22,8 +24,8 @@ class ValidateApiKey
             return response()->json(['error' => 'API key is required'], 401);
         }
 
-        // Find user by API key
-        $user = User::where('api_key', $apiKey)->first();
+        // Keys are stored hashed at rest; hash the incoming key to find its owner
+        $user = User::query()->where('api_key', User::hashApiKey($apiKey))->first();
 
         if (! $user) {
             return response()->json(['error' => 'Invalid API key'], 401);

@@ -62,14 +62,16 @@ final class ProfileController
             $user->email_verified_at = null;
         }
 
-        // Handle API key regeneration
-        if ($request->boolean('regenerate_api_key')) {
-            $user->regenerateApiKey();
-        }
-
         $user->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        $redirect = Redirect::route('profile.edit')->with('status', 'profile-updated');
+
+        if ($request->boolean('regenerate_api_key')) {
+            $redirect->with('new_api_key', $user->regenerateApiKey())
+                ->with('success', 'API key regenerated. Copy it now - it will not be shown again.');
+        }
+
+        return $redirect;
     }
 
     /**
