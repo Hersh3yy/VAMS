@@ -1,0 +1,47 @@
+services:
+    api:
+        build:
+            context: .
+            target: app
+        image: vams-app
+        restart: unless-stopped
+        ports:
+            - "${APP_PORT:-8080}:80"
+        env_file:
+            - .env
+        environment:
+            RUN_MIGRATIONS: "${RUN_MIGRATIONS:-false}"
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    # Service name matches .env DB_HOST=mysql (Sail convention).
+    mysql:
+        image: mysql:8.4
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: "${DB_DATABASE:-vams}"
+            MYSQL_USER: "${DB_USERNAME:-sail}"
+            MYSQL_PASSWORD: "${DB_PASSWORD:-password}"
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-password}"
+        ports:
+            - "${FORWARD_DB_PORT:-3306}:3306"
+        volumes:
+            - db-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD:-password}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        volumes:
+            - redis-data:/data
+
+volumes:
+    db-data:
+    redis-data:

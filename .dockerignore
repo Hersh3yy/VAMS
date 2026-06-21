@@ -1,0 +1,44 @@
+# Dependencies (rebuilt inside the image)
+/vendor
+/node_modules
+
+# Build artifacts (regenerated)
+/public/build
+/public/hot
+/bootstrap/ssr
+
+# VCS & editor
+.git
+.gitignore
+.gitattributes
+.idea
+.vscode
+.cursor
+
+# Local env & secrets (provided at runtime via env_file / platform secrets)
+.env
+.env.*
+!.env.example
+
+# Laravel runtime state (must not be baked into the image)
+# Stale package/service manifests reference dev-only providers (e.g. Boost)
+# and would crash a --no-dev image; let artisan regenerate them.
+/bootstrap/cache/*.php
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/app/public/*
+/storage/*.key
+
+# Tests & CI (not needed in the runtime image)
+/tests
+/.github
+phpunit.xml
+
+# Misc
+README.md
+ARCH_AUDIT.md
+DOCKER_COMMANDS.md
+*.log
+.DS_Store

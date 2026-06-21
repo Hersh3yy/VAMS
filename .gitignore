@@ -24,7 +24,9 @@ yarn-error.log
 /.zed
 /node_modules
 
-# Docker files for local development
-docker-compose.yml
-Dockerfile
-nginx.conf
+# Legacy local-only nginx config (superseded by docker/nginx.conf).
+# Anchored to repo root so it does NOT also ignore docker/nginx.conf.
+/nginx.conf
+
+# Resolved fresh inside the Docker build (container env, not a dev machine)
+package-lock.json
