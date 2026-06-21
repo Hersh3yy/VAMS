@@ -2,8 +2,8 @@
 
 # =============================================================================
 # Stage 1 — PHP dependencies (Composer)
-# Scripts skipped (no artisan/PHP extensions here); discovery runs in Stage 3.
-# Built first because the frontend build imports vendor/tightenco/ziggy.
+# Scripts skipped; discovery runs in Stage 3.
+# Built first because the frontend imports vendor/tightenco/ziggy.
 # =============================================================================
 FROM composer:2 AS vendor
 WORKDIR /app
@@ -18,48 +18,46 @@ RUN composer install \
 
 # =============================================================================
 # Stage 2 — Frontend assets (Vite)
-# Builds client bundle only. SSR + vue-tsc are intentionally skipped here for
-# deploy reliability; Inertia falls back to client-side rendering at runtime.
 # =============================================================================
 FROM node:22-alpine AS frontend
 WORKDIR /app
 
 COPY package.json ./
-# No package-lock.json in the repo by design: dependencies resolve fresh inside
-# the image so the build matches the container environment, not a dev machine.
-# --legacy-peer-deps sidesteps an eslint/vue plugin peer conflict that is
-# irrelevant to the asset build.
+# No package-lock.json by design: resolves fresh inside the container.
+# --legacy-peer-deps: sidesteps an eslint/vue peer conflict irrelevant to build.
 RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 COPY . .
-# Ziggy ships as a composer package but is imported by the Vue app.
+# Ziggy ships as a PHP package but is imported by the Vue app.
 COPY --from=vendor /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
 RUN npx vite build
 
 # =============================================================================
 # Stage 3 — Runtime (PHP-FPM + Nginx + Supervisor)
-# A single self-contained image so local and production run identically.
+#
+# We use the mlocati/docker-php-extension-installer helper which downloads
+# pre-compiled extension binaries instead of building from C source.
+# This cuts the extension install step from ~20 min down to ~2-3 min.
 # =============================================================================
 FROM php:8.3-fpm-bookworm AS app
 
-# --- System packages & PHP extensions ---------------------------------------
-# gd: current image pipeline. imagick: future variant system. exif: orientation.
+# Pull in the extension installer (single ADD is fine; no curl/wget needed)
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+    /usr/local/bin/install-php-extensions
+RUN chmod +x /usr/local/bin/install-php-extensions
+
+# System packages (only what the extensions actually need at runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
         unzip \
         git \
-        libpng-dev \
-        libjpeg62-turbo-dev \
-        libfreetype6-dev \
-        libwebp-dev \
-        libzip-dev \
-        libonig-dev \
-        libicu-dev \
-        libmagickwand-dev \
-        libpq-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# All PHP extensions in one fast step — pre-compiled binaries, not source.
+# gd: current image pipeline.  imagick: future variant system.
+RUN install-php-extensions \
         gd \
         pdo_mysql \
         pdo_pgsql \
@@ -70,10 +68,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         intl \
         opcache \
         pcntl \
-    && pecl install imagick redis \
-    && docker-php-ext-enable imagick redis \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        imagick \
+        redis
 
 WORKDIR /var/www
 
@@ -82,7 +78,7 @@ COPY . /var/www
 COPY --from=vendor /app/vendor /var/www/vendor
 COPY --from=frontend /app/public/build /var/www/public/build
 
-# Laravel package discovery (composer scripts were skipped in Stage 2)
+# Laravel package discovery (composer scripts were skipped in Stage 1)
 RUN php artisan package:discover --ansi || true
 
 # --- Container configuration -------------------------------------------------
@@ -93,8 +89,6 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
 # --- Writable runtime directories + permissions ------------------------------
-# .dockerignore strips storage contents, so recreate the framework dirs the
-# app needs at runtime, then hand ownership to the php-fpm/queue user.
 RUN mkdir -p \
         storage/app/public \
         storage/framework/cache/data \
