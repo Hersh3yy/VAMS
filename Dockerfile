@@ -22,10 +22,9 @@ RUN composer install \
 FROM node:22-alpine AS frontend
 WORKDIR /app
 
-COPY package.json ./
-# No package-lock.json by design: resolves fresh inside the container.
+COPY package.json package-lock.json ./
 # --legacy-peer-deps: sidesteps an eslint/vue peer conflict irrelevant to build.
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
 COPY . .
 # Ziggy ships as a PHP package but is imported by the Vue app.
