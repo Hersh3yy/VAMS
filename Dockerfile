@@ -22,9 +22,9 @@ RUN composer install \
 FROM node:22-alpine AS frontend
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-# --legacy-peer-deps: sidesteps an eslint/vue peer conflict irrelevant to build.
-RUN npm ci --legacy-peer-deps --no-audit --no-fund
+COPY package.json package-lock.json .npmrc ./
+# legacy-peer-deps comes from .npmrc (eslint/vue peer conflict; also required by DO App Platform).
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 # Ziggy ships as a PHP package but is imported by the Vue app.
