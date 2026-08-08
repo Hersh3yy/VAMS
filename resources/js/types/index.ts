@@ -37,6 +37,10 @@ export interface PageProps {
         error?: string;
         message?: string;
     };
+    theme_defaults: {
+        main_color: string;
+        secondary_color: string;
+    };
     ziggy: {
         location: string;
         url: string;

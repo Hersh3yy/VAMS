@@ -7,7 +7,7 @@
                 <select
                     v-model="columnCount"
                     @change="updateColumns"
-                    class="form-select rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="form-select rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary"
                 >
                     <option value="1">1 Column</option>
                     <option value="2">2 Columns</option>

@@ -14,7 +14,7 @@
                     </Link>
                     <Link
                         :href="route('admin.entry-types.index')"
-                        class="hover:bg-green-600 rounded bg-green-500 px-4 py-2 text-white"
+                        class="hover:bg-primary/90 rounded bg-primary px-4 py-2 text-white"
                     >
                         Manage Entry Types
                     </Link>

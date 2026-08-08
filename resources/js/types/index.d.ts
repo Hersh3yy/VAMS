@@ -22,8 +22,6 @@ export interface User {
         main_color?: string;
         secondary_color?: string;
     };
-    theme_settings?: Record<string, any>;
-    site_settings?: Record<string, any>;
 }
 
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {

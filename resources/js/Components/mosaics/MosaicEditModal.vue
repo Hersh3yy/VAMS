@@ -11,7 +11,7 @@
                                 <input
                                     type="text"
                                     v-model="formData.title"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                                 />
                             </div>
 
@@ -22,7 +22,7 @@
                                 <textarea
                                     v-model="formData.description"
                                     rows="3"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                                 />
                             </div>
 
@@ -40,7 +40,7 @@
                                             v-model="formData.settings.grid_columns"
                                             min="1"
                                             max="6"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                                         />
                                     </div>
 
@@ -51,7 +51,7 @@
                                             v-model="formData.settings.gap"
                                             min="0"
                                             max="32"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                                         />
                                     </div>
 
@@ -64,7 +64,7 @@
                                             v-model="formData.settings.padding"
                                             min="0"
                                             max="32"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                                         />
                                     </div>
 
@@ -72,7 +72,7 @@
                                         <input
                                             type="checkbox"
                                             v-model="formData.settings.show_titles"
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            class="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                                         />
                                         <label class="ml-2 block text-sm text-gray-900"
                                             >Show Titles</label
@@ -83,7 +83,7 @@
                                         <input
                                             type="checkbox"
                                             v-model="formData.settings.show_captions"
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            class="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                                         />
                                         <label class="ml-2 block text-sm text-gray-900"
                                             >Show Captions</label

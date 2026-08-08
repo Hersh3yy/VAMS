@@ -63,7 +63,7 @@
                             v-model="editText"
                             type="text"
                             placeholder="Text to display on hover"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary"
                         />
                     </div>
 
@@ -213,7 +213,7 @@
                             v-model="linkUrl"
                             type="text"
                             placeholder="Enter URL, album title, or path starting with '/'"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary"
                         />
                     </div>
 
@@ -226,7 +226,7 @@
                             v-model="editText"
                             type="text"
                             placeholder="Text to display on hover"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary"
                         />
                     </div>
 
@@ -457,10 +457,6 @@ watch(selectedAlbumId, (newAlbumId, oldAlbumId) => {
 </script>
 
 <style scoped>
-.btn-primary {
-    @apply rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700;
-}
-
 .btn-secondary {
     @apply rounded-md bg-gray-200 px-4 py-2 font-medium text-gray-800 transition-colors hover:bg-gray-300;
 }

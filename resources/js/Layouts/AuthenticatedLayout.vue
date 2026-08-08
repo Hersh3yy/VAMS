@@ -2,13 +2,11 @@
 import ErrorModal from '@/Components/albums/ErrorModal.vue';
 import MobileNav from '@/Components/layout/MobileNav.vue';
 import Navbar from '@/Components/layout/Navbar.vue';
-import { PageProps, User } from '@/types';
-import { usePage } from '@inertiajs/vue3';
-import { computed, onMounted, provide, ref, watch } from 'vue';
+import { useUserTheme } from '@/composables/shared/useUserTheme';
+import { provide, ref } from 'vue';
 
 const showingNavigationDropdown = ref(false);
 const errorModal = ref<InstanceType<typeof ErrorModal> | null>(null);
-const page = usePage<PageProps>();
 
 const toggleNavigation = () => {
     showingNavigationDropdown.value = !showingNavigationDropdown.value;
@@ -18,43 +16,14 @@ const showError = (message: string) => {
     errorModal.value?.showError(message);
 };
 
-// Theme handling
-const userThemeStyle = computed(() => {
-    const user = page.props.auth?.user as User;
-    if (!user) return { '--primary-color': '#000000', '--secondary-color': '#EAB308' };
-
-    const settings = user.album_display_settings || {};
-    const mainColor = settings.main_color || '#000000'; // Default black
-    const secondaryColor = settings.secondary_color || '#EAB308'; // Default gold
-
-    return {
-        '--primary-color': mainColor,
-        '--secondary-color': secondaryColor
-    };
-});
-
-// Handle dark mode
-onMounted(() => {
-    document.documentElement.classList.add('dark');
-});
-
-// Update CSS variables when theme changes
-watch(
-    () => userThemeStyle.value,
-    newStyle => {
-        Object.entries(newStyle).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(key, value);
-        });
-    },
-    { immediate: true }
-);
+const { themeStyle } = useUserTheme();
 
 // Provide the showError function to all child components
 provide('showError', showError);
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100" :style="userThemeStyle">
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-900" :style="themeStyle">
         <Navbar
             :showing-navigation-dropdown="showingNavigationDropdown"
             :toggle-navigation="toggleNavigation"

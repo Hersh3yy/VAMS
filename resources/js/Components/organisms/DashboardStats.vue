@@ -35,7 +35,7 @@
                 <div class="text-sm">
                     <Link
                         :href="route('albums.index')"
-                        class="font-medium text-indigo-600 hover:text-indigo-500"
+                        class="font-medium text-secondary hover:text-indigo-500"
                     >
                         View all albums
                     </Link>
@@ -80,7 +80,7 @@
                 <div class="text-sm">
                     <Link
                         :href="route('mosaics.index')"
-                        class="font-medium text-indigo-600 hover:text-indigo-500"
+                        class="font-medium text-secondary hover:text-indigo-500"
                     >
                         View all mosaics
                     </Link>
@@ -125,7 +125,7 @@
                 <div class="text-sm">
                     <Link
                         :href="route('albums.index')"
-                        class="font-medium text-indigo-600 hover:text-indigo-500"
+                        class="font-medium text-secondary hover:text-indigo-500"
                     >
                         View all media
                     </Link>
@@ -142,7 +142,7 @@
                 <li v-for="activity in recentActivity" :key="activity.id">
                     <div class="px-4 py-4 sm:px-6">
                         <div class="flex items-center justify-between">
-                            <p class="truncate text-sm font-medium text-indigo-600">
+                            <p class="truncate text-sm font-medium text-secondary">
                                 {{ activity.description }}
                             </p>
                             <div class="ml-2 flex flex-shrink-0">

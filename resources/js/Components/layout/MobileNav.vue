@@ -69,11 +69,23 @@
                 >
                     Log Out
                 </ResponsiveNavLink>
+                <button
+                    type="button"
+                    class="flex w-full items-center gap-2 border-l-4 border-transparent py-2 ps-3 pe-4 text-start text-base font-medium text-yellow-400 transition duration-150 ease-in-out hover:border-yellow-500 hover:bg-gray-900 hover:text-yellow-300 focus:outline-none"
+                    @click="toggleDarkMode"
+                >
+                    <Icon :name="isDark ? 'sun' : 'moon'" size="sm" />
+                    {{ isDark ? 'Light Mode' : 'Dark Mode' }}
+                </button>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import Icon from '@/Components/Base/Icon.vue';
 import ResponsiveNavLink from '@/Components/Base/ResponsiveNavLink.vue';
+import { useDarkMode } from '@/composables/shared/useDarkMode';
+
+const { isDark, toggleDarkMode } = useDarkMode();
 </script>

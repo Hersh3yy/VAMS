@@ -96,7 +96,7 @@ const textareaClasses = computed(() => {
     const baseClasses = 'block w-full rounded-md border shadow-sm transition-colors duration-200 focus:ring-2 focus:outline-none';
     const errorClasses = props.error
         ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600'
-        : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
+        : 'border-gray-300 focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:focus:border-secondary dark:focus:ring-indigo-400';
     const disabledClasses = props.disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'dark:bg-gray-700 dark:text-white dark:placeholder-gray-400';
     
     return `${baseClasses} ${errorClasses} ${disabledClasses} px-3 py-2`;

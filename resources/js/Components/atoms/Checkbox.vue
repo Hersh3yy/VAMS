@@ -41,7 +41,7 @@ defineEmits<{
 }>();
 
 const inputClass = computed(() => {
-    return 'rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600';
+    return 'rounded border-gray-300 text-secondary shadow-sm focus:ring-secondary dark:border-gray-600';
 });
 </script>
 

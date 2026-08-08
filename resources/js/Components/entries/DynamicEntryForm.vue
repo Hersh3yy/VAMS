@@ -9,7 +9,7 @@
                 id="title"
                 v-model="form.title"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                 required
             />
             <p v-if="form.errors.title" class="text-sm text-red-600 mt-1">{{ form.errors.title }}</p>
@@ -90,7 +90,7 @@
                                 type="text"
                                 :placeholder="nestedField.placeholder || `Enter ${nestedField.label.toLowerCase()}...`"
                                 :required="nestedField.required"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-600 dark:text-white"
                             />
                             
                             <!-- Nested Textarea Field -->
@@ -101,7 +101,7 @@
                                 :placeholder="nestedField.placeholder || `Enter ${nestedField.label.toLowerCase()}...`"
                                 :required="nestedField.required"
                                 rows="3"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-600 dark:text-white"
                             ></textarea>
                             
                             <!-- Nested Image Field -->
@@ -111,7 +111,7 @@
                                     type="file"
                                     accept="image/*"
                                     @change="handleImageUpload($event, field.name, itemIndex, nestedField.name)"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-600 dark:text-white"
                                 />
                                 <div v-if="item[nestedField.name]" class="text-xs text-green-600">
                                     Image uploaded: {{ item[nestedField.name] }}
@@ -125,7 +125,7 @@
                     variant="ghost"
                     size="sm"
                     @click="addRepeatableItem(field)"
-                    class="!text-indigo-600 hover:!text-indigo-800 !text-sm"
+                    class="!text-secondary hover:!text-indigo-800 !text-sm"
                 >
                     + Add {{ field.label }}
                 </BaseButton>
@@ -169,7 +169,7 @@
                             v-model="form.content[field.name][nestedField.name]"
                             type="text"
                             :placeholder="nestedField.placeholder || `Enter ${nestedField.label || nestedField.name}...`"
-                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-600 dark:text-white"
                         />
                         
                         <textarea
@@ -178,7 +178,7 @@
                             v-model="form.content[field.name][nestedField.name]"
                             :placeholder="nestedField.placeholder || `Enter ${nestedField.label || nestedField.name}...`"
                             rows="2"
-                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                            class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-600 dark:text-white"
                         ></textarea>
                     </div>
                 </div>
@@ -193,7 +193,7 @@
             <select
                 id="status"
                 v-model="form.status"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
             >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>

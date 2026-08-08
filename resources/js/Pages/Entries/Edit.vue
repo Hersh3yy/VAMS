@@ -44,7 +44,7 @@
                                     id="title"
                                     v-model="form.title"
                                     type="text"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                                     :placeholder="`Give your ${entry.entry_type?.name || 'entry'} a title...`"
                                     required
                                 />
@@ -61,7 +61,7 @@
                                     id="content"
                                     v-model="form.content"
                                     rows="6"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                                     :placeholder="`Enter ${entry.entry_type?.name?.toLowerCase() || 'entry'} content...`"
                                     required
                                 ></textarea>
@@ -77,7 +77,7 @@
                                 <select
                                     id="status"
                                     v-model="form.status"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                                 >
                                     <option value="draft">Draft</option>
                                     <option value="published">Published</option>
@@ -95,7 +95,7 @@
                                 <button
                                     type="submit"
                                     :disabled="form.processing"
-                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                                    class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
                                 >
                                     <span v-if="form.processing">Saving...</span>
                                     <span v-else>Save Changes</span>

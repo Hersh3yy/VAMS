@@ -15,7 +15,7 @@
                             </div>
                             <Link 
                                 :href="route('entries.create', { type: entryType.slug })" 
-                                class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+                                class="rounded bg-primary px-4 py-2 font-bold text-white hover:bg-primary/90"
                             >
                                 Create {{ entryType.name }}
                             </Link>

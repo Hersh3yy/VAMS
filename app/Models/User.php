@@ -56,8 +56,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'theme_settings' => 'array',
-            'site_settings' => 'array',
             'album_display_settings' => 'array',
             'entry_type_permissions' => 'array',
             'is_admin' => 'boolean',

@@ -7,13 +7,13 @@
                 <template #actions>
                     <Link
                         :href="route('test-api')"
-                        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
                     >
                         Test API
                     </Link>
                     <Link
                         :href="route('admin.users.create')"
-                        class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                        class="rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
                     >
                         Add New User
                     </Link>
@@ -59,7 +59,7 @@
                                     v-model="search"
                                     type="text"
                                     placeholder="Search users..."
-                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary"
                                 />
                             </div>
                         </div>
@@ -188,7 +188,7 @@
                                         >
                                             <Link
                                                 :href="route('admin.users.edit', user.id)"
-                                                class="mr-2 text-indigo-600 hover:text-indigo-900"
+                                                class="mr-2 text-secondary hover:text-indigo-900"
                                             >
                                                 Edit
                                             </Link>

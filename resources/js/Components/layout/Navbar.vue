@@ -57,7 +57,8 @@
                     </div>
                 </div>
 
-                <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                <div class="hidden sm:ms-6 sm:flex sm:items-center sm:gap-2">
+                    <DarkModeToggle />
                     <UserDropdown />
                 </div>
 
@@ -99,6 +100,7 @@
 <script setup lang="ts">
 import ApplicationLogo from '@/Components/Base/ApplicationLogo.vue';
 import NavLink from '@/Components/Base/NavLink.vue';
+import DarkModeToggle from '@/Components/molecules/DarkModeToggle.vue';
 import { Link } from '@inertiajs/vue3';
 import UserDropdown from './UserDropdown.vue';
 

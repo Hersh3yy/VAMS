@@ -72,7 +72,7 @@ const inputClass = computed(() => {
     const showError = !!props.error || props.hasError;
     const stateClasses = showError
         ? 'border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400'
-        : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400';
+        : 'border-gray-300 focus:border-secondary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-secondary dark:focus:ring-indigo-400';
 
     const disabledClass = props.disabled ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : '';
 

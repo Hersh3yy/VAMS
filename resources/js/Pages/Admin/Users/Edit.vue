@@ -171,7 +171,7 @@
                                             <button
                                                 type="button"
                                                 @click="copyApiKey"
-                                                class="rounded bg-blue-500 px-3 py-2 text-sm text-white hover:bg-blue-600"
+                                                class="rounded bg-secondary px-3 py-2 text-sm text-primary hover:brightness-90"
                                             >
                                                 Copy
                                             </button>

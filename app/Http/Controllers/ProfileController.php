@@ -38,8 +38,8 @@ final class ProfileController
                 'tags' => true,
                 'title' => true,
                 'author' => true,
-                'main_color' => '#4F46E5', // Default indigo color
-                'secondary_color' => '#10B981', // Default emerald color
+                'main_color' => config('theme.default_main_color'),
+                'secondary_color' => config('theme.default_secondary_color'),
             ],
         ]);
     }
@@ -104,8 +104,8 @@ final class ProfileController
             'tags' => isset($settings['tags']) ? (bool) $settings['tags'] : false,
             'title' => isset($settings['title']) ? (bool) $settings['title'] : false,
             'author' => isset($settings['author']) ? (bool) $settings['author'] : false,
-            'main_color' => $settings['main_color'] ?? $existingSettings['main_color'] ?? '#4F46E5',
-            'secondary_color' => $settings['secondary_color'] ?? $existingSettings['secondary_color'] ?? '#10B981',
+            'main_color' => $settings['main_color'] ?? $existingSettings['main_color'] ?? config('theme.default_main_color'),
+            'secondary_color' => $settings['secondary_color'] ?? $existingSettings['secondary_color'] ?? config('theme.default_secondary_color'),
         ];
 
         $user->save();

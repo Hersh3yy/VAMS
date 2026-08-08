@@ -18,8 +18,11 @@ export default {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                primary: 'var(--primary-color)',
-                secondary: 'var(--secondary-color)',
+                // --primary-color/--secondary-color hold "r g b" triplets (see
+                // resources/css/app.css and useUserTheme.ts) so opacity modifiers
+                // like `bg-secondary/20` work against user-supplied theme colors.
+                primary: 'rgb(var(--primary-color) / <alpha-value>)',
+                secondary: 'rgb(var(--secondary-color) / <alpha-value>)',
             },
         },
     },

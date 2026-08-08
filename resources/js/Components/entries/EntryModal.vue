@@ -36,7 +36,7 @@
                         v-model="formData.title"
                         type="text"
                         :readonly="!isEditing"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                         :class="{ 'bg-gray-100 dark:bg-gray-600': !isEditing }"
                         :placeholder="`Give your ${props.entryType?.name || 'entry'} a title...`"
                         required
@@ -52,7 +52,7 @@
                         v-model="formData.content"
                         rows="6"
                         :readonly="!isEditing"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:text-white"
                         :class="{ 'bg-gray-100 dark:bg-gray-600': !isEditing }"
                         :placeholder="`Enter ${props.entryType?.name?.toLowerCase() || 'entry'} content...`"
                         required

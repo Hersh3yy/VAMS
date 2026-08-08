@@ -17,7 +17,7 @@
                             v-model="formData.name"
                             type="text"
                             required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                             placeholder="e.g., Recipes, Blog Posts"
                         />
                         <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
@@ -30,7 +30,7 @@
                             id="description"
                             v-model="formData.description"
                             rows="3"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary sm:text-sm"
                             placeholder="A brief description of this entry type..."
                         />
                         <p v-if="errors.description" class="mt-1 text-sm text-red-600">{{ errors.description }}</p>
@@ -56,7 +56,7 @@
                             <textarea
                                 v-model="jsonFieldConfig"
                                 rows="20"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary font-mono text-sm"
                                 placeholder="Paste your field_config JSON here..."
                             ></textarea>
                             <div v-if="jsonError" class="text-sm text-red-600">
@@ -65,7 +65,7 @@
                             <button
                                 type="button"
                                 @click="parseJsonConfig"
-                                class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+                                class="text-sm bg-secondary text-primary px-3 py-1 rounded hover:brightness-90"
                             >
                                 Parse JSON
                             </button>
@@ -83,7 +83,7 @@
                                             type="text"
                                             placeholder="Field name (e.g., title)"
                                             :class="[
-                                                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm',
+                                                'rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-sm',
                                                 errors[`field_config.${index}.name`] ? 'border-red-500' : ''
                                             ]"
                                         />
@@ -94,11 +94,11 @@
                                             v-model="field.label"
                                             type="text"
                                             placeholder="Label (e.g., Title)"
-                                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                            class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-sm"
                                         />
                                         <select
                                             v-model="field.type"
-                                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                            class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-sm"
                                             @change="onFieldTypeChange(field)"
                                         >
                                             <option value="text">Text</option>
@@ -115,7 +115,7 @@
                                             v-model="field.placeholder"
                                             type="text"
                                             placeholder="Placeholder (optional)"
-                                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                            class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-sm"
                                         />
                                     </div>
                                     <label class="flex items-center space-x-1 text-sm whitespace-nowrap ml-2">
@@ -149,17 +149,17 @@
                                                     v-model="nestedField.name"
                                                     type="text"
                                                     placeholder="Field name"
-                                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                    class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                                 />
                                                 <input
                                                     v-model="nestedField.label"
                                                     type="text"
                                                     placeholder="Label"
-                                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                    class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                                 />
                                                 <select
                                                     v-model="nestedField.type"
-                                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                    class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                                 >
                                                     <option value="text">Text</option>
                                                     <option value="textarea">Textarea</option>
@@ -171,7 +171,7 @@
                                                     v-model="nestedField.placeholder"
                                                     type="text"
                                                     placeholder="Placeholder"
-                                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                    class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                                 />
                                             </div>
                                             <label class="flex items-center space-x-1 text-xs whitespace-nowrap ml-2">
@@ -193,7 +193,7 @@
                                     <button
                                         type="button"
                                         @click="addNestedField(field)"
-                                        class="mt-2 text-xs text-indigo-600 hover:text-indigo-800"
+                                        class="mt-2 text-xs text-secondary hover:text-indigo-800"
                                     >
                                         + Add Nested Field
                                     </button>
@@ -208,7 +208,7 @@
                                                 v-model.number="field.min"
                                                 type="number"
                                                 min="0"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                             />
                                         </div>
                                         <div class="flex-1">
@@ -217,7 +217,7 @@
                                                 v-model.number="field.max"
                                                 type="number"
                                                 min="1"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                             />
                                         </div>
                                     </div>
@@ -229,7 +229,7 @@
                                         v-model="field.entry_type_slug"
                                         type="text"
                                         placeholder="e.g., case, blog-post"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-xs"
                                     />
                                     <label class="mt-1 flex items-center text-xs">
                                         <input v-model="field.exclude_current" type="checkbox" class="rounded mr-1" />
@@ -248,7 +248,7 @@
                             <button
                                 type="button"
                                 @click="addField"
-                                class="mt-2 text-sm text-indigo-600 hover:text-indigo-800"
+                                class="mt-2 text-sm text-secondary hover:text-indigo-800"
                             >
                                 + Add Field
                             </button>
@@ -262,7 +262,7 @@
                             id="is_active"
                             v-model="formData.is_active"
                             type="checkbox"
-                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary"
                         />
                         <label for="is_active" class="ml-2 block text-sm text-gray-900">
                             Active

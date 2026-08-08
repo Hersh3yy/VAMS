@@ -10,7 +10,7 @@
                 <div class="flex space-x-3">
                     <button
                         @click="openCreateModal"
-                        class="hover:bg-green-600 rounded bg-green-500 px-4 py-2 text-white"
+                        class="hover:bg-primary/90 rounded bg-primary px-4 py-2 text-white"
                     >
                         Create Entry Type
                     </button>
@@ -48,7 +48,7 @@
                             <p class="text-gray-500 mb-4">No entry types created yet.</p>
                             <button
                                 @click="openCreateModal"
-                                class="inline-block rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                                class="inline-block rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
                             >
                                 Create First Entry Type
                             </button>

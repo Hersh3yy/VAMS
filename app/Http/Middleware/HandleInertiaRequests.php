@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'logo_url' => $request->user()->logo_url,
                     'is_admin' => $request->user()->is_admin,
+                    'album_display_settings' => $request->user()->album_display_settings,
                     'allowed_entry_types' => $request->user()->allowedEntryTypes()->map(fn ($type) => [
                         'id' => $type->id,
                         'name' => $type->name,
@@ -53,6 +54,10 @@ class HandleInertiaRequests extends Middleware
             ],
             // Pass CSRF token refresh if available (for post-login synchronization)
             'csrf_token_refresh' => session('csrf_token_refresh'),
+            'theme_defaults' => [
+                'main_color' => config('theme.default_main_color'),
+                'secondary_color' => config('theme.default_secondary_color'),
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
