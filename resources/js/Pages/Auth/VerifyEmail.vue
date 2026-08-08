@@ -2,6 +2,10 @@
     <GuestLayout>
         <Head title="Email Verification" />
 
+        <h1 class="mb-4 text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            Email Verification
+        </h1>
+
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
             Thanks for signing up! Before getting started, could you verify your email address by
             clicking on the link we just emailed to you? If you didn't receive the email, we will

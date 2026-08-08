@@ -6,7 +6,7 @@
             <div class="page-header">
                 <div class="flex items-center">
                     <BackLink :href="route('albums.show', Album.id)" />
-                    <h2 class="page-title">Edit Album</h2>
+                    <h1 class="page-title">Edit Album</h1>
                 </div>
             </div>
         </template>

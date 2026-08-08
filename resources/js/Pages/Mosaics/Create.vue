@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="page-title">Create New Mosaic</h2>
+                <h1 class="page-title">Create New Mosaic</h1>
             </div>
         </template>
 

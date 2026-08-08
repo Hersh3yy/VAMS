@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h2>
+                <h1 class="text-xl font-semibold leading-tight text-gray-800">Admin Dashboard</h1>
                 <div class="flex space-x-3">
                     <Link
                         :href="route('admin.users.index')"

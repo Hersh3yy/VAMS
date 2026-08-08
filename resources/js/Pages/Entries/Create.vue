@@ -7,7 +7,7 @@
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-semibold">Create New {{ entryType.name }}</h2>
+                            <h1 class="text-2xl font-semibold">Create New {{ entryType.name }}</h1>
                             <Link :href="route('entries.index', { type: entryType.slug })" class="text-gray-500 hover:text-gray-700">
                                 ← Back to {{ entryType.name }}
                             </Link>

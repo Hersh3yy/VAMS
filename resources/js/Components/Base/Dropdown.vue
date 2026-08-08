@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
+import { onClickOutside, onKeyStroke } from '@vueuse/core';
 
 const props = withDefaults(
     defineProps<{
@@ -14,14 +15,23 @@ const props = withDefaults(
     }
 );
 
-const closeOnEscape = (e: KeyboardEvent) => {
-    if (open.value && e.key === 'Escape') {
-        open.value = false;
-    }
-};
+const open = ref(false);
+const rootRef = useTemplateRef<HTMLElement>('rootRef');
+const triggerRef = useTemplateRef<HTMLElement>('triggerRef');
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
-onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
+function close() {
+    if (!open.value) return;
+    open.value = false;
+    triggerRef.value?.querySelector<HTMLElement>('button, a, [tabindex]')?.focus();
+}
+
+function toggle() {
+    open.value = !open.value;
+}
+
+onClickOutside(rootRef, close);
+
+onKeyStroke('Escape', () => close());
 
 const widthClass = computed(() => {
     return {
@@ -38,18 +48,13 @@ const alignmentClasses = computed(() => {
         return 'origin-top';
     }
 });
-
-const open = ref(false);
 </script>
 
 <template>
-    <div class="relative">
-        <div @click="open = !open">
-            <slot name="trigger" />
+    <div ref="rootRef" class="relative">
+        <div ref="triggerRef" @click="toggle">
+            <slot name="trigger" :open="open" :toggle="toggle" />
         </div>
-
-        <!-- Full Screen Dropdown Overlay -->
-        <div v-show="open" class="fixed inset-0 z-40" @click="open = false" />
 
         <Transition
             enter-active-class="transition ease-out duration-200"
@@ -61,10 +66,11 @@ const open = ref(false);
         >
             <div
                 v-show="open"
+                role="menu"
                 class="absolute z-50 mt-2 rounded-md shadow-lg"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none"
-                @click="open = false"
+                @click="close"
             >
                 <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
                     <slot name="content" />

@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Create New User</h2>
+                <h1 class="text-xl font-semibold leading-tight text-gray-800">Create New User</h1>
                 <div>
                     <Link
                         :href="route('admin.users.index')"

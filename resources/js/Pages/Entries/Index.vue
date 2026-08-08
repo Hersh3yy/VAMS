@@ -8,7 +8,7 @@
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="mb-6 flex items-center justify-between">
                             <div>
-                                <h2 class="text-2xl font-semibold">{{ entryType.name }}</h2>
+                                <h1 class="text-2xl font-semibold">{{ entryType.name }}</h1>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                     {{ entryType.description || `Manage your ${entryType.name.toLowerCase()}` }}
                                 </p>

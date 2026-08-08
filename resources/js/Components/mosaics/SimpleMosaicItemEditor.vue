@@ -2,15 +2,19 @@
     <div
         v-if="show"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
         @click="handleBackdropClick"
     >
         <div
+            ref="panelRef"
             class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-lg"
             @click.stop
         >
             <!-- Header -->
             <div class="flex items-center justify-between border-b p-4">
-                <h3 class="text-lg font-medium">
+                <h3 :id="titleId" class="text-lg font-medium">
                     {{ item?.id ? 'Edit Item' : 'Add Item' }}
                 </h3>
                 <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
@@ -250,8 +254,9 @@
 </template>
 
 <script setup lang="ts">
+import { useFocusTrap } from '@/composables/shared/useFocusTrap';
 import type { Album, MosaicItem } from '@/types/mosaic';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, toRef, useTemplateRef, watch } from 'vue';
 
 const props = defineProps<{
     show: boolean;
@@ -266,6 +271,11 @@ const emit = defineEmits<{
     (e: 'delete', item: MosaicItem): void;
     (e: 'update'): void;
 }>();
+
+const titleId = 'simple-mosaic-item-editor-title';
+const panelRef = useTemplateRef<HTMLElement>('panelRef');
+
+useFocusTrap(panelRef, toRef(props, 'show'), () => emit('close'));
 
 // State
 const isEditMode = ref(false);

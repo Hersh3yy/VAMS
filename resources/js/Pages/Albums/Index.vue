@@ -3,7 +3,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="page-header">
-                <h2 class="page-title">Albums</h2>
+                <h1 class="page-title">Albums</h1>
                 <Link :href="route('albums.create')" class="btn-primary"> Create Album </Link>
             </div>
         </template>

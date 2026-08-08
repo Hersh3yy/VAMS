@@ -25,7 +25,7 @@
                         </svg>
                         Back
                     </Link>
-                    <h2 class="text-xl font-semibold leading-tight text-gray-800">Create Album</h2>
+                    <h1 class="text-xl font-semibold leading-tight text-gray-800">Create Album</h1>
                 </div>
             </div>
         </template>

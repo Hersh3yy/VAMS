@@ -4,9 +4,9 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                <h1 class="text-xl font-semibold leading-tight text-gray-800">
                     Manage Entry Types
-                </h2>
+                </h1>
                 <div class="flex space-x-3">
                     <button
                         @click="openCreateModal"

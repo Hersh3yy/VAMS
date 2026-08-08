@@ -7,13 +7,14 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <!-- Modal content -->
                 <div
+                    ref="panelRef"
                     :class="modalClasses"
                     class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 dark:bg-gray-800"
                 >
                     <!-- Header -->
                     <div v-if="hasHeaderSlot" class="mb-4">
                         <div class="flex items-center justify-between">
-                            <div class="flex-1">
+                            <div :id="titleId" class="flex-1">
                                 <slot name="header" />
                             </div>
                             <button
@@ -48,7 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue';
+import { computed, useSlots, useTemplateRef, toRef } from 'vue';
+import { useFocusTrap } from '@/composables/shared/useFocusTrap';
 
 interface Props {
     show: boolean;
@@ -63,7 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
     titleId: 'modal-title'
 });
 
-defineEmits<{
+const emit = defineEmits<{
     close: [];
 }>();
 
@@ -71,6 +73,10 @@ const slots = useSlots();
 
 const hasHeaderSlot = computed(() => !!slots.header);
 const hasFooterSlot = computed(() => !!slots.footer);
+
+const panelRef = useTemplateRef<HTMLElement>('panelRef');
+
+useFocusTrap(panelRef, toRef(props, 'show'), () => emit('close'));
 
 const modalClasses = computed(() => {
     const sizeClasses = {

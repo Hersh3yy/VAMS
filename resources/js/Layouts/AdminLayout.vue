@@ -46,8 +46,11 @@
                     <div class="hidden sm:ml-6 sm:flex sm:items-center">
                         <div class="relative ml-3">
                             <Dropdown align="right" width="48">
-                                <template #trigger>
+                                <template #trigger="{ open }">
                                     <button
+                                        type="button"
+                                        aria-haspopup="true"
+                                        :aria-expanded="open"
                                         class="flex rounded-full border-2 border-transparent text-sm transition duration-150 ease-in-out focus:border-gray-300 focus:outline-none"
                                     >
                                         <span class="sr-only">Open user menu</span>

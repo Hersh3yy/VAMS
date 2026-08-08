@@ -3,7 +3,7 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="page-header">
-                <h2 class="page-title">Mosaics</h2>
+                <h1 class="page-title">Mosaics</h1>
                 <Link :href="route('mosaics.create')" class="btn-primary"> Create New Mosaic </Link>
             </div>
         </template>

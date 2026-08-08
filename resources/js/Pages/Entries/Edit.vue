@@ -7,7 +7,7 @@
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-semibold">Edit {{ entry.entry_type?.name || 'Entry' }}</h2>
+                            <h1 class="text-2xl font-semibold">Edit {{ entry.entry_type?.name || 'Entry' }}</h1>
                             <Link :href="route('entries.show', entry.id)" class="text-gray-500 hover:text-gray-700">
                                 ← Back to {{ entry.entry_type?.name || 'Entry' }}
                             </Link>

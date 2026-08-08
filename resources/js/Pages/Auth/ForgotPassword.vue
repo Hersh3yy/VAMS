@@ -2,9 +2,13 @@
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 dark:bg-gray-900 sm:justify-center sm:pt-0"
     >
-        <div
+        <main
             class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md dark:bg-gray-800 sm:max-w-md sm:rounded-lg"
         >
+            <h1 class="mb-4 text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                Forgot Password
+            </h1>
+
             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
                 Forgot your password? No problem. Just let us know your email address and we will
                 email you a password reset link that will allow you to choose a new one.
@@ -47,7 +51,7 @@
                     </button>
                 </div>
             </form>
-        </div>
+        </main>
     </div>
 </template>
 

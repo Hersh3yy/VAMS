@@ -15,9 +15,9 @@
                 </svg>
                 Back
             </Link>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h1 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ album.title }}
-            </h2>
+            </h1>
         </div>
         <HeaderActions
             entity-type="Album"
