@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import Card from '@/Components/Base/Card.vue';
 import Icon from '@/Components/Base/Icon.vue';
-import EntityCard from '@/Components/atoms/EntityCard.vue';
+import EntityCard from '@/Components/molecules/EntityCard.vue';
 import { Link } from '@inertiajs/vue3';
 
 interface Entity {

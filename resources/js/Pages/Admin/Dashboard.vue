@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import AdminQuickActions from '@/Components/organisms/AdminQuickActions.vue';
-import AdminStatsGrid from '@/Components/organisms/AdminStatsGrid.vue';
+import AdminQuickActions from '@/Components/admin/AdminQuickActions.vue';
+import AdminStatsGrid from '@/Components/admin/AdminStatsGrid.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 

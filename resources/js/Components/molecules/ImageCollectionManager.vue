@@ -71,7 +71,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onUnmounted } from 'vue'
 import Sortable from 'sortablejs'
-import ImageUploadZone from '@/Components/atoms/ImageUploadZone.vue'
+import ImageUploadZone from '@/Components/molecules/ImageUploadZone.vue'
 import { useCsrfToken } from '@/composables/shared/useCsrfToken'
 
 interface Image {

@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import Card from '@/Components/Base/Card.vue';
 import Icon from '@/Components/Base/Icon.vue';
-import ActivityItem from '@/Components/atoms/ActivityItem.vue';
+import ActivityItem from '@/Components/molecules/ActivityItem.vue';
 
 interface Activity {
     id: number;
