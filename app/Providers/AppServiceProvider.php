@@ -8,6 +8,10 @@ use App\Models\Mosaic;
 use App\Policies\AlbumPolicy;
 use App\Policies\EntryPolicy;
 use App\Policies\MosaicPolicy;
+use App\Services\Plans\AlbumUsageStrategy;
+use App\Services\Plans\EntryUsageStrategy;
+use App\Services\Plans\MosaicUsageStrategy;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -20,7 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(PlanLimitService::class, fn () => new PlanLimitService([
+            'albums' => new AlbumUsageStrategy,
+            'mosaics' => new MosaicUsageStrategy,
+            'entries' => new EntryUsageStrategy,
+        ]));
     }
 
     /**

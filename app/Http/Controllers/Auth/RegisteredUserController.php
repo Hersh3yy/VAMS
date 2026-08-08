@@ -33,6 +33,7 @@ class RegisteredUserController
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'terms' => ['accepted'],
         ]);
 
         $user = User::create([
@@ -42,6 +43,13 @@ class RegisteredUserController
         ]);
 
         event(new Registered($user));
+
+        if (! $user->is_admin && ! $user->is_approved) {
+            return redirect()->route('login')->with(
+                'success',
+                "Thanks for registering, {$user->name}! Your account is pending approval by an administrator — you'll be able to log in as soon as it's approved."
+            );
+        }
 
         Auth::login($user);
 

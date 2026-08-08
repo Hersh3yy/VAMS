@@ -21,7 +21,7 @@
                     <input
                         id="name"
                         type="text"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-secondary dark:focus:ring-secondary"
                         v-model="form.name"
                         required
                         autofocus
@@ -44,7 +44,7 @@
                     <input
                         id="email"
                         type="email"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-secondary dark:focus:ring-secondary"
                         v-model="form.email"
                         required
                         autocomplete="username"
@@ -66,7 +66,7 @@
                     <input
                         id="password"
                         type="password"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-secondary dark:focus:ring-secondary"
                         v-model="form.password"
                         required
                         autocomplete="new-password"
@@ -91,7 +91,7 @@
                     <input
                         id="password_confirmation"
                         type="password"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-secondary dark:focus:ring-secondary"
                         v-model="form.password_confirmation"
                         required
                         autocomplete="new-password"
@@ -102,6 +102,25 @@
                         class="mt-2 text-sm text-red-600 dark:text-red-400"
                     >
                         {{ form.errors.password_confirmation }}
+                    </p>
+                </div>
+
+                <div class="mt-4">
+                    <label class="flex items-start">
+                        <input
+                            id="terms"
+                            type="checkbox"
+                            class="mt-0.5 rounded border-gray-300 text-secondary shadow-sm focus:ring-secondary dark:border-gray-700 dark:bg-gray-900 dark:focus:ring-secondary dark:focus:ring-offset-gray-800"
+                            v-model="form.terms"
+                            required
+                        />
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                            I agree to the Terms of Service and Privacy Policy
+                        </span>
+                    </label>
+
+                    <p v-if="form.errors.terms" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                        {{ form.errors.terms }}
                     </p>
                 </div>
 
@@ -137,7 +156,8 @@ const form = useForm({
     name: '',
     email: '',
     password: '',
-    password_confirmation: ''
+    password_confirmation: '',
+    terms: false
 });
 
 const submit = () => {

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Services\ImageService;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -14,8 +16,10 @@ class MediaUploadController
 {
     protected $imageService;
 
-    public function __construct(ImageService $imageService)
-    {
+    public function __construct(
+        ImageService $imageService,
+        private readonly PlanLimitService $planLimitService,
+    ) {
         $this->imageService = $imageService;
     }
 
@@ -24,11 +28,13 @@ class MediaUploadController
      */
     public function upload(Request $request): JsonResponse|RedirectResponse
     {
+        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
+
         $request->validate([
             'entity_type' => 'required|string|in:album,blog,news,mosaic',
             'entity_id' => 'required|string',
             'media' => 'required|array',
-            'media.*' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi',
+            'media.*' => "required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi|max:{$maxUploadKb}",
         ]);
 
         try {

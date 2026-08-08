@@ -23,6 +23,15 @@
                 {{ $page.props.flash.error }}
             </div>
 
+            <!-- Flash Success (e.g. registration submitted, pending approval) -->
+            <div
+                v-if="$page.props.flash?.success"
+                class="relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/50 dark:text-green-300"
+                role="alert"
+            >
+                {{ $page.props.flash.success }}
+            </div>
+
             <form @submit.prevent="submit">
                 <FormField
                     id="email"

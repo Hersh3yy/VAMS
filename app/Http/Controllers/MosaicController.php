@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Services\MosaicService;
+use App\Services\Plans\PlanLimitService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,9 +19,10 @@ use Inertia\Response;
 class MosaicController extends BaseEntityController
 {
     public function __construct(
-        protected readonly MosaicService $mosaicService
+        protected readonly MosaicService $mosaicService,
+        PlanLimitService $planLimitService,
     ) {
-        parent::__construct($mosaicService);
+        parent::__construct($mosaicService, $planLimitService);
     }
 
     /**
@@ -311,10 +313,12 @@ class MosaicController extends BaseEntityController
     {
         $this->authorizeOwnership($mosaic);
 
+        $maxUploadKb = $this->planLimitService->maxUploadSizeKb($this->user());
+
         // Note: Images are converted to WebP client-side and should be under 1.99MB
         // Videos may still be larger, so we validate per file type
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp',
+            'media' => "required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:{$maxUploadKb}",
         ]);
 
         try {

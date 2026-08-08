@@ -8,11 +8,13 @@ use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
 use App\Services\ImageService;
+use App\Services\Plans\PlanLimitService;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +27,8 @@ final class AlbumImageController
 
     public function __construct(
         private readonly ImageService $imageService,
-        private readonly AlbumService $albumService
+        private readonly AlbumService $albumService,
+        private readonly PlanLimitService $planLimitService,
     ) {}
 
     /**
@@ -62,17 +65,20 @@ final class AlbumImageController
             Log::error('PHP limits too low: upload_max_filesize='.$uploadMaxFilesize.', post_max_size='.$postMaxSize.' (need 1.99M)');
         }
 
+        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
+
         try {
             $request->validate(
                 [
                     'images' => 'required|array',
-                    'images.*' => 'required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
+                    'images.*' => "required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:{$maxUploadKb}",
                 ],
                 [
                     'images.required' => 'Please select at least one image to upload.',
                     'images.array' => 'Images must be provided as an array.',
                     'images.*.required' => 'One or more image files are missing.',
                     'images.*.file' => 'The uploaded file failed to upload. This may be due to file size limits, network issues, or unsupported file type.',
+                    'images.*.max' => 'Each image must be '.round($maxUploadKb / 1024).'MB or smaller on your current plan.',
                     'images.*.mimes' => 'The file must be one of: jpeg, png, jpg, gif, webp, heic, heif. Detected type: :attribute',
                     'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
                 ]
@@ -225,6 +231,8 @@ final class AlbumImageController
 
         $this->authorize('update', $album);
 
+        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
+
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
             'altText' => 'nullable|string|max:255',
@@ -233,7 +241,7 @@ final class AlbumImageController
             'dateCreated' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'tags' => 'nullable|string',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif',
+            'image' => "nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:{$maxUploadKb}",
             'published' => 'nullable|boolean',
         ]);
 

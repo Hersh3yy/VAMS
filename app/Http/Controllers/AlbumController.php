@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Services\AlbumService;
 use App\Services\ImageService;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,9 +17,10 @@ class AlbumController extends BaseEntityController
 {
     public function __construct(
         protected readonly AlbumService $albumService,
-        protected readonly ImageService $imageService
+        protected readonly ImageService $imageService,
+        PlanLimitService $planLimitService,
     ) {
-        parent::__construct($albumService);
+        parent::__construct($albumService, $planLimitService);
     }
 
     /**
@@ -152,11 +154,11 @@ class AlbumController extends BaseEntityController
 
         // Update album basic info (only if provided)
         $updateData = [];
-        
+
         if (isset($validated['title'])) {
             $updateData['title'] = $validated['title'];
         }
-        
+
         if (isset($validated['description'])) {
             $updateData['description'] = $validated['description'];
         }

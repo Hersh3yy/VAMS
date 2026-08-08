@@ -8,6 +8,7 @@ use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
 use App\Services\EntryValidationService;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,10 @@ class EntryController extends BaseEntityController
 {
     public function __construct(
         EntryService $entryService,
-        private readonly EntryValidationService $validationService
+        private readonly EntryValidationService $validationService,
+        PlanLimitService $planLimitService,
     ) {
-        parent::__construct($entryService);
+        parent::__construct($entryService, $planLimitService);
     }
 
     /**
@@ -185,6 +187,12 @@ class EntryController extends BaseEntityController
         // Validate user has permission for this entry type
         if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
             return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
+        }
+
+        if ($this->planLimitService->hasReached($this->user(), 'entries')) {
+            return $this->redirectBackWithError(
+                $this->planLimitService->limitMessage($this->user(), 'entries')
+            );
         }
 
         // Handle content: if it's a string (old simple format), convert to object

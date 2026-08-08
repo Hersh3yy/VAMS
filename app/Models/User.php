@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Concerns\HasPlan;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasUuids, Notifiable;
+    use HasApiTokens, HasFactory, HasPlan, HasUuids, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -34,6 +35,7 @@ class User extends Authenticatable
         'approved_at',
         'api_key',
         'entry_type_permissions',
+        'plan',
     ];
 
     /**
@@ -44,6 +46,22 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * The model's default values for attributes.
+     *
+     * `plan` also has a database-level default, but Eloquent never learns
+     * about column defaults for attributes it didn't explicitly set on
+     * create/new (it doesn't re-select the row), so without this a
+     * freshly-created User has no `plan` key in $attributes at all. That
+     * ambiguity is exactly what makes `$this->plan` in HasPlan::plan()
+     * misresolve as a relationship method call instead of an attribute read.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'plan' => 'free',
     ];
 
     /**

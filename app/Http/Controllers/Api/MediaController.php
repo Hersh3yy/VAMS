@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Services\ImageService;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +14,10 @@ class MediaController
 {
     protected $imageService;
 
-    public function __construct(ImageService $imageService)
-    {
+    public function __construct(
+        ImageService $imageService,
+        private readonly PlanLimitService $planLimitService,
+    ) {
         $this->imageService = $imageService;
     }
 
@@ -24,9 +27,10 @@ class MediaController
     public function upload(Request $request): JsonResponse
     {
         $type = $request->input('type', 'image');
+        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
 
         $request->validate([
-            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi,webp',
+            'file' => "required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi,webp|max:{$maxUploadKb}",
             'type' => 'sometimes|string|in:image,video',
         ]);
 

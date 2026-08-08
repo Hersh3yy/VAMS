@@ -12,7 +12,25 @@ it('can render registration screen', function () {
     $response->assertSuccessful();
 });
 
-it('allows new users to register', function () {
+it('registers a new user pending approval and does not log them in', function () {
+    $response = $this->post('/register', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'terms' => true,
+    ]);
+
+    $this->assertGuest();
+    $this->assertDatabaseHas('users', [
+        'email' => 'test@example.com',
+        'is_approved' => false,
+    ]);
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('success');
+});
+
+it('requires terms acceptance to register', function () {
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',
@@ -20,6 +38,6 @@ it('allows new users to register', function () {
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertSessionHasErrors('terms');
+    $this->assertGuest();
 });

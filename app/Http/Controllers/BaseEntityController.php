@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Contracts\EntityServiceContract;
+use App\Services\Plans\PlanLimitService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,8 @@ use Inertia\Response;
 abstract class BaseEntityController extends BaseController
 {
     public function __construct(
-        protected readonly EntityServiceContract $entityService
+        protected readonly EntityServiceContract $entityService,
+        protected readonly PlanLimitService $planLimitService,
     ) {}
 
     /**
@@ -110,6 +112,14 @@ abstract class BaseEntityController extends BaseController
         $rules = $formRequest->rules();
 
         $validated = $request->validate($rules);
+
+        $resource = $this->getRelationshipName();
+
+        if ($this->planLimitService->hasReached($this->user(), $resource)) {
+            return $this->redirectBackWithError(
+                $this->planLimitService->limitMessage($this->user(), $resource)
+            );
+        }
 
         $entityModelClass = $this->getEntityModelClass();
         $entity = $this->user()->{$this->getRelationshipName()}()->create([
