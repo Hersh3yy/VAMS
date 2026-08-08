@@ -11,7 +11,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -219,70 +219,6 @@ class MosaicController extends BaseEntityController
 
         return redirect()->route('mosaics.show', $mosaic->id)
             ->with('success', 'Mosaic updated successfully');
-    }
-
-    // API Routes
-    public function showApi(Request $request, Mosaic $mosaic): JsonResponse
-    {
-        $mosaic = $this->mosaicService->getById($mosaic, true);
-        if (! $mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404, [], JSON_UNESCAPED_UNICODE);
-        }
-
-        return response()->json(
-            $this->mosaicService->formatWithMediaForApi($mosaic),
-            200,
-            [],
-            JSON_UNESCAPED_UNICODE
-        );
-    }
-
-    public function showByTitle(string $title): JsonResponse
-    {
-        $mosaic = Mosaic::where('title', $title)->first();
-
-        if (! $mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404);
-        }
-
-        return $this->showApi(request(), $mosaic);
-    }
-
-    public function showByTitleWithApiKey(string $title, Request $request): JsonResponse
-    {
-        $user = $request->user();
-
-        $mosaic = $user->mosaics()->where('title', $title)->first();
-        if (! $mosaic) {
-            return response()->json(['error' => 'Mosaic not found'], 404);
-        }
-
-        return $this->showApi($request, $mosaic);
-    }
-
-    public function indexApi(Request $request): JsonResponse
-    {
-        $user = $request->user();
-        $mosaics = $user->mosaics()->with('items')->get();
-
-        return response()->json([
-            'mosaics' => $mosaics->map(fn ($mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-    }
-
-    public function split(MosaicItem $mosaicItem, Request $request): JsonResponse
-    {
-        $user = $request->user();
-
-        if ($mosaicItem->mosaic->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $newItem = $this->mosaicService->splitItem($mosaicItem);
-
-        return response()->json([
-            'item' => $this->mosaicService->formatMosaicItemForApi($newItem),
-        ]);
     }
 
     public function storeItem(Request $request, Mosaic $mosaic)

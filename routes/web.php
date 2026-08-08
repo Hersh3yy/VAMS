@@ -104,11 +104,6 @@ Route::post('admin/stop-impersonating', [App\Http\Controllers\Admin\UserControll
     ->middleware(['auth'])
     ->name('admin.stop-impersonating');
 
-// API Testing route (for development)
-Route::get('/test-api', function () {
-    return view('test-api');
-})->middleware(['auth', 'admin'])->name('test-api');
-
 // CSRF Token refresh route
 Route::get('/csrf-token', function () {
     return response()->json([
