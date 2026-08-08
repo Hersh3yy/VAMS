@@ -21,8 +21,8 @@
             </PageHeader>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="content-wrapper">
+            <div class="content-container">
                 <!-- Flash Messages -->
                 <FlashMessage :message="$page.props.flash?.success" type="success" class="mb-4" />
                 <FlashMessage :message="$page.props.flash?.error" type="error" class="mb-4" />

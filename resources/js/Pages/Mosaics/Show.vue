@@ -11,8 +11,8 @@
             />
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="content-wrapper">
+            <div class="content-container">
                 <div class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg">
                     <MosaicGrid
                         :items="Mosaic.items"

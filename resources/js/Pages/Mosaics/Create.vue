@@ -8,8 +8,8 @@
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="content-wrapper">
+            <div class="content-container">
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <form @submit.prevent="createMosaic" class="space-y-6 p-6">
                         <FormField

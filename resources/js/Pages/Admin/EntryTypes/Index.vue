@@ -24,8 +24,8 @@
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="content-wrapper">
+            <div class="content-container">
                 <!-- Flash Messages -->
                 <div
                     v-if="$page.props.flash?.success"
