@@ -7,10 +7,10 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to dashboard (with auth protection)
-Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'approved'])->name('dashboard');
 
 // Authenticated routes - FRONTEND PAGES ONLY
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Album Frontend Pages
     Route::get('/albums', [AlbumController::class, 'index'])->name('albums.index');
@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // CRUD operations (for named routes needed by frontend)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     // Album CRUD operations
     Route::post('/albums', [AlbumController::class, 'store'])->name('albums.store');
     Route::patch('/albums/{album}', [AlbumController::class, 'update'])->name('albums.update');
@@ -72,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Profile routes (these can stay as they are minimal)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'approved'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::patch('/theme', [ProfileController::class, 'updateTheme'])->name('theme.update');

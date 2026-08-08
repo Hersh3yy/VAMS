@@ -53,6 +53,11 @@ class HandleInertiaRequests extends Middleware
             ],
             // Pass CSRF token refresh if available (for post-login synchronization)
             'csrf_token_refresh' => session('csrf_token_refresh'),
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'message' => fn () => $request->session()->get('message'),
+            ],
         ];
     }
 }

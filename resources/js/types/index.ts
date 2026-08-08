@@ -32,6 +32,11 @@ export interface PageProps {
         user: User;
     };
     is_impersonating?: boolean;
+    flash: {
+        success?: string;
+        error?: string;
+        message?: string;
+    };
     ziggy: {
         location: string;
         url: string;

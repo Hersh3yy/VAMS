@@ -10,6 +10,15 @@
                 {{ status }}
             </div>
 
+            <!-- Flash Error (e.g. pending account approval) -->
+            <div
+                v-if="$page.props.flash?.error"
+                class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/50 dark:text-red-300"
+                role="alert"
+            >
+                {{ $page.props.flash.error }}
+            </div>
+
             <form @submit.prevent="submit">
                 <FormField
                     id="email"
