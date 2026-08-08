@@ -3,7 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Album;
+use App\Models\Entry;
+use App\Models\Mosaic;
 use App\Policies\AlbumPolicy;
+use App\Policies\EntryPolicy;
+use App\Policies\MosaicPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -35,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
 
         Vite::prefetch(concurrency: 3);
         Gate::policy(Album::class, AlbumPolicy::class);
-
+        Gate::policy(Mosaic::class, MosaicPolicy::class);
+        Gate::policy(Entry::class, EntryPolicy::class);
     }
 }
