@@ -29,7 +29,8 @@ it('allows authenticated user to view mosaics index', function () {
     $this->actingAs($this->user);
 
     // Create some mosaics for this user
-    Mosaic::factory()->count(3)->forUser($this->user)->create();
+    $mosaics = Mosaic::factory()->count(3)->forUser($this->user)->create();
+    MosaicItem::factory()->count(2)->forMosaic($mosaics->first())->create();
     // Create mosaics for other users (should not appear)
     Mosaic::factory()->count(2)->forUser($this->otherUser)->create();
 
@@ -38,6 +39,14 @@ it('allows authenticated user to view mosaics index', function () {
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Mosaics/Index')
         ->has('mosaics', 3) // Only user's mosaics
+        ->has('entities', 3)
+        // Cover preview iterates items; missing relation crashes the Vue grid
+        ->where('entities', function ($entities) {
+            $entities = collect($entities);
+
+            return $entities->every(fn ($mosaic) => array_key_exists('items', $mosaic))
+                && $entities->contains(fn ($mosaic) => count($mosaic['items']) === 2);
+        })
     );
 });
 

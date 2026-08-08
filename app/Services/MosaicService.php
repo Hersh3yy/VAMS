@@ -6,7 +6,10 @@ namespace App\Services;
 
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class MosaicService extends BaseEntityService
 {
@@ -16,6 +19,32 @@ class MosaicService extends BaseEntityService
     protected function getEntityModelClass(): string
     {
         return Mosaic::class;
+    }
+
+    /**
+     * Get all mosaics for the current user or for the API.
+     * Eager-loads items so the index UI can render cover previews without crashing.
+     */
+    public function getAll(bool $forApi = false): Collection
+    {
+        $itemsRelation = ['items' => fn ($query) => $query->orderBy('column_index')->orderBy('order')];
+
+        if ($forApi) {
+            return Mosaic::query()
+                ->with($itemsRelation)
+                ->orderBy('updated_at', 'desc')
+                ->get();
+        }
+
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            return new Collection;
+        }
+
+        return $user->mosaics()
+            ->with($itemsRelation)
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 
     /**

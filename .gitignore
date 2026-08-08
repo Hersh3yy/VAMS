@@ -23,7 +23,7 @@ yarn-error.log
 /.vscode
 /.zed
 /node_modules
-
+.ua/
 # Legacy local-only nginx config (superseded by docker/nginx.conf).
 # Anchored to repo root so it does NOT also ignore docker/nginx.conf.
 /nginx.conf

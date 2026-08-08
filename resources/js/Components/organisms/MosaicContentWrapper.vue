@@ -86,8 +86,8 @@ const getSimpleActions = (mosaic: Mosaic) => {
 };
 
 const getMosaicCoverImage = (mosaic: Mosaic): string | undefined => {
-    // Find the first image in the mosaic items
-    for (const item of mosaic.items) {
+    // Find the first image in the mosaic items (items may be absent if not eager-loaded)
+    for (const item of mosaic.items ?? []) {
         if (item.type === 'album' && item.properties?.selected_image?.path) {
             return item.properties.selected_image.path;
         }
