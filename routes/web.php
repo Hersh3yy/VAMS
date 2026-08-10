@@ -52,6 +52,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Entry CRUD operations
     Route::post('/entries', [\App\Http\Controllers\EntryController::class, 'store'])->name('entries.store');
+    Route::post('/entries/json/preview', [\App\Http\Controllers\EntryController::class, 'previewJson'])->name('entries.preview-json');
+    Route::post('/entries/json/edit', [\App\Http\Controllers\EntryController::class, 'editJsonImport'])->name('entries.edit-json');
+    Route::post('/entries/json', [\App\Http\Controllers\EntryController::class, 'storeJson'])->name('entries.store-json');
     Route::patch('/entries/reorder', [\App\Http\Controllers\EntryController::class, 'reorder'])->name('entries.reorder');
     Route::patch('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'updateEntry'])->name('entries.update');
     Route::delete('/entries/{entry}', [\App\Http\Controllers\EntryController::class, 'destroy'])->name('entries.destroy');

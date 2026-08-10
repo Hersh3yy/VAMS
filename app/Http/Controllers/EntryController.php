@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Adapters\EntryJsonPayloadAdapter;
+use App\Http\Requests\StoreEntriesJsonRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryService;
@@ -12,15 +14,17 @@ use App\Services\Plans\PlanLimitService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class EntryController extends BaseEntityController
 {
     public function __construct(
         EntryService $entryService,
         private readonly EntryValidationService $validationService,
+        private readonly EntryJsonPayloadAdapter $jsonPayloadAdapter,
         PlanLimitService $planLimitService,
     ) {
         parent::__construct($entryService, $planLimitService);
@@ -167,6 +171,7 @@ class EntryController extends BaseEntityController
 
         return Inertia::render('Entries/Create', [
             'entryType' => $entryType,
+            'jsonImportDraft' => session('jsonImportDraft'),
         ]);
     }
 
@@ -207,32 +212,166 @@ class EntryController extends BaseEntityController
         if (is_array($content) && ! empty($content)) {
             try {
                 $content = $this->validationService->validateContent($entryType, $content);
-            } catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (ValidationException $e) {
                 return back()->withErrors($e->errors());
             }
         }
 
         $user = $this->user();
 
-        // Calculate next order for this entry type
-        $maxOrder = $user->entries()
-            ->where('entry_type_id', $entryType->id)
-            ->max('order') ?? -1;
+        /** @var EntryService $service */
+        $service = $this->entityService;
 
-        $newStatus = $validated['status'] ?? 'published';
-
-        $entry = $user->entries()->create([
-            'id' => Str::uuid(),
-            'title' => $validated['title'],
-            'content' => $content, // Store as JSON (can be simple object or complex structure)
-            'entry_type_id' => $entryType->id,
-            'status' => $newStatus,
-            'order' => $maxOrder + 1,
-            'published_at' => $newStatus === 'published' ? now() : null,
-        ]);
+        $service->createForUser(
+            $user,
+            $entryType,
+            [
+                'title' => $validated['title'],
+                'content' => $content,
+                'status' => $validated['status'] ?? 'published',
+            ],
+            $service->nextOrderFor($user, $entryType),
+        );
 
         return redirect()->route('entries.index', ['type' => $entryType->slug])
             ->with('success', 'Entry created successfully');
+    }
+
+    /**
+     * Validate JSON import and show a preview screen (no writes).
+     */
+    public function previewJson(StoreEntriesJsonRequest $request): Response|RedirectResponse
+    {
+        $prepared = $this->prepareJsonEntries($request);
+
+        if ($prepared instanceof RedirectResponse) {
+            return $prepared;
+        }
+
+        ['entryType' => $entryType, 'entries' => $entries, 'payload' => $payload] = $prepared;
+
+        return Inertia::render('Entries/JsonPreview', [
+            'entryType' => $entryType,
+            'entries' => $entries,
+            'payload' => $payload,
+        ]);
+    }
+
+    /**
+     * Return to the create JSON editor with the drafted payload.
+     */
+    public function editJsonImport(StoreEntriesJsonRequest $request): RedirectResponse
+    {
+        $entryType = EntryType::query()->findOrFail($request->validated('entry_type_id'));
+
+        if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
+            return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
+        }
+
+        return redirect()
+            ->route('entries.create', ['type' => $entryType->slug])
+            ->with('jsonImportDraft', [
+                'mode' => 'json',
+                'payload' => $request->validated('payload'),
+            ]);
+    }
+
+    /**
+     * Bulk-create entries from a JSON object or array of objects.
+     */
+    public function storeJson(StoreEntriesJsonRequest $request): RedirectResponse
+    {
+        $prepared = $this->prepareJsonEntries($request);
+
+        if ($prepared instanceof RedirectResponse) {
+            return $prepared;
+        }
+
+        ['entryType' => $entryType, 'entries' => $validatedEntries] = $prepared;
+
+        /** @var EntryService $service */
+        $service = $this->entityService;
+        $created = $service->createManyForUser($this->user(), $entryType, $validatedEntries);
+
+        $count = $created->count();
+
+        return redirect()->route('entries.index', ['type' => $entryType->slug])
+            ->with('success', $count === 1
+                ? 'Entry created successfully'
+                : "{$count} entries created successfully");
+    }
+
+    /**
+     * Adapt + validate a JSON import payload without writing.
+     *
+     * @return array{entryType: EntryType, entries: list<array{title: string, content: array<string, mixed>, status: string}>, payload: array<mixed>}|RedirectResponse
+     */
+    private function prepareJsonEntries(StoreEntriesJsonRequest $request): array|RedirectResponse
+    {
+        $entryType = EntryType::query()->findOrFail($request->validated('entry_type_id'));
+
+        if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
+            return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
+        }
+
+        /** @var array<mixed> $payload */
+        $payload = $request->validated('payload');
+
+        try {
+            $adapted = $this->jsonPayloadAdapter->adapt(
+                $payload,
+                $entryType->field_config ?? [],
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['payload' => $e->getMessage()]);
+        }
+
+        if (count($adapted) > 100) {
+            return back()->withErrors(['payload' => 'You may insert at most 100 entries at a time.']);
+        }
+
+        $remaining = $this->planLimitService->remaining($this->user(), 'entries');
+
+        if ($remaining !== null && count($adapted) > $remaining) {
+            return $this->redirectBackWithError(
+                $this->planLimitService->limitMessage($this->user(), 'entries')
+                .' You tried to insert '.count($adapted).' but only '.$remaining.' remain.'
+            );
+        }
+
+        $validatedEntries = [];
+
+        foreach ($adapted as $index => $entryData) {
+            try {
+                $content = $this->validationService->validateContent($entryType, $entryData['content']);
+            } catch (ValidationException $e) {
+                $prefixed = [];
+
+                foreach ($e->errors() as $field => $messages) {
+                    $prefixed["entries.{$index}.content.{$field}"] = $messages;
+                }
+
+                return back()->withErrors($prefixed);
+            }
+
+            if (strlen($entryData['title']) > 255) {
+                return back()->withErrors([
+                    "entries.{$index}.title" => 'The entry title cannot be longer than 255 characters.',
+                ]);
+            }
+
+            $validatedEntries[] = [
+                'title' => $entryData['title'],
+                'content' => $content,
+                'status' => $entryData['status'],
+            ];
+        }
+
+        return [
+            'entryType' => $entryType,
+            'entries' => $validatedEntries,
+            'payload' => $payload,
+        ];
     }
 
     /**

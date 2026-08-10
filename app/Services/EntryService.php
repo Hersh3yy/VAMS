@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Entry;
+use App\Models\EntryType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EntryService extends BaseEntityService
 {
@@ -17,6 +21,63 @@ class EntryService extends BaseEntityService
     protected function getEntityModelClass(): string
     {
         return Entry::class;
+    }
+
+    /**
+     * Create a single entry for a user at the given order.
+     *
+     * @param  array{title: string, content: array<string, mixed>, status?: string}  $data
+     */
+    public function createForUser(User $user, EntryType $entryType, array $data, int $order): Entry
+    {
+        $status = $data['status'] ?? 'published';
+
+        return $user->entries()->create([
+            'id' => (string) Str::uuid(),
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'entry_type_id' => $entryType->id,
+            'status' => $status,
+            'order' => $order,
+            'published_at' => $status === 'published' ? now() : null,
+        ]);
+    }
+
+    /**
+     * Create many entries atomically with sequential order.
+     *
+     * @param  list<array{title: string, content: array<string, mixed>, status: string}>  $entries
+     * @return Collection<int, Entry>
+     */
+    public function createManyForUser(User $user, EntryType $entryType, array $entries): Collection
+    {
+        return DB::transaction(function () use ($user, $entryType, $entries): Collection {
+            $maxOrder = $user->entries()
+                ->where('entry_type_id', $entryType->id)
+                ->max('order') ?? -1;
+
+            $created = new Collection;
+
+            foreach ($entries as $index => $entryData) {
+                $created->push(
+                    $this->createForUser($user, $entryType, $entryData, $maxOrder + 1 + $index)
+                );
+            }
+
+            return $created;
+        });
+    }
+
+    /**
+     * Next order value for a user's entries of this type.
+     */
+    public function nextOrderFor(User $user, EntryType $entryType): int
+    {
+        $maxOrder = $user->entries()
+            ->where('entry_type_id', $entryType->id)
+            ->max('order') ?? -1;
+
+        return $maxOrder + 1;
     }
 
     /**
@@ -124,7 +185,7 @@ class EntryService extends BaseEntityService
     /**
      * Format entity with its media for API response (required by contract)
      */
-    public function formatWithMediaForApi(\Illuminate\Database\Eloquent\Model $entity): array
+    public function formatWithMediaForApi(Model $entity): array
     {
         if (! $entity instanceof Entry) {
             return [];

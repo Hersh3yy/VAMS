@@ -114,7 +114,7 @@
 interface Props {
     label: string
     value: any
-    type: 'text' | 'textarea' | 'repeatable' | 'image_collection' | 'object' | 'checkbox'
+    type: string
 }
 
 defineProps<Props>()
