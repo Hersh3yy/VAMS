@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Adapters\AdaptedEntry;
 use App\Adapters\EntryJsonPayloadAdapter;
 
-it('adapts a single object into a one-item list', function () {
+it('adapts a single object into a one-item list of AdaptedEntry', function () {
     $adapter = new EntryJsonPayloadAdapter;
 
     $result = $adapter->adapt([
@@ -15,9 +16,10 @@ it('adapts a single object into a one-item list', function () {
     ]);
 
     expect($result)->toHaveCount(1)
-        ->and($result[0]['title'])->toBe('One')
-        ->and($result[0]['content'])->toBe(['statement' => 'I am one'])
-        ->and($result[0]['status'])->toBe('published');
+        ->and($result[0])->toBeInstanceOf(AdaptedEntry::class)
+        ->and($result[0]->title)->toBe('One')
+        ->and($result[0]->content)->toBe(['statement' => 'I am one'])
+        ->and($result[0]->status)->toBe('published');
 });
 
 it('adapts an array of objects', function () {
@@ -31,7 +33,8 @@ it('adapts an array of objects', function () {
     ]);
 
     expect($result)->toHaveCount(2)
-        ->and($result[1]['status'])->toBe('draft');
+        ->and($result[1])->toBeInstanceOf(AdaptedEntry::class)
+        ->and($result[1]->status)->toBe('draft');
 });
 
 it('adapts flat field keys into a content object', function () {
@@ -46,7 +49,7 @@ it('adapts flat field keys into a content object', function () {
         ['name' => 'body', 'type' => 'textarea'],
     ]);
 
-    expect($result[0]['content'])->toBe([
+    expect($result[0]->content)->toBe([
         'url' => 'https://flat.test',
         'body' => 'Hello',
     ]);
@@ -60,7 +63,7 @@ it('adapts legacy string content into statement', function () {
         'content' => 'I am legacy',
     ], []);
 
-    expect($result[0]['content'])->toBe(['statement' => 'I am legacy']);
+    expect($result[0]->content)->toBe(['statement' => 'I am legacy']);
 });
 
 it('rejects a list item that is not an object', function () {

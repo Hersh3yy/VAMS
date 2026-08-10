@@ -7,15 +7,11 @@ namespace App\Adapters;
 use InvalidArgumentException;
 
 /**
- * Adapter: turns "whatever the user/LLM pasted" into the kingdom's entry create shape.
+ * Adapter: turns "whatever the user/LLM pasted" into {@see AdaptedEntry} objects.
  *
  * Incompatible inputs this adapts:
  * - a single object OR a list of objects
  * - nested `content` OR flat field keys matching the entry type's field_config
- *
- * Target interface (what EntryService expects per item):
- *
- * @phpstan-type AdaptedEntry array{title: string, content: array<string, mixed>, status: string}
  *
  * @see https://refactoring.guru/design-patterns/adapter
  */
@@ -37,7 +33,7 @@ final readonly class EntryJsonPayloadAdapter
         }
 
         return array_values(array_map(
-            fn (array $item): array => $this->adaptItem($item, $fieldConfig),
+            fn (array $item): AdaptedEntry => $this->adaptItem($item, $fieldConfig),
             $items,
         ));
     }
@@ -76,9 +72,8 @@ final readonly class EntryJsonPayloadAdapter
     /**
      * @param  array<string, mixed>  $item
      * @param  list<array<string, mixed>>  $fieldConfig
-     * @return AdaptedEntry
      */
-    private function adaptItem(array $item, array $fieldConfig): array
+    private function adaptItem(array $item, array $fieldConfig): AdaptedEntry
     {
         $title = $item['title'] ?? null;
 
@@ -92,11 +87,11 @@ final readonly class EntryJsonPayloadAdapter
             throw new InvalidArgumentException('Entry status must be either "draft" or "published".');
         }
 
-        return [
-            'title' => $title,
-            'content' => $this->adaptContent($item, $fieldConfig),
-            'status' => $status,
-        ];
+        return new AdaptedEntry(
+            title: $title,
+            content: $this->adaptContent($item, $fieldConfig),
+            status: $status,
+        );
     }
 
     /**

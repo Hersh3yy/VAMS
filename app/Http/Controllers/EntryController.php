@@ -343,7 +343,7 @@ class EntryController extends BaseEntityController
 
         foreach ($adapted as $index => $entryData) {
             try {
-                $content = $this->validationService->validateContent($entryType, $entryData['content']);
+                $content = $this->validationService->validateContent($entryType, $entryData->content);
             } catch (ValidationException $e) {
                 $prefixed = [];
 
@@ -354,17 +354,13 @@ class EntryController extends BaseEntityController
                 return back()->withErrors($prefixed);
             }
 
-            if (strlen($entryData['title']) > 255) {
+            if (strlen($entryData->title) > 255) {
                 return back()->withErrors([
                     "entries.{$index}.title" => 'The entry title cannot be longer than 255 characters.',
                 ]);
             }
 
-            $validatedEntries[] = [
-                'title' => $entryData['title'],
-                'content' => $content,
-                'status' => $entryData['status'],
-            ];
+            $validatedEntries[] = $entryData->withContent($content)->toArray();
         }
 
         return [
