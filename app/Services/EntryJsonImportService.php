@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Adapters\AdaptedEntry;
-use App\Adapters\EntryJsonPayloadAdapter;
+use App\Data\ImportEntryData;
+use App\Data\ImportEntryDataMapper;
 use App\Models\EntryType;
 use App\Models\User;
 use App\Services\Plans\PlanLimitService;
@@ -16,8 +16,8 @@ use InvalidArgumentException;
 /**
  * Facade over the JSON entry-import subsystem.
  *
- * Clients (controllers, later commands) call prepare() / commit() instead of
- * wiring Adapter + validation + plan limits + EntryService themselves.
+ * Clients (controllers, actions) call prepare() / commit() instead of
+ * wiring the mapper + validation + plan limits + EntryService themselves.
  *
  * @see https://refactoring.guru/design-patterns/facade
  */
@@ -26,14 +26,14 @@ final class EntryJsonImportService
     private const MAX_ENTRIES = 100;
 
     public function __construct(
-        private readonly EntryJsonPayloadAdapter $adapter,
+        private readonly ImportEntryDataMapper $mapper,
         private readonly EntryValidationService $validationService,
         private readonly PlanLimitService $planLimitService,
         private readonly EntryService $entryService,
     ) {}
 
     /**
-     * Adapt + authorize + validate. Never writes. Never returns HTTP types.
+     * Map + authorize + validate. Never writes. Never returns HTTP types.
      *
      * @param  array<mixed>  $payload
      */
@@ -54,7 +54,7 @@ final class EntryJsonImportService
         }
 
         try {
-            $adapted = $this->adapter->adapt(
+            $mapped = $this->mapper->map(
                 $payload,
                 $entryType->field_config ?? [],
             );
@@ -64,7 +64,7 @@ final class EntryJsonImportService
             ]);
         }
 
-        if (count($adapted) > self::MAX_ENTRIES) {
+        if (count($mapped) > self::MAX_ENTRIES) {
             return EntryJsonImportResult::invalid([
                 'payload' => ['You may insert at most '.self::MAX_ENTRIES.' entries at a time.'],
             ]);
@@ -72,16 +72,16 @@ final class EntryJsonImportService
 
         $remaining = $this->planLimitService->remaining($user, 'entries');
 
-        if ($remaining !== null && count($adapted) > $remaining) {
+        if ($remaining !== null && count($mapped) > $remaining) {
             return EntryJsonImportResult::flashFailure(
                 $this->planLimitService->limitMessage($user, 'entries')
-                .' You tried to insert '.count($adapted).' but only '.$remaining.' remain.'
+                .' You tried to insert '.count($mapped).' but only '.$remaining.' remain.'
             );
         }
 
         $validated = [];
 
-        foreach ($adapted as $index => $entry) {
+        foreach ($mapped as $index => $entry) {
             try {
                 $content = $this->validationService->validateContent($entryType, $entry->content);
             } catch (ValidationException $e) {
@@ -123,13 +123,13 @@ final class EntryJsonImportService
         /** @var EntryType $entryType */
         $entryType = $result->entryType;
 
-        /** @var list<AdaptedEntry> $entries */
+        /** @var list<ImportEntryData> $entries */
         $entries = $result->entries;
 
         $created = $this->entryService->createManyForUser(
             $user,
             $entryType,
-            array_map(static fn (AdaptedEntry $entry): array => $entry->toArray(), $entries),
+            array_map(static fn (ImportEntryData $entry): array => $entry->toArray(), $entries),
         );
 
         return ['result' => $result, 'created' => $created];

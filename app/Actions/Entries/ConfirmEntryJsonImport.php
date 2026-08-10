@@ -2,18 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Commands\EntryJson;
+namespace App\Actions\Entries;
 
 use App\Models\User;
 use App\Services\EntryJsonImportService;
 
 /**
- * Concrete Command: validate/adapt the payload and return a previewable result.
- * Never writes to the database.
- *
- * @see https://refactoring.guru/design-patterns/command
+ * Confirm a JSON import: re-validate then persist.
  */
-final readonly class PreviewEntryJsonImportCommand implements EntryJsonCommand
+final readonly class ConfirmEntryJsonImport implements EntryJsonImportAction
 {
     /**
      * @param  array<mixed>  $payload
@@ -25,14 +22,17 @@ final readonly class PreviewEntryJsonImportCommand implements EntryJsonCommand
         private array $payload,
     ) {}
 
-    public function execute(): EntryJsonCommandOutcome
+    public function execute(): EntryJsonImportOutcome
     {
-        $import = $this->importService->prepare(
+        ['result' => $import, 'created' => $created] = $this->importService->commit(
             $this->user,
             $this->entryTypeId,
             $this->payload,
         );
 
-        return new EntryJsonCommandOutcome(import: $import);
+        return new EntryJsonImportOutcome(
+            import: $import,
+            created: $created,
+        );
     }
 }

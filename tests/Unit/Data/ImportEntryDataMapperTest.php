@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Adapters\AdaptedEntry;
-use App\Adapters\EntryJsonPayloadAdapter;
+use App\Data\ImportEntryData;
+use App\Data\ImportEntryDataMapper;
 
-it('adapts a single object into a one-item list of AdaptedEntry', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+it('maps a single object into a one-item list of ImportEntryData', function () {
+    $mapper = new ImportEntryDataMapper;
 
-    $result = $adapter->adapt([
+    $result = $mapper->map([
         'title' => 'One',
         'content' => ['statement' => 'I am one'],
     ], [
@@ -16,16 +16,16 @@ it('adapts a single object into a one-item list of AdaptedEntry', function () {
     ]);
 
     expect($result)->toHaveCount(1)
-        ->and($result[0])->toBeInstanceOf(AdaptedEntry::class)
+        ->and($result[0])->toBeInstanceOf(ImportEntryData::class)
         ->and($result[0]->title)->toBe('One')
         ->and($result[0]->content)->toBe(['statement' => 'I am one'])
         ->and($result[0]->status)->toBe('published');
 });
 
-it('adapts an array of objects', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+it('maps an array of objects', function () {
+    $mapper = new ImportEntryDataMapper;
 
-    $result = $adapter->adapt([
+    $result = $mapper->map([
         ['title' => 'A', 'content' => ['url' => 'https://a.test']],
         ['title' => 'B', 'content' => ['url' => 'https://b.test'], 'status' => 'draft'],
     ], [
@@ -33,14 +33,14 @@ it('adapts an array of objects', function () {
     ]);
 
     expect($result)->toHaveCount(2)
-        ->and($result[1])->toBeInstanceOf(AdaptedEntry::class)
+        ->and($result[1])->toBeInstanceOf(ImportEntryData::class)
         ->and($result[1]->status)->toBe('draft');
 });
 
-it('adapts flat field keys into a content object', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+it('maps flat field keys into a content object', function () {
+    $mapper = new ImportEntryDataMapper;
 
-    $result = $adapter->adapt([
+    $result = $mapper->map([
         'title' => 'Flat',
         'url' => 'https://flat.test',
         'body' => 'Hello',
@@ -55,10 +55,10 @@ it('adapts flat field keys into a content object', function () {
     ]);
 });
 
-it('adapts legacy string content into statement', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+it('maps legacy string content into statement', function () {
+    $mapper = new ImportEntryDataMapper;
 
-    $result = $adapter->adapt([
+    $result = $mapper->map([
         'title' => 'Legacy',
         'content' => 'I am legacy',
     ], []);
@@ -67,21 +67,21 @@ it('adapts legacy string content into statement', function () {
 });
 
 it('rejects a list item that is not an object', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+    $mapper = new ImportEntryDataMapper;
 
-    $adapter->adapt(['not-an-object'], []);
+    $mapper->map(['not-an-object'], []);
 })->throws(\InvalidArgumentException::class, 'must be a JSON object');
 
 it('rejects entries without a title', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+    $mapper = new ImportEntryDataMapper;
 
-    $adapter->adapt([['content' => ['statement' => 'nope']]], []);
+    $mapper->map([['content' => ['statement' => 'nope']]], []);
 })->throws(\InvalidArgumentException::class, 'title');
 
 it('treats empty content object as a valid object', function () {
-    $adapter = new EntryJsonPayloadAdapter;
+    $mapper = new ImportEntryDataMapper;
 
-    $result = $adapter->adapt([
+    $result = $mapper->map([
         'title' => 'Empty content',
         'content' => [],
     ], [

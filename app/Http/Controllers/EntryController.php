@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Commands\EntryJson\ConfirmEntryJsonImportCommand;
-use App\Commands\EntryJson\EntryJsonCommandOutcome;
-use App\Commands\EntryJson\PreviewEntryJsonImportCommand;
+use App\Actions\Entries\ConfirmEntryJsonImport;
+use App\Actions\Entries\EntryJsonImportOutcome;
+use App\Actions\Entries\PreviewEntryJsonImport;
 use App\Http\Requests\StoreEntriesJsonRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
@@ -241,22 +241,20 @@ class EntryController extends BaseEntityController
 
     /**
      * Validate JSON import and show a preview screen (no writes).
-     *
-     * Invoker for {@see PreviewEntryJsonImportCommand}.
      */
     public function previewJson(StoreEntriesJsonRequest $request): Response|RedirectResponse
     {
         /** @var array<mixed> $payload */
         $payload = $request->validated('payload');
 
-        $outcome = (new PreviewEntryJsonImportCommand(
+        $outcome = (new PreviewEntryJsonImport(
             $this->jsonImportService,
             $this->user(),
             $request->validated('entry_type_id'),
             $payload,
         ))->execute();
 
-        if ($redirect = $this->redirectForFailedCommand($outcome)) {
+        if ($redirect = $this->redirectForFailedImport($outcome)) {
             return $redirect;
         }
 
@@ -290,22 +288,20 @@ class EntryController extends BaseEntityController
 
     /**
      * Bulk-create entries from a JSON object or array of objects.
-     *
-     * Invoker for {@see ConfirmEntryJsonImportCommand}.
      */
     public function storeJson(StoreEntriesJsonRequest $request): RedirectResponse
     {
         /** @var array<mixed> $payload */
         $payload = $request->validated('payload');
 
-        $outcome = (new ConfirmEntryJsonImportCommand(
+        $outcome = (new ConfirmEntryJsonImport(
             $this->jsonImportService,
             $this->user(),
             $request->validated('entry_type_id'),
             $payload,
         ))->execute();
 
-        if ($redirect = $this->redirectForFailedCommand($outcome)) {
+        if ($redirect = $this->redirectForFailedImport($outcome)) {
             return $redirect;
         }
 
@@ -317,7 +313,7 @@ class EntryController extends BaseEntityController
                 : "{$count} entries created successfully");
     }
 
-    private function redirectForFailedCommand(EntryJsonCommandOutcome $outcome): ?RedirectResponse
+    private function redirectForFailedImport(EntryJsonImportOutcome $outcome): ?RedirectResponse
     {
         if ($outcome->successful()) {
             return null;

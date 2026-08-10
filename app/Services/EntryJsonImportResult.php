@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Adapters\AdaptedEntry;
+use App\Data\ImportEntryData;
 use App\Models\EntryType;
 
 /**
@@ -15,7 +15,7 @@ use App\Models\EntryType;
 final readonly class EntryJsonImportResult
 {
     /**
-     * @param  list<AdaptedEntry>|null  $entries
+     * @param  list<ImportEntryData>|null  $entries
      * @param  array<mixed>|null  $payload
      * @param  FieldErrors|null  $errors
      */
@@ -29,7 +29,7 @@ final readonly class EntryJsonImportResult
     ) {}
 
     /**
-     * @param  list<AdaptedEntry>  $entries
+     * @param  list<ImportEntryData>  $entries
      * @param  array<mixed>  $payload
      */
     public static function success(EntryType $entryType, array $entries, array $payload): self
@@ -61,7 +61,7 @@ final readonly class EntryJsonImportResult
     public function entriesAsArrays(): array
     {
         return array_map(
-            static fn (AdaptedEntry $entry): array => $entry->toArray(),
+            static fn (ImportEntryData $entry): array => $entry->toArray(),
             $this->entries ?? [],
         );
     }

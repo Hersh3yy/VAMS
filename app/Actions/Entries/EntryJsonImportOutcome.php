@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Commands\EntryJson;
+namespace App\Actions\Entries;
 
 use App\Models\Entry;
 use App\Services\EntryJsonImportResult;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Shared result envelope for preview (read-only) and confirm (write) commands.
+ * Shared result envelope for preview (read-only) and confirm (write) actions.
  */
-final readonly class EntryJsonCommandOutcome
+final readonly class EntryJsonImportOutcome
 {
     /**
      * @param  Collection<int, Entry>|null  $created

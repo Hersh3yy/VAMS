@@ -2,29 +2,28 @@
 
 declare(strict_types=1);
 
-namespace App\Adapters;
+namespace App\Data;
 
 use InvalidArgumentException;
 
 /**
- * Adapter: turns "whatever the user/LLM pasted" into {@see AdaptedEntry} objects.
+ * Maps foreign JSON import payloads into {@see ImportEntryData} DTOs.
  *
- * Incompatible inputs this adapts:
- * - a single object OR a list of objects
- * - nested `content` OR flat field keys matching the entry type's field_config
+ * Handles object-vs-list payloads, nested vs flat field keys, and legacy string content.
+ * (Same responsibility as the Adapter pattern; named as a mapper for Laravel familiarity.)
  *
  * @see https://refactoring.guru/design-patterns/adapter
  */
-final readonly class EntryJsonPayloadAdapter
+final readonly class ImportEntryDataMapper
 {
     private const META_KEYS = ['title', 'content', 'status'];
 
     /**
      * @param  array<mixed>  $payload  Decoded JSON object or list
      * @param  list<array<string, mixed>>  $fieldConfig
-     * @return list<AdaptedEntry>
+     * @return list<ImportEntryData>
      */
-    public function adapt(array $payload, array $fieldConfig): array
+    public function map(array $payload, array $fieldConfig): array
     {
         $items = $this->normalizeToList($payload);
 
@@ -33,7 +32,7 @@ final readonly class EntryJsonPayloadAdapter
         }
 
         return array_values(array_map(
-            fn (array $item): AdaptedEntry => $this->adaptItem($item, $fieldConfig),
+            fn (array $item): ImportEntryData => $this->mapItem($item, $fieldConfig),
             $items,
         ));
     }
@@ -73,7 +72,7 @@ final readonly class EntryJsonPayloadAdapter
      * @param  array<string, mixed>  $item
      * @param  list<array<string, mixed>>  $fieldConfig
      */
-    private function adaptItem(array $item, array $fieldConfig): AdaptedEntry
+    private function mapItem(array $item, array $fieldConfig): ImportEntryData
     {
         $title = $item['title'] ?? null;
 
@@ -87,9 +86,9 @@ final readonly class EntryJsonPayloadAdapter
             throw new InvalidArgumentException('Entry status must be either "draft" or "published".');
         }
 
-        return new AdaptedEntry(
+        return new ImportEntryData(
             title: $title,
-            content: $this->adaptContent($item, $fieldConfig),
+            content: $this->mapContent($item, $fieldConfig),
             status: $status,
         );
     }
@@ -99,7 +98,7 @@ final readonly class EntryJsonPayloadAdapter
      * @param  list<array<string, mixed>>  $fieldConfig
      * @return array<string, mixed>
      */
-    private function adaptContent(array $item, array $fieldConfig): array
+    private function mapContent(array $item, array $fieldConfig): array
     {
         if (array_key_exists('content', $item)) {
             $content = $item['content'];
@@ -132,7 +131,6 @@ final readonly class EntryJsonPayloadAdapter
             }
         }
 
-        // If field_config is empty (legacy I AM), treat non-meta keys as content.
         if ($fieldNames === []) {
             foreach ($item as $key => $value) {
                 if (is_string($key) && ! in_array($key, self::META_KEYS, true)) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Adapters\AdaptedEntry;
+use App\Data\ImportEntryData;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
@@ -35,7 +35,7 @@ it('prepares valid payloads without writing entries', function () {
 
     expect($result->successful)->toBeTrue()
         ->and($result->entries)->toHaveCount(1)
-        ->and($result->entries[0])->toBeInstanceOf(AdaptedEntry::class)
+        ->and($result->entries[0])->toBeInstanceOf(ImportEntryData::class)
         ->and(Entry::query()->count())->toBe(0);
 });
 

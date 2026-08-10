@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Adapters;
+namespace App\Data;
 
 /**
- * The Adapter's target type: the shape the rest of the kingdom understands.
- *
- * @see https://refactoring.guru/design-patterns/adapter
+ * DTO for one entry about to be previewed or created via JSON import.
  */
-final readonly class AdaptedEntry
+final readonly class ImportEntryData
 {
     /**
      * @param  array<string, mixed>  $content
