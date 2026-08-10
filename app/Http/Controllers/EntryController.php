@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Commands\EntryJson\ConfirmEntryJsonImportCommand;
+use App\Commands\EntryJson\EntryJsonCommandOutcome;
+use App\Commands\EntryJson\PreviewEntryJsonImportCommand;
 use App\Http\Requests\StoreEntriesJsonRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
-use App\Services\EntryJsonImportResult;
 use App\Services\EntryJsonImportService;
 use App\Services\EntryService;
 use App\Services\EntryValidationService;
@@ -239,26 +241,31 @@ class EntryController extends BaseEntityController
 
     /**
      * Validate JSON import and show a preview screen (no writes).
+     *
+     * Invoker for {@see PreviewEntryJsonImportCommand}.
      */
     public function previewJson(StoreEntriesJsonRequest $request): Response|RedirectResponse
     {
         /** @var array<mixed> $payload */
         $payload = $request->validated('payload');
 
-        $result = $this->jsonImportService->prepare(
+        $outcome = (new PreviewEntryJsonImportCommand(
+            $this->jsonImportService,
             $this->user(),
             $request->validated('entry_type_id'),
             $payload,
-        );
+        ))->execute();
 
-        if ($redirect = $this->redirectForFailedImport($result)) {
+        if ($redirect = $this->redirectForFailedCommand($outcome)) {
             return $redirect;
         }
 
+        $import = $outcome->import;
+
         return Inertia::render('Entries/JsonPreview', [
-            'entryType' => $result->entryType,
-            'entries' => $result->entriesAsArrays(),
-            'payload' => $result->payload,
+            'entryType' => $import->entryType,
+            'entries' => $import->entriesAsArrays(),
+            'payload' => $import->payload,
         ]);
     }
 
@@ -283,41 +290,46 @@ class EntryController extends BaseEntityController
 
     /**
      * Bulk-create entries from a JSON object or array of objects.
+     *
+     * Invoker for {@see ConfirmEntryJsonImportCommand}.
      */
     public function storeJson(StoreEntriesJsonRequest $request): RedirectResponse
     {
         /** @var array<mixed> $payload */
         $payload = $request->validated('payload');
 
-        ['result' => $result, 'created' => $created] = $this->jsonImportService->commit(
+        $outcome = (new ConfirmEntryJsonImportCommand(
+            $this->jsonImportService,
             $this->user(),
             $request->validated('entry_type_id'),
             $payload,
-        );
+        ))->execute();
 
-        if ($redirect = $this->redirectForFailedImport($result)) {
+        if ($redirect = $this->redirectForFailedCommand($outcome)) {
             return $redirect;
         }
 
-        $count = $created?->count() ?? 0;
+        $count = $outcome->created?->count() ?? 0;
 
-        return redirect()->route('entries.index', ['type' => $result->entryType?->slug])
+        return redirect()->route('entries.index', ['type' => $outcome->import->entryType?->slug])
             ->with('success', $count === 1
                 ? 'Entry created successfully'
                 : "{$count} entries created successfully");
     }
 
-    private function redirectForFailedImport(EntryJsonImportResult $result): ?RedirectResponse
+    private function redirectForFailedCommand(EntryJsonCommandOutcome $outcome): ?RedirectResponse
     {
-        if ($result->successful) {
+        if ($outcome->successful()) {
             return null;
         }
 
-        if ($result->flashError !== null) {
-            return $this->redirectBackWithError($result->flashError);
+        $import = $outcome->import;
+
+        if ($import->flashError !== null) {
+            return $this->redirectBackWithError($import->flashError);
         }
 
-        return back()->withErrors($result->errors ?? ['error' => 'Unable to import entries.']);
+        return back()->withErrors($import->errors ?? ['error' => 'Unable to import entries.']);
     }
 
     /**
