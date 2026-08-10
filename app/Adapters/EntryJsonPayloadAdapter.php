@@ -108,7 +108,8 @@ final readonly class EntryJsonPayloadAdapter
                 return ['statement' => $content];
             }
 
-            if (! is_array($content) || $this->isList($content)) {
+            // json_decode('{}') yields [] in PHP; array_is_list([]) is true, so allow empty.
+            if (! is_array($content) || ($content !== [] && $this->isList($content))) {
                 throw new InvalidArgumentException('Entry "content" must be a JSON object (or a string for legacy simple entries).');
             }
 

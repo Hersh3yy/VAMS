@@ -77,3 +77,16 @@ it('rejects entries without a title', function () {
 
     $adapter->adapt([['content' => ['statement' => 'nope']]], []);
 })->throws(\InvalidArgumentException::class, 'title');
+
+it('treats empty content object as a valid object', function () {
+    $adapter = new EntryJsonPayloadAdapter;
+
+    $result = $adapter->adapt([
+        'title' => 'Empty content',
+        'content' => [],
+    ], [
+        ['name' => 'body', 'type' => 'textarea', 'required' => false],
+    ]);
+
+    expect($result[0]->content)->toBe([]);
+});

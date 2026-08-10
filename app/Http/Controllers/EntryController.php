@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Adapters\EntryJsonPayloadAdapter;
 use App\Http\Requests\StoreEntriesJsonRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
+use App\Services\EntryJsonImportResult;
+use App\Services\EntryJsonImportService;
 use App\Services\EntryService;
 use App\Services\EntryValidationService;
 use App\Services\Plans\PlanLimitService;
@@ -17,14 +18,13 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use InvalidArgumentException;
 
 class EntryController extends BaseEntityController
 {
     public function __construct(
         EntryService $entryService,
         private readonly EntryValidationService $validationService,
-        private readonly EntryJsonPayloadAdapter $jsonPayloadAdapter,
+        private readonly EntryJsonImportService $jsonImportService,
         PlanLimitService $planLimitService,
     ) {
         parent::__construct($entryService, $planLimitService);
@@ -242,18 +242,23 @@ class EntryController extends BaseEntityController
      */
     public function previewJson(StoreEntriesJsonRequest $request): Response|RedirectResponse
     {
-        $prepared = $this->prepareJsonEntries($request);
+        /** @var array<mixed> $payload */
+        $payload = $request->validated('payload');
 
-        if ($prepared instanceof RedirectResponse) {
-            return $prepared;
+        $result = $this->jsonImportService->prepare(
+            $this->user(),
+            $request->validated('entry_type_id'),
+            $payload,
+        );
+
+        if ($redirect = $this->redirectForFailedImport($result)) {
+            return $redirect;
         }
 
-        ['entryType' => $entryType, 'entries' => $entries, 'payload' => $payload] = $prepared;
-
         return Inertia::render('Entries/JsonPreview', [
-            'entryType' => $entryType,
-            'entries' => $entries,
-            'payload' => $payload,
+            'entryType' => $result->entryType,
+            'entries' => $result->entriesAsArrays(),
+            'payload' => $result->payload,
         ]);
     }
 
@@ -281,93 +286,38 @@ class EntryController extends BaseEntityController
      */
     public function storeJson(StoreEntriesJsonRequest $request): RedirectResponse
     {
-        $prepared = $this->prepareJsonEntries($request);
+        /** @var array<mixed> $payload */
+        $payload = $request->validated('payload');
 
-        if ($prepared instanceof RedirectResponse) {
-            return $prepared;
+        ['result' => $result, 'created' => $created] = $this->jsonImportService->commit(
+            $this->user(),
+            $request->validated('entry_type_id'),
+            $payload,
+        );
+
+        if ($redirect = $this->redirectForFailedImport($result)) {
+            return $redirect;
         }
 
-        ['entryType' => $entryType, 'entries' => $validatedEntries] = $prepared;
+        $count = $created?->count() ?? 0;
 
-        /** @var EntryService $service */
-        $service = $this->entityService;
-        $created = $service->createManyForUser($this->user(), $entryType, $validatedEntries);
-
-        $count = $created->count();
-
-        return redirect()->route('entries.index', ['type' => $entryType->slug])
+        return redirect()->route('entries.index', ['type' => $result->entryType?->slug])
             ->with('success', $count === 1
                 ? 'Entry created successfully'
                 : "{$count} entries created successfully");
     }
 
-    /**
-     * Adapt + validate a JSON import payload without writing.
-     *
-     * @return array{entryType: EntryType, entries: list<array{title: string, content: array<string, mixed>, status: string}>, payload: array<mixed>}|RedirectResponse
-     */
-    private function prepareJsonEntries(StoreEntriesJsonRequest $request): array|RedirectResponse
+    private function redirectForFailedImport(EntryJsonImportResult $result): ?RedirectResponse
     {
-        $entryType = EntryType::query()->findOrFail($request->validated('entry_type_id'));
-
-        if (! $this->user()->hasEntryTypePermission($entryType->slug)) {
-            return back()->withErrors(['error' => 'You do not have permission to create entries of this type.']);
+        if ($result->successful) {
+            return null;
         }
 
-        /** @var array<mixed> $payload */
-        $payload = $request->validated('payload');
-
-        try {
-            $adapted = $this->jsonPayloadAdapter->adapt(
-                $payload,
-                $entryType->field_config ?? [],
-            );
-        } catch (InvalidArgumentException $e) {
-            return back()->withErrors(['payload' => $e->getMessage()]);
+        if ($result->flashError !== null) {
+            return $this->redirectBackWithError($result->flashError);
         }
 
-        if (count($adapted) > 100) {
-            return back()->withErrors(['payload' => 'You may insert at most 100 entries at a time.']);
-        }
-
-        $remaining = $this->planLimitService->remaining($this->user(), 'entries');
-
-        if ($remaining !== null && count($adapted) > $remaining) {
-            return $this->redirectBackWithError(
-                $this->planLimitService->limitMessage($this->user(), 'entries')
-                .' You tried to insert '.count($adapted).' but only '.$remaining.' remain.'
-            );
-        }
-
-        $validatedEntries = [];
-
-        foreach ($adapted as $index => $entryData) {
-            try {
-                $content = $this->validationService->validateContent($entryType, $entryData->content);
-            } catch (ValidationException $e) {
-                $prefixed = [];
-
-                foreach ($e->errors() as $field => $messages) {
-                    $prefixed["entries.{$index}.content.{$field}"] = $messages;
-                }
-
-                return back()->withErrors($prefixed);
-            }
-
-            if (strlen($entryData->title) > 255) {
-                return back()->withErrors([
-                    "entries.{$index}.title" => 'The entry title cannot be longer than 255 characters.',
-                ]);
-            }
-
-            $validatedEntries[] = $entryData->withContent($content)->toArray();
-        }
-
-        return [
-            'entryType' => $entryType,
-            'entries' => $validatedEntries,
-            'payload' => $payload,
-        ];
+        return back()->withErrors($result->errors ?? ['error' => 'Unable to import entries.']);
     }
 
     /**
