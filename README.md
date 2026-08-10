@@ -13,8 +13,8 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 ## Tech Stack
 
 - PHP 8.3
-- Laravel 11
-- PostgreSQL
+- Laravel 12
+- PostgreSQL in production (managed); local Docker Compose also ships MySQL for offline development
 - Docker & Docker Compose
 - Vue.js 3 (Admin Interface)
 - PHPUnit for testing
@@ -135,10 +135,16 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 
 ## Testing
 
-Run the test suite:
+The `api` container image is built with `composer install --no-dev`, so Pest/PHPUnit
+aren't available inside it. Run tests with a dev install instead, e.g.:
+
 ```bash
-docker compose exec api php artisan test
+docker run --rm -v "$(pwd)":/app -w /app composer:2 composer install
+docker compose run --rm api php artisan test
 ```
+
+Tests use an in-memory SQLite connection (see `phpunit.xml`), never the
+PostgreSQL database configured in `.env`.
 
 ## API Documentation
 
@@ -194,5 +200,3 @@ Development Tools: http://localhost:8000/telescope
 #### **Integrations**
 - **Third-Party Storage**: S3, Cloudinary, and other cloud storage providers
 - **Webhook System**: Real-time notifications for content changes
-
-> 📖 **For detailed implementation plan, see [SAAS_LAUNCH_PLAN.md](./SAAS_LAUNCH_PLAN.md)**
