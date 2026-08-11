@@ -184,17 +184,24 @@ it('prevents user from updating other users album', function () {
     $response->assertForbidden();
 });
 
-it('validates required fields for album update', function () {
+it('allows partial album updates without a title', function () {
     $this->actingAs($this->user);
 
-    $album = Album::factory()->forUser($this->user)->create();
-
-    $response = $this->patch(route('albums.update', $album), [
-        'title' => '', // Empty title
+    $album = Album::factory()->forUser($this->user)->create([
+        'title' => 'Original Title',
     ]);
 
-    $response->assertStatus(302);
-    $response->assertSessionHasErrors(['title']);
+    $response = $this->patch(route('albums.update', $album), [
+        'description' => 'Updated description only',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHasNoErrors();
+
+    $album->refresh();
+
+    expect($album->title)->toBe('Original Title')
+        ->and($album->description)->toBe('Updated description only');
 });
 
 it('allows authenticated user to upload cover image', function () {

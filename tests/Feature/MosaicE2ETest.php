@@ -299,33 +299,20 @@ test('user can reorder mosaic items', function () {
         'column_index' => 1,
     ]);
 
-    // Reorder items
-    $reorderData = [
-        'items' => [
-            [
-                'id' => $item2->id,
-                'order' => 0,
-                'column_index' => 0,
-            ],
-            [
-                'id' => $item1->id,
-                'order' => 1,
-                'column_index' => 1,
-            ],
-        ],
-    ];
-
-    $response = $this->patch(route('mosaics.items.reorder', $mosaic->id), $reorderData);
+    $response = $this->patch(route('mosaics.items.reorder', $mosaic->id), [
+        'from_id' => $item1->id,
+        'to_id' => $item2->id,
+    ]);
     $response->assertRedirect();
 
-    // Verify items were reordered
     $item1->refresh();
     $item2->refresh();
 
+    // Controller reindexes order from 0 after splice; column_index is unchanged.
     $this->assertEquals(1, $item1->order);
-    $this->assertEquals(1, $item1->column_index);
+    $this->assertEquals(0, $item1->column_index);
     $this->assertEquals(0, $item2->order);
-    $this->assertEquals(0, $item2->column_index);
+    $this->assertEquals(1, $item2->column_index);
 });
 
 test('user cannot access other users mosaics', function () {

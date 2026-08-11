@@ -301,13 +301,14 @@ it('allows user to reorder mosaic items', function () {
 
     $response->assertRedirect();
 
+    // Reorder reindexes from 0 after moving from_id to to_id's position.
     $this->assertDatabaseHas('mosaic_items', [
-        'id' => $item1->id,
-        'order' => 2,
+        'id' => $item2->id,
+        'order' => 0,
     ]);
 
     $this->assertDatabaseHas('mosaic_items', [
-        'id' => $item2->id,
+        'id' => $item1->id,
         'order' => 1,
     ]);
 });

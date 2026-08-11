@@ -48,22 +48,31 @@ class MosaicService extends BaseEntityService
     }
 
     /**
-     * Get a specific mosaic with its items
+     * Get a specific mosaic with its items.
      */
-    public function getMosaicWithItems(string|Mosaic $mosaic, bool $forApi = false): ?Mosaic
+    public function getById(string|Model $entity, bool $forApi = false): ?Model
     {
-        if (is_string($mosaic)) {
-            $mosaic = Mosaic::findOrFail($mosaic);
-        }
+        $mosaic = parent::getById($entity, $forApi);
 
         if (! $mosaic instanceof Mosaic) {
             return null;
         }
 
-        // Load relationships
-        $mosaic->load('items');
+        $mosaic->load(['items' => fn ($query) => $query->orderBy('column_index')->orderBy('order')]);
 
         return $mosaic;
+    }
+
+    /**
+     * Get a specific mosaic with its items
+     *
+     * @deprecated Use getById() instead.
+     */
+    public function getMosaicWithItems(string|Mosaic $mosaic, bool $forApi = false): ?Mosaic
+    {
+        $resolved = $this->getById($mosaic, $forApi);
+
+        return $resolved instanceof Mosaic ? $resolved : null;
     }
 
     /**

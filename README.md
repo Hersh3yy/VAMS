@@ -13,7 +13,7 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 ## Tech Stack
 
 - PHP 8.3
-- Laravel 12
+- Laravel 13
 - PostgreSQL in production (managed); local Docker Compose also ships MySQL for offline development
 - Docker & Docker Compose
 - Vue.js 3 (Admin Interface)

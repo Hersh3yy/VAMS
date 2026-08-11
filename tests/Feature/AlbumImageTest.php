@@ -5,15 +5,21 @@ declare(strict_types=1);
 use App\Models\Album;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    Storage::fake('spaces');
+
+    $this->user = User::factory()->create([
+        'is_approved' => true,
+        'email_verified_at' => now(),
+    ]);
     $this->album = Album::factory()->create(['user_id' => $this->user->id]);
     $this->actingAs($this->user);
 });
 
 it('allows user to add image to their album', function () {
-    $file = UploadedFile::fake()->image('test-image.jpg', 800, 600);
+    $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
 
     $response = $this->post(route('albums.images.store', $this->album->id), [
         'images' => [$file],
@@ -43,7 +49,7 @@ it('prevents adding images to other users albums', function () {
     $otherUser = User::factory()->create();
     $otherAlbum = Album::factory()->create(['user_id' => $otherUser->id]);
 
-    $file = \Illuminate\Http\UploadedFile::fake()->image('test-image.jpg', 800, 600);
+    $file = UploadedFile::fake()->image('test-image.jpg', 800, 600);
 
     $response = $this->post(route('albums.images.store', $otherAlbum->id), [
         'images' => [$file],
