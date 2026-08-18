@@ -1,110 +1,36 @@
 # VAMS - Visual Album Management System
 
-VAMS is a headless CMS specifically designed for visual content management, offering a user-friendly interface for managing albums, landing page layouts, and visual assets. It's built to serve both as a standalone system and as a content backend for existing websites.
+VAMS is a headless CMS for visual content: albums, mosaics, and structured entries. It serves both as an admin interface and as a read-only API backend for existing websites.
 
 ## Core Features
 
 - **Album Management**: Create and organize image collections with rich metadata
 - **Landing Page Builder**: Visual drag-and-drop mosaic builder with desktop/mobile layouts
-- **API-First Design**: Built to serve content to any frontend
+- **Entries**: Dynamic entry types (text, images, relations) for portfolio-style content
+- **API-First Design**: Read-only API key access for external frontends
 - **Theme Customization**: Per-user theming and branding options
-- **Responsive Layouts**: Separate desktop and mobile layout management
 
 ## Tech Stack
 
-- PHP 8.5
-- Laravel 13
-- PostgreSQL everywhere (managed in production, containerized locally via Docker Compose)
+- PHP 8.5 / Laravel 13
+- PostgreSQL (containerized locally, managed in production)
 - Docker & Docker Compose
-- Vue.js 3 (Admin Interface)
-- PHPUnit for testing
+- Vue.js 3 + Inertia (admin)
+- Pest 4 for tests
 - Scramble for API documentation
-
-## API Integration
-
-### Getting Landing Page Content
-
-```typescript
-// Example response from GET /api/v1/sites/{site_id}/landing
-{
-  data: {
-    id: "uuid",
-    title: "Homepage",
-    theme: {
-      logo: "https://assets.vams.com/logos/site-logo.png",
-      colors: {
-        primary: "#FF0000",
-        secondary: "#00FF00"
-        // ... other theme settings
-      }
-    },
-    mosaic: {
-      desktop: [
-        {
-          id: "uuid",
-          type: "image", // or "album"
-          position: { x: 0, y: 0, width: 2, height: 2 },
-          content: {
-            image_url: "https://assets.vams.com/images/hero.jpg",
-            title: "Welcome",
-            description: "Our latest collection",
-            link: "/collections/latest"
-          }
-        }
-        // ... more items
-      ],
-      mobile: [
-        // Mobile-specific layout
-      ]
-    },
-    meta: {
-      last_updated: "2024-03-10T15:30:00Z",
-      version: 1
-    }
-  },
-  cache: {
-    ttl: 3600,
-    etag: "abc123"
-  }
-}
-```
-
-### Implementation Guide
-
-1. **Cache Integration**:
-   ```javascript
-   // Example client implementation
-   async function getLandingContent(siteId) {
-     const response = await fetch(`/api/v1/sites/${siteId}/landing`, {
-       headers: {
-         'If-None-Match': localStorage.getItem('landing-etag')
-       }
-     });
-     
-     if (response.status === 304) {
-       return JSON.parse(localStorage.getItem('landing-content'));
-     }
-     
-     const data = await response.json();
-     localStorage.setItem('landing-etag', data.cache.etag);
-     localStorage.setItem('landing-content', JSON.stringify(data));
-     return data;
-   }
-   ```
 
 ## Development Setup
 
-## Run Locally with Docker
+Local app port defaults to **8080** (`APP_PORT` in `.env`).
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/work-it-out
-   cd work-it-out
+   git clone https://github.com/Hersh3yy/VAMS.git
+   cd VAMS
    ```
 
-2. Create environment files:
+2. Create the environment file:
    ```bash
-   # Laravel directory
    cp .env.example .env
    ```
 
@@ -114,45 +40,46 @@ VAMS is a headless CMS specifically designed for visual content management, offe
    docker compose build
    ```
 
-4. Setup application:
+4. Generate the app key:
    ```bash
    docker compose run --rm api php artisan key:generate
    ```
 
-5. Start the application:
+5. Start the stack:
    ```bash
    docker compose up -d
    ```
 
-6. Setup database with seed data (optional):
+6. Optional — migrate and seed:
    ```bash
    docker compose run --rm api php artisan migrate:fresh --seed
    ```
 
-## API Endpoints
-- `GET /docs/api` - API Documentation UI
-- `GET /telescope` - Development debugging dashboard
+PHP/Artisan commands always go through Docker:
+
+```bash
+docker compose exec api php artisan <command>
+```
+
+## API
+
+External frontends authenticate with an `X-API-Key` header. Routes are read-only.
+
+- Guide: [`docs/API_FRONTEND_GUIDE.md`](docs/API_FRONTEND_GUIDE.md)
+- Live docs: http://localhost:8080/docs/api
+- OpenAPI spec: http://localhost:8080/docs/api.json
+- Telescope (local): http://localhost:8080/telescope
 
 ## Testing
 
-The `api` container image is built with `composer install --no-dev`, so Pest/PHPUnit
-aren't available inside it. Run tests with a dev install instead, e.g.:
+The `api` image is built with `composer install --no-dev`, so Pest is not inside it. Use a full Composer install, then:
 
 ```bash
 docker run --rm -v "$(pwd)":/app -w /app composer:2 composer install
 docker compose run --rm api php artisan test
 ```
 
-Tests use an in-memory SQLite connection (see `phpunit.xml`), never the
-PostgreSQL database configured in `.env`.
-
-## API Documentation
-
-Access the auto-generated API documentation:
-- UI Documentation: http://localhost:8000/docs/api
-- OpenAPI Spec: http://localhost:8000/docs/api.json
-
-Development Tools: http://localhost:8000/telescope
+Tests use in-memory SQLite (`phpunit.xml`), not the Postgres database in `.env`.
 
 ## Documentation
 
@@ -164,51 +91,10 @@ Living docs live in [`docs/`](docs/):
 - [`docs/IMAGE_PROCESSING_PLAN.md`](docs/IMAGE_PROCESSING_PLAN.md) — planned image variants work
 - [`docs/VIDEO_THUMBNAIL_FEATURES.md`](docs/VIDEO_THUMBNAIL_FEATURES.md) — video thumbnails and the fix command
 
-PHP/Artisan commands always go through Docker: `docker compose exec api php artisan <command>`.
+File storage remains DigitalOcean Spaces (`DO_SPACES_*`). That is separate from the database cutover.
 
-## 🚀 Development Roadmap
+## Still on the agenda
 
-### ✅ **Completed (MVP-1)**
-- Core album and mosaic management functionality
-- API-first architecture with comprehensive documentation
-- Admin interface with user management
-- Digital Ocean deployment and file storage
-- Atomic design foundation implementation
-
-### 🔄 **Current Phase: Pre-Launch Preparation**
-- **Testing Infrastructure**: Comprehensive Pest 4 test suite (Unit, Feature, API, E2E)
-- **Frontend Architecture**: Complete atomic design refactoring
-- **Code Quality**: 80%+ test coverage, performance optimization
-- **Security**: Security audit and vulnerability assessment
-
-### 📋 **Post-MVP-1: User Management & Subscriptions** (10 hours)
-- Enhanced user registration/login flow with email verification
-- Subscription tier system with payment integration (Stripe/Paddle)
-- User access control based on subscription levels
-- Social login integration (Google, GitHub)
-
-### 📋 **Post-MVP-2: Content Expansion & Business Features** (10 hours)
-- Multi-content type support (video, documents, custom types)
-- Analytics dashboard with user activity tracking
-- Content performance metrics and usage reporting
-- Scalable architecture for future content type additions
-
-### 🎯 **Future Enhancements**
-
-#### **Image Enhancement**
-- **Image Resizing & Multiple Formats**: Automatic generation of responsive image sizes and modern formats (WebP, AVIF)
-- **Smart Compression**: Intelligent image optimization with quality preservation
-
-#### **Mosaic Builder Enhancements**
-- **Image Cropping & Positioning**: Fine-grained control over image framing within mosaic tiles
-- **Dynamic Tile Sizing**: Flexible tile dimensions with custom aspect ratios
-- **Video Support**: Native video embedding and playback within mosaic layouts
-
-#### **Performance & Technical**
-- **CDN Integration**: Built-in support for content delivery networks
-- **Progressive Loading**: Lazy loading and progressive image enhancement
-- **Export/Import**: Backup and migration tools for content and settings
-
-#### **Integrations**
-- **Third-Party Storage**: S3, Cloudinary, and other cloud storage providers
-- **Webhook System**: Real-time notifications for content changes
+- Image variants (WebP/JPEG sizes) — see the image processing plan
+- Mosaic cropping and finer tile control
+- Queue-based image processing when a single instance is no longer enough

@@ -38,7 +38,8 @@ phpunit.xml
 
 # Misc
 README.md
-ARCH_AUDIT.md
-DOCKER_COMMANDS.md
+docs
 *.log
 .DS_Store
+jtmConfig.json
+.user.ini

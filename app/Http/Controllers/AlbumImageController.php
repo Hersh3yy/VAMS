@@ -52,7 +52,7 @@ final class AlbumImageController
      */
     public function store(Request $request, Album $album): JsonResponse|RedirectResponse
     {
-        // Quick PHP settings check (verify .user.ini is working)
+        // Sanity-check PHP upload limits (set in docker/php.ini for the container).
         $uploadMaxFilesize = (string) ini_get('upload_max_filesize');
         $postMaxSize = (string) ini_get('post_max_size');
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);

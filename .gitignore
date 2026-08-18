@@ -26,6 +26,10 @@ yarn-error.log
 /.zed
 /node_modules
 .ua/
+.DS_Store
+jtmConfig.json
+/.user.ini
+/.htaccess
 # Legacy local-only nginx config (superseded by docker/nginx.conf).
 # Anchored to repo root so it does NOT also ignore docker/nginx.conf.
 /nginx.conf
