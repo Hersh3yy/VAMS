@@ -1,5 +1,28 @@
 ---
+description: How to run PHP/Artisan in this Docker project
 alwaysApply: true
-
-this project uses docker, so php commands are run docker compose exec api php artisan blabla
 ---
+
+# Docker
+
+This project uses Docker. Do not run `php artisan` against a random local PHP unless the command is tests (see below).
+
+## App / migrations / tinker
+
+```bash
+docker compose exec api php artisan <command>
+```
+
+The `api` image is production-shaped (`composer install --no-dev`). Pest is not installed inside it. `docker compose exec api php artisan test` will fail with "Command test is not defined".
+
+## Tests
+
+Run Pest on the host (this repo's `vendor/` is a full dev install):
+
+```bash
+php artisan test
+php artisan test tests/Feature/ExampleTest.php
+php artisan test --filter=testName
+```
+
+Pint likewise: `vendor/bin/pint --dirty`.
