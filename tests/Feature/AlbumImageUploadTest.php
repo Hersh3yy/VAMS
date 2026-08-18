@@ -101,15 +101,44 @@ it('validates file types on upload', function () {
         'images' => [$invalidFile],
     ]);
 
-    // The controller validates with 'images.*' => 'required|image'
-    // When validation fails, Laravel returns 422 with validation errors
-    $response->assertStatus(422);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['images.0']);
 });
 
 it('requires images array for upload', function () {
     $response = $this->actingAs($this->user)->postJson(route('albums.images.store', $this->album), []);
 
-    $response->assertStatus(422);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['images'])
+        ->assertJsonPath('errors.images.0', 'Please select at least one image to upload.');
+});
+
+it('rejects images larger than the free plan upload limit', function () {
+    $this->actingAs($this->user);
+
+    $file = UploadedFile::fake()->image('huge.jpg')->size(26 * 1024);
+
+    $response = $this->postJson(route('albums.images.store', $this->album), [
+        'images' => [$file],
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors([
+            'images.0' => 'Each image must be 25MB or smaller on your current plan.',
+        ]);
+});
+
+it('allows a file over the free plan limit on the pro plan', function () {
+    $this->user->update(['plan' => 'pro']);
+    $this->actingAs($this->user);
+
+    $file = UploadedFile::fake()->image('huge.jpg')->size(26 * 1024);
+
+    $response = $this->postJson(route('albums.images.store', $this->album), [
+        'images' => [$file],
+    ]);
+
+    $response->assertSuccessful();
 });
 
 it('can update image metadata', function () {
@@ -133,6 +162,41 @@ it('can update image metadata', function () {
     expect($albumImage->caption)->toBe('Updated caption');
     // Note: alt_text field might not be fillable/updatable in the current implementation
     // Let's just verify the other fields for now
+});
+
+it('returns 404 when updating an image that does not belong to the album', function () {
+    $otherAlbum = Album::factory()->create(['user_id' => $this->user->id]);
+    $albumImage = AlbumImage::factory()->create([
+        'album_id' => $this->album->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->patch(
+        route('albums.images.update', [$otherAlbum, $albumImage]),
+        ['title' => 'Hijack']
+    );
+
+    $response->assertNotFound();
+});
+
+it('rejects an invalid replacement file when updating an image', function () {
+    $albumImage = AlbumImage::factory()->create([
+        'album_id' => $this->album->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->patch(
+        route('albums.images.update', [$this->album, $albumImage]),
+        ['image' => UploadedFile::fake()->create('document.pdf', 100)]
+    );
+
+    $response->assertRedirect()
+        ->assertSessionHasErrors(['image']);
+});
+
+it('requires reorder indexes', function () {
+    $response = $this->actingAs($this->user)->patchJson(route('albums.images.reorder', $this->album), []);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['from_index', 'to_index']);
 });
 
 it('can reorder images', function () {
@@ -212,7 +276,6 @@ it('validates url for video upload', function () {
         ]
     );
 
-    // The storeVideo method catches validation exceptions and returns back()->withErrors()
-    // Check that it redirects back (which indicates an error occurred)
-    $response->assertStatus(302);
+    $response->assertRedirect()
+        ->assertSessionHasErrors(['url']);
 });

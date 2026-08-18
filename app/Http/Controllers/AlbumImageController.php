@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderAlbumImagesRequest;
+use App\Http\Requests\StoreAlbumImagesRequest;
+use App\Http\Requests\StoreAlbumVideoRequest;
+use App\Http\Requests\UpdateAlbumImageRequest;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Services\AlbumService;
 use App\Services\ImageService;
-use App\Services\Plans\PlanLimitService;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 final class AlbumImageController
 {
@@ -28,43 +28,11 @@ final class AlbumImageController
     public function __construct(
         private readonly ImageService $imageService,
         private readonly AlbumService $albumService,
-        private readonly PlanLimitService $planLimitService,
     ) {}
 
-    public function store(Request $request, Album $album): JsonResponse|RedirectResponse
+    public function store(StoreAlbumImagesRequest $request, Album $album): JsonResponse|RedirectResponse
     {
-        // Sanity-check PHP upload limits (set in docker/php.ini for the container).
-        $uploadMaxFilesize = (string) ini_get('upload_max_filesize');
-        $postMaxSize = (string) ini_get('post_max_size');
-        $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
-        $postMaxBytes = $this->convertToBytes($postMaxSize);
-        $requiredBytes = 1.99 * 1024 * 1024; // 1.99MB required
-
-        $settingsOK = ($uploadMaxBytes >= $requiredBytes && $postMaxBytes >= $requiredBytes);
-
-        if (! $settingsOK) {
-            Log::error('PHP limits too low: upload_max_filesize='.$uploadMaxFilesize.', post_max_size='.$postMaxSize.' (need 1.99M)');
-        }
-
-        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
-
         try {
-            $request->validate(
-                [
-                    'images' => 'required|array',
-                    'images.*' => "required|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:{$maxUploadKb}",
-                ],
-                [
-                    'images.required' => 'Please select at least one image to upload.',
-                    'images.array' => 'Images must be provided as an array.',
-                    'images.*.required' => 'One or more image files are missing.',
-                    'images.*.file' => 'The uploaded file failed to upload. This may be due to file size limits, network issues, or unsupported file type.',
-                    'images.*.max' => 'Each image must be '.round($maxUploadKb / 1024).'MB or smaller on your current plan.',
-                    'images.*.mimes' => 'The file must be one of: jpeg, png, jpg, gif, webp, heic, heif. Detected type: :attribute',
-                    'images.*.image' => 'All files must be valid images (jpeg, png, jpg, gif, etc.).',
-                ]
-            );
-
             $this->authorize('update', $album);
 
             $fileCount = count($request->file('images'));
@@ -105,62 +73,6 @@ final class AlbumImageController
                 'message' => 'Images uploaded successfully',
                 'images' => $uploadedImages,
             ]);
-        } catch (ValidationException $e) {
-            $errors = $e->errors();
-            $fileErrors = [];
-
-            foreach ($errors as $field => $messages) {
-                if (str_starts_with($field, 'images.')) {
-                    $index = str_replace('images.', '', $field);
-                    if ($request->hasFile('images') && isset($request->file('images')[$index])) {
-                        $file = $request->file('images')[$index];
-                        $fileErrors[$field] = [
-                            'messages' => $messages,
-                            'file_info' => [
-                                'original_name' => $file->getClientOriginalName(),
-                                'mime_type' => $file->getMimeType(),
-                                'size' => $file->getSize(),
-                                'size_mb' => round($file->getSize() / 1024 / 1024, 2),
-                                'extension' => $file->getClientOriginalExtension(),
-                                'is_valid' => $file->isValid(),
-                                'error_code' => $file->getError(),
-                                'error_message' => $file->getErrorMessage(),
-                            ],
-                        ];
-                    }
-                }
-            }
-
-            $firstError = '';
-            $firstFileName = '';
-            foreach ($fileErrors as $field => $errorData) {
-                if (empty($firstError)) {
-                    $firstFileName = $errorData['file_info']['original_name'] ?? $field;
-                    $firstError = implode('; ', $errorData['messages']);
-                    break;
-                }
-            }
-
-            Log::warning('Upload failed: '.$firstFileName.' - '.$firstError);
-
-            if ($request->ajax() || $request->wantsJson()) {
-                $errors = $e->errors();
-                $firstError = '';
-                foreach ($errors as $field => $messages) {
-                    if (is_array($messages) && count($messages) > 0) {
-                        $firstError = $messages[0];
-                        break;
-                    }
-                }
-
-                return response()->json([
-                    'success' => false,
-                    'message' => $firstError ?: 'Validation failed. Please check your files and try again.',
-                    'errors' => $errors,
-                ], 422);
-            }
-
-            return back()->withErrors($e->errors())->withInput();
         } catch (Exception $e) {
             Log::error('Upload error: '.$e->getMessage());
 
@@ -175,7 +87,7 @@ final class AlbumImageController
         }
     }
 
-    public function update(Request $request, Album $album, AlbumImage $image): RedirectResponse
+    public function update(UpdateAlbumImageRequest $request, Album $album, AlbumImage $image): RedirectResponse
     {
         if ($image->album_id !== $album->id) {
             abort(404);
@@ -183,19 +95,7 @@ final class AlbumImageController
 
         $this->authorize('update', $album);
 
-        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
-
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'altText' => 'nullable|string|max:255',
-            'caption' => 'nullable|string',
-            'author' => 'nullable|string|max:255',
-            'dateCreated' => 'nullable|date',
-            'location' => 'nullable|string|max:255',
-            'tags' => 'nullable|string',
-            'image' => "nullable|file|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:{$maxUploadKb}",
-            'published' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             $result = $this->imageService->storeImage(
@@ -213,27 +113,6 @@ final class AlbumImageController
         $image->update($validated);
 
         return back()->with('message', 'Image updated successfully');
-    }
-
-    /**
-     * Convert PHP ini size format to bytes (handles K, M, G)
-     */
-    private function convertToBytes(string $size): int
-    {
-        $size = trim($size);
-        if (empty($size)) {
-            return 0;
-        }
-
-        $last = strtolower($size[strlen($size) - 1]);
-        $value = (int) $size;
-
-        return match ($last) {
-            'g' => $value * 1024 * 1024 * 1024,
-            'm' => $value * 1024 * 1024,
-            'k' => $value * 1024,
-            default => $value,
-        };
     }
 
     public function destroy(Album $album, AlbumImage $image): RedirectResponse
@@ -280,19 +159,14 @@ final class AlbumImageController
             strpos($url, 'vimeo.com') !== false;
     }
 
-    public function reorder(Request $request, ?Album $album = null): RedirectResponse
+    public function reorder(ReorderAlbumImagesRequest $request, ?Album $album = null): RedirectResponse
     {
         if (! $album && $request->has('album_id')) {
             $album = Album::findOrFail($request->album_id);
         }
 
-        $request->validate([
-            'from_index' => 'required|integer|min:0',
-            'to_index' => 'required|integer|min:0',
-        ]);
-
-        $fromIndex = $request->from_index;
-        $toIndex = $request->to_index;
+        $fromIndex = $request->integer('from_index');
+        $toIndex = $request->integer('to_index');
 
         $albumId = $album ? $album->id : $request->album_id;
 
@@ -325,17 +199,11 @@ final class AlbumImageController
     /**
      * Store a video URL as an album image
      */
-    public function storeVideo(Request $request, Album $album): RedirectResponse
+    public function storeVideo(StoreAlbumVideoRequest $request, Album $album): RedirectResponse
     {
         Log::info('Incoming video request data:', $request->all());
 
         try {
-            $request->validate([
-                'url' => 'required|url',
-                'title' => 'nullable|string|max:255',
-                'caption' => 'nullable|string',
-            ]);
-
             $this->authorize('update', $album);
 
             $album->images()->increment('order', 1);
