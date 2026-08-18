@@ -38,27 +38,29 @@ RUN npx vite build
 # pre-compiled extension binaries instead of building from C source.
 # This cuts the extension install step from ~20 min down to ~2-3 min.
 # =============================================================================
-FROM php:8.4-fpm-bookworm AS app
+FROM php:8.5-fpm-bookworm AS app
 
 # Pull in the extension installer (single ADD is fine; no curl/wget needed)
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
     /usr/local/bin/install-php-extensions
 RUN chmod +x /usr/local/bin/install-php-extensions
 
-# System packages (only what the extensions actually need at runtime)
+# System packages (only what the extensions actually need at runtime).
+# curl: required so container-internal healthchecks (Coolify et al.) can hit /up.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
         unzip \
         git \
+        curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # All PHP extensions in one fast step — pre-compiled binaries, not source.
 # gd: current image pipeline.  imagick: future variant system.
+# Postgres-only: MySQL support was dropped, see database.php default connection.
 RUN install-php-extensions \
         gd \
-        pdo_mysql \
         pdo_pgsql \
         pgsql \
         zip \
@@ -68,7 +70,8 @@ RUN install-php-extensions \
         opcache \
         pcntl \
         imagick \
-        redis
+        redis \
+        sockets
 
 WORKDIR /var/www
 
