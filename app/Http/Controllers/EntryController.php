@@ -8,13 +8,13 @@ use App\Actions\Entries\ConfirmEntryJsonImport;
 use App\Actions\Entries\EntryJsonImportOutcome;
 use App\Actions\Entries\PreviewEntryJsonImport;
 use App\Http\Requests\StoreEntriesJsonRequest;
+use App\Http\Requests\StoreEntryRequest;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Services\EntryJsonImportService;
 use App\Services\EntryService;
 use App\Services\EntryValidationService;
 use App\Services\Plans\PlanLimitService;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -45,7 +45,7 @@ class EntryController extends BaseEntityController
      */
     protected function getFormRequestClass(): string
     {
-        return \App\Http\Requests\StoreEntryRequest::class; // Not used since we override store/update
+        return StoreEntryRequest::class;
     }
 
     /**
@@ -409,7 +409,7 @@ class EntryController extends BaseEntityController
         if (is_array($content) && ! empty($content)) {
             try {
                 $content = $this->validationService->validateContent($entry->entryType, $content);
-            } catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (ValidationException $e) {
                 return back()->withErrors($e->errors());
             }
         }
@@ -430,24 +430,12 @@ class EntryController extends BaseEntityController
             ->with('success', 'Entry updated successfully');
     }
 
-    /**
-     * Remove the specified entry from storage
-     *
-     * @override
-     */
-    public function destroy(Model|int|string $entity): RedirectResponse
+    public function destroy(Entry $entry): RedirectResponse
     {
-        /** @var Entry $entry */
-        $entry = $entity instanceof Model
-            ? $entity
-            : Entry::query()->findOrFail($entity);
-
-        // Check if user owns this entry
         $this->authorizeOwnership($entry);
 
         $entry->loadMissing('entryType');
 
-        // Store the entry type slug before deletion for redirect
         $entryTypeSlug = $entry->entryType->slug;
 
         $entry->delete();

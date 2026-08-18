@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\BaseEntity;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -79,56 +81,40 @@ abstract class BaseApiController
         return $this->error($message, 422, $errors);
     }
 
-    /**
-     * Check if the authenticated user owns the given model
-     */
-    protected function userOwnsModel(mixed $model, ?User $user = null): bool
+    protected function userOwns(BaseEntity $entity, ?User $user = null): bool
     {
         $user = $user ?? Auth::user();
 
-        return isset($model->user_id) && $model->user_id === $user->id;
+        return $entity->user_id === $user->id;
     }
 
-    /**
-     * Validate ownership and return error response if unauthorized
-     */
-    protected function validateOwnership(mixed $model, ?User $user = null): ?JsonResponse
+    protected function validateOwnership(BaseEntity $entity, ?User $user = null): ?JsonResponse
     {
-        if (! $this->userOwnsModel($model, $user)) {
+        if (! $this->userOwns($entity, $user)) {
             return $this->forbidden();
         }
 
         return null;
     }
 
-    /**
-     * Get the authenticated user
-     */
     protected function user(): User
     {
         return Auth::user();
     }
 
     /**
-     * Find an entity by title with case-insensitive fallback
-     *
-     * @param string $title The title to search for (will be URL-decoded)
-     * @param \Illuminate\Database\Eloquent\Builder $query The query builder to search on
-     * @param bool $caseSensitive Whether to only match exact case (default: false)
-     * @return \Illuminate\Database\Eloquent\Model|null
+     * @param  Builder<BaseEntity>  $query
      */
-    protected function findByTitle(string $title, $query, bool $caseSensitive = false): ?\Illuminate\Database\Eloquent\Model
+    protected function findByTitle(string $title, Builder $query, bool $caseSensitive = false): ?BaseEntity
     {
         $decodedTitle = urldecode($title);
 
-        // Try exact match first
         $entity = $query->where('title', $decodedTitle)->first();
 
-        // If no exact match and case-insensitive is enabled, try case-insensitive match
-        if (! $entity && ! $caseSensitive) {
+        if (! $entity instanceof BaseEntity && ! $caseSensitive) {
             $entity = $query->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])->first();
         }
 
-        return $entity;
+        return $entity instanceof BaseEntity ? $entity : null;
     }
 }

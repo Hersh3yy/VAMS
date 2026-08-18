@@ -8,9 +8,9 @@ use App\Http\Resources\AlbumImageResource;
 use App\Http\Resources\AlbumResource;
 use App\Models\Album;
 use App\Models\AlbumImage;
+use App\Models\BaseEntity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class AlbumService extends BaseEntityService
@@ -52,9 +52,13 @@ class AlbumService extends BaseEntityService
     /**
      * Get a specific album with its images
      */
-    public function getById(string|Model $entity, bool $forApi = false): ?Model
+    public function getById(string|BaseEntity $entity, bool $forApi = false): ?Album
     {
-        $album = $entity instanceof Album ? $entity : (string) $entity;
+        $album = $entity instanceof Album ? $entity : (is_string($entity) ? $entity : null);
+
+        if ($album === null) {
+            return null;
+        }
 
         if ($forApi) {
             // For API, only return if published
@@ -144,7 +148,7 @@ class AlbumService extends BaseEntityService
      *
      * @return array{album: array<string, mixed>, images: mixed}
      */
-    public function formatWithMediaForApi(Model $entity): array
+    public function formatWithMediaForApi(BaseEntity $entity): array
     {
         if (! $entity instanceof Album) {
             return [];

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Http\Resources\EntryResource;
+use App\Models\BaseEntity;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -173,7 +173,7 @@ class EntryService extends BaseEntityService
     /**
      * Format entity with its media for API response (required by contract)
      */
-    public function formatWithMediaForApi(Model $entity): array
+    public function formatWithMediaForApi(BaseEntity $entity): array
     {
         if (! $entity instanceof Entry) {
             return [];

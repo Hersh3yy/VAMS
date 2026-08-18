@@ -4,131 +4,106 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderMosaicItemsRequest;
+use App\Http\Requests\StoreMosaicItemRequest;
+use App\Http\Requests\StoreMosaicMediaRequest;
+use App\Http\Requests\StoreMosaicRequest;
+use App\Http\Requests\UpdateMosaicRequest;
+use App\Models\Album;
+use App\Models\AlbumImage;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
+use App\Services\ImageService;
 use App\Services\MosaicService;
 use App\Services\Plans\PlanLimitService;
 use Exception;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class MosaicController extends BaseEntityController
 {
     public function __construct(
-        protected readonly MosaicService $mosaicService,
+        MosaicService $mosaicService,
+        private readonly ImageService $imageService,
         PlanLimitService $planLimitService,
     ) {
         parent::__construct($mosaicService, $planLimitService);
     }
 
-    /**
-     * Get the entity model class name
-     */
     protected function getEntityModelClass(): string
     {
         return Mosaic::class;
     }
 
-    /**
-     * Get the form request class for this entity
-     */
     protected function getFormRequestClass(): string
     {
-        return \App\Http\Requests\StoreMosaicRequest::class;
+        return StoreMosaicRequest::class;
     }
 
-    /**
-     * Get the view name for index page
-     */
     protected function getIndexView(): string
     {
         return 'Mosaics/Index';
     }
 
-    /**
-     * Get the view name for create page
-     */
     protected function getCreateView(): string
     {
         return 'Mosaics/Create';
     }
 
-    /**
-     * Get the view name for show page
-     */
     protected function getShowView(): string
     {
         return 'Mosaics/Show';
     }
 
-    /**
-     * Get the view name for edit page
-     */
     protected function getEditView(): string
     {
         return 'Mosaics/Edit';
     }
 
-    /**
-     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
-     */
     protected function getRouteNamePrefix(): string
     {
         return 'mosaics';
     }
 
-    /**
-     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
-     */
     protected function getRelationshipName(): string
     {
         return 'mosaics';
     }
 
-    /**
-     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
-     */
     protected function getEntityName(): string
     {
         return 'Mosaic';
     }
 
     /**
-     * Display a listing of mosaics for the authenticated user
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
      */
-    public function index(Request $request): Response
+    protected function extraCreationAttributes(array $validated): array
     {
-        $mosaics = $this->entityService->getAll(false);
-
-        return Inertia::render($this->getIndexView(), [
-            'entities' => $mosaics,
-            'mosaics' => $mosaics,
-            ...$this->getAdditionalViewData(),
-        ]);
+        return [
+            'columns' => $validated['columns'],
+            'display_settings' => $validated['display_settings'] ?? null,
+        ];
     }
 
-    /**
-     * Get additional data to pass to views
-     */
     protected function getAdditionalViewData(): array
     {
         return [
             'albums' => $this->user()->albums()
-                ->with(['images' => function ($query) {
+                ->with(['images' => function (HasMany $query): void {
                     $query->orderBy('order');
                 }])
                 ->get()
-                ->map(function ($album) {
+                ->map(function (Album $album): array {
                     return [
                         'id' => $album->id,
                         'title' => $album->title,
                         'cover_image_path' => $album->cover_image_path,
                         'images_count' => $album->images->count(),
-                        'images' => $album->images->map(function ($image) {
+                        'images' => $album->images->map(function (AlbumImage $image): array {
                             return [
                                 'id' => $image->id,
                                 'path' => $image->path,
@@ -143,21 +118,13 @@ class MosaicController extends BaseEntityController
         ];
     }
 
-    /**
-     * Update the specified resource in storage
-     */
-    public function update(Request $request, $mosaic): JsonResponse|RedirectResponse
+    public function update(UpdateMosaicRequest $request, Mosaic $mosaic): JsonResponse|RedirectResponse
     {
-        $mosaic = $this->resolveEntity($mosaic);
-
         $this->authorizeOwnership($mosaic);
 
-        // Use UpdateMosaicRequest for validation
-        $updateRequestClass = \App\Http\Requests\UpdateMosaicRequest::class;
-        $validated = $request->validate((new $updateRequestClass)->rules());
+        $validated = $request->validated();
 
-        // Check if items array is empty and handle accordingly (only if items are provided)
-        if (isset($validated['items']) && empty($validated['items'])) {
+        if (isset($validated['items']) && $validated['items'] === []) {
             return response()->json([
                 'success' => false,
                 'message' => 'No items to save. Please add at least one item to your mosaic before saving.',
@@ -165,52 +132,33 @@ class MosaicController extends BaseEntityController
             ], 400);
         }
 
-        // Update mosaic basic info if provided
-        $updateData = [];
-        if (isset($validated['title'])) {
-            $updateData['title'] = $validated['title'];
-        }
-        if (isset($validated['description'])) {
-            $updateData['description'] = $validated['description'];
-        }
-        if (isset($validated['columns'])) {
-            $updateData['columns'] = $validated['columns'];
-        }
-        if (! empty($updateData)) {
-            $mosaic->update($updateData);
-        }
+        $this->fillValidatedAttributes($mosaic, $validated, ['title', 'description', 'columns']);
 
-        // Update items (only if items are provided)
-        if (isset($validated['items']) && ! empty($validated['items'])) {
+        if (isset($validated['items']) && $validated['items'] !== []) {
             $syncItems = collect($validated['items'])
                 ->sortBy('order')
                 ->values()
-                ->map(function ($itemData, $index) {
+                ->map(function (array $itemData, int $index): array {
                     $itemData['order'] = $index;
 
                     return $itemData;
                 });
 
-            $mosaic->items()->delete(); // Remove old items
+            $mosaic->items()->delete();
             foreach ($syncItems as $item) {
-                try {
-                    $mosaic->items()->create([
-                        'column_index' => $item['column_index'],
-                        'type' => $item['type'],
-                        'content' => $item['content'] ?? null,
-                        'album_id' => $item['album_id'] ?? null,
-                        'properties' => $item['properties'] ?? null,
-                        'order' => $item['order'],
-                    ]);
-                } catch (Exception $e) {
-                    throw $e;
-                }
+                $mosaic->items()->create([
+                    'column_index' => $item['column_index'],
+                    'type' => $item['type'],
+                    'content' => $item['content'] ?? null,
+                    'album_id' => $item['album_id'] ?? null,
+                    'properties' => $item['properties'] ?? null,
+                    'order' => $item['order'],
+                ]);
             }
 
             $validated['items'] = $syncItems->toArray();
         }
 
-        // Return redirect for web requests, JSON for API requests
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -219,120 +167,100 @@ class MosaicController extends BaseEntityController
             ]);
         }
 
-        return redirect()->route('mosaics.show', $mosaic->id)
-            ->with('success', 'Mosaic updated successfully');
+        return $this->redirectWithSuccess(
+            'mosaics.show',
+            $mosaic,
+            'Mosaic updated successfully'
+        );
     }
 
-    public function storeItem(Request $request, Mosaic $mosaic)
+    public function destroy(Mosaic $mosaic): RedirectResponse
+    {
+        return $this->deleteOwned($mosaic);
+    }
+
+    public function storeItem(StoreMosaicItemRequest $request, Mosaic $mosaic): RedirectResponse
     {
         $this->authorizeOwnership($mosaic);
 
-        $validated = $request->validate([
-            'type' => 'required|string|in:album,media,color,text',
-            'properties' => 'required|array',
-            'order' => 'required|integer|min:0',
-            'column_index' => 'required|integer|min:0',
-        ]);
+        $mosaic->items()->create($request->validated());
 
-        $item = $mosaic->items()->create([
-            'type' => $validated['type'],
-            'properties' => $validated['properties'],
-            'order' => $validated['order'],
-            'column_index' => $validated['column_index'],
-        ]);
-
-        return redirect()->route('mosaics.show', $mosaic->id)
-            ->with('success', 'Item added successfully');
+        return $this->redirectWithSuccess(
+            'mosaics.show',
+            $mosaic,
+            'Item added successfully'
+        );
     }
 
-    public function updateItem(Request $request, Mosaic $mosaic, MosaicItem $item)
+    public function updateItem(StoreMosaicItemRequest $request, Mosaic $mosaic, MosaicItem $item): RedirectResponse
     {
         $this->authorizeOwnership($mosaic);
 
-        $validated = $request->validate([
-            'type' => 'required|string|in:album,media,color,text',
-            'properties' => 'required|array',
-            'order' => 'required|integer|min:0',
-            'column_index' => 'required|integer|min:0',
-        ]);
+        $item->update($request->validated());
 
-        $item->update($validated);
-
-        return redirect()->route('mosaics.show', $mosaic->id)
-            ->with('success', 'Item updated successfully');
+        return $this->redirectWithSuccess(
+            'mosaics.show',
+            $mosaic,
+            'Item updated successfully'
+        );
     }
 
-    public function destroyItem(Mosaic $mosaic, MosaicItem $item)
+    public function destroyItem(Mosaic $mosaic, MosaicItem $item): RedirectResponse
     {
         $this->authorizeOwnership($mosaic);
 
         $item->delete();
 
-        return redirect()->route('mosaics.show', $mosaic->id)
-            ->with('success', 'Item deleted successfully');
+        return $this->redirectWithSuccess(
+            'mosaics.show',
+            $mosaic,
+            'Item deleted successfully'
+        );
     }
 
-    public function reorderItems(Request $request, Mosaic $mosaic)
+    public function reorderItems(ReorderMosaicItemsRequest $request, Mosaic $mosaic): RedirectResponse
     {
         $this->authorizeOwnership($mosaic);
 
-        $validated = $request->validate([
-            'from_id' => 'required|string|exists:mosaic_items,id',
-            'to_id' => 'required|string|exists:mosaic_items,id',
-        ]);
+        $validated = $request->validated();
 
-        // Get all items for this mosaic ordered by current order
-        $items = MosaicItem::where('mosaic_id', $mosaic->id)
+        $items = MosaicItem::query()
+            ->where('mosaic_id', $mosaic->id)
             ->orderBy('column_index')
             ->orderBy('order')
             ->get();
 
-        // Find the from and to positions
-        $fromIndex = $items->search(fn ($item) => $item->id === $validated['from_id']);
-        $toIndex = $items->search(fn ($item) => $item->id === $validated['to_id']);
+        $fromIndex = $items->search(fn (MosaicItem $item): bool => $item->id === $validated['from_id']);
+        $toIndex = $items->search(fn (MosaicItem $item): bool => $item->id === $validated['to_id']);
 
         if ($fromIndex === false || $toIndex === false) {
             return back()->withErrors(['message' => 'Invalid item IDs provided']);
         }
 
-        // Reorder the collection
-        $item = $items->splice($fromIndex, 1)->first();
-        $items->splice($toIndex, 0, [$item]);
+        $moved = $items->splice($fromIndex, 1)->first();
+        $items->splice($toIndex, 0, [$moved]);
 
-        // Update the order for all affected items
         foreach ($items as $index => $item) {
             $item->order = $index;
             $item->save();
         }
 
-        return redirect()->route('mosaics.show', $mosaic->id)
-            ->with('success', 'Items reordered successfully');
+        return $this->redirectWithSuccess(
+            'mosaics.show',
+            $mosaic,
+            'Items reordered successfully'
+        );
     }
 
-    public function storeMedia(Request $request, Mosaic $mosaic)
+    public function storeMedia(StoreMosaicMediaRequest $request, Mosaic $mosaic): JsonResponse
     {
         $this->authorizeOwnership($mosaic);
 
-        $maxUploadKb = $this->planLimitService->maxUploadSizeKb($this->user());
-
-        // Note: Images are converted to WebP client-side and should be under 1.99MB
-        // Videos may still be larger, so we validate per file type
-        $request->validate([
-            'media' => "required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,webp|max:{$maxUploadKb}",
-        ]);
-
         try {
-            $file = $request->file('media');
-
-            // Use ImageService to store the file (same as albums)
-            $result = app(\App\Services\ImageService::class)->storeImage(
-                $file,
-                "mosaics/{$mosaic->id}"
-            );
-
-            // Determine the type
+            $file = $request->uploadedFile();
+            $result = $this->imageService->storeImage($file, "mosaics/{$mosaic->id}");
             $mime = $file->getMimeType();
-            $type = str_starts_with($mime, 'video/') ? 'video' : 'image';
+            $type = str_starts_with((string) $mime, 'video/') ? 'video' : 'image';
 
             return response()->json([
                 'success' => true,
@@ -342,7 +270,6 @@ class MosaicController extends BaseEntityController
                     'mime_type' => $mime,
                     'original_name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
-                    // Include WebP URL if available
                     'webp_url' => $result['webp_url'] ?? null,
                 ],
             ]);

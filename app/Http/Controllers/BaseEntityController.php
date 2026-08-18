@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Contracts\EntityServiceContract;
+use App\Models\BaseEntity;
 use App\Services\Plans\PlanLimitService;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,52 +25,31 @@ abstract class BaseEntityController extends BaseController
     ) {}
 
     /**
-     * Get the entity model class name
+     * @return class-string<BaseEntity>
      */
     abstract protected function getEntityModelClass(): string;
 
     /**
-     * Get the form request class for this entity
+     * @return class-string
      */
     abstract protected function getFormRequestClass(): string;
 
-    /**
-     * Get the view name for index page
-     */
     abstract protected function getIndexView(): string;
 
-    /**
-     * Get the view name for create page
-     */
     abstract protected function getCreateView(): string;
 
-    /**
-     * Get the view name for show page
-     */
     abstract protected function getShowView(): string;
 
-    /**
-     * Get the view name for edit page
-     */
     abstract protected function getEditView(): string;
 
-    /**
-     * Get the route name prefix (e.g., 'albums' for albums.show, albums.index, etc.)
-     */
     abstract protected function getRouteNamePrefix(): string;
 
-    /**
-     * Get the relationship name on the User model (e.g., 'albums', 'mosaics', 'entries')
-     */
     abstract protected function getRelationshipName(): string;
 
-    /**
-     * Get the entity name for view data keys (e.g., 'album', 'mosaic', 'entry')
-     */
     abstract protected function getEntityName(): string;
 
     /**
-     * Get additional data to pass to views
+     * @return array<string, mixed>
      */
     protected function getAdditionalViewData(): array
     {
@@ -80,21 +57,46 @@ abstract class BaseEntityController extends BaseController
     }
 
     /**
-     * Display a listing of the resource
+     * Extra attributes merged into the create payload after title/description.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
      */
+    protected function extraCreationAttributes(array $validated): array
+    {
+        return [];
+    }
+
+    /**
+     * @param  list<string>  $keys
+     * @param  array<string, mixed>  $validated
+     */
+    protected function fillValidatedAttributes(BaseEntity $entity, array $validated, array $keys): void
+    {
+        $updateData = [];
+
+        foreach ($keys as $key) {
+            if (isset($validated[$key])) {
+                $updateData[$key] = $validated[$key];
+            }
+        }
+
+        if ($updateData !== []) {
+            $entity->update($updateData);
+        }
+    }
+
     public function index(Request $request): Response
     {
         $entities = $this->entityService->getAll(false);
 
         return Inertia::render($this->getIndexView(), [
             'entities' => $entities,
+            $this->getRelationshipName() => $entities,
             ...$this->getAdditionalViewData(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource
-     */
     public function create(Request $request): Response
     {
         return Inertia::render($this->getCreateView(), [
@@ -102,16 +104,11 @@ abstract class BaseEntityController extends BaseController
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage
-     */
     public function store(Request $request): RedirectResponse
     {
         $formRequestClass = $this->getFormRequestClass();
         $formRequest = new $formRequestClass;
-        $rules = $formRequest->rules();
-
-        $validated = $request->validate($rules);
+        $validated = $request->validate($formRequest->rules());
 
         $resource = $this->getRelationshipName();
 
@@ -121,11 +118,11 @@ abstract class BaseEntityController extends BaseController
             );
         }
 
-        $entityModelClass = $this->getEntityModelClass();
         $entity = $this->user()->{$this->getRelationshipName()}()->create([
             'id' => Str::uuid(),
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            ...$this->extraCreationAttributes($validated),
         ]);
 
         return $this->redirectWithSuccess(
@@ -135,108 +132,21 @@ abstract class BaseEntityController extends BaseController
         );
     }
 
-    /**
-     * Display the specified resource
-     */
     public function show(string $entityId): Response|RedirectResponse
     {
-        $entityModelClass = $this->getEntityModelClass();
-        $entity = $entityModelClass::find($entityId);
-
-        if (! $entity) {
-            return $this->redirectWithError(
-                $this->getRouteNamePrefix().'.index',
-                [],
-                ucfirst($this->getEntityName()).' not found. You have been redirected to your '.$this->getRouteNamePrefix().'.'
-            );
-        }
-
-        // Check if user owns this entity
-        $this->authorizeOwnership($entity);
-
-        // Get entity with relationships using service
-        $entity = $this->entityService->getById($entity, false);
-
-        return Inertia::render($this->getShowView(), [
-            $this->getEntityName() => $entity,
-            ...$this->getAdditionalViewData(),
-        ]);
+        return $this->renderOwnedEntity($entityId, $this->getShowView());
     }
 
-    /**
-     * Show the form for editing the specified resource
-     */
     public function edit(string $entityId): Response|RedirectResponse
     {
-        $entityModelClass = $this->getEntityModelClass();
-        $entity = $entityModelClass::find($entityId);
+        return $this->renderOwnedEntity($entityId, $this->getEditView());
+    }
 
-        if (! $entity) {
-            return $this->redirectWithError(
-                $this->getRouteNamePrefix().'.index',
-                [],
-                ucfirst($this->getEntityName()).' not found. You have been redirected to your '.$this->getRouteNamePrefix().'.'
-            );
-        }
-
-        // Check if user owns this entity
+    protected function deleteOwned(BaseEntity $entity): RedirectResponse
+    {
         $this->authorizeOwnership($entity);
 
-        // Get entity with relationships using service
-        $entity = $this->entityService->getById($entity, false);
-
-        return Inertia::render($this->getEditView(), [
-            $this->getEntityName() => $entity,
-            ...$this->getAdditionalViewData(),
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage
-     */
-    public function update(Request $request, Model|int|string $entity): RedirectResponse|JsonResponse
-    {
-        Log::info($this->getEntityName().'Controller@update - Incoming request data:', $request->all());
-
-        $entityModel = $this->resolveEntity($entity);
-
-        // Check if user owns this entity
-        $this->authorizeOwnership($entityModel);
-
-        $formRequestClass = $this->getFormRequestClass();
-        $formRequest = new $formRequestClass;
-        $rules = $formRequest->rules();
-
-        $validated = $request->validate($rules);
-
-        Log::info($this->getEntityName().'Controller@update - Validated data:', $validated);
-
-        // Update entity basic info
-        $entityModel->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-        ]);
-
-        Log::info($this->getEntityName().'Controller@update - '.ucfirst($this->getEntityName()).' updated successfully');
-
-        return $this->redirectWithSuccess(
-            $this->getRouteNamePrefix().'.show',
-            $entityModel,
-            ucfirst($this->getEntityName()).' updated successfully'
-        );
-    }
-
-    /**
-     * Remove the specified resource from storage
-     */
-    public function destroy(Model|int|string $entity): RedirectResponse
-    {
-        $entityModel = $this->resolveEntity($entity);
-
-        // Check if user owns this entity
-        $this->authorizeOwnership($entityModel);
-
-        $entityModel->delete();
+        $entity->delete();
 
         return $this->redirectWithSuccess(
             $this->getRouteNamePrefix().'.index',
@@ -245,18 +155,24 @@ abstract class BaseEntityController extends BaseController
         );
     }
 
-    /**
-     * Resolve an entity identifier to its corresponding model instance
-     */
-    protected function resolveEntity(Model|int|string $entity): Model
+    private function renderOwnedEntity(string $entityId, string $view): Response|RedirectResponse
     {
-        if ($entity instanceof Model) {
-            return $entity;
+        $entityClass = $this->getEntityModelClass();
+        $entity = $entityClass::query()->find($entityId);
+
+        if (! $entity instanceof BaseEntity) {
+            return $this->redirectWithError(
+                $this->getRouteNamePrefix().'.index',
+                [],
+                ucfirst($this->getEntityName()).' not found. You have been redirected to your '.$this->getRouteNamePrefix().'.'
+            );
         }
 
-        /** @var class-string<Model> $entityModelClass */
-        $entityModelClass = $this->getEntityModelClass();
+        $this->authorizeOwnership($entity);
 
-        return $entityModelClass::query()->findOrFail($entity);
+        return Inertia::render($view, [
+            $this->getEntityName() => $this->entityService->getById($entity, false),
+            ...$this->getAdditionalViewData(),
+        ]);
     }
 }

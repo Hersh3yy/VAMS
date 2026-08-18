@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\EntityServiceContract;
+use App\Models\BaseEntity;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -17,21 +18,17 @@ use Illuminate\Support\Facades\Log;
 abstract class BaseEntityService implements EntityServiceContract
 {
     /**
-     * Get the entity model class name
+     * @return class-string<BaseEntity>
      */
     abstract protected function getEntityModelClass(): string;
 
-    /**
-     * Get all entities for the current user or API context
-     */
     public function getAll(bool $forApi = false): Collection
     {
-        $entityModelClass = $this->getEntityModelClass();
+        $entityClass = $this->getEntityModelClass();
 
         if ($forApi) {
-            // For API, we return all published entities (if they have published scope)
-            $query = $entityModelClass::query();
-            if (method_exists($entityModelClass, 'scopePublished')) {
+            $query = $entityClass::query();
+            if (method_exists($entityClass, 'scopePublished')) {
                 $query = $query->published();
             }
 
@@ -40,7 +37,6 @@ abstract class BaseEntityService implements EntityServiceContract
                 ->get();
         }
 
-        // For web, we only return the user's entities
         $user = Auth::user();
 
         if (! $user) {
@@ -52,29 +48,25 @@ abstract class BaseEntityService implements EntityServiceContract
             ->get();
     }
 
-    /**
-     * Get a specific entity with its relationships
-     */
-    public function getById(string|Model $entity, bool $forApi = false): ?Model
+    public function getById(string|BaseEntity $entity, bool $forApi = false): ?BaseEntity
     {
         try {
-            $entityModelClass = $this->getEntityModelClass();
+            $entityClass = $this->getEntityModelClass();
 
             if (is_string($entity)) {
-                $entity = $entityModelClass::findOrFail($entity);
+                $entity = $entityClass::query()->findOrFail($entity);
             }
 
-            if (! $entity instanceof Model) {
+            if (! $entity instanceof BaseEntity) {
                 return null;
             }
 
-            // For API, check if entity is published (if it has published property)
             if ($forApi && property_exists($entity, 'published') && ! $entity->published) {
                 return null;
             }
 
             return $entity;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error in '.class_basename($this).'@getById:', [
                 'entity_id' => is_string($entity) ? $entity : $entity->id ?? 'unknown',
                 'for_api' => $forApi,
@@ -86,9 +78,9 @@ abstract class BaseEntityService implements EntityServiceContract
     }
 
     /**
-     * Format entity for API response
+     * @return array<string, mixed>
      */
-    public function formatForApi(Model $entity): array
+    public function formatForApi(BaseEntity $entity): array
     {
         return [
             'id' => $entity->id,
@@ -101,13 +93,10 @@ abstract class BaseEntityService implements EntityServiceContract
     }
 
     /**
-     * Format entity with its media for API response
+     * @return array<string, mixed>
      */
-    abstract public function formatWithMediaForApi(Model $entity): array;
+    abstract public function formatWithMediaForApi(BaseEntity $entity): array;
 
-    /**
-     * Get recent entities for the current user
-     */
     public function getRecent(int $limit = 3): Collection
     {
         $user = Auth::user();
@@ -116,27 +105,17 @@ abstract class BaseEntityService implements EntityServiceContract
             return new Collection;
         }
 
-        $entityModelClass = $this->getEntityModelClass();
-
         return $user->{$this->getEntityNamePlural()}()
             ->orderBy('updated_at', 'desc')
             ->limit($limit)
             ->get();
     }
 
-    /**
-     * Get the entity name for this service
-     */
     protected function getEntityName(): string
     {
-        $className = class_basename($this->getEntityModelClass());
-
-        return strtolower($className);
+        return strtolower(class_basename($this->getEntityModelClass()));
     }
 
-    /**
-     * Get the entity name plural for this service
-     */
     protected function getEntityNamePlural(): string
     {
         return $this->getEntityName().'s';

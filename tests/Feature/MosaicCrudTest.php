@@ -71,7 +71,7 @@ it('allows authenticated user to create mosaic', function () {
     $mosaicData = [
         'title' => 'Test Mosaic',
         'description' => 'This is a test mosaic description.',
-        'columns' => 3,
+        'columns' => 4,
         'display_settings' => [
             'show_titles' => true,
             'show_captions' => false,
@@ -85,7 +85,7 @@ it('allows authenticated user to create mosaic', function () {
     $this->assertDatabaseHas('mosaics', [
         'title' => 'Test Mosaic',
         'description' => 'This is a test mosaic description.',
-        'columns' => 3,
+        'columns' => 4,
         'user_id' => $this->user->id,
     ]);
 });

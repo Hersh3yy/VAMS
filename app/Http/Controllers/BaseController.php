@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\BaseEntity;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -39,20 +40,14 @@ abstract class BaseController
         return Redirect::back()->with('error', $message);
     }
 
-    /**
-     * Check if the authenticated user owns the given model
-     */
-    protected function userOwnsModel(mixed $model): bool
+    protected function userOwns(BaseEntity $entity): bool
     {
-        return isset($model->user_id) && $model->user_id == Auth::id();
+        return $entity->user_id === Auth::id();
     }
 
-    /**
-     * Abort if user doesn't own the model
-     */
-    protected function authorizeOwnership(mixed $model): void
+    protected function authorizeOwnership(BaseEntity $entity): void
     {
-        if (! $this->userOwnsModel($model)) {
+        if (! $this->userOwns($entity)) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }

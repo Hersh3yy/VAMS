@@ -6,11 +6,11 @@ namespace App\Services;
 
 use App\Http\Resources\MosaicItemResource;
 use App\Http\Resources\MosaicResource;
+use App\Models\BaseEntity;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class MosaicService extends BaseEntityService
@@ -52,7 +52,7 @@ class MosaicService extends BaseEntityService
     /**
      * Get a specific mosaic with its items.
      */
-    public function getById(string|Model $entity, bool $forApi = false): ?Model
+    public function getById(string|BaseEntity $entity, bool $forApi = false): ?Mosaic
     {
         $mosaic = parent::getById($entity, $forApi);
 
@@ -70,7 +70,7 @@ class MosaicService extends BaseEntityService
      *
      * @return array{mosaic: array<string, mixed>, items: mixed}
      */
-    public function formatWithMediaForApi(Model $entity): array
+    public function formatWithMediaForApi(BaseEntity $entity): array
     {
         if (! $entity instanceof Mosaic) {
             return [];

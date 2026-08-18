@@ -38,6 +38,7 @@ it('allows authenticated user to view albums index', function () {
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page->component('Albums/Index')
         ->has('albums', 3) // Only user's albums
+        ->has('entities', 3)
     );
 });
 
