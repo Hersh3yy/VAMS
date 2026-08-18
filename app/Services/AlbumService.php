@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Http\Resources\AlbumImageResource;
+use App\Http\Resources\AlbumResource;
 use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
@@ -88,86 +90,35 @@ class AlbumService extends BaseEntityService
 
     /**
      * Format album data for API response
+     *
+     * @return array<string, mixed>
      */
     public function formatAlbumForApi(Album $album): array
     {
-        return [
-            'id' => $album->id,
-            'title' => $album->title,
-            'description' => $album->description,
-            'cover_image_path' => $album->cover_image_path,
-            'images_count' => $album->images_count ?? $album->images->count(),
-            'user_id' => $album->user_id,
-            'published' => $album->published,
-            'created_at' => $album->created_at?->toISOString(),
-            'updated_at' => $album->updated_at?->toISOString(),
-        ];
+        return AlbumResource::make($album)->resolve();
     }
 
     /**
      * Format image data for API response
+     *
+     * @return array<string, mixed>
      */
     public function formatImageForApi(AlbumImage $image): array
     {
-        $properties = is_string($image->properties) ?
-            json_decode($image->properties, true) :
-            ($image->properties ?? []);
-
-        return [
-            'id' => $image->id,
-            'title' => $image->title,
-            'description' => $image->description,
-            'path' => $image->path,
-            'webp_path' => $image->webp_path ?? null,
-            'thumbnail_url' => $properties['thumbnail_url'] ?? $image->path,
-            'webp_url' => $properties['webp_url'] ?? null,
-            'caption' => $image->caption,
-            'order' => $image->order,
-            'published' => $image->published,
-            'properties' => $properties,
-            'created_at' => $image->created_at?->toISOString(),
-            'updated_at' => $image->updated_at?->toISOString(),
-        ];
+        return AlbumImageResource::make($image)->resolve();
     }
 
     /**
      * Format album with images for API response
+     *
+     * @return array{album: array<string, mixed>, images: mixed}
      */
     public function formatAlbumWithImagesForApi(Album $album): array
     {
         return [
             'album' => $this->formatAlbumForApi($album),
-            'images' => $album->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
+            'images' => AlbumImageResource::collection($album->images)->resolve(),
         ];
-    }
-
-    /**
-     * Format album for Strapi compatibility
-     */
-    public function formatAlbumForStrapi(Album $album): array
-    {
-        return $album->images()
-            ->orderBy('order')
-            ->get()
-            ->map(fn (AlbumImage $image) => [
-                'id' => $image->id,
-                'created_at' => $image->created_at?->toISOString(),
-                'updated_at' => $image->updated_at?->toISOString(),
-                'Name' => $image->title ?? 'Untitled',
-                'Order' => $image->order ?? 0,
-                'Caption' => $image->caption ?? '',
-                'Year' => (is_string($image->properties) ? json_decode($image->properties, true) : ($image->properties ?? []))['year'] ?? null,
-                'Image' => [
-                    'id' => $image->id,
-                    'url' => $image->path,
-                    'formats' => [
-                        'thumbnail' => [
-                            'url' => $image->path,
-                        ],
-                    ],
-                ],
-            ])
-            ->toArray();
     }
 
     /**
@@ -189,87 +140,16 @@ class AlbumService extends BaseEntityService
     }
 
     /**
-     * Format album data with user display settings
-     */
-    public function formatAlbumWithUserSettings(Album $album, ?array $userSettings = null): array
-    {
-        $defaultSettings = [
-            'caption' => true,
-            'altText' => true,
-            'dateCreated' => true,
-            'location' => true,
-            'tags' => true,
-            'title' => true,
-            'author' => true,
-            'main_color' => '#4F46E5',
-            'secondary_color' => '#10B981',
-        ];
-
-        $settings = $userSettings ?? $defaultSettings;
-
-        $images = $album->images()
-            ->orderBy('order')
-            ->get()
-            ->map(function (AlbumImage $image) use ($settings, $album) {
-                $properties = is_string($image->properties) ?
-                    json_decode($image->properties, true) :
-                    ($image->properties ?? []);
-
-                $formattedImage = [
-                    'id' => $image->id,
-                    'url' => $image->path,
-                    'order' => $image->order ?? 0,
-                ];
-
-                // Add fields based on user settings
-                if ($settings['title'] ?? false) {
-                    $formattedImage['title'] = $image->title ?? '';
-                }
-                if ($settings['caption'] ?? false) {
-                    $formattedImage['caption'] = $image->caption ?? '';
-                }
-                if ($settings['altText'] ?? false) {
-                    $formattedImage['alt_text'] = $image->title ?? $image->caption ?? '';
-                }
-                if ($settings['dateCreated'] ?? false) {
-                    $formattedImage['date_created'] = $image->created_at?->toISOString();
-                }
-                if ($settings['location'] ?? false) {
-                    $formattedImage['location'] = $properties['location'] ?? null;
-                }
-                if ($settings['tags'] ?? false) {
-                    $formattedImage['tags'] = $properties['tags'] ?? [];
-                }
-                if ($settings['author'] ?? false) {
-                    $formattedImage['author'] = $properties['author'] ?? $album->user?->name ?? '';
-                }
-
-                return $formattedImage;
-            });
-
-        return [
-            'id' => $album->id,
-            'title' => $album->title,
-            'description' => $album->description,
-            'created_at' => $album->created_at?->toISOString(),
-            'updated_at' => $album->updated_at?->toISOString(),
-            'images' => $images->toArray(),
-            'images_count' => $images->count(),
-            'display_settings' => [
-                'main_color' => $settings['main_color'] ?? '#4F46E5',
-                'secondary_color' => $settings['secondary_color'] ?? '#10B981',
-            ],
-        ];
-    }
-
-    /**
      * Format entity with its media for API response
+     *
+     * @return array{album: array<string, mixed>, images: mixed}
      */
     public function formatWithMediaForApi(Model $entity): array
     {
-        return [
-            'album' => $this->formatForApi($entity),
-            'images' => $entity->images->map(fn (AlbumImage $image) => $this->formatImageForApi($image)),
-        ];
+        if (! $entity instanceof Album) {
+            return [];
+        }
+
+        return $this->formatAlbumWithImagesForApi($entity);
     }
 }

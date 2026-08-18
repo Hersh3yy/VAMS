@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\MosaicItemResource;
+use App\Http\Resources\MosaicResource;
 use App\Models\Mosaic;
-use App\Services\MosaicService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,10 +16,6 @@ use Illuminate\Http\Request;
  */
 class MosaicController extends BaseApiController
 {
-    public function __construct(
-        private readonly MosaicService $mosaicService,
-    ) {}
-
     /**
      * Get all mosaics for the authenticated user (API key)
      */
@@ -30,14 +27,14 @@ class MosaicController extends BaseApiController
         $mosaics = $user->mosaics()->get();
 
         return $this->success([
-            'mosaics' => $mosaics->map(fn (Mosaic $mosaic) => $this->mosaicService->formatMosaicForApi($mosaic)),
+            'mosaics' => MosaicResource::collection($mosaics)->resolve(),
         ], 'Mosaics retrieved successfully');
     }
 
     /**
      * Get specific mosaic by ID (API key)
      */
-    public function showWithApiKey(Request $request, $id): JsonResponse
+    public function showWithApiKey(Request $request, string $id): JsonResponse
     {
         // User is automatically set by the api.key middleware
         $user = $request->user();
@@ -48,7 +45,7 @@ class MosaicController extends BaseApiController
         }
 
         return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            $this->mosaicPayload($mosaic),
             'Mosaic retrieved successfully'
         );
     }
@@ -72,8 +69,19 @@ class MosaicController extends BaseApiController
         }
 
         return $this->success(
-            $this->mosaicService->formatMosaicWithItemsForApi($mosaic),
+            $this->mosaicPayload($mosaic),
             'Mosaic retrieved successfully'
         );
+    }
+
+    /**
+     * @return array{mosaic: array<string, mixed>, items: mixed}
+     */
+    private function mosaicPayload(Mosaic $mosaic): array
+    {
+        return [
+            'mosaic' => MosaicResource::make($mosaic)->resolve(),
+            'items' => MosaicItemResource::collection($mosaic->items)->resolve(),
+        ];
     }
 }

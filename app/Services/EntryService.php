@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Http\Resources\EntryResource;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
@@ -145,25 +146,12 @@ class EntryService extends BaseEntityService
 
     /**
      * Format entry data for API response
+     *
+     * @return array<string, mixed>
      */
     public function formatEntryForApi(Entry $entry): array
     {
-        return [
-            'id' => $entry->id,
-            'title' => $entry->title,
-            'content' => $entry->content,
-            'status' => $entry->status,
-            'published_at' => $entry->published_at?->toISOString(),
-            'order' => $entry->order,
-            'entry_type' => [
-                'id' => $entry->entryType->id,
-                'name' => $entry->entryType->name,
-                'slug' => $entry->entryType->slug,
-            ],
-            'user_id' => $entry->user_id,
-            'created_at' => $entry->created_at?->toISOString(),
-            'updated_at' => $entry->updated_at?->toISOString(),
-        ];
+        return EntryResource::make($entry)->resolve();
     }
 
     /**

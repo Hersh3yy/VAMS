@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Http\Resources\MosaicItemResource;
+use App\Http\Resources\MosaicResource;
 use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Models\User;
@@ -65,56 +67,48 @@ class MosaicService extends BaseEntityService
 
     /**
      * Format entity with its media for API response
+     *
+     * @return array{mosaic: array<string, mixed>, items: mixed}
      */
     public function formatWithMediaForApi(Model $entity): array
     {
-        return [
-            'mosaic' => $this->formatForApi($entity),
-            'items' => $entity->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
-        ];
+        if (! $entity instanceof Mosaic) {
+            return [];
+        }
+
+        return $this->formatMosaicWithItemsForApi($entity);
     }
 
     /**
      * Format mosaic for API response
+     *
+     * @return array<string, mixed>
      */
     public function formatMosaicForApi(Mosaic $mosaic): array
     {
-        return [
-            'id' => $mosaic->id,
-            'title' => $mosaic->title,
-            'description' => $mosaic->description,
-            'columns' => $mosaic->columns,
-            'user_id' => $mosaic->user_id,
-            'created_at' => $mosaic->created_at?->toISOString(),
-            'updated_at' => $mosaic->updated_at?->toISOString(),
-        ];
+        return MosaicResource::make($mosaic)->resolve();
     }
 
     /**
      * Format mosaic with items for API response
+     *
+     * @return array{mosaic: array<string, mixed>, items: mixed}
      */
     public function formatMosaicWithItemsForApi(Mosaic $mosaic): array
     {
         return [
             'mosaic' => $this->formatMosaicForApi($mosaic),
-            'items' => $mosaic->items->map(fn (MosaicItem $item) => $this->formatMosaicItemForApi($item)),
+            'items' => MosaicItemResource::collection($mosaic->items)->resolve(),
         ];
     }
 
     /**
      * Format mosaic item for API response
+     *
+     * @return array<string, mixed>
      */
     public function formatMosaicItemForApi(MosaicItem $item): array
     {
-        return [
-            'id' => $item->id,
-            'type' => $item->type,
-            'content' => $item->content,
-            'properties' => $item->properties,
-            'column_index' => $item->column_index,
-            'order' => $item->order,
-            'created_at' => $item->created_at?->toISOString(),
-            'updated_at' => $item->updated_at?->toISOString(),
-        ];
+        return MosaicItemResource::make($item)->resolve();
     }
 }

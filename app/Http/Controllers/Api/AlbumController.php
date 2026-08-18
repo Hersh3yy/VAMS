@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\AlbumImageResource;
+use App\Http\Resources\AlbumResource;
 use App\Models\Album;
-use App\Services\AlbumService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,10 +16,6 @@ use Illuminate\Http\Request;
  */
 class AlbumController extends BaseApiController
 {
-    public function __construct(
-        protected readonly AlbumService $albumService,
-    ) {}
-
     /**
      * Get all albums for the authenticated user (API key)
      */
@@ -40,13 +37,11 @@ class AlbumController extends BaseApiController
 
         $albums = $query->get();
 
-        // Format albums with or without images based on request
         $formattedAlbums = $albums->map(function (Album $album) use ($withImages) {
-            $albumData = $this->albumService->formatAlbumForApi($album);
+            $albumData = AlbumResource::make($album)->resolve();
 
-            // Include images if requested
             if ($withImages && $album->relationLoaded('images')) {
-                $albumData['images'] = $album->images->map(fn ($image) => $this->albumService->formatImageForApi($image));
+                $albumData['images'] = AlbumImageResource::collection($album->images)->resolve();
             }
 
             return $albumData;
@@ -71,7 +66,7 @@ class AlbumController extends BaseApiController
         }
 
         return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album),
+            $this->albumPayload($album),
             'Album retrieved successfully'
         );
     }
@@ -99,8 +94,19 @@ class AlbumController extends BaseApiController
         }
 
         return $this->success(
-            $this->albumService->formatAlbumWithImagesForApi($album),
+            $this->albumPayload($album),
             'Album retrieved successfully'
         );
+    }
+
+    /**
+     * @return array{album: array<string, mixed>, images: mixed}
+     */
+    private function albumPayload(Album $album): array
+    {
+        return [
+            'album' => AlbumResource::make($album)->resolve(),
+            'images' => AlbumImageResource::collection($album->images)->resolve(),
+        ];
     }
 }
