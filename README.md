@@ -154,6 +154,18 @@ Access the auto-generated API documentation:
 
 Development Tools: http://localhost:8000/telescope
 
+## Documentation
+
+Living docs live in [`docs/`](docs/):
+
+- [`docs/API_FRONTEND_GUIDE.md`](docs/API_FRONTEND_GUIDE.md) — API key auth and consumer endpoints
+- [`docs/ATOMIC_DESIGN.md`](docs/ATOMIC_DESIGN.md) — Vue component organization
+- [`docs/COOLIFY_DB_MIGRATION_GUIDE.md`](docs/COOLIFY_DB_MIGRATION_GUIDE.md) — DigitalOcean → Coolify Postgres cutover
+- [`docs/IMAGE_PROCESSING_PLAN.md`](docs/IMAGE_PROCESSING_PLAN.md) — planned image variants work
+- [`docs/VIDEO_THUMBNAIL_FEATURES.md`](docs/VIDEO_THUMBNAIL_FEATURES.md) — video thumbnails and the fix command
+
+PHP/Artisan commands always go through Docker: `docker compose exec api php artisan <command>`.
+
 ## 🚀 Development Roadmap
 
 ### ✅ **Completed (MVP-1)**

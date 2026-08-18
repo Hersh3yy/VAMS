@@ -1,4 +1,4 @@
-1# API & Frontend Guide
+# API & Frontend Guide
 
 ## Overview
 This application has a clean separation between frontend operations and API access:

@@ -1,0 +1,22 @@
+---
+description: Vue component structure, Pages vs Components, and BaseButton conventions
+globs: resources/js/**/*.{vue,ts}
+alwaysApply: false
+---
+
+# Vue Conventions
+
+## Component Structure
+Vue SFCs use this section order:
+1. `<template>`
+2. `<script>`
+3. `<style>` (if present)
+
+## Organization
+- `Pages/` contains only Inertia pages (Index, Show, Edit, Create). Pages compose components; they do not define reusable ones.
+- `Components/` holds reusable components, organized by domain, following atomic design (`docs/ATOMIC_DESIGN.md`).
+
+## Style
+- Use `BaseButton` instead of raw `<button>` tags.
+- Prefer composition over large monolithic files.
+- Use proper TypeScript types and props definitions.
