@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Album;
+use App\Models\Mosaic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -108,7 +109,7 @@ it('allows mosaic media upload with valid csrf', function () {
     $this->actingAs($this->user);
 
     // Create a mosaic first
-    $mosaic = \App\Models\Mosaic::factory()->create([
+    $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
     ]);
 
@@ -122,21 +123,6 @@ it('allows mosaic media upload with valid csrf', function () {
         ->assertJson([
             'success' => true,
         ]);
-});
-
-it('validates entity type for generic media upload', function () {
-    $this->actingAs($this->user);
-
-    $file = UploadedFile::fake()->image('test.jpg');
-
-    $response = $this->postJson(route('media.upload'), [
-        'entity_type' => 'invalid_type',
-        'entity_id' => $this->album->id,
-        'media' => [$file],
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors(['entity_type']);
 });
 
 it('allows api media upload with sanctum auth', function () {

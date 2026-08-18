@@ -1,111 +1,71 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\DeleteApiMediaRequest;
+use App\Http\Requests\StoreApiMediaRequest;
 use App\Services\ImageService;
-use App\Services\Plans\PlanLimitService;
+use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class MediaController
+final class MediaController extends BaseApiController
 {
-    protected $imageService;
-
     public function __construct(
-        ImageService $imageService,
-        private readonly PlanLimitService $planLimitService,
-    ) {
-        $this->imageService = $imageService;
-    }
+        private readonly ImageService $imageService,
+    ) {}
 
-    /**
-     * Upload media file
-     */
-    public function upload(Request $request): JsonResponse
+    public function upload(StoreApiMediaRequest $request): JsonResponse
     {
-        $type = $request->input('type', 'image');
-        $maxUploadKb = $this->planLimitService->maxUploadSizeKb(Auth::user());
-
-        $request->validate([
-            'file' => "required|file|mimes:jpeg,png,jpg,gif,svg,mp4,webm,avi,webp|max:{$maxUploadKb}",
-            'type' => 'sometimes|string|in:image,video',
-        ]);
-
         try {
-            $file = $request->file('file');
-            $type = $request->input('type', 'image');
-
-            // Determine folder based on type
+            $file = $request->uploadedFile();
+            $type = $request->mediaType();
             $folder = $type === 'video' ? 'videos' : 'images';
 
             $result = $this->imageService->storeImage(
                 $file,
-                "uploads/{$folder}/".Auth::user()->id
+                "uploads/{$folder}/".$request->user()->id
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'url' => $result['url'],
-                    'path' => $result['path'],
-                    'type' => $type,
-                    'size' => $file->getSize(),
-                    'original_name' => $file->getClientOriginalName(),
-                ],
+            return $this->success([
+                'url' => $result['url'],
+                'path' => $result['path'],
+                'type' => $type,
+                'size' => $file->getSize(),
+                'original_name' => $file->getClientOriginalName(),
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Media upload failed: '.$e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Upload failed: '.$e->getMessage(),
-            ], 422);
+            return $this->error('Upload failed: '.$e->getMessage(), 422);
         }
     }
 
-    /**
-     * Delete media file
-     */
-    public function delete(Request $request): JsonResponse
+    public function delete(DeleteApiMediaRequest $request): JsonResponse
     {
-        $request->validate([
-            'path' => 'required|string',
-        ]);
-
         try {
-            $path = $request->input('path');
+            $path = $request->string('path')->toString();
 
-            // Extract the actual file path from URL if needed
-            if (str_contains($path, config('filesystems.disks.spaces.endpoint'))) {
+            if (str_contains($path, (string) config('filesystems.disks.spaces.endpoint'))) {
                 $bucket = config('filesystems.disks.spaces.bucket');
                 $endpoint = config('filesystems.disks.spaces.endpoint');
                 $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
             }
 
-            // Delete from cloud storage
             $deleted = Storage::disk('spaces')->delete($path);
 
             if (! $deleted) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File not found or could not be deleted',
-                ], 404);
+                return $this->notFound('File not found or could not be deleted');
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'File deleted successfully',
-            ]);
-        } catch (\Exception $e) {
+            return $this->success(message: 'File deleted successfully');
+        } catch (Exception $e) {
             Log::error('Media deletion failed: '.$e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Deletion failed: '.$e->getMessage(),
-            ], 422);
+            return $this->error('Deletion failed: '.$e->getMessage(), 422);
         }
     }
 }
