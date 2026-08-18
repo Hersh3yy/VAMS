@@ -31,13 +31,9 @@ final class StoreEntriesJsonRequest extends FormRequest
             return;
         }
 
-        if (! is_array($decoded)) {
-            $this->merge(['payload' => null]);
-
-            return;
-        }
-
-        $this->merge(['payload' => $decoded]);
+        $this->merge([
+            'payload' => is_array($decoded) ? $decoded : null,
+        ]);
     }
 
     /**

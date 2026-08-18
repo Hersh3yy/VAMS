@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Data\ImportEntryData;
 use App\Data\ImportEntryDataMapper;
+use App\Enums\EntryStatus;
+use InvalidArgumentException;
 
 it('maps a single object into a one-item list of ImportEntryData', function () {
     $mapper = new ImportEntryDataMapper;
@@ -19,7 +21,7 @@ it('maps a single object into a one-item list of ImportEntryData', function () {
         ->and($result[0])->toBeInstanceOf(ImportEntryData::class)
         ->and($result[0]->title)->toBe('One')
         ->and($result[0]->content)->toBe(['statement' => 'I am one'])
-        ->and($result[0]->status)->toBe('published');
+        ->and($result[0]->status)->toBe(EntryStatus::Published);
 });
 
 it('maps an array of objects', function () {
@@ -34,7 +36,7 @@ it('maps an array of objects', function () {
 
     expect($result)->toHaveCount(2)
         ->and($result[1])->toBeInstanceOf(ImportEntryData::class)
-        ->and($result[1]->status)->toBe('draft');
+        ->and($result[1]->status)->toBe(EntryStatus::Draft);
 });
 
 it('maps flat field keys into a content object', function () {
@@ -70,13 +72,13 @@ it('rejects a list item that is not an object', function () {
     $mapper = new ImportEntryDataMapper;
 
     $mapper->map(['not-an-object'], []);
-})->throws(\InvalidArgumentException::class, 'must be a JSON object');
+})->throws(InvalidArgumentException::class, 'must be a JSON object');
 
 it('rejects entries without a title', function () {
     $mapper = new ImportEntryDataMapper;
 
     $mapper->map([['content' => ['statement' => 'nope']]], []);
-})->throws(\InvalidArgumentException::class, 'title');
+})->throws(InvalidArgumentException::class, 'title');
 
 it('treats empty content object as a valid object', function () {
     $mapper = new ImportEntryDataMapper;

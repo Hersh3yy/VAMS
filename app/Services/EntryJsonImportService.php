@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Data\ImportEntryData;
 use App\Data\ImportEntryDataMapper;
+use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
 use App\Services\Plans\PlanLimitService;
@@ -21,15 +22,15 @@ use InvalidArgumentException;
  *
  * @see https://refactoring.guru/design-patterns/facade
  */
-final class EntryJsonImportService
+final readonly class EntryJsonImportService
 {
-    private const MAX_ENTRIES = 100;
+    private const int MAX_ENTRIES = 100;
 
     public function __construct(
-        private readonly ImportEntryDataMapper $mapper,
-        private readonly EntryValidationService $validationService,
-        private readonly PlanLimitService $planLimitService,
-        private readonly EntryService $entryService,
+        private ImportEntryDataMapper $mapper,
+        private EntryValidationService $validationService,
+        private PlanLimitService $planLimitService,
+        private EntryService $entryService,
     ) {}
 
     /**
@@ -54,10 +55,9 @@ final class EntryJsonImportService
         }
 
         try {
-            $mapped = $this->mapper->map(
-                $payload,
-                $entryType->field_config ?? [],
-            );
+            /** @var list<array<string, mixed>> $fieldConfig */
+            $fieldConfig = $entryType->field_config ?? [];
+            $mapped = $this->mapper->map($payload, $fieldConfig);
         } catch (InvalidArgumentException $e) {
             return EntryJsonImportResult::invalid([
                 'payload' => [$e->getMessage()],
@@ -110,7 +110,7 @@ final class EntryJsonImportService
      * Persist previously prepared entries (re-runs prepare for safety).
      *
      * @param  array<mixed>  $payload
-     * @return array{result: EntryJsonImportResult, created: Collection<int, \App\Models\Entry>|null}
+     * @return array{result: EntryJsonImportResult, created: Collection<int, Entry>|null}
      */
     public function commit(User $user, string $entryTypeId, array $payload): array
     {

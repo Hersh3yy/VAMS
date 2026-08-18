@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use App\Enums\EntryStatus;
 use InvalidArgumentException;
 
 /**
@@ -16,7 +17,8 @@ use InvalidArgumentException;
  */
 final readonly class ImportEntryDataMapper
 {
-    private const META_KEYS = ['title', 'content', 'status'];
+    /** @var list<string> */
+    private const array META_KEYS = ['title', 'content', 'status'];
 
     /**
      * @param  array<mixed>  $payload  Decoded JSON object or list
@@ -47,25 +49,27 @@ final readonly class ImportEntryDataMapper
             return [];
         }
 
-        if ($this->isList($payload)) {
-            $items = [];
-
-            foreach ($payload as $index => $item) {
-                if (! is_array($item) || $this->isList($item)) {
-                    throw new InvalidArgumentException(
-                        "Entry at index {$index} must be a JSON object."
-                    );
-                }
-
-                /** @var array<string, mixed> $item */
-                $items[] = $item;
-            }
-
-            return $items;
+        if (! $this->isList($payload)) {
+            /** @var array<string, mixed> $payload */
+            return [$payload];
         }
 
-        /** @var array<string, mixed> $payload */
-        return [$payload];
+        if (array_any(
+            $payload,
+            static fn (mixed $item): bool => ! is_array($item) || array_is_list($item),
+        )) {
+            $badIndex = array_find_key(
+                $payload,
+                static fn (mixed $item): bool => ! is_array($item) || array_is_list($item),
+            );
+
+            throw new InvalidArgumentException(
+                "Entry at index {$badIndex} must be a JSON object."
+            );
+        }
+
+        /** @var list<array<string, mixed>> $payload */
+        return $payload;
     }
 
     /**
@@ -80,9 +84,10 @@ final readonly class ImportEntryDataMapper
             throw new InvalidArgumentException('Each entry must include a non-empty string "title".');
         }
 
-        $status = $item['status'] ?? 'published';
+        $statusValue = $item['status'] ?? EntryStatus::Published->value;
+        $status = is_string($statusValue) ? EntryStatus::tryFrom($statusValue) : null;
 
-        if (! is_string($status) || ! in_array($status, ['draft', 'published'], true)) {
+        if (! $status instanceof EntryStatus) {
             throw new InvalidArgumentException('Entry status must be either "draft" or "published".');
         }
 
@@ -108,7 +113,7 @@ final readonly class ImportEntryDataMapper
             }
 
             // json_decode('{}') yields [] in PHP; array_is_list([]) is true, so allow empty.
-            if (! is_array($content) || ($content !== [] && $this->isList($content))) {
+            if (! is_array($content) || ($content !== [] && array_is_list($content))) {
                 throw new InvalidArgumentException('Entry "content" must be a JSON object (or a string for legacy simple entries).');
             }
 
@@ -123,19 +128,23 @@ final readonly class ImportEntryDataMapper
             $fieldConfig,
         )));
 
-        $content = [];
+        if ($fieldNames !== []) {
+            $content = [];
 
-        foreach ($fieldNames as $fieldName) {
-            if (array_key_exists($fieldName, $item)) {
-                $content[$fieldName] = $item[$fieldName];
+            foreach ($fieldNames as $fieldName) {
+                if (array_key_exists($fieldName, $item)) {
+                    $content[$fieldName] = $item[$fieldName];
+                }
             }
+
+            return $content;
         }
 
-        if ($fieldNames === []) {
-            foreach ($item as $key => $value) {
-                if (is_string($key) && ! in_array($key, self::META_KEYS, true)) {
-                    $content[$key] = $value;
-                }
+        $content = [];
+
+        foreach ($item as $key => $value) {
+            if (is_string($key) && ! in_array($key, self::META_KEYS, true)) {
+                $content[$key] = $value;
             }
         }
 
@@ -147,10 +156,6 @@ final readonly class ImportEntryDataMapper
      */
     private function isList(array $value): bool
     {
-        if ($value === []) {
-            return true;
-        }
-
-        return array_is_list($value);
+        return $value === [] || array_is_list($value);
     }
 }

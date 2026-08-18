@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Data;
 
+use App\Enums\EntryStatus;
+
 /**
  * DTO for one entry about to be previewed or created via JSON import.
  */
@@ -15,7 +17,7 @@ final readonly class ImportEntryData
     public function __construct(
         public string $title,
         public array $content,
-        public string $status = 'published',
+        public EntryStatus $status = EntryStatus::Published,
     ) {}
 
     /**
@@ -34,7 +36,7 @@ final readonly class ImportEntryData
         return [
             'title' => $this->title,
             'content' => $this->content,
-            'status' => $this->status,
+            'status' => $this->status->value,
         ];
     }
 }

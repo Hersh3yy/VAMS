@@ -38,7 +38,7 @@ RUN npx vite build
 # pre-compiled extension binaries instead of building from C source.
 # This cuts the extension install step from ~20 min down to ~2-3 min.
 # =============================================================================
-FROM php:8.3-fpm-bookworm AS app
+FROM php:8.4-fpm-bookworm AS app
 
 # Pull in the extension installer (single ADD is fine; no curl/wget needed)
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
