@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\Activity;
 use App\Models\Album;
 use App\Models\Mosaic;
+use App\Services\ActivityService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -106,7 +108,7 @@ class DashboardController
         ])->sortByDesc('created_at')->take(6)->values();
 
         // Get recent activities using ActivityService
-        $activityService = app(\App\Services\ActivityService::class);
+        $activityService = app(ActivityService::class);
         $recentActivities = $activityService->formatActivitiesForDisplay(
             $activityService->getRecentActivities($user, 5)
         );
