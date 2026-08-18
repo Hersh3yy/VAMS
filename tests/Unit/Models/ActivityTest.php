@@ -6,7 +6,6 @@ use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Album;
 use App\Models\User;
-use Mockery;
 
 it('has correct fillable attributes', function () {
     $activity = new Activity;

@@ -31,25 +31,6 @@ final class AlbumImageController
         private readonly PlanLimitService $planLimitService,
     ) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request, Album $album): JsonResponse|RedirectResponse
     {
         // Sanity-check PHP upload limits (set in docker/php.ini for the container).
@@ -86,7 +67,6 @@ final class AlbumImageController
 
             $this->authorize('update', $album);
 
-            // Shift all existing images down to make room at the top
             $fileCount = count($request->file('images'));
             $album->images()->increment('order', $fileCount);
 
@@ -104,14 +84,12 @@ final class AlbumImageController
                 $fileNames[] = $image->getClientOriginalName().' ('.round($image->getSize() / 1024 / 1024, 2).' MB)';
             }
 
-            Log::info('✅ Uploaded '.count($uploadedImages).' image(s): '.implode(', ', $fileNames));
+            Log::info('Uploaded '.count($uploadedImages).' image(s): '.implode(', ', $fileNames));
 
-            // Reload album with images for response
             $album = $this->albumService->getById($album, false);
 
-            Log::info('📸 Album after upload has '.($album->images->count() ?? 0).' images');
+            Log::info('Album after upload has '.($album->images->count() ?? 0).' images');
 
-            // Check if this is an AJAX request (for individual uploads)
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
@@ -128,11 +106,9 @@ final class AlbumImageController
                 'images' => $uploadedImages,
             ]);
         } catch (ValidationException $e) {
-            // Log detailed validation failure
             $errors = $e->errors();
             $fileErrors = [];
 
-            // Extract detailed file errors
             foreach ($errors as $field => $messages) {
                 if (str_starts_with($field, 'images.')) {
                     $index = str_replace('images.', '', $field);
@@ -155,7 +131,6 @@ final class AlbumImageController
                 }
             }
 
-            // Get first error message for quick logging
             $firstError = '';
             $firstFileName = '';
             foreach ($fileErrors as $field => $errorData) {
@@ -166,11 +141,9 @@ final class AlbumImageController
                 }
             }
 
-            Log::warning('❌ Upload failed: '.$firstFileName.' - '.$firstError);
+            Log::warning('Upload failed: '.$firstFileName.' - '.$firstError);
 
-            // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
-                // Get the first error message for a user-friendly response
                 $errors = $e->errors();
                 $firstError = '';
                 foreach ($errors as $field => $messages) {
@@ -191,7 +164,6 @@ final class AlbumImageController
         } catch (Exception $e) {
             Log::error('Upload error: '.$e->getMessage());
 
-            // Check if this is an AJAX request
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -203,28 +175,8 @@ final class AlbumImageController
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(AlbumImage $albumImage): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(AlbumImage $albumImage): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Album $album, AlbumImage $image): RedirectResponse
     {
-        // Ensure the image belongs to the album and user owns the album
         if ($image->album_id !== $album->id) {
             abort(404);
         }
@@ -245,10 +197,7 @@ final class AlbumImageController
             'published' => 'nullable|boolean',
         ]);
 
-        // The mutators in the model will handle mapping to the appropriate columns
-
         if ($request->hasFile('image')) {
-            // Use ImageService to store the replacement image
             $result = $this->imageService->storeImage(
                 $request->file('image'),
                 "albums/{$image->album_id}"
@@ -257,7 +206,6 @@ final class AlbumImageController
             $validated['path'] = $result['url'];
         }
 
-        // Handle published field if provided
         if (isset($validated['published'])) {
             $validated['published'] = (bool) $validated['published'];
         }
@@ -288,30 +236,8 @@ final class AlbumImageController
         };
     }
 
-    /**
-     * Get human-readable upload error message from PHP error code
-     */
-    private function getUploadErrorMessage(?int $errorCode): string
-    {
-        return match ($errorCode) {
-            UPLOAD_ERR_OK => 'UPLOAD_ERR_OK - No error',
-            UPLOAD_ERR_INI_SIZE => 'UPLOAD_ERR_INI_SIZE - File exceeds upload_max_filesize',
-            UPLOAD_ERR_FORM_SIZE => 'UPLOAD_ERR_FORM_SIZE - File exceeds MAX_FILE_SIZE in form',
-            UPLOAD_ERR_PARTIAL => 'UPLOAD_ERR_PARTIAL - File only partially uploaded',
-            UPLOAD_ERR_NO_FILE => 'UPLOAD_ERR_NO_FILE - No file was uploaded',
-            UPLOAD_ERR_NO_TMP_DIR => 'UPLOAD_ERR_NO_TMP_DIR - Missing temporary folder',
-            UPLOAD_ERR_CANT_WRITE => 'UPLOAD_ERR_CANT_WRITE - Failed to write file to disk',
-            UPLOAD_ERR_EXTENSION => 'UPLOAD_ERR_EXTENSION - PHP extension stopped the upload',
-            default => "Unknown error code: {$errorCode}",
-        };
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Album $album, AlbumImage $image): RedirectResponse
     {
-        // Ensure the image belongs to the album and user owns the album
         if ($image->album_id !== $album->id) {
             abort(404);
         }
@@ -319,19 +245,15 @@ final class AlbumImageController
         $this->authorize('delete', $album);
 
         try {
-            // Delete the image from storage if it's a local file
             if (! $this->isVideoLink($image->path) && strpos($image->path, '/storage/') !== false) {
-                // Extract the path relative to the storage directory
                 $path = str_replace('/storage/', '', parse_url($image->path, PHP_URL_PATH));
                 if ($path) {
                     Storage::disk('public')->delete($path);
                 }
             }
 
-            // Delete the image record from the database
             $image->delete();
 
-            // Reload the album with its updated images
             $album = $this->albumService->getById($album, false);
 
             return back()->with([
@@ -360,7 +282,6 @@ final class AlbumImageController
 
     public function reorder(Request $request, ?Album $album = null): RedirectResponse
     {
-        // Support both nested and non-nested routes
         if (! $album && $request->has('album_id')) {
             $album = Album::findOrFail($request->album_id);
         }
@@ -373,10 +294,8 @@ final class AlbumImageController
         $fromIndex = $request->from_index;
         $toIndex = $request->to_index;
 
-        // Get the album ID from the route or request
         $albumId = $album ? $album->id : $request->album_id;
 
-        // Get all images for this album ordered by current order
         $images = AlbumImage::where('album_id', $albumId)
             ->orderBy('order')
             ->get();
@@ -385,11 +304,9 @@ final class AlbumImageController
             return back()->withErrors(['message' => 'Invalid index provided']);
         }
 
-        // Reorder the collection
         $item = $images->splice($fromIndex, 1)->first();
         $images->splice($toIndex, 0, [$item]);
 
-        // Update the order for all affected images
         DB::transaction(function () use ($images) {
             foreach ($images as $index => $image) {
                 $image->order = $index;
@@ -397,7 +314,6 @@ final class AlbumImageController
             }
         });
 
-        // Reload the album with its updated images
         $album = $this->albumService->getById($albumId, false);
 
         return back()->with([
@@ -422,28 +338,23 @@ final class AlbumImageController
 
             $this->authorize('update', $album);
 
-            // Shift all existing images down to make room at the top
             $album->images()->increment('order', 1);
 
-            // Store video thumbnail using ImageService
             $thumbnailResult = $this->imageService->storeVideoThumbnail(
                 $request->url,
                 "albums/{$album->id}"
             );
 
-            // Create properties JSON with video metadata
             $properties = [
                 'type' => 'video',
                 'video_url' => $request->url,
             ];
 
-            // Add thumbnail URL if available
             if ($thumbnailResult) {
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
 
-            // Create the album image entry
-            $albumImage = $album->images()->create([
+            $album->images()->create([
                 'path' => $request->url,
                 'title' => $request->title,
                 'caption' => $request->caption,
@@ -452,7 +363,6 @@ final class AlbumImageController
                 'published' => true,
             ]);
 
-            // Reload the album with its updated images
             $album = $this->albumService->getById($album, false);
 
             return back()->with([

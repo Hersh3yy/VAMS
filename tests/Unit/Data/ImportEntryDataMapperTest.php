@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Data\ImportEntryData;
 use App\Data\ImportEntryDataMapper;
 use App\Enums\EntryStatus;
-use InvalidArgumentException;
 
 it('maps a single object into a one-item list of ImportEntryData', function () {
     $mapper = new ImportEntryDataMapper;

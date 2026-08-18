@@ -64,18 +64,6 @@ class MosaicService extends BaseEntityService
     }
 
     /**
-     * Get a specific mosaic with its items
-     *
-     * @deprecated Use getById() instead.
-     */
-    public function getMosaicWithItems(string|Mosaic $mosaic, bool $forApi = false): ?Mosaic
-    {
-        $resolved = $this->getById($mosaic, $forApi);
-
-        return $resolved instanceof Mosaic ? $resolved : null;
-    }
-
-    /**
      * Format entity with its media for API response
      */
     public function formatWithMediaForApi(Model $entity): array
@@ -128,15 +116,5 @@ class MosaicService extends BaseEntityService
             'created_at' => $item->created_at?->toISOString(),
             'updated_at' => $item->updated_at?->toISOString(),
         ];
-    }
-
-    /**
-     * Split a mosaic item into multiple items
-     */
-    public function splitItem(MosaicItem $mosaicItem): MosaicItem
-    {
-        // Implementation for splitting items would go here
-        // This is a placeholder for the existing functionality
-        return $mosaicItem;
     }
 }
