@@ -1,0 +1,5 @@
+- App artisan: `docker compose exec api php artisan <command>` (migrations, tinker). Never `php artisan` against a random local PHP for the running app.
+- Tests: host `php artisan test` / `php artisan test tests/Feature/Foo.php` / `--filter=name`. Do not run `tests/Browser` in the default suite (Playwright e2e was abandoned; it hangs).
+- Pint: host `vendor/bin/pint --dirty`.
+- Frontend: `npm run dev` / `npm run build`. If UI does not update, assets are stale.
+- Serena: `serena memories check` from the project root. MCP: `.cursor/mcp.json` (`laravel-boost` + `serena start-mcp-server --context=ide --project ${workspaceFolder}`).

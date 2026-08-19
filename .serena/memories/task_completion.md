@@ -1,0 +1,5 @@
+- Format PHP: `vendor/bin/pint --dirty` (host).
+- Tests: `php artisan test` with the smallest relevant path/filter first; then the full suite if the user wants it. Feature/unit/API run on host sqlite. Do not run Playwright browser e2e (abandoned; hangs).
+- Do not run `docker compose exec api php artisan test` (test command is not defined in that image).
+- Frontend lint/format only if JS/Vue changed: `npm run lint` / `npm run format` as needed.
+- Do not commit unless the user asks.

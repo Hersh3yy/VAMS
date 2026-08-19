@@ -6,6 +6,17 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "serena": {
+            "command": "/Users/hirenbudhrani/.local/bin/serena",
+            "args": [
+                "start-mcp-server",
+                "--context=ide",
+                "--project",
+                "${workspaceFolder}",
+                "--open-web-dashboard",
+                "false"
+            ]
         }
     }
 }

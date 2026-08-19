@@ -1,0 +1,6 @@
+- PHP: `declare(strict_types=1)`; import classes (no leading `\Foo`); Form Requests not inline controller validation; `final`/`readonly` when it matches siblings.
+- Entities: type `BaseEntity` (or `Album`/`Mosaic`/`Entry` on public controller actions). Do not type-hint `Illuminate\Database\Eloquent\Model` for albums/mosaics/entries. Template Method via `BaseEntityController` hooks (`extraCreationAttributes`, `fillValidatedAttributes`, `deleteOwned`).
+- Policies: empty subclasses of `BaseEntityPolicy` unless an entity needs extra rules.
+- Vue: follow `.cursor/rules/vue-conventions.mdc` (SFC order, Pages vs Components, BaseButton).
+- Docker: `.cursor/rules/docker.mdc`. Laravel Boost rules in `.cursor/rules/laravel-boost.mdc`.
+- No new root `.md` files unless the user asks.

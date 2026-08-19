@@ -1,0 +1,6 @@
+- PHP 8.5, Laravel 13 (Laravel 10 directory layout: Kernel in `app/Http`, no bootstrap/app.php).
+- Inertia v2 + Vue 3 + Tailwind 3 + Ziggy. Vite 6.
+- Sanctum, Telescope, Breeze, Pint, Pest 4.
+- Host `vendor/` is the full dev install. Docker `api` image is `composer install --no-dev` — Pest is not inside it.
+- Node: npm.
+- Postgres in Docker/Coolify; tests use sqlite `:memory:` (`phpunit.xml`). Media disk: DigitalOcean Spaces (`spaces`).

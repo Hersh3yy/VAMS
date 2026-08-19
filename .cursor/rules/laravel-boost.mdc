@@ -13,7 +13,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - php - 8.5
 - inertiajs/inertia-laravel (INERTIA) - v2
-- laravel/framework (LARAVEL) - v12
+- laravel/framework (LARAVEL) - v13
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
 - laravel/telescope (TELESCOPE) - v5
@@ -204,13 +204,12 @@ Route::get('/users', function () {
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
 
-=== laravel/v12 rules ===
+=== laravel/v13 rules ===
 
-## Laravel 12
+## Laravel 13
 
 - Use the `search-docs` tool to get version specific documentation.
-- This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
-- This is **perfectly fine** and recommended by Laravel. Follow the existing structure from Laravel 10. We do not to need migrate to the new Laravel structure unless the user explicitly requests that.
+- This project is on Laravel 13 with the Laravel 10 directory layout (no `bootstrap/app.php`). That is **perfectly fine** and recommended by Laravel. Follow the existing structure. Do not migrate unless the user explicitly requests that.
 
 ### Laravel 10 Structure
 - Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
