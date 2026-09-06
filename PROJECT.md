@@ -55,6 +55,26 @@ Full detail with file:line in `docs/adversarial-review.md`.
 - **Base classes** `BaseEntityService`/`BaseEntityController` are a template the Entry path mostly bypasses (a Refused-Bequest smell — decide to use or collapse).
 - Planning docs live in `docs/`: roadmap (`vams-renewal-plan.html`), adversarial review, kickoff prompt, and unbuilt feature plans (Case entity, permissions, entry-type fields, image variants).
 
+## Hard parts
+
+### The env-shadow → CSRF → 419 chain
+
+🔭 **What it does** — The container exports `APP_ENV=local`. PHPUnit's `<env>` only sets a variable when it isn't already set, so `testing` loses to `local`. Laravel's `runningUnitTests()` is literally `env === 'testing'`, so it was false — and the framework's CSRF middleware self-skips *only* when that's true. So CSRF ran during tests and every non-GET web request came back 419.
+
+⚖️ **Why this way** — `force="true"` and a `.env.testing` both fail, because Laravel reads `APP_ENV` to choose which env file to load *before* that file is read. Setting it in `tests/bootstrap.php`, before `vendor/autoload.php`, is the one layer upstream of the whole chain.
+
+🗣️ **Say it to a senior** — "The container's APP_ENV shadowed phpunit's, so runningUnitTests() was false and CSRF never skipped in tests — I set the env before autoload, the only point that beats the process env, and runtime stays local."
+
+---
+
+### The `json` field type vs a one-level validator
+
+🔭 **What it does** — `EntryValidationService` turns an Entry Type's `field_config` into Laravel rules. Unknown types fall through to `string`, which would flatten a nested payload (a colour palette `[{hex, lab:[L,a,b]}]`) into garbage. The new `json` type validates as a passthrough `array`, so the nested shape survives into the native Postgres JSON column intact.
+
+⚖️ **Why this way** — The validator only recurses one level, so `object`/`repeatable` can't express deep nesting; `json` is the honest escape hatch for a payload that carries its own structure.
+
+🗣️ **Say it to a senior** — "Unknown field types coerce to string and would flatten nested data, so deep payloads go through a `json` passthrough into the native JSON column."
+
 ## Roadmap — near future
 
 - [ ] Add `gd` to the Dockerfile, rebuild, clear the 25 media test failures; stub `Storage::fake()` where needed <!-- id:a2 cu:123kjkdhp5b -->
