@@ -1,0 +1,215 @@
+<title>VAMS Production Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F4F5F3; --surface: #FFFFFF; --ink: #161A18; --ink-2: #55605A; --ink-3: #869089;
+    --hair: #DCE0DC; --hair-2: #EAEEEA; --accent: #0E6E5C; --accent-ink: #FFFFFF; --accent-soft: #DFF0EB;
+    --crit: #c4342f; --serious: #d9772e; --warn: #e0a500; --warn-text: #8a6400; --good: #0a8f4d; --good-text: #05663a;
+    --s1: #0e6e5c; --s2: #d9772e; --s3: #2a78d6; --grid: #dbe2dd; --axis: #b7c2bb;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #121513; --surface: #1A1E1B; --ink: #EEF2EE; --ink-2: #A6B0A9; --ink-3: #78827B;
+      --hair: #282D29; --hair-2: #202420; --accent: #4FBEA6; --accent-ink: #06231C; --accent-soft: #16332C;
+      --warn-text: #e0a500; --good-text: #0a8f4d; --s1: #4fbea6; --s2: #e08a44; --s3: #3987e5; --grid: #2a2f2b; --axis: #363c37;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121513; --surface: #1A1E1B; --ink: #EEF2EE; --ink-2: #A6B0A9; --ink-3: #78827B;
+    --hair: #282D29; --hair-2: #202420; --accent: #4FBEA6; --accent-ink: #06231C; --accent-soft: #16332C;
+    --warn-text: #e0a500; --good-text: #0a8f4d; --s1: #4fbea6; --s2: #e08a44; --s3: #3987e5; --grid: #2a2f2b; --axis: #363c37;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--hair-2); padding: 0.05em 0.35em; border-radius: 3px; }
+  .mono { font-family: var(--mono); }
+  h1, h2 { font-family: var(--display); font-weight: 500; line-height: 1.12; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(2.4rem, 5vw, 3.6rem); font-variation-settings: "opsz" 144; }
+  h2 { font-size: 1.85rem; margin-top: 0.6rem; }
+  h3 { font-size: 1.15rem; font-weight: 600; margin: 1.6rem 0 0.4rem; }
+  p { max-width: 68ch; margin: 0.7rem 0; }
+  ul, ol { max-width: 70ch; padding-left: 1.2rem; } li { margin: 0.25rem 0; }
+  .page { max-width: 1080px; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+  @media (max-width: 700px) { .page { padding: 1.5rem 1rem 4rem; } }
+  .eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); font-weight: 500; }
+  .label { border-top: 1px solid var(--ink); padding-top: 0.6rem; margin-top: 3.5rem; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 0.5rem 2rem; align-items: end; }
+  .label .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-2); text-align: right; line-height: 1.5; white-space: nowrap; }
+  .hero { border-top: 3px solid var(--ink); padding-top: 1rem; margin-bottom: 2rem; }
+  .lede { font-size: 1.15rem; color: var(--ink-2); max-width: 62ch; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 0.4rem 2rem; margin-top: 1.4rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-2); }
+  .meta-row b { color: var(--ink); font-weight: 500; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 1rem 0; }
+  th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; border-bottom: 1px solid var(--ink); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 0.82rem; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .pill { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.crit { color: var(--crit); background: color-mix(in srgb, var(--crit) 12%, transparent); }
+  .pill.serious { color: var(--serious); background: color-mix(in srgb, var(--serious) 14%, transparent); }
+  .pill.warn { color: var(--warn-text); background: color-mix(in srgb, var(--warn) 20%, transparent); }
+  .pill.good { color: var(--good-text); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .pill.done { color: var(--good-text); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); margin: 1.4rem 0; }
+  .tile { background: var(--surface); padding: 1rem 1.1rem; }
+  .tile .v { font-family: var(--display); font-size: 2.2rem; font-weight: 500; line-height: 1; }
+  .tile .k { font-size: 0.78rem; color: var(--ink-2); margin-top: 0.35rem; }
+  .callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 0.9rem 1.1rem; margin: 1.2rem 0; max-width: 74ch; }
+  .callout p { margin: 0.3rem 0; }
+  figure { margin: 1.4rem 0; } figcaption { font-size: 0.8rem; color: var(--ink-2); margin-top: 0.5rem; max-width: 68ch; }
+  .fig { background: var(--surface); border: 1px solid var(--hair); padding: 1rem; overflow-x: auto; }
+  svg text { font-family: var(--sans); fill: var(--ink); } svg .t2 { fill: var(--ink-2); } svg .t3 { fill: var(--ink-3); }
+  svg .box { fill: var(--surface); stroke: var(--ink); stroke-width: 1; } svg .box2 { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+  svg .arrow { stroke: var(--ink-2); stroke-width: 1.2; fill: none; marker-end: url(#ah); }
+  .track { border: 1px solid var(--hair); background: var(--surface); margin: 1.2rem 0; }
+  .track > header { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 1rem; align-items: baseline; padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--hair); }
+  .track > header .l { font-family: var(--display); font-size: 1.9rem; line-height: 1; color: var(--accent); }
+  .track > header h3 { margin: 0; }
+  .track > header .dep { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-2); white-space: nowrap; }
+  .track ol { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: s; }
+  .track li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 1rem; padding: 0.75rem 1.2rem; border-bottom: 1px solid var(--hair-2); margin: 0; align-items: baseline; }
+  .track li:last-child { border-bottom: 0; }
+  .track li::before { content: attr(data-l) counter(s); font-family: var(--mono); font-size: 0.78rem; color: var(--ink-3); padding-top: 0.15rem; }
+  .track li b { display: block; }
+  .track li span.d { font-size: 0.9rem; color: var(--ink-2); }
+  .track li .sev { justify-self: end; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+</style>
+
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Production roadmap · VAMS (Visual Album Management System) · for Hiren</div>
+    <h1 style="margin-top:.5rem">VAMS Production Roadmap</h1>
+    <p class="lede">A cleanup-and-harden plan to take a working-but-rough Laravel 12 headless CMS to production: green tests, real security, account tiers, a UI/UX audit, and the DigitalOcean → Coolify move — sized in sessions, no dates.</p>
+    <div class="meta-row">
+      <span>Stack <b>Laravel 12 · PostgreSQL 15 · Inertia + Vue · Sanctum</b></span>
+      <span>Branch <b>AI-REFACTOR</b></span>
+      <span>Transition <b>DigitalOcean → Coolify</b></span>
+      <span>Date <b>2026-09-06</b></span>
+    </div>
+  </header>
+
+  <div class="tiles" role="list">
+    <div class="tile" role="listitem"><div class="v">168<span style="font-size:1rem;color:var(--ink-2)"> / 193</span></div><div class="k">tests passing after the env-shadow fix (was 76). 25 left — all GD-extension media failures.</div></div>
+    <div class="tile" role="listitem"><div class="v">4</div><div class="k">security findings to close before public traffic (API-key hashing, CORS, EntryPolicy, mass-assign)</div></div>
+    <div class="tile" role="listitem"><div class="v">1</div><div class="k">tenancy model today: per-user only. Account tiers are a net-new capability.</div></div>
+    <div class="tile" role="listitem"><div class="v">DO→Coolify</div><div class="k">in flight — a natural moment to fix env, secrets, storage and the image</div></div>
+  </div>
+
+  <div class="callout">
+    <p><b>Already done this session:</b> the <code>json</code> field type + three Image Colors entry types (seeded, tested); the test-suite env-shadowing fix (<code>tests/bootstrap.php</code>) that un-redded ~86 tests; an adversarial review of the core Entry flow (<code>docs/adversarial-review.md</code>). Nothing touched runtime or the online deployment.</p>
+  </div>
+
+  <!-- context -->
+  <section id="context">
+    <div class="label"><h2>Where VAMS stands</h2><div class="meta">honest baseline<br>from the review</div></div>
+    <p>VAMS works and is deployed, but it carries the marks of fast MVP growth and a half-finished "refactor phase 1": a base-class/service layer the main entity mostly bypasses, duplicated media code, a plaintext API-key scheme, a permissive CORS policy, and a test suite that only recently came back to life. None of it is dramatic; all of it wants tidying before it takes public, tiered traffic. This plan is deliberately conservative — the running system must keep working, with a small migration only where it genuinely helps.</p>
+  </section>
+
+  <!-- tracks -->
+  <section id="tracks">
+    <div class="label"><h2>Tracks</h2><div class="meta">6 tracks · session-sized items<br>ordered within a track</div></div>
+    <p>Order across tracks: <b>A</b> underpins everything (you cannot safely refactor without a green suite). <b>B</b> (security) and <b>C</b> (correctness) can interleave. <b>D</b> (tiers) builds on B. <b>E</b> (Coolify) can start now and lands the infra fixes A and B need. <b>F</b> (UX) runs alongside once the API is stable.</p>
+
+    <div class="track">
+      <header><div class="l">A</div><h3>Test suite &amp; CI — a floor under every later change</h3><div class="dep">start here</div></header>
+      <ol>
+        <li data-l="A"><b>Env-shadow fix <span class="pill done">done</span></b><span class="d">The container bakes <code>APP_ENV=local</code>, which shadowed phpunit's <code>testing</code> everywhere → CSRF never skipped → 419 on every web test. <code>tests/bootstrap.php</code> forces the env in-process. 76 → 168 passing.</span><span class="sev"></span></li>
+        <li data-l="A"><b>Install <code>gd</code> in the image</b><span class="d">The 25 remaining failures are all <code>LogicException</code> in media-upload tests — <code>ImageService</code>'s WebP/GD code hits a missing extension (the warning on every artisan call). Add <code>gd</code> to the Dockerfile; stub <code>Storage::fake()</code> where tests still touch disk.</span><span class="sev"><span class="pill warn">25 red</span></span></li>
+        <li data-l="A"><b>CI pipeline</b><span class="d">GitHub Actions (or Coolify's): <code>composer install</code>, <code>php artisan test</code>, Pint/PHPStan. Fail the build on red; the suite is now trustworthy enough to gate merges.</span></li>
+        <li data-l="A"><b>Delete dead &amp; duplicate code</b><span class="d">Remove <code>Api/MediaController</code> (routes commented), <code>MediaService</code> (wrong disk), the media-record throw-stubs; the review lists them with line numbers.</span></li>
+      </ol>
+    </div>
+
+    <div class="track">
+      <header><div class="l">B</div><h3>Security — before public / tiered traffic</h3><div class="dep">after A1 · before launch</div></header>
+      <ol>
+        <li data-l="B"><b>Hash API keys</b><span class="d">Keys are stored plaintext and matched with a plain <code>where</code>, column unindexed (<code>ValidateApiKey.php:28</code>). Store <code>hash('sha256',$key)</code>, look up by hash, unique index, show the raw key once. Migration re-issues existing keys.</span><span class="sev"><span class="pill serious">serious</span></span></li>
+        <li data-l="B"><b>Add &amp; register <code>EntryPolicy</code></b><span class="d">Entry media upload gates on <code>Gate::allows('update',$entry)</code> but no policy exists → it always denies (<code>MediaUploadController.php:246</code>). Add the owner check so entry uploads work at all.</span><span class="sev"><span class="pill crit">critical</span></span></li>
+        <li data-l="B"><b>Lock down CORS</b><span class="d"><code>config/cors.php</code> pairs <code>'*'</code> with <code>supports_credentials</code> — pin the real frontend origins (bemgijzel, the Image Colors app, admin).</span><span class="sev"><span class="pill serious">serious</span></span></li>
+        <li data-l="B"><b>Mass-assignment &amp; existence leaks</b><span class="d">Drop <code>user_id</code> from <code>Entry::$fillable</code>; return 404 (not 403) when an owned entry's type isn't permitted; audit the other models.</span></li>
+        <li data-l="B"><b>Secrets &amp; rate limits</b><span class="d">Move all secrets to Coolify env (no committed keys); keep the 60/min API throttle, add per-key limits; review Telescope/Pulse exposure in production.</span></li>
+      </ol>
+    </div>
+
+    <div class="track">
+      <header><div class="l">C</div><h3>Core-flow correctness &amp; patterns</h3><div class="dep">after A · interleaves with B</div></header>
+      <ol>
+        <li data-l="C"><b>Fix paginated API 500</b><span class="d"><code>successPaginated</code> calls <code>->items()->map()</code>, but <code>items()</code> is a plain array — any <code>?per_page=</code> request throws (<code>BaseApiController.php:49</code>). <code>collect(...)</code> it; add a test that hits the paginated path.</span><span class="sev"><span class="pill serious">serious</span></span></li>
+        <li data-l="C"><b>Bound reads, transact reorder</b><span class="d">Always paginate (floor <code>per_page</code> at 1); wrap <code>reorder()</code>'s N updates in a transaction or one <code>CASE</code>.</span></li>
+        <li data-l="C"><b>Resolve the base-class Refused Bequest</b><span class="d">Either make <code>BaseEntityService</code>/<code>BaseEntityController</code> genuine templates the Entry path uses, or collapse them — today Entry overrides most of both and the base checks a non-existent <code>published</code> property. Pick one; don't keep a half-inherited hierarchy.</span></li>
+        <li data-l="C"><b>Content-validation depth</b><span class="d">Decide the contract per field type: recurse for nested <code>object</code>/<code>repeatable</code>, or document that <code>json</code> is the passthrough for deep shapes (it is). Stop silently dropping unenumerated keys.</span></li>
+        <li data-l="C"><b>Value objects for status/ids</b><span class="d">Introduce a <code>Status</code> enum (draft/published) and stop scattering <code>in:draft,published</code>; small win against Primitive Obsession.</span></li>
+      </ol>
+    </div>
+
+    <div class="track">
+      <header><div class="l">D</div><h3>Account tiers &amp; permissions</h3><div class="dep">after B · net-new</div></header>
+      <ol>
+        <li data-l="D"><b>Define the tier model</b><span class="d">Today tenancy is per-user only (<code>is_admin</code>, <code>is_approved</code>, <code>entry_type_permissions</code> JSON). Agree the tiers (e.g. free / studio / museum) and what each unlocks — entry-type quota, storage, API rate, seats.</span></li>
+        <li data-l="D"><b>Tier as data, enforced centrally</b><span class="d">A <code>tier</code> column + a policy/gate layer (not scattered <code>if</code>s). Reuse the permission seam that already exists rather than a parallel one.</span></li>
+        <li data-l="D"><b>Quotas &amp; limits</b><span class="d">Enforce per-tier limits at the write boundary (entry count, upload size, API throttle) with clear 402/429 responses.</span></li>
+        <li data-l="D"><b>Admin management UI</b><span class="d">Let an admin set a user's tier, approve accounts, and see usage — extends the existing admin area.</span></li>
+      </ol>
+    </div>
+
+    <div class="track">
+      <header><div class="l">E</div><h3>DigitalOcean → Coolify</h3><div class="dep">in flight · lands infra fixes</div></header>
+      <ol>
+        <li data-l="E"><b>Reproducible image</b><span class="d">Dockerfile with <code>gd</code> (and the PHP extensions the app needs), pinned versions; the local <code>docker-compose.yml</code> is gitignored — Coolify builds from the Dockerfile, so make that the source of truth.</span></li>
+        <li data-l="E"><b>Env &amp; secrets in Coolify</b><span class="d">Move the DO env into Coolify's secret store; keep <code>APP_ENV=production</code> there. (The local <code>APP_ENV=local</code> that broke tests is dev-only and now handled.)</span></li>
+        <li data-l="E"><b>Storage &amp; DB continuity</b><span class="d">Spaces stays the object store during the move (the Image Colors app already reads it) — verify keys/CORS from the new host; plan the Postgres cutover (managed DB or Coolify Postgres) with a dump/restore rehearsal.</span></li>
+        <li data-l="E"><b>Health, backups, observability</b><span class="d">Wire <code>/up</code> to Coolify's healthcheck; scheduled DB + Spaces backups; decide Telescope/Pulse on/off in prod.</span></li>
+      </ol>
+    </div>
+
+    <div class="track">
+      <header><div class="l">F</div><h3>UI/UX audit &amp; improvements</h3><div class="dep">after the API stabilises</div></header>
+      <ol>
+        <li data-l="F"><b>Heuristic + accessibility audit</b><span class="d">Walk the admin and album/entry flows (Inertia + Vue): keyboard, focus, labels, contrast, error states, empty states. Record findings like the code review — severity + evidence.</span></li>
+        <li data-l="F"><b>The CSRF-retry smell</b><span class="d">There is a client-side CSRF-token retry loop (<code>useCsrfToken</code>, a whole <code>CsrfTokenRetryTest</code>) — a symptom of session/token friction. Fix the cause (token lifecycle) rather than retrying around it.</span></li>
+        <li data-l="F"><b>Entry-type &amp; media authoring UX</b><span class="d">The entry-type builder and image-collection/upload flows are where users spend time — smooth the field editor (now incl. <code>json</code>), upload progress, and reorder.</span></li>
+        <li data-l="F"><b>Design tokens &amp; consistency</b><span class="d">A shared token set for the admin theme (the per-user <code>album_display_settings</code> colours hint at a design-system need) and a component pass.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- integration -->
+  <section id="integration">
+    <div class="label"><h2>The Image Colors dependency</h2><div class="meta">cross-project<br>read + write API</div></div>
+    <p>VAMS is the planned backend for the Image Colors app. That app's roadmap (track C there) needs three things from VAMS that this plan must schedule alongside its own cleanup:</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Image Colors needs</th><th>VAMS work</th><th>Track here</th></tr></thead>
+      <tbody>
+        <tr><td>Write entries via API (currently read-only)</td><td><code>POST/PATCH/DELETE /api/v1/entries</code> with Sanctum tokens (routes exist, commented)</td><td>C + B</td></tr>
+        <tr><td>Upload analysis source images via API</td><td>Enable the commented Sanctum media routes; <code>preserve_original</code> flag (no forced WebP on originals)</td><td>C + E</td></tr>
+        <tr><td>Owner reads of drafts, batch create</td><td>API returns unpublished entries to their owner; <code>POST /entries/batch</code></td><td>C</td></tr>
+        <tr><td>Entry types provisioned by script</td><td><span class="pill done">done</span> <code>ImageColorsSeeder</code> + <code>json</code> field type</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+    <p>The learning entity types (<code>feedback</code>, <code>knowledge-base</code>) are intentionally deferred on both sides until the Image Colors learning stack is reviewed.</p>
+  </section>
+
+  <section id="next">
+    <div class="label"><h2>Next session</h2><div class="meta">A2 → B2 → C1</div></div>
+    <ol>
+      <li><b>A2</b> — add <code>gd</code> to the Dockerfile, rebuild the image, watch the 25 media failures fall; stub storage where needed.</li>
+      <li><b>B2</b> — add and register <code>EntryPolicy</code> (the entry-upload 403), with a test.</li>
+      <li><b>C1</b> — fix the paginated-API 500 (<code>collect($paginator->items())</code>), with a <code>?per_page=</code> test.</li>
+      <li>Confirm branch strategy: <code>AI-REFACTOR</code> is ahead of <code>main</code> and healthier — decide whether it becomes the trunk before more work lands.</li>
+    </ol>
+  </section>
+
+  <footer style="margin-top:4rem;border-top:1px solid var(--hair);padding-top:1rem;font-size:.8rem;color:var(--ink-2)">
+    Companion: <code>docs/adversarial-review.md</code> (core-flow findings with file:line). Cross-project: the Image Colors renewal plan. Progress and next steps for resuming in a fresh session: <code>docs/session-kickoff.md</code>.
+  </footer>
+</div>
