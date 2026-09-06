@@ -40,6 +40,11 @@ final class EntryValidationService
                 'text', 'textarea' => $fieldRules[] = 'string',
                 'number' => $fieldRules[] = 'numeric',
                 'checkbox' => $fieldRules[] = 'boolean',
+                // json: a passthrough array/object (decoded JSON) stored verbatim.
+                // Needed for payloads with their own nested shape - e.g. a colour
+                // palette [{hex, lab:[L,a,b], share, ...}] - that the field-by-field
+                // validators above would flatten to strings.
+                'json' => $fieldRules[] = 'array',
                 'repeatable' => $this->addRepeatableRules($rules, $field, $fieldRules),
                 'image_collection' => $this->addImageCollectionRules($rules, $field, $fieldRules),
                 'entry_relation' => $this->addEntryRelationRules($rules, $field, $fieldRules),

@@ -31,7 +31,7 @@ class StoreEntryTypeRequest extends FormRequest
             'description' => 'nullable|string',
             'field_config' => 'required|array|min:1',
             'field_config.*.name' => 'required|string',
-            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,repeatable,image_collection,entry_relation,object',
+            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,json,repeatable,image_collection,entry_relation,object',
             'field_config.*.label' => 'required|string',
             'field_config.*.required' => 'boolean',
             'field_config.*.placeholder' => 'nullable|string',
