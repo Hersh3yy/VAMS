@@ -57,24 +57,24 @@ Full detail with file:line in `docs/adversarial-review.md`.
 
 ## Roadmap — near future
 
-- [ ] Add `gd` to the Dockerfile, rebuild, clear the 25 media test failures; stub `Storage::fake()` where needed <!-- id:a2 -->
-- [ ] Add + register an `EntryPolicy` (owner `update`) — fixes the always-403 entry upload; with a test <!-- id:b2 -->
-- [ ] Fix the paginated-API 500: `collect($paginator->items())->map(...)`; add a `?per_page=` test <!-- id:c1 -->
-- [ ] Hash API keys (store sha256, unique index, look up by hash); migration re-issues keys <!-- id:b1 -->
-- [ ] Lock down CORS (drop `'*'`, pin the real frontend origins) <!-- id:b3 -->
-- [ ] CI that stays free (GitHub Actions free tier / Coolify): `composer install`, `php artisan test`, Pint + PHPStan <!-- id:a3 -->
-- [ ] Package updates (`composer/npm outdated`) + adopt packages that delete code (larastan, spatie permission/backup/medialibrary) <!-- id:a5 -->
+- [ ] Add `gd` to the Dockerfile, rebuild, clear the 25 media test failures; stub `Storage::fake()` where needed <!-- id:a2 cu:123kjkdhp5b -->
+- [ ] Add + register an `EntryPolicy` (owner `update`) — fixes the always-403 entry upload; with a test <!-- id:b2 cu:123kjkdhp5c -->
+- [ ] Fix the paginated-API 500: `collect($paginator->items())->map(...)`; add a `?per_page=` test <!-- id:c1 cu:123kjkdhp5d -->
+- [ ] Hash API keys (store sha256, unique index, look up by hash); migration re-issues keys <!-- id:b1 cu:123kjkdhp5e -->
+- [ ] Lock down CORS (drop `'*'`, pin the real frontend origins) <!-- id:b3 cu:123kjkdhp5f -->
+- [ ] CI that stays free (GitHub Actions free tier / Coolify): `composer install`, `php artisan test`, Pint + PHPStan <!-- id:a3 cu:123kjkdhp5g -->
+- [ ] Package updates (`composer/npm outdated`) + adopt packages that delete code (larastan, spatie permission/backup/medialibrary) <!-- id:a5 cu:123kjkdhp5h -->
 
 ## Roadmap — far future
 
-- [ ] DO → Coolify: reproducible image, domain + SSL, secrets, script-based data move (a few hundred rows, not a heavy migration), backups, rollback on failed deploy <!-- id:e -->
-- [ ] Move permissions to `spatie/laravel-permission` (cheap prep so tiers later = "a role with limits") <!-- id:d1 -->
-- [ ] Account tiers — deferred: a product/pricing/marketing decision, not a build yet <!-- id:d2 -->
-- [ ] Image variants pipeline / `AlbumImageVariant` (`docs/IMAGE_PROCESSING_PLAN.md`) <!-- id:f1 -->
-- [ ] Case-study / portfolio entity (`docs/CASE_ENTITY_IMPLEMENTATION_PLAN.md`) <!-- id:f2 -->
-- [ ] "Project" entity type (`docs/ENTITY_FEATURE_FOR_FRONTEND.md`) <!-- id:f3 -->
-- [ ] Deep nested entry-type fields (validator only checks one level today) <!-- id:f4 -->
-- [ ] Write API for entries + API media upload (unblocks the Image Colors integration) <!-- id:f5 -->
+- [ ] DO → Coolify: reproducible image, domain + SSL, secrets, script-based data move (a few hundred rows, not a heavy migration), backups, rollback on failed deploy <!-- id:e cu:123kjkdhp5j -->
+- [ ] Move permissions to `spatie/laravel-permission` (cheap prep so tiers later = "a role with limits") <!-- id:d1 cu:123kjkdhp5k -->
+- [ ] Account tiers — deferred: a product/pricing/marketing decision, not a build yet <!-- id:d2 cu:123kjkdhp5m -->
+- [ ] Image variants pipeline / `AlbumImageVariant` (`docs/IMAGE_PROCESSING_PLAN.md`) <!-- id:f1 cu:123kjkdhp5n -->
+- [ ] Case-study / portfolio entity (`docs/CASE_ENTITY_IMPLEMENTATION_PLAN.md`) <!-- id:f2 cu:123kjkdhp5p -->
+- [ ] "Project" entity type (`docs/ENTITY_FEATURE_FOR_FRONTEND.md`) <!-- id:f3 cu:123kjkdhp5q -->
+- [ ] Deep nested entry-type fields (validator only checks one level today) <!-- id:f4 cu:123kjkdhp5r -->
+- [ ] Write API for entries + API media upload (unblocks the Image Colors integration) <!-- id:f5 cu:123kjkdhp5t -->
 
 ---
 
