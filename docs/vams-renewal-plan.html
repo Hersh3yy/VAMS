@@ -257,6 +257,22 @@
     <p>The learning entity types (<code>feedback</code>, <code>knowledge-base</code>) are intentionally deferred on both sides until the Image Colors learning stack is reviewed.</p>
   </section>
 
+  <section id="backlog">
+    <div class="label"><h2>Backlog — already thought of, not scheduled</h2><div class="meta">rescued from scratch docs<br>now under docs/</div></div>
+    <p>A doc-cleanup pass this session deleted six AI-scratch files and moved the real planning docs into <code>docs/</code>. These feature ideas were noted there or as code TODOs, and are worth keeping in view. None is on the critical path; each becomes a real task only when the product calls for it.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Idea</th><th>Where it was noted</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td><b>Image variants pipeline</b> — thumbnails / responsive sizes for album images</td><td class="mono">docs/IMAGE_PROCESSING_PLAN.md · AlbumImage.php:61 TODO</td><td>designed, unbuilt (<code>AlbumImageVariant</code> model absent). Could ride on <code>spatie/laravel-medialibrary</code>.</td></tr>
+        <tr><td><b>Case-study / portfolio entity</b></td><td class="mono">docs/CASE_ENTITY_IMPLEMENTATION_PLAN.md</td><td>plan exists, no <code>Case*</code> model. Sensible when a portfolio use-case is real.</td></tr>
+        <tr><td><b>"Project" entity type</b> for frontends</td><td class="mono">docs/ENTITY_FEATURE_FOR_FRONTEND.md</td><td>honestly marked "does not exist yet". A future Entry Type, not a new system.</td></tr>
+        <tr><td><b>Entry-type nested fields / dynamic form builder</b></td><td class="mono">docs/ENTRY_TYPE_ENHANCEMENT_PLAN.md · docs/ADMIN_MODAL_NESTED_FIELDS.md</td><td>partly built; the runtime validator only checks one level of nesting today (see the review). Deep nesting is the gap.</td></tr>
+        <tr><td><b>Permission system as a real model</b> (vs the ad-hoc JSON column)</td><td class="mono">docs/PERMISSION_SYSTEM_IMPLEMENTATION_PLAN.md</td><td>the cheap-prep half of track D. The plan predates Docker (mentions <code>herd</code>) — rewrite before use.</td></tr>
+        <tr><td><b>Further out</b> — mosaic crop/positioning, CDN, webhooks, third-party storage adapters</td><td class="mono">README.md "future features"</td><td>aspirational; revisit after production is stable and there's a reason.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
   <section id="next">
     <div class="label"><h2>Next session</h2><div class="meta">A2 → B2 → C1</div></div>
     <ol>

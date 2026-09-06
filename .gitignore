@@ -28,3 +28,6 @@ yarn-error.log
 docker-compose.yml
 Dockerfile
 nginx.conf
+
+# local sqlite scratch db — never commit
+/vams

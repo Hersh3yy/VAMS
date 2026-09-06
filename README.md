@@ -13,7 +13,7 @@ VAMS is a headless CMS specifically designed for visual content management, offe
 ## Tech Stack
 
 - PHP 8.3
-- Laravel 11
+- Laravel 12
 - PostgreSQL
 - Docker & Docker Compose
 - Vue.js 3 (Admin Interface)
@@ -195,4 +195,4 @@ Development Tools: http://localhost:8000/telescope
 - **Third-Party Storage**: S3, Cloudinary, and other cloud storage providers
 - **Webhook System**: Real-time notifications for content changes
 
-> 📖 **For detailed implementation plan, see [SAAS_LAUNCH_PLAN.md](./SAAS_LAUNCH_PLAN.md)**
+> 📖 Planning docs live in [`docs/`](./docs): the production roadmap (`docs/vams-renewal-plan.html`), the core-flow review (`docs/adversarial-review.md`), and a paste-in kickoff prompt (`docs/session-kickoff.md`). Unbuilt feature plans (Case entity, permission system, entry-type fields, image variants) are also under `docs/`.
