@@ -1,0 +1,410 @@
+VAMS session briefing — 2026-09-09
+Machine A (this one): /Users/hirenbudhrani/Code/VAMS
+Remote: git@github.com:Hersh3yy/VAMS.git
+Purpose: read this on the other computer before cherry-picking / rewriting main.
+
+
+================================================================
+0. ANSWERS FIRST
+================================================================
+
+Q: Is local main the same as remote main?
+A: YES. Identical SHA.
+
+    main         = 05d1750  Upgrade PHP version to 8.4 and refactor entry status handling
+    origin/main  = 05d1750  (same)
+
+    No unpushed main commits. No unpulled main commits.
+    Verified after git fetch on 2026-09-09.
+
+Q: Should you revert main, then merge AI-REFACTOR?
+A: Still a bad default — but this is a Coolify transition, not a
+   museum. Breaking admin polish / theming / JSON import / plans is
+   acceptable. Breaking the 2 live clients is not.
+
+Q: Should you force-push a rebuilt main?
+A: Acceptable during this transition IF the client contract below
+   still holds after cutover. Prefer not losing origin/coolify
+   (Docker + PHP 8.5 + Postgres) because that IS the Coolify path.
+   Losing Epic 4–6 (a11y, theme, plans) is fine for now.
+
+Q: Cherry-pick all of main onto AI-REFACTOR?
+A: Don't bother picking theming/plans/a11y/JSON import unless a
+   client needs them. Merge or copy Docker + API-shape + published
+   status. Skip the museum pieces.
+
+
+================================================================
+1. BRANCH MAP (as of fetch 2026-09-09)
+================================================================
+
+    56e0baa  2025-12-18   merge-base of main and AI-REFACTOR
+      |
+      +-- origin/main     05d1750   Laravel 13.24, PHP ^8.4, Docker, JSON import, theming, plans
+      |     |
+      |     +-- origin/coolify  8acdb24   PHP ^8.5, local Postgres, more Form Requests,
+      |                                   Eloquent API resources, BaseEntity CRUD
+      |                                   THIS MACHINE WAS ON coolify BEFORE THE SWITCH
+      |
+      +-- origin/AI-REFACTOR  1035476   Laravel 12.40 / PHP ^8.2 at last fetch
+                                        (you said you just made it Laravel 13 THERE —
+                                         that upgrade is NOT on origin yet as of this fetch)
+
+Local copies match remotes:
+    coolify        == origin/coolify     8acdb24
+    AI-REFACTOR    == origin/AI-REFACTOR 1035476
+    main           == origin/main        05d1750
+
+This machine HEAD: AI-REFACTOR (1035476).
+Working tree leftovers (ignore): .cursor/mcp.json, .serena/, .ua/
+
+
+================================================================
+2. ENV ON THIS MACHINE (not production)
+================================================================
+
+Active .env:
+    APP_ENV=local
+    APP_DEBUG=true
+    APP_URL=http://localhost
+    DB_HOST=postgres          (Docker network name)
+    DB_DATABASE=vams
+    FILESYSTEM_DISK=local
+    DO_SPACES_* empty
+    MAIL_HOST=mailpit
+
+NOT pointing at production.
+
+HOWEVER: .env contains a COMMENTED-OUT DigitalOcean managed Postgres
+block with real credentials. Leave it commented. Do not paste it
+around. Rotate if this file has been copied.
+
+Mismatch: that .env expects docker-compose services (postgres, redis,
+mailpit, meilisearch). Those files live on main/coolify, NOT on
+AI-REFACTOR. Leftover from the coolify checkout.
+
+
+================================================================
+3. WHAT MAIN DID AFTER THE SPLIT (this machine, Jun–Aug 2026)
+   AI-REFACTOR does not have this. This is the cherry-pick / merge list.
+================================================================
+
+Platform / deploy
+    fab52c2  Docker deployment + fresh-install migration order
+    958d696  pdo_pgsql for Coolify Postgres
+    7b8422d  Faster Docker build (mlocati extension installer)
+    5c36f98  HTTPS enforcement behind proxy
+    332d5af / 404c24f  build fixes
+    a696edf  Laravel 13 + Pest browser e2e
+    05d1750  PHP 8.4 + entry published-status handling
+             (app/Enums/EntryStatus.php)
+
+Housekeeping / authz
+    0c3d9e8  User-specific mosaic retrieval + eager loading
+    2ccef20  Dead code: unrouted media controller, orphaned mosaic API, jwt-auth
+    12de6bb  Mosaic/Entry policies + Telescope gate
+    7488d29  Approval gate on authenticated routes + flash messages
+
+Frontend
+    4dfe365  Base+domain component reorg (atoms/organisms -> molecules)
+    23b8722  content-wrapper / content-container page shells
+    deb33a9  Epic 4: a11y on modals, dropdowns, landmarks (useFocusTrap)
+    936bdae  Epic 5: user theming end-to-end (config/theme.php, useUserTheme, DarkModeToggle)
+    860af22  Epic 6: config-driven subscription plan seams + onboarding
+             (config/plans.php, PlanLimitService, HasPlan, usage strategies)
+
+JSON import (do not rebuild from scratch)
+    616ab41  preview-before-create flow
+    66f9c80  Adapter: AdaptedEntry
+    296568c  Facade: EntryJsonImportService
+    44d31f5  Command: preview + confirm
+    061b151  Actions: PreviewEntryJsonImport / ConfirmEntryJsonImport
+    Vue: EntryJsonInsert, EntryJsonPreviewCard, Pages/Entries/JsonPreview
+    tests: Feature + Browser workflow tests
+
+Files that exist on main and NOT on AI-REFACTOR (high signal):
+    Dockerfile, docker-compose.yml, docker/*
+    app/Actions/Entries/*
+    app/Data/ImportEntryData.php, ImportEntryDataMapper.php
+    app/Enums/EntryStatus.php
+    app/Policies/EntryPolicy.php
+    app/Services/EntryJsonImport*.php
+    app/Services/Plans/*
+    app/Models/Concerns/HasPlan.php
+    config/plans.php, config/theme.php
+    resources/js/Components/entries/EntryJson*.vue
+    resources/js/Pages/Entries/JsonPreview.vue
+    resources/js/composables/shared/useDarkMode.ts
+    resources/js/composables/shared/useFocusTrap.ts
+    resources/js/composables/shared/useUserTheme.ts
+    tests/Browser/Entries/EntryJsonImportWorkflowTest.php
+    tests/Feature/EntryJson*.php, Plans/*, Policies/*, Auth/ApprovalGateTest.php
+
+
+================================================================
+4. WHAT COOLIFY DID ON TOP OF MAIN (this machine — DO NOT LOSE)
+================================================================
+
+    f17e5c7  PHP 8.5 + local Postgres for Coolify
+    912547f  living docs into docs/, drop completed plans
+    bd6bad5  leftover hosting config gone, README = Docker
+    263ed36  unused resource stubs / dead media-mosaic helpers
+    1c9b1b6  API payloads via Eloquent resources
+    1606fec  declare(strict_types=1) leftovers
+    b3224af  unused generic media uploader gone; API media Form Requests
+    f00be3f  album image validation Form Requests
+    84eeee6  Pest runs on the HOST, not inside the api image
+    cd7d3ef  album + mosaic CRUD through BaseEntity
+    8acdb24  PHPUnit config, Serena files, memory docs
+
+If the other computer rebuilds "main" from AI-REFACTOR + cherry-picked
+main commits and force-pushes, these 11 commits vanish unless you also
+merge origin/coolify.
+
+
+================================================================
+5. WHAT AI-REFACTOR HAS THAT MAIN/COOLIFY DO NOT
+================================================================
+
+    11eeec5  2026-03-09  "refactor phase 1"
+             Form Requests, thinner controllers, fatter services.
+             OVERLAPS coolify Form Requests. Do not take wholesale.
+
+    863ffd1  image-colors entry types + json field
+             ImageColorsSeeder + EntryValidationService tweak.
+             KEEP. Port if it conflicts.
+
+    2f063c4  testing-env shadowing fix + EntryValidationServiceTest
+             KEEP if still relevant on Laravel 13 phpunit.xml.
+
+    32d2952..313fc48  docs: roadmap, PROJECT.md, ClickUp, adversarial review
+    1035476  Coolify migration kickoff prompt
+             KEEP. README clash: keep Docker README from coolify/main.
+
+    3bedb8f  media.delete ownership check (userCanDeletePath)
+             KEEP THE IDEA. Do not cherry-pick the old MediaUploadController.
+             On coolify the live delete is:
+                 app/Http/Controllers/Api/MediaController.php
+                 DeleteApiMediaRequest::authorize() currently returns true
+                 (any authenticated user can delete any Spaces path).
+             Port userCanDeletePath onto that API controller.
+
+
+================================================================
+6. OVERLAP — YOU DID THE SAME CLASS OF WORK TWICE
+================================================================
+
+Both histories thinned controllers / extracted Form Requests.
+
+    AI-REFACTOR: MediaDeleteRequest, MediaUploadRequest, StoreAlbumImageRequest, …
+    coolify:     DeleteApiMediaRequest, StoreApiMediaRequest, StoreAlbumImagesRequest, …
+
+Frontend components were MOVED, not invented twice:
+    AI still has atoms/ + organisms/ + AdminLayout.vue
+    main moved ActivityItem, EntityCard, ImageUploadZone, admin widgets -> molecules/
+
+Landmine files (exist on BOTH, evolved on main/coolify):
+    EntryController, EntryService          (JSON import + status on main)
+    MediaUploadController                  (thinned on main; replaced on coolify)
+    MosaicController, MosaicService
+    AlbumImageController
+    ProfileController
+    routes/web.php
+    Vue modals: EntryModal, EntryTypeModal, mosaic editor, ImageCollectionManager
+
+Protocol on the other machine: before editing one of those, look at
+    git show origin/coolify:<path>
+and origin/main:<path>.
+
+
+================================================================
+7. RECOMMENDED PROCEDURE ON THE OTHER COMPUTER
+================================================================
+
+You just made AI-REFACTOR Laravel 13 there. Good — composer clash
+with main should be smaller than it was this morning (this fetch still
+shows origin/AI-REFACTOR on Laravel 12.40).
+
+PUSH that Laravel 13 commit first so this machine can fetch it.
+
+Then, in order:
+
+    git fetch origin
+
+    # 1. Do not cherry-pick 23 main commits one by one unless you enjoy pain.
+    git checkout AI-REFACTOR
+    git merge origin/main
+    # resolve conflicts. Prefer main/coolify versions of:
+    #   Dockerfile, docker-compose, JSON import, plans, theme, policies,
+    #   Vue molecules paths, EntryController (keep JSON import),
+    #   composer.lock (Laravel 13).
+    # Prefer AI-REFACTOR for:
+    #   ImageColorsSeeder, PROJECT.md / docs/kickoff,
+    #   media delete OWNERSHIP logic (ported, not the old controller file).
+
+    # 2. Bring in this machine's extra work
+    git merge origin/coolify
+    # same rule: coolify wins on Form Requests / API resources / PHP 8.5 /
+    # docker-compose / README. Keep image-colors + delete-auth + docs.
+
+    # 3. Get green
+    php artisan test     # on HOST, not docker compose exec api
+    # (Pest is not in the production-shaped api image)
+
+    # 4. Replace main WITHOUT destroying coolify
+    git checkout -b main-next
+    git push -u origin main-next
+    # Open a PR into main. Merge when green.
+    # Only then consider making this the new main.
+
+FORCE PUSH main only if:
+    - origin/coolify history is contained in the new tip
+    - you are sure no one else is based on origin/main
+    - this machine can reset:  git fetch && git checkout main && git reset --hard origin/main
+    Never --force to main from a history that skipped coolify.
+
+If merge is a stampede, fallback:
+
+    git checkout -b from-coolify origin/coolify
+    git cherry-pick 863ffd1 2f063c4 3bedb8f
+    # then cherry-pick the docs commits (32d2952..1035476)
+    # skip 11eeec5 (refactor phase 1) entirely
+    # port 3bedb8f by hand onto Api/MediaController
+
+
+================================================================
+8. CHERRY-PICK CHEAT SHEET (if you insist on picking, not merging)
+================================================================
+
+SKIP
+    11eeec5  refactor phase 1 — duplicate of coolify Form Requests
+
+TAKE / PORT
+    863ffd1  image-colors + json field
+    2f063c4  test-env shadowing (check phpunit.xml first)
+    3bedb8f  media delete ownership — PORT onto Api/MediaController
+    docs     PROJECT.md, docs/coolify-migration-kickoff.md, roadmap, ClickUp
+
+DO NOT REBUILD ON AI-REFACTOR
+    JSON import, plans, theming, Docker, Laravel 13 (already on main;
+    you said you did L13 there — do not do it a third time),
+    another controller-thinning pass
+
+
+================================================================
+9. THIS MACHINE AFTER YOU REWRITE MAIN
+================================================================
+
+When the other computer has pushed:
+
+    git fetch origin
+    git checkout main
+    git pull          # if fast-forward
+    # if you force-pushed:
+    git reset --hard origin/main
+
+    Then either delete local coolify or reset it onto the new main
+    so the two machines do not diverge again.
+
+Do not keep developing on the December 2025 fork.
+
+
+================================================================
+10. ONE-LINE VERDICT
+================================================================
+
+Local main == remote main (05d1750).
+Coolify transition: breakage is allowed. The bar is 2 clients,
+<100 entities, still able to read their published albums/mosaics/
+entries via X-API-Key, with Spaces URLs intact, and able to log
+into the admin to edit. Merge Docker/coolify + API shape into the
+Laravel-13 AI-REFACTOR; skip theming/plans/a11y/JSON import if they
+fight. Force-push main if you must — after a staging smoke of the
+client contract.
+
+Deal.
+
+
+================================================================
+11. CLIENT SURVIVAL CONTRACT (added 2026-09-09 16:07)
+    Hiren: transition to Coolify; OK breaking things; 2 existing
+    clients, <100 total entities, must still function.
+================================================================
+
+"Function" = the live frontends (Image Colors + the other client)
+keep getting data, and the two humans can still edit in the admin.
+
+MUST NOT BREAK (or must be restored before DNS cutover)
+    1. Read API, API-key auth
+           GET /api/albums
+           GET /api/albums/{id}  and  /by-title/{title}
+           GET /api/mosaics      same
+           GET /api/entries      GET /api/entries/by-type/{type}  GET /api/entries/{id}
+           Header: X-API-Key
+           User-scoped, published-only, permission-filtered.
+           JSON field names the frontends already parse.
+    2. Existing API keys still work
+           Keys are plaintext today. Do NOT hash/re-issue at
+           cutover unless you hand both clients new keys the
+           same hour.
+    3. Postgres rows survive
+           ~hundreds of rows. pg_dump | pg_restore (or a
+           re-runnable Artisan streamer). Dry-run on staging.
+    4. Spaces objects stay put
+           Do NOT migrate the bucket. Both DO and Coolify read
+           the same DO Spaces. Image URLs in DB must keep
+           resolving. FILESYSTEM / DO_SPACES_* must be the
+           production bucket on Coolify, not empty local.
+    5. Admin login + write path
+           Session + CSRF Inertia: albums, mosaics, entries,
+           media upload. Clients need to edit. Write API is
+           not required (still commented out).
+    6. Image Colors entry types
+           parent-colors, preset, processed-image
+           seeded + granted to itamar@gilboa.net
+           `json` field type must keep nested palettes intact.
+    7. APP_URL + Sanctum stateful domains + CORS
+           After DNS/SSL, these must match the new host or
+           the admin cookie and the client fetch die together.
+    8. /up health check
+           Coolify needs it or it will kill the box.
+
+KNOWN LANDMINE ALREADY IN THIS BRANCH
+    Paginated API 500: ->items()->map() on a plain array
+    (BaseApiController). If a client uses ?page= this is a
+    live break. Fix before or during cutover; <100 rows may
+    mean they never paginate — verify, don't assume.
+
+OK TO BREAK DURING TRANSITION
+    JSON import (preview/confirm) — no client uses this
+    User theming / dark mode / a11y pass
+    Subscription plan limits / onboarding seams
+    Frontend atoms→molecules reorg (as long as admin still loads)
+    Pest browser e2e, gd image tests (25 already fail)
+    Hashing API keys, approval-gate polish, Telescope
+    Force-pushing main / abandoning a tidy git history
+    Laravel 12 vs 13, as long as the API JSON shape matches
+    Media delete ownership (admin-only; do it, but it isn't
+    what keeps the 2 sites up)
+
+CUTOVER SHAPE (from docs/coolify-migration-kickoff.md)
+    Data move = script, not a ceremony.
+    Spaces stay. Only Postgres moves.
+    Staging domain first, smoke the 8 MUST-NOTs, then DNS.
+    Rollback = Coolify previous deploy + keep DO up until
+    the 2 clients are confirmed green.
+
+SMOKE AFTER ANY REWRITE OF MAIN (do this on staging)
+    [ ] Login as each of the 2 client users
+    [ ] Album list / mosaic list / entry list load
+    [ ] One published entry JSON from /api/entries/{id}
+        with that user's real X-API-Key matches old shape
+        (especially Image Colors nested json)
+    [ ] An <img> URL from a row still 200s on Spaces
+    [ ] Create or edit one entry, reload the API, see it
+        (published)
+    [ ] /up returns 200
+    [ ] APP_URL on the new host, HTTPS, admin not mixed-content
+
+If those pass, the kingdom still has two subjects. Everything
+else can be ghastly for a while.
