@@ -61,8 +61,9 @@ it('validates file for media upload', function () {
 it('deletes media via web route', function () {
     $this->actingAs($this->user);
 
+    // Own SPA scratch space (uploaded, not yet attached to any entity).
     $response = $this->deleteJson(route('media.delete'), [
-        'path' => 'test/path/file.jpg',
+        'path' => "uploads/images/{$this->user->id}/file.jpg",
     ]);
 
     $response->assertStatus(200)
@@ -79,4 +80,21 @@ it('requires path for media deletion', function () {
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['path']);
+});
+
+it('denies deleting another user\'s attached album image', function () {
+    $owner = User::factory()->create();
+    $album = \App\Models\Album::factory()->create(['user_id' => $owner->id]);
+    $image = \App\Models\AlbumImage::factory()->create([
+        'album_id' => $album->id,
+        'path' => 'https://spaces.example/bucket/albums/1/photo.jpg',
+    ]);
+
+    $this->actingAs($this->user); // not the owner
+
+    $response = $this->deleteJson(route('media.delete'), [
+        'path' => $image->path,
+    ]);
+
+    $response->assertStatus(403);
 });

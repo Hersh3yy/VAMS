@@ -137,8 +137,9 @@ it('handles video files', function () {
 it('can delete media via web route', function () {
     $this->actingAs($this->user);
 
+    // Own SPA scratch space (uploaded, not yet attached to any entity).
     $response = $this->deleteJson(route('media.delete'), [
-        'path' => 'test/path/to/file.jpg',
+        'path' => "uploads/images/{$this->user->id}/file.jpg",
     ]);
 
     $response->assertSuccessful()

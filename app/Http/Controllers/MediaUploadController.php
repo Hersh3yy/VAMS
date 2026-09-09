@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\MediaDeleteRequest;
 use App\Http\Requests\MediaUploadRequest;
+use App\Models\AlbumImage;
+use App\Models\EntryImage;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -139,15 +141,16 @@ final class MediaUploadController
      */
     public function delete(MediaDeleteRequest $request): JsonResponse
     {
+        $path = $this->normalizeSpacesPath($request->input('path'));
+
+        // Authorize before touching storage — abort() here must NOT land in the
+        // catch block below, or an unauthorized delete would report as a 422
+        // instead of a 403.
+        if (! $this->userCanDeletePath($path)) {
+            abort(403, 'Unauthorized action.');
+        }
+
         try {
-            $path = $request->input('path');
-
-            if (str_contains($path, config('filesystems.disks.spaces.endpoint'))) {
-                $bucket = config('filesystems.disks.spaces.bucket');
-                $endpoint = config('filesystems.disks.spaces.endpoint');
-                $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
-            }
-
             $deleted = Storage::disk('spaces')->delete($path);
 
             if (! $deleted) {
@@ -169,6 +172,55 @@ final class MediaUploadController
                 'message' => 'Deletion failed: '.$e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Strip the Spaces endpoint+bucket prefix, if present, so a relative
+     * storage path and a full public URL for the same file resolve alike.
+     */
+    private function normalizeSpacesPath(string $path): string
+    {
+        $endpoint = config('filesystems.disks.spaces.endpoint');
+
+        if (str_contains($path, $endpoint)) {
+            $bucket = config('filesystems.disks.spaces.bucket');
+            $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
+        }
+
+        return $path;
+    }
+
+    /**
+     * A path may be deleted only if it's either (a) still in the caller's own
+     * SPA scratch space — uploaded via handleSpaUpload but not yet attached to
+     * any entity — or (b) already attached to an Album/Entry image the caller
+     * has 'update' rights on. Anything else, including a guessed or borrowed
+     * path, is denied.
+     */
+    private function userCanDeletePath(string $path): bool
+    {
+        $userId = (string) Auth::id();
+
+        if (str_starts_with($path, "uploads/images/{$userId}/")
+            || str_starts_with($path, "uploads/videos/{$userId}/")) {
+            return true;
+        }
+
+        // AlbumImage/EntryImage store the full public URL in `path`, not the
+        // relative storage path — check both forms.
+        $fullUrl = $this->imageService->getPublicUrl($path);
+
+        $albumImage = AlbumImage::whereIn('path', [$path, $fullUrl])->first();
+        if ($albumImage) {
+            return Gate::allows('update', $albumImage->album);
+        }
+
+        $entryImage = EntryImage::whereIn('path', [$path, $fullUrl])->first();
+        if ($entryImage) {
+            return Gate::allows('update', $entryImage->entry);
+        }
+
+        return false;
     }
 
     /**
