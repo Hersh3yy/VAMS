@@ -7,10 +7,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -23,7 +24,7 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to upload media to mosaic', function () {
+it('allows authenticated user to upload media to mosaic', function (): void {
     $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
@@ -48,7 +49,7 @@ it('allows authenticated user to upload media to mosaic', function () {
         ]);
 });
 
-it('can upload video to mosaic', function () {
+it('can upload video to mosaic', function (): void {
     $this->actingAs($this->user);
 
     $video = UploadedFile::fake()->create('test-video.mp4', 5000, 'video/mp4');
@@ -67,7 +68,7 @@ it('can upload video to mosaic', function () {
         ]);
 });
 
-it('prevents unauthorized user from uploading to mosaic', function () {
+it('prevents unauthorized user from uploading to mosaic', function (): void {
     $otherUser = User::factory()->create(['is_approved' => true]);
     $this->actingAs($otherUser);
 
@@ -80,7 +81,7 @@ it('prevents unauthorized user from uploading to mosaic', function () {
     $response->assertForbidden();
 });
 
-it('prevents guest from uploading media', function () {
+it('prevents guest from uploading media', function (): void {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), [
@@ -90,7 +91,7 @@ it('prevents guest from uploading media', function () {
     $response->assertUnauthorized();
 });
 
-it('validates file types on upload', function () {
+it('validates file types on upload', function (): void {
     $this->actingAs($this->user);
 
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
@@ -103,7 +104,7 @@ it('validates file types on upload', function () {
         ->assertJsonValidationErrors(['media']);
 });
 
-it('validates file size on upload', function () {
+it('validates file size on upload', function (): void {
     $this->actingAs($this->user);
 
     // Create file larger than 30MB limit
@@ -117,7 +118,7 @@ it('validates file size on upload', function () {
     $response->assertSuccessful();
 })->skip('Backend file size validation removed per user request');
 
-it('requires media file for upload', function () {
+it('requires media file for upload', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->postJson(route('mosaics.media.upload', $this->mosaic), []);
@@ -126,11 +127,11 @@ it('requires media file for upload', function () {
         ->assertJsonValidationErrors(['media']);
 });
 
-it('handles upload errors gracefully', function () {
+it('handles upload errors gracefully', function (): void {
     $this->actingAs($this->user);
 
     // Mock ImageService to throw an exception
-    $this->mock(\App\Services\ImageService::class, function ($mock) {
+    $this->mock(\App\Services\ImageService::class, function (MockInterface $mock): void {
         $mock->shouldReceive('storeImage')
             ->andThrow(new \Exception('Storage failed'));
     });
@@ -148,11 +149,11 @@ it('handles upload errors gracefully', function () {
         ]);
 });
 
-it('returns webp url when available', function () {
+it('returns webp url when available', function (): void {
     $this->actingAs($this->user);
 
     // Mock ImageService to return WebP URL
-    $this->mock(\App\Services\ImageService::class, function ($mock) {
+    $this->mock(\App\Services\ImageService::class, function (MockInterface $mock): void {
         $mock->shouldReceive('storeImage')
             ->andReturn([
                 'url' => 'https://example.com/image.jpg',

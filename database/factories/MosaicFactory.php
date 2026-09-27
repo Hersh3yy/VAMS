@@ -39,7 +39,7 @@ class MosaicFactory extends Factory
      */
     public function withColumns(int $columns): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'columns' => $columns,
         ]);
     }
@@ -49,7 +49,7 @@ class MosaicFactory extends Factory
      */
     public function forUser(User $user): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'user_id' => $user->id,
         ]);
     }

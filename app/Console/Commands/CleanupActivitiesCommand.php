@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Activity;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 
 class CleanupActivitiesCommand extends Command
 {
@@ -61,7 +62,7 @@ class CleanupActivitiesCommand extends Command
                     ->selectRaw('type, COUNT(*) as count')
                     ->groupBy('type')
                     ->get()
-                    ->map(fn ($item) => [$item->type, $item->count])
+                    ->map(fn (Activity $item): array => [$item->type, $item->count])
                     ->toArray()
             );
 
@@ -86,7 +87,7 @@ class CleanupActivitiesCommand extends Command
         $deleted = 0;
 
         Activity::where('created_at', '<', $cutoffDate)
-            ->chunk($chunkSize, function ($activities) use ($bar, &$deleted) {
+            ->chunk($chunkSize, function (Collection $activities) use ($bar, &$deleted): void {
                 foreach ($activities as $activity) {
                     $activity->delete();
                     $deleted++;

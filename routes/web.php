@@ -8,13 +8,14 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
 use App\Http\Controllers\MosaicController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to dashboard (with auth protection)
 Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'approved'])->name('dashboard');
 
 // Authenticated routes - FRONTEND PAGES ONLY
-Route::middleware(['auth', 'verified', 'approved'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function (): void {
 
     // Album Frontend Pages
     Route::get('/albums', [AlbumController::class, 'index'])->name('albums.index');
@@ -38,7 +39,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 });
 
 // CRUD operations (for named routes needed by frontend)
-Route::middleware(['auth', 'verified', 'approved'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function (): void {
     // Album CRUD operations
     Route::post('/albums', [AlbumController::class, 'store'])->name('albums.store');
     Route::patch('/albums/{album}', [AlbumController::class, 'update'])->name('albums.update');
@@ -76,8 +77,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 });
 
 // Profile routes (these can stay as they are minimal)
-Route::middleware(['auth', 'approved'])->group(function () {
-    Route::prefix('profile')->name('profile.')->group(function () {
+Route::middleware(['auth', 'approved'])->group(function (): void {
+    Route::prefix('profile')->name('profile.')->group(function (): void {
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::patch('/theme', [ProfileController::class, 'updateTheme'])->name('theme.update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
@@ -89,7 +90,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     // User management
     Route::resource('users', UserController::class);
@@ -109,7 +110,7 @@ Route::post('admin/stop-impersonating', [UserController::class, 'stopImpersonati
     ->name('admin.stop-impersonating');
 
 // CSRF Token refresh route
-Route::get('/csrf-token', function () {
+Route::get('/csrf-token', function (): JsonResponse {
     return response()->json([
         'csrf_token' => csrf_token(),
     ]);

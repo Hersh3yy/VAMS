@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->mosaic = Mosaic::factory()->create(['user_id' => $this->user->id]);
     $this->mosaicItems = MosaicItem::factory()->count(3)->create([
@@ -17,7 +17,7 @@ beforeEach(function () {
     ]);
 });
 
-it('retrieves mosaic via API with valid API key', function () {
+it('retrieves mosaic via API with valid API key', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
     ])->getJson("/api/mosaics/{$this->mosaic->id}");
@@ -32,7 +32,7 @@ it('retrieves mosaic via API with valid API key', function () {
     ]);
 });
 
-it('returns 401 for mosaic API request without API key', function () {
+it('returns 401 for mosaic API request without API key', function (): void {
     $response = $this->getJson("/api/mosaics/{$this->mosaic->id}");
 
     $response->assertStatus(401)
@@ -41,7 +41,7 @@ it('returns 401 for mosaic API request without API key', function () {
         ]);
 });
 
-it('returns 401 for mosaic API request with invalid API key', function () {
+it('returns 401 for mosaic API request with invalid API key', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => 'invalid-key',
     ])->getJson("/api/mosaics/{$this->mosaic->id}");
@@ -52,7 +52,7 @@ it('returns 401 for mosaic API request with invalid API key', function () {
         ]);
 });
 
-it('returns 404 for non-existent mosaic via API', function () {
+it('returns 404 for non-existent mosaic via API', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
     ])->getJson('/api/mosaics/non-existent-id');
@@ -60,7 +60,7 @@ it('returns 404 for non-existent mosaic via API', function () {
     $response->assertStatus(404);
 });
 
-it('returns 404 when accessing other users mosaic via API', function () {
+it('returns 404 when accessing other users mosaic via API', function (): void {
     $otherUser = User::factory()->create();
     $otherMosaic = Mosaic::factory()->create(['user_id' => $otherUser->id]);
 

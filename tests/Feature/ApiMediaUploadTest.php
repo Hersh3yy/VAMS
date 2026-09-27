@@ -6,10 +6,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -18,7 +19,7 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to upload media via api', function () {
+it('allows authenticated user to upload media via api', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
@@ -47,7 +48,7 @@ it('allows authenticated user to upload media via api', function () {
         ]);
 });
 
-it('validates file size 10mb limit for api upload', function () {
+it('validates file size 10mb limit for api upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     // Create file larger than 10MB (API limit)
@@ -65,7 +66,7 @@ it('validates file size 10mb limit for api upload', function () {
     $response->assertSuccessful();
 })->skip('Backend file size validation removed per user request');
 
-it('validates file types for api upload', function () {
+it('validates file types for api upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $invalidFile = UploadedFile::fake()->create('document.pdf', 1000);
@@ -82,7 +83,7 @@ it('validates file types for api upload', function () {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('requires authentication for api upload', function () {
+it('requires authentication for api upload', function (): void {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson('/api/media/upload', [
@@ -93,7 +94,7 @@ it('requires authentication for api upload', function () {
     $response->assertUnauthorized();
 });
 
-it('requires file for api upload', function () {
+it('requires file for api upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $response = $this->withHeaders([
@@ -107,7 +108,7 @@ it('requires file for api upload', function () {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('makes type optional for api upload', function () {
+it('makes type optional for api upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
     $file = UploadedFile::fake()->image('test.jpg');
 
@@ -123,7 +124,7 @@ it('makes type optional for api upload', function () {
         ->assertJsonPath('data.type', 'image'); // defaults to image
 });
 
-it('validates type values for api upload', function () {
+it('validates type values for api upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
     $file = UploadedFile::fake()->image('test.jpg');
 
@@ -139,7 +140,7 @@ it('validates type values for api upload', function () {
         ->assertJsonValidationErrors(['type']);
 });
 
-it('handles video files via api', function () {
+it('handles video files via api', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $video = UploadedFile::fake()->create('test-video.mp4', 5000, 'video/mp4');
@@ -156,7 +157,7 @@ it('handles video files via api', function () {
         ->assertJsonPath('data.type', 'video');
 });
 
-it('can delete media via api', function () {
+it('can delete media via api', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $response = $this->withHeaders([
@@ -173,7 +174,7 @@ it('can delete media via api', function () {
         ]);
 });
 
-it('requires path for api delete', function () {
+it('requires path for api delete', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $response = $this->withHeaders([
@@ -185,7 +186,7 @@ it('requires path for api delete', function () {
         ->assertJsonValidationErrors(['path']);
 });
 
-it('throttles api requests', function () {
+it('throttles api requests', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     // Make 31 requests (API limit is 30 per minute)
@@ -208,11 +209,11 @@ it('throttles api requests', function () {
     }
 });
 
-it('returns webp url when available', function () {
+it('returns webp url when available', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     // Mock ImageService to return WebP URL
-    $this->mock(\App\Services\ImageService::class, function ($mock) {
+    $this->mock(\App\Services\ImageService::class, function (MockInterface $mock): void {
         $mock->shouldReceive('storeImage')
             ->andReturn([
                 'url' => 'https://example.com/image.jpg',

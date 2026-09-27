@@ -16,11 +16,11 @@ trait LogsActivity
      */
     public static function bootLogsActivity(): void
     {
-        static::created(function ($model) {
+        static::created(function ($model): void {
             $model->logActivity(ActivityType::CREATE, 'Created '.class_basename($model));
         });
 
-        static::updated(function ($model) {
+        static::updated(function ($model): void {
             $changes = $model->getChanges();
             $properties = [];
 
@@ -32,7 +32,7 @@ trait LogsActivity
             $model->logActivity(ActivityType::UPDATE, 'Updated '.class_basename($model), $properties);
         });
 
-        static::deleted(function ($model) {
+        static::deleted(function ($model): void {
             $model->logActivity(ActivityType::DELETE, 'Deleted '.class_basename($model));
         });
     }

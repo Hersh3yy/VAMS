@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
-it('allows user to add image to their album', function () {
+it('allows user to add image to their album', function (): void {
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
 
     $response = $this->post(route('albums.images.store', $this->album->id), [
@@ -33,7 +33,7 @@ it('allows user to add image to their album', function () {
     ]);
 });
 
-it('requires image file when adding to album', function () {
+it('requires image file when adding to album', function (): void {
     $response = $this->post(route('albums.images.store', $this->album->id), [
         'title' => 'Test Image',
         'description' => 'Test image description',
@@ -45,7 +45,7 @@ it('requires image file when adding to album', function () {
     ]);
 });
 
-it('prevents adding images to other users albums', function () {
+it('prevents adding images to other users albums', function (): void {
     $otherUser = User::factory()->create();
     $otherAlbum = Album::factory()->create(['user_id' => $otherUser->id]);
 

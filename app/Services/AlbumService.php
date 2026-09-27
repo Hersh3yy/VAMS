@@ -10,7 +10,9 @@ use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\BaseEntity;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
 class AlbumService extends BaseEntityService
@@ -31,8 +33,8 @@ class AlbumService extends BaseEntityService
         if ($forApi) {
             // For API, only return published albums
             return Album::published()
-                ->with(['images' => fn ($query) => $query->published()->orderBy('order')])
-                ->withCount(['images' => fn ($query) => $query->published()])
+                ->with(['images' => fn (HasMany $query): HasMany => $query->published()->orderBy('order')])
+                ->withCount(['images' => fn (Builder $query): Builder => $query->published()])
                 ->orderBy('updated_at', 'desc')
                 ->get();
         }
@@ -44,7 +46,7 @@ class AlbumService extends BaseEntityService
         }
 
         return $user->albums()
-            ->with(['images' => fn ($query) => $query->orderBy('order')])
+            ->with(['images' => fn (HasMany $query): HasMany => $query->orderBy('order')])
             ->orderBy('updated_at', 'desc')
             ->get();
     }
@@ -73,7 +75,7 @@ class AlbumService extends BaseEntityService
             }
 
             // Load relationships - only published images for API
-            $album->load(['images' => fn ($query) => $query->published()->orderBy('order')]);
+            $album->load(['images' => fn (HasMany $query): HasMany => $query->published()->orderBy('order')]);
 
             return $album;
         }
@@ -87,7 +89,7 @@ class AlbumService extends BaseEntityService
             return null;
         }
 
-        $album->load(['images' => fn ($query) => $query->orderBy('order')]);
+        $album->load(['images' => fn (HasMany $query): HasMany => $query->orderBy('order')]);
 
         return $album;
     }

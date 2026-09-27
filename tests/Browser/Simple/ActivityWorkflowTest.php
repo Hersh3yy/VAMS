@@ -7,7 +7,7 @@ use App\Models\User;
 
 pest()->skip('Abandoned: Playwright e2e hangs on Inertia login. Feature tests cover activity logging.');
 
-it('shows activities on dashboard after creating album', function () {
+it('shows activities on dashboard after creating album', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -34,7 +34,7 @@ it('shows activities on dashboard after creating album', function () {
     expect($activity)->not->toBeNull();
 });
 
-it('shows activities on dashboard after updating album', function () {
+it('shows activities on dashboard after updating album', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -64,7 +64,7 @@ it('shows activities on dashboard after updating album', function () {
     expect($activity)->not->toBeNull();
 });
 
-it('shows activities on dashboard after creating mosaic', function () {
+it('shows activities on dashboard after creating mosaic', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -91,7 +91,7 @@ it('shows activities on dashboard after creating mosaic', function () {
     expect($activity)->not->toBeNull();
 });
 
-it('displays activity with correct formatting and icons', function () {
+it('displays activity with correct formatting and icons', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -117,7 +117,7 @@ it('displays activity with correct formatting and icons', function () {
     $page->assertSee('bg-green-100'); // or similar green styling
 });
 
-it('shows multiple activities in chronological order', function () {
+it('shows multiple activities in chronological order', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -152,7 +152,7 @@ it('shows multiple activities in chronological order', function () {
     expect($activities)->toHaveCount(2);
 });
 
-it('handles activity display when no activities exist', function () {
+it('handles activity display when no activities exist', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -170,7 +170,7 @@ it('handles activity display when no activities exist', function () {
         ->orSee('Get started by creating your first album');
 });
 
-it('shows activity details on hover or click', function () {
+it('shows activity details on hover or click', function (): void {
     $user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),

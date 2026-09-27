@@ -6,7 +6,7 @@ use App\Models\Album;
 use App\Models\AlbumImage;
 use App\Models\User;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->album = Album::factory()->create(['user_id' => $this->user->id]);
     $this->albumImages = AlbumImage::factory()->count(3)->create([
@@ -14,7 +14,7 @@ beforeEach(function () {
     ]);
 });
 
-it('retrieves album via API with valid API key', function () {
+it('retrieves album via API with valid API key', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
     ])->getJson("/api/albums/{$this->album->id}");
@@ -54,13 +54,13 @@ it('retrieves album via API with valid API key', function () {
         ]);
 });
 
-it('returns 401 for API requests without API key', function () {
+it('returns 401 for API requests without API key', function (): void {
     $response = $this->getJson("/api/albums/{$this->album->id}");
 
     $response->assertStatus(401);
 });
 
-it('returns 404 when accessing other users album with API key', function () {
+it('returns 404 when accessing other users album with API key', function (): void {
     $otherUser = User::factory()->create();
 
     $response = $this->withHeaders([
@@ -70,7 +70,7 @@ it('returns 404 when accessing other users album with API key', function () {
     $response->assertStatus(404);
 });
 
-it('returns 404 for non-existent album', function () {
+it('returns 404 for non-existent album', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
     ])->getJson('/api/albums/99999');
@@ -78,7 +78,7 @@ it('returns 404 for non-existent album', function () {
     $response->assertStatus(404);
 });
 
-it('retrieves all albums via API index with valid API key', function () {
+it('retrieves all albums via API index with valid API key', function (): void {
     // Create another album for this user
     $album2 = Album::factory()->create(['user_id' => $this->user->id]);
     AlbumImage::factory()->count(2)->create(['album_id' => $album2->id]);
@@ -123,7 +123,7 @@ it('retrieves all albums via API index with valid API key', function () {
     expect($album2Data)->not->toHaveKey('images');
 });
 
-it('includes images when with_images parameter is true', function () {
+it('includes images when with_images parameter is true', function (): void {
     $response = $this->withHeaders([
         'X-API-Key' => $this->user->api_key,
     ])->getJson('/api/albums?with_images=true');

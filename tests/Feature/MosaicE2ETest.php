@@ -11,12 +11,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
 
-test('user can create a mosaic with columns and items', function () {
+test('user can create a mosaic with columns and items', function (): void {
     // Create an album with images for testing
     $album = Album::factory()->create(['user_id' => $this->user->id]);
     $image1 = AlbumImage::factory()->create([
@@ -106,7 +106,7 @@ test('user can create a mosaic with columns and items', function () {
     $response->assertSee('Test Mosaic');
 });
 
-test('user can edit a mosaic and its items', function () {
+test('user can edit a mosaic and its items', function (): void {
     // Create a mosaic with items
     $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
@@ -196,7 +196,7 @@ test('user can edit a mosaic and its items', function () {
     $this->assertArrayHasKey('caption', $firstItemProperties);
 });
 
-test('user can add new items to existing mosaic', function () {
+test('user can add new items to existing mosaic', function (): void {
     // Create a mosaic
     $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
@@ -242,7 +242,7 @@ test('user can add new items to existing mosaic', function () {
     ]);
 });
 
-test('user can delete items from mosaic', function () {
+test('user can delete items from mosaic', function (): void {
     // Create a mosaic with items
     $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
@@ -278,7 +278,7 @@ test('user can delete items from mosaic', function () {
     ]);
 });
 
-test('user can reorder mosaic items', function () {
+test('user can reorder mosaic items', function (): void {
     // Create a mosaic with items
     $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
@@ -315,7 +315,7 @@ test('user can reorder mosaic items', function () {
     $this->assertEquals(1, $item2->column_index);
 });
 
-test('user cannot access other users mosaics', function () {
+test('user cannot access other users mosaics', function (): void {
     $otherUser = User::factory()->create();
     $otherMosaic = Mosaic::factory()->create([
         'user_id' => $otherUser->id,
@@ -342,7 +342,7 @@ test('user cannot access other users mosaics', function () {
     $response->assertStatus(403);
 });
 
-test('mosaic creation requires valid data', function () {
+test('mosaic creation requires valid data', function (): void {
     // Test with missing title
     $response = $this->post(route('mosaics.store'), [
         'description' => 'Missing title',
@@ -357,7 +357,7 @@ test('mosaic creation requires valid data', function () {
     $response->assertSessionHasErrors(['columns']);
 });
 
-test('mosaic item creation requires valid data', function () {
+test('mosaic item creation requires valid data', function (): void {
     $mosaic = Mosaic::factory()->create([
         'user_id' => $this->user->id,
     ]);

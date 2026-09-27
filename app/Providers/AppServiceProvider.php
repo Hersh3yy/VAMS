@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(PlanLimitService::class, fn () => new PlanLimitService([
+        $this->app->singleton(PlanLimitService::class, fn (): PlanLimitService => new PlanLimitService([
             'albums' => new AlbumUsageStrategy,
             'mosaics' => new MosaicUsageStrategy,
             'entries' => new EntryUsageStrategy,

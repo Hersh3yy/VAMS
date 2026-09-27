@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create([
         'is_approved' => true,
         'email_verified_at' => now(),
@@ -17,7 +17,7 @@ beforeEach(function () {
     ]);
 });
 
-it('blocks album creation once the plan limit is reached', function () {
+it('blocks album creation once the plan limit is reached', function (): void {
     Album::factory()->count(10)->forUser($this->user)->create();
 
     $this->actingAs($this->user);
@@ -32,7 +32,7 @@ it('blocks album creation once the plan limit is reached', function () {
     $this->assertDatabaseMissing('albums', ['title' => 'One too many']);
 });
 
-it('allows album creation when under the plan limit', function () {
+it('allows album creation when under the plan limit', function (): void {
     Album::factory()->count(9)->forUser($this->user)->create();
 
     $this->actingAs($this->user);
@@ -47,7 +47,7 @@ it('allows album creation when under the plan limit', function () {
     $this->assertDatabaseHas('albums', ['title' => 'Still room']);
 });
 
-it('blocks mosaic creation once the plan limit is reached', function () {
+it('blocks mosaic creation once the plan limit is reached', function (): void {
     Mosaic::factory()->count(5)->forUser($this->user)->create();
 
     $this->actingAs($this->user);
@@ -63,7 +63,7 @@ it('blocks mosaic creation once the plan limit is reached', function () {
     $this->assertDatabaseMissing('mosaics', ['title' => 'One too many']);
 });
 
-it('has no album/mosaic/entry limits on the pro plan', function () {
+it('has no album/mosaic/entry limits on the pro plan', function (): void {
     $this->user->update(['plan' => 'pro']);
     Album::factory()->count(25)->forUser($this->user)->create();
 

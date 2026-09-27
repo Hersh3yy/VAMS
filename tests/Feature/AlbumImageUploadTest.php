@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -24,7 +24,7 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to upload images to album', function () {
+it('allows authenticated user to upload images to album', function (): void {
     $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('test-image.jpg', 800, 600)->size(1000);
@@ -45,7 +45,7 @@ it('allows authenticated user to upload images to album', function () {
     ]);
 });
 
-it('can upload multiple images at once', function () {
+it('can upload multiple images at once', function (): void {
     $this->actingAs($this->user);
 
     $files = [
@@ -69,7 +69,7 @@ it('can upload multiple images at once', function () {
     expect($images[2]->order)->toBe(2);
 });
 
-it('prevents unauthorized user from uploading to album', function () {
+it('prevents unauthorized user from uploading to album', function (): void {
     $otherUser = User::factory()->create();
     $otherAlbum = Album::factory()->create(['user_id' => $otherUser->id]);
 
@@ -84,7 +84,7 @@ it('prevents unauthorized user from uploading to album', function () {
     $response->assertStatus(422);
 });
 
-it('prevents guest from uploading images', function () {
+it('prevents guest from uploading images', function (): void {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson(route('albums.images.store', $this->album), [
@@ -94,7 +94,7 @@ it('prevents guest from uploading images', function () {
     $response->assertUnauthorized();
 });
 
-it('validates file types on upload', function () {
+it('validates file types on upload', function (): void {
     $invalidFile = UploadedFile::fake()->create('document.pdf', 100);
 
     $response = $this->actingAs($this->user)->postJson(route('albums.images.store', $this->album), [
@@ -105,7 +105,7 @@ it('validates file types on upload', function () {
         ->assertJsonValidationErrors(['images.0']);
 });
 
-it('requires images array for upload', function () {
+it('requires images array for upload', function (): void {
     $response = $this->actingAs($this->user)->postJson(route('albums.images.store', $this->album), []);
 
     $response->assertStatus(422)
@@ -113,7 +113,7 @@ it('requires images array for upload', function () {
         ->assertJsonPath('errors.images.0', 'Please select at least one image to upload.');
 });
 
-it('rejects images larger than the free plan upload limit', function () {
+it('rejects images larger than the free plan upload limit', function (): void {
     $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('huge.jpg')->size(26 * 1024);
@@ -128,7 +128,7 @@ it('rejects images larger than the free plan upload limit', function () {
         ]);
 });
 
-it('allows a file over the free plan limit on the pro plan', function () {
+it('allows a file over the free plan limit on the pro plan', function (): void {
     $this->user->update(['plan' => 'pro']);
     $this->actingAs($this->user);
 
@@ -141,7 +141,7 @@ it('allows a file over the free plan limit on the pro plan', function () {
     $response->assertSuccessful();
 });
 
-it('can update image metadata', function () {
+it('can update image metadata', function (): void {
     $albumImage = AlbumImage::factory()->create([
         'album_id' => $this->album->id,
         'title' => 'Original Title',
@@ -164,7 +164,7 @@ it('can update image metadata', function () {
     // Let's just verify the other fields for now
 });
 
-it('returns 404 when updating an image that does not belong to the album', function () {
+it('returns 404 when updating an image that does not belong to the album', function (): void {
     $otherAlbum = Album::factory()->create(['user_id' => $this->user->id]);
     $albumImage = AlbumImage::factory()->create([
         'album_id' => $this->album->id,
@@ -178,7 +178,7 @@ it('returns 404 when updating an image that does not belong to the album', funct
     $response->assertNotFound();
 });
 
-it('rejects an invalid replacement file when updating an image', function () {
+it('rejects an invalid replacement file when updating an image', function (): void {
     $albumImage = AlbumImage::factory()->create([
         'album_id' => $this->album->id,
     ]);
@@ -192,14 +192,14 @@ it('rejects an invalid replacement file when updating an image', function () {
         ->assertSessionHasErrors(['image']);
 });
 
-it('requires reorder indexes', function () {
+it('requires reorder indexes', function (): void {
     $response = $this->actingAs($this->user)->patchJson(route('albums.images.reorder', $this->album), []);
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['from_index', 'to_index']);
 });
 
-it('can reorder images', function () {
+it('can reorder images', function (): void {
     $this->actingAs($this->user);
 
     // Create 3 images with initial order
@@ -225,7 +225,7 @@ it('can reorder images', function () {
     expect($image3->order)->toBe(1);
 });
 
-it('can delete image', function () {
+it('can delete image', function (): void {
     $this->actingAs($this->user);
 
     $albumImage = AlbumImage::factory()->create([
@@ -240,7 +240,7 @@ it('can delete image', function () {
     $this->assertModelMissing($albumImage);
 });
 
-it('can add video url to album', function () {
+it('can add video url to album', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->postJson(
@@ -267,7 +267,7 @@ it('can add video url to album', function () {
     expect($properties['video_url'])->toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
 });
 
-it('validates url for video upload', function () {
+it('validates url for video upload', function (): void {
     $response = $this->actingAs($this->user)->post(
         route('albums.images.store-video', $this->album),
         [

@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
     $this->user = User::factory()->create();
 });
 
-it('uploads media via API with sanctum token', function () {
+it('uploads media via API with sanctum token', function (): void {
     $token = $this->user->createToken('test')->plainTextToken;
     $file = UploadedFile::fake()->image('test.jpg', 800, 600);
 
@@ -39,7 +39,7 @@ it('uploads media via API with sanctum token', function () {
         ]);
 });
 
-it('requires authentication for media upload', function () {
+it('requires authentication for media upload', function (): void {
     $file = UploadedFile::fake()->image('test.jpg');
 
     $response = $this->postJson('/api/media/upload', [
@@ -50,7 +50,7 @@ it('requires authentication for media upload', function () {
     $response->assertStatus(401);
 });
 
-it('validates file for media upload via API', function () {
+it('validates file for media upload via API', function (): void {
     $token = $this->user->createToken('test')->plainTextToken;
 
     $response = $this->withHeaders([
@@ -64,7 +64,7 @@ it('validates file for media upload via API', function () {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('deletes media via API', function () {
+it('deletes media via API', function (): void {
     $token = $this->user->createToken('test')->plainTextToken;
 
     $response = $this->withHeaders([
@@ -81,7 +81,7 @@ it('deletes media via API', function () {
         ]);
 });
 
-it('requires path for media deletion via API', function () {
+it('requires path for media deletion via API', function (): void {
     $token = $this->user->createToken('test')->plainTextToken;
 
     $response = $this->withHeaders([

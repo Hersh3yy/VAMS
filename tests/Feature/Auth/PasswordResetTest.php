@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
-it('can render reset password link screen', function () {
+it('can render reset password link screen', function (): void {
     $response = $this->get('/forgot-password');
 
     $response->assertSuccessful();
 });
 
-it('can request reset password link', function () {
+it('can request reset password link', function (): void {
     Notification::fake();
 
     $user = User::factory()->create();
@@ -25,14 +25,14 @@ it('can request reset password link', function () {
     Notification::assertSentTo($user, ResetPassword::class);
 });
 
-it('can render reset password screen', function () {
+it('can render reset password screen', function (): void {
     Notification::fake();
 
     $user = User::factory()->create();
 
     $this->post('/forgot-password', ['email' => $user->email]);
 
-    Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
+    Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification): bool {
         $response = $this->get('/reset-password/'.$notification->token);
 
         $response->assertSuccessful();
@@ -41,14 +41,14 @@ it('can render reset password screen', function () {
     });
 });
 
-it('can reset password with valid token', function () {
+it('can reset password with valid token', function (): void {
     Notification::fake();
 
     $user = User::factory()->create();
 
     $this->post('/forgot-password', ['email' => $user->email]);
 
-    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+    Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user): bool {
         $response = $this->post('/reset-password', [
             'token' => $notification->token,
             'email' => $user->email,

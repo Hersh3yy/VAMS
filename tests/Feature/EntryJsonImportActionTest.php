@@ -21,7 +21,7 @@ function makeActionNewsType(): EntryType
     ]);
 }
 
-it('preview action validates without writing', function () {
+it('preview action validates without writing', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news-action'],
         'plan' => 'pro',
@@ -40,7 +40,7 @@ it('preview action validates without writing', function () {
         ->and(Entry::query()->count())->toBe(0);
 });
 
-it('confirm action persists entries', function () {
+it('confirm action persists entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news-action'],
         'plan' => 'pro',

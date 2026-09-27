@@ -6,10 +6,11 @@ use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\Fluent\AssertableJson;
 
 uses(RefreshDatabase::class);
 
-it('returns only published entries for the user via API', function () {
+it('returns only published entries for the user via API', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -48,14 +49,14 @@ it('returns only published entries for the user via API', function () {
     ])->getJson('/api/entries');
 
     $response->assertSuccessful()
-        ->assertJson(fn ($json) => $json
+        ->assertJson(fn (AssertableJson $json): AssertableJson => $json
             ->has('success')
             ->has('data.entries', 1)
             ->where('data.entries.0.id', $published->id)
         );
 });
 
-it('returns only published entries by type via API', function () {
+it('returns only published entries by type via API', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -93,7 +94,7 @@ it('returns only published entries by type via API', function () {
     ])->getJson('/api/entries/by-type/i-ams');
 
     $response->assertSuccessful()
-        ->assertJson(fn ($json) => $json
+        ->assertJson(fn (AssertableJson $json): AssertableJson => $json
             ->has('success')
             ->has('data.entries', 1)
             ->where('data.entries.0.id', $published->id)

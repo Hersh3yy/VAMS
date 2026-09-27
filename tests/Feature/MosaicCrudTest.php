@@ -7,11 +7,13 @@ use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -25,7 +27,7 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to view mosaics index', function () {
+it('allows authenticated user to view mosaics index', function (): void {
     $this->actingAs($this->user);
 
     // Create some mosaics for this user
@@ -37,35 +39,35 @@ it('allows authenticated user to view mosaics index', function () {
     $response = $this->get(route('mosaics.index'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Mosaics/Index')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Mosaics/Index')
         ->has('mosaics', 3) // Only user's mosaics
         ->has('entities', 3)
         // Cover preview iterates items; missing relation crashes the Vue grid
-        ->where('entities', function ($entities) {
+        ->where('entities', function (Collection $entities): bool {
             $entities = collect($entities);
 
-            return $entities->every(fn ($mosaic) => array_key_exists('items', $mosaic))
-                && $entities->contains(fn ($mosaic) => count($mosaic['items']) === 2);
+            return $entities->every(fn (array $mosaic): bool => array_key_exists('items', $mosaic))
+                && $entities->contains(fn (array $mosaic): bool => count($mosaic['items']) === 2);
         })
     );
 });
 
-it('prevents guest from viewing mosaics index', function () {
+it('prevents guest from viewing mosaics index', function (): void {
     $response = $this->get(route('mosaics.index'));
     $response->assertRedirect('/login');
 });
 
-it('allows authenticated user to view create mosaic page', function () {
+it('allows authenticated user to view create mosaic page', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->get(route('mosaics.create'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Mosaics/Create')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Mosaics/Create')
     );
 });
 
-it('allows authenticated user to create mosaic', function () {
+it('allows authenticated user to create mosaic', function (): void {
     $this->actingAs($this->user);
 
     $mosaicData = [
@@ -90,7 +92,7 @@ it('allows authenticated user to create mosaic', function () {
     ]);
 });
 
-it('validates required fields for mosaic creation', function () {
+it('validates required fields for mosaic creation', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->post(route('mosaics.store'), []);
@@ -99,7 +101,7 @@ it('validates required fields for mosaic creation', function () {
     $response->assertSessionHasErrors(['title', 'columns']);
 });
 
-it('validates columns range for mosaic creation', function () {
+it('validates columns range for mosaic creation', function (): void {
     $this->actingAs($this->user);
 
     // Test minimum columns
@@ -121,7 +123,7 @@ it('validates columns range for mosaic creation', function () {
     $response->assertSessionHasErrors(['columns']);
 });
 
-it('allows authenticated user to view mosaic', function () {
+it('allows authenticated user to view mosaic', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -132,7 +134,7 @@ it('allows authenticated user to view mosaic', function () {
     $response = $this->get(route('mosaics.show', $mosaic));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Mosaics/Show')
         ->has('Mosaic')
         ->where('Mosaic.id', $mosaic->id)
         ->where('Mosaic.title', $mosaic->title)
@@ -140,7 +142,7 @@ it('allows authenticated user to view mosaic', function () {
     );
 });
 
-it('prevents user from viewing other users mosaics', function () {
+it('prevents user from viewing other users mosaics', function (): void {
     $this->actingAs($this->user);
 
     $otherMosaic = Mosaic::factory()->forUser($this->otherUser)->create();
@@ -150,7 +152,7 @@ it('prevents user from viewing other users mosaics', function () {
     $response->assertForbidden();
 });
 
-it('allows authenticated user to view mosaic show page for editing', function () {
+it('allows authenticated user to view mosaic show page for editing', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -158,13 +160,13 @@ it('allows authenticated user to view mosaic show page for editing', function ()
     $response = $this->get(route('mosaics.show', $mosaic));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Mosaics/Show')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Mosaics/Show')
         ->has('Mosaic')
         ->where('Mosaic.id', $mosaic->id)
     );
 });
 
-it('allows authenticated user to update mosaic', function () {
+it('allows authenticated user to update mosaic', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create([
@@ -199,7 +201,7 @@ it('allows authenticated user to update mosaic', function () {
     ]);
 });
 
-it('prevents user from updating other users mosaics', function () {
+it('prevents user from updating other users mosaics', function (): void {
     $this->actingAs($this->user);
 
     $otherMosaic = Mosaic::factory()->forUser($this->otherUser)->create();
@@ -219,7 +221,7 @@ it('prevents user from updating other users mosaics', function () {
     ]);
 });
 
-it('allows authenticated user to delete mosaic', function () {
+it('allows authenticated user to delete mosaic', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -233,7 +235,7 @@ it('allows authenticated user to delete mosaic', function () {
     ]);
 });
 
-it('prevents user from deleting other users mosaics', function () {
+it('prevents user from deleting other users mosaics', function (): void {
     $this->actingAs($this->user);
 
     $otherMosaic = Mosaic::factory()->forUser($this->otherUser)->create();
@@ -247,7 +249,7 @@ it('prevents user from deleting other users mosaics', function () {
     ]);
 });
 
-it('allows user to add items to mosaic', function () {
+it('allows user to add items to mosaic', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -272,7 +274,7 @@ it('allows user to add items to mosaic', function () {
     ]);
 });
 
-it('allows user to reorder mosaic items', function () {
+it('allows user to reorder mosaic items', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -313,7 +315,7 @@ it('allows user to reorder mosaic items', function () {
     ]);
 });
 
-it('validates mosaic item data', function () {
+it('validates mosaic item data', function (): void {
     $this->actingAs($this->user);
 
     $mosaic = Mosaic::factory()->forUser($this->user)->create();
@@ -324,7 +326,7 @@ it('validates mosaic item data', function () {
     $response->assertSessionHasErrors(['type', 'properties', 'order', 'column_index']);
 });
 
-it('prevents adding items to other users mosaics', function () {
+it('prevents adding items to other users mosaics', function (): void {
     $this->actingAs($this->user);
 
     $otherMosaic = Mosaic::factory()->forUser($this->otherUser)->create();

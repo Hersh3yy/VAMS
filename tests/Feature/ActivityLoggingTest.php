@@ -9,7 +9,7 @@ use App\Models\Mosaic;
 use App\Models\User;
 
 // Unit tests for Activity model
-it('creates activity with correct relationships', function () {
+it('creates activity with correct relationships', function (): void {
     $user = User::factory()->create();
     $album = Album::factory()->forUser($user)->create();
 
@@ -25,7 +25,7 @@ it('creates activity with correct relationships', function () {
     expect($activity->subject->id)->toBe($album->id);
 });
 
-it('casts properties to array', function () {
+it('casts properties to array', function (): void {
     $activity = Activity::factory()->create([
         'properties' => ['key' => 'value', 'nested' => ['data' => 'test']],
     ]);
@@ -35,7 +35,7 @@ it('casts properties to array', function () {
     expect($activity->properties['nested']['data'])->toBe('test');
 });
 
-it('casts user_id to string', function () {
+it('casts user_id to string', function (): void {
     $user = User::factory()->create();
     $activity = Activity::factory()->create(['user_id' => $user->id]);
 
@@ -43,7 +43,7 @@ it('casts user_id to string', function () {
     expect($activity->user_id)->toBe((string) $user->id);
 });
 
-it('has fillable attributes', function () {
+it('has fillable attributes', function (): void {
     $activity = new Activity;
     $fillable = $activity->getFillable();
 
@@ -55,7 +55,7 @@ it('has fillable attributes', function () {
     expect($fillable)->toContain('properties');
 });
 
-it('can create activity with minimal data', function () {
+it('can create activity with minimal data', function (): void {
     $user = User::factory()->create();
 
     $activity = Activity::create([
@@ -72,7 +72,7 @@ it('can create activity with minimal data', function () {
     expect($activity->user_id)->toBe($user->id);
 });
 
-it('can create activity with properties', function () {
+it('can create activity with properties', function (): void {
     $user = User::factory()->create();
     $properties = [
         'ip_address' => '192.168.1.1',
@@ -94,7 +94,7 @@ it('can create activity with properties', function () {
     expect($activity->properties['changes']['old'])->toBe('value1');
 });
 
-it('automatically logs album creation', function () {
+it('automatically logs album creation', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -114,7 +114,7 @@ it('automatically logs album creation', function () {
     expect($activity->subject_id)->toBe($album->id);
 });
 
-it('automatically logs album updates', function () {
+it('automatically logs album updates', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -134,7 +134,7 @@ it('automatically logs album updates', function () {
     expect($activity->user_id)->toBe($user->id);
 });
 
-it('automatically logs album deletion', function () {
+it('automatically logs album deletion', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -153,7 +153,7 @@ it('automatically logs album deletion', function () {
     expect($activity->user_id)->toBe($user->id);
 });
 
-it('automatically logs mosaic creation', function () {
+it('automatically logs mosaic creation', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -171,7 +171,7 @@ it('automatically logs mosaic creation', function () {
     expect($activity->user_id)->toBe($user->id);
 });
 
-it('handles console context for activity logging', function () {
+it('handles console context for activity logging', function (): void {
     $user = User::factory()->create();
 
     // Simulate console context (no auth)
@@ -188,7 +188,7 @@ it('handles console context for activity logging', function () {
     expect($activity->description)->toBe('Created Album');
 });
 
-it('skips logging when no user context available', function () {
+it('skips logging when no user context available', function (): void {
     // Ensure no user context
     auth()->logout();
 
@@ -206,7 +206,7 @@ it('skips logging when no user context available', function () {
     expect($activityCount)->toBe(0);
 });
 
-it('creates multiple activities for different operations', function () {
+it('creates multiple activities for different operations', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -225,7 +225,7 @@ it('creates multiple activities for different operations', function () {
     expect($activities[2]->type)->toBe(ActivityType::DELETE);
 });
 
-it('associates activities with correct user', function () {
+it('associates activities with correct user', function (): void {
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
 
@@ -244,7 +244,7 @@ it('associates activities with correct user', function () {
     expect($user2Activities->first()->subject_id)->toBe($album2->id);
 });
 
-it('can retrieve activities through model relationship', function () {
+it('can retrieve activities through model relationship', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -254,12 +254,12 @@ it('can retrieve activities through model relationship', function () {
     $activities = $album->activities;
 
     expect($activities)->toHaveCount(2);
-    $types = $activities->pluck('type')->map(fn ($type) => $type instanceof ActivityType ? $type->value : $type)->toArray();
+    $types = $activities->pluck('type')->map(fn ($type): string => $type instanceof ActivityType ? $type->value : $type)->toArray();
     expect($types)->toContain('create');
     expect($types)->toContain('update');
 });
 
-it('can retrieve user activities through user relationship', function () {
+it('can retrieve user activities through user relationship', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 

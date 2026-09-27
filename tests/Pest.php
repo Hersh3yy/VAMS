@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Pest\Expectation;
 use Tests\TestCase;
 
 /*
@@ -31,7 +32,7 @@ pest()->extend(TestCase::class)
 |
 */
 
-expect()->extend('toBeOne', function () {
+expect()->extend('toBeOne', function (): Expectation {
     return $this->toBe(1);
 });
 
@@ -46,7 +47,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function something(): void
 {
     // ..
 }

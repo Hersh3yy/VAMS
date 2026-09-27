@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Entry types (admin-defined types like "I AM", "Blog Post", etc.)
-        Schema::create('entry_types', function (Blueprint $table) {
+        Schema::create('entry_types', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name'); // "I AM", "Blog Post", "Recipe", etc.
             $table->string('slug')->unique(); // "i-am", "blog-post", "recipe"
@@ -25,12 +25,12 @@ return new class extends Migration
         });
 
         // Add permissions column to users table
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->json('entry_type_permissions')->nullable()->after('api_key'); // Which entry types user can access
         });
 
         // Entries - user-created content based on entry types
-        Schema::create('entries', function (Blueprint $table) {
+        Schema::create('entries', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('entry_type_id')->constrained()->onDelete('cascade');
@@ -47,7 +47,7 @@ return new class extends Migration
         });
 
         // Entry images (for entry types that have image fields)
-        Schema::create('entry_images', function (Blueprint $table) {
+        Schema::create('entry_images', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('entry_id')->constrained()->onDelete('cascade');
             $table->string('field_name'); // which field this image belongs to
@@ -71,7 +71,7 @@ return new class extends Migration
         Schema::dropIfExists('entry_images');
         Schema::dropIfExists('entries');
 
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->dropColumn('entry_type_permissions');
         });
 

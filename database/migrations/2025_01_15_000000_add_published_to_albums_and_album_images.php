@@ -13,11 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('albums', function (Blueprint $table) {
+        Schema::table('albums', function (Blueprint $table): void {
             $table->boolean('published')->default(true)->after('order');
         });
 
-        Schema::table('album_images', function (Blueprint $table) {
+        Schema::table('album_images', function (Blueprint $table): void {
             $table->boolean('published')->default(true)->after('order');
         });
     }
@@ -27,11 +27,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('albums', function (Blueprint $table) {
+        Schema::table('albums', function (Blueprint $table): void {
             $table->dropColumn('published');
         });
 
-        Schema::table('album_images', function (Blueprint $table) {
+        Schema::table('album_images', function (Blueprint $table): void {
             $table->dropColumn('published');
         });
     }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -25,7 +25,7 @@ beforeEach(function () {
     ]);
 });
 
-it('handles upload with invalid csrf token', function () {
+it('handles upload with invalid csrf token', function (): void {
     $this->actingAs($this->user);
 
     $file = UploadedFile::fake()->image('test.jpg');
@@ -44,7 +44,7 @@ it('handles upload with invalid csrf token', function () {
     $response->assertStatus(302);
 });
 
-it('returns fresh csrf token from endpoint', function () {
+it('returns fresh csrf token from endpoint', function (): void {
     $response = $this->getJson('/csrf-token');
 
     $response->assertSuccessful()
@@ -55,7 +55,7 @@ it('returns fresh csrf token from endpoint', function () {
     expect($token)->toBeString();
 });
 
-it('includes csrf token in inertia props after login', function () {
+it('includes csrf token in inertia props after login', function (): void {
     // Login the user
     $response = $this->post('/login', [
         'email' => $this->user->email,
@@ -73,7 +73,7 @@ it('includes csrf token in inertia props after login', function () {
     expect(Auth::check())->toBeTrue();
 });
 
-it('allows album crud operations with valid csrf', function () {
+it('allows album crud operations with valid csrf', function (): void {
     $this->actingAs($this->user);
 
     // Test creating album
@@ -105,7 +105,7 @@ it('allows album crud operations with valid csrf', function () {
     $this->assertModelMissing($album);
 });
 
-it('allows mosaic media upload with valid csrf', function () {
+it('allows mosaic media upload with valid csrf', function (): void {
     $this->actingAs($this->user);
 
     // Create a mosaic first
@@ -125,7 +125,7 @@ it('allows mosaic media upload with valid csrf', function () {
         ]);
 });
 
-it('allows api media upload with sanctum auth', function () {
+it('allows api media upload with sanctum auth', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     $file = UploadedFile::fake()->image('test.jpg');
@@ -144,7 +144,7 @@ it('allows api media upload with sanctum auth', function () {
         ]);
 });
 
-it('validates file size for api media upload', function () {
+it('validates file size for api media upload', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     // Create a file larger than 10MB (API limit)
@@ -162,7 +162,7 @@ it('validates file size for api media upload', function () {
     $response->assertSuccessful();
 })->skip('Backend file size validation removed per user request');
 
-it('handles csrf protected routes without token', function () {
+it('handles csrf protected routes without token', function (): void {
     $this->actingAs($this->user);
 
     // Disable CSRF middleware for this test by removing token header
@@ -178,7 +178,7 @@ it('handles csrf protected routes without token', function () {
     $response->assertSuccessful();
 });
 
-it('updates csrf token after session regeneration', function () {
+it('updates csrf token after session regeneration', function (): void {
     // Get initial CSRF token
     $initialResponse = $this->getJson('/csrf-token');
     $initialToken = $initialResponse->json('csrf_token');

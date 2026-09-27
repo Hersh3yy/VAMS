@@ -7,10 +7,11 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Album;
 use App\Models\User;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController
 {
-    public function index()
+    public function index(): Response
     {
         $stats = [
             'total_users' => User::count(),

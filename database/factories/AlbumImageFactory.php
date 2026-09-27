@@ -41,7 +41,7 @@ class AlbumImageFactory extends Factory
      */
     public function video(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'path' => 'https://www.youtube.com/watch?v='.$this->faker->regexify('[A-Za-z0-9_-]{11}'),
             'properties' => [
                 'type' => 'video',
@@ -57,7 +57,7 @@ class AlbumImageFactory extends Factory
      */
     public function forAlbum(Album $album): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'album_id' => $album->id,
         ]);
     }
@@ -67,7 +67,7 @@ class AlbumImageFactory extends Factory
      */
     public function withOrder(int $order): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'order' => $order,
         ]);
     }

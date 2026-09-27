@@ -39,7 +39,7 @@ final class ActivityService
             'total' => $activities->count(),
             'by_type' => $activities->groupBy('type')->map->count()->toArray(),
             'by_subject' => $activities->groupBy('subject_type')->map->count()->toArray(),
-            'recent_days' => $activities->groupBy(function ($activity) {
+            'recent_days' => $activities->groupBy(function (Activity $activity): string {
                 return $activity->created_at->format('Y-m-d');
             })->map->count()->toArray(),
         ];
@@ -86,7 +86,7 @@ final class ActivityService
     public function getActivityTypes(): array
     {
         return collect(ActivityType::cases())
-            ->mapWithKeys(fn (ActivityType $type) => [$type->value => $type->label()])
+            ->mapWithKeys(fn (ActivityType $type): array => [$type->value => $type->label()])
             ->toArray();
     }
 
@@ -105,7 +105,7 @@ final class ActivityService
      */
     public function formatActivitiesForDisplay(Collection $activities): array
     {
-        return $activities->map(function ($activity) {
+        return $activities->map(function (Activity $activity): array {
             return [
                 'id' => $activity->id,
                 'type' => $activity->type,
@@ -133,4 +133,3 @@ final class ActivityService
         ];
     }
 }
-

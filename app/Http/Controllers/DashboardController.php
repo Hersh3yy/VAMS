@@ -7,13 +7,15 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\Mosaic;
 use App\Services\ActivityService;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController
 {
-    public function index()
+    public function index(): Response
     {
         $user = Auth::user();
 
@@ -31,7 +33,7 @@ class DashboardController
         $totalVideos = DB::table('album_images')
             ->join('albums', 'album_images.album_id', '=', 'albums.id')
             ->where('albums.user_id', $user->id)
-            ->where(function ($query) {
+            ->where(function (Builder $query): void {
                 $query->whereRaw("album_images.properties->>'type' = 'video'")
                     ->orWhereRaw("album_images.properties->>'is_video' = 'true'")
                     ->orWhere('album_images.path', 'like', '%youtube.com%')
@@ -53,7 +55,7 @@ class DashboardController
             ->latest()
             ->take(6)
             ->get()
-            ->map(function (Album $album) {
+            ->map(function (Album $album): array {
                 return [
                     'id' => $album->id,
                     'title' => $album->title,
@@ -69,7 +71,7 @@ class DashboardController
             ->latest()
             ->take(3)
             ->get()
-            ->map(function ($mosaic) {
+            ->map(function (Mosaic $mosaic): array {
                 return [
                     'id' => $mosaic->id,
                     'title' => $mosaic->title,
@@ -81,7 +83,7 @@ class DashboardController
 
         // Get recent entities (albums and mosaics combined)
         $recentEntities = collect([
-            ...$recentAlbums->map(function ($album) {
+            ...$recentAlbums->map(function (array $album): array {
                 return [
                     'id' => $album['id'],
                     'type' => 'album',
@@ -93,7 +95,7 @@ class DashboardController
                     'url' => route('albums.show', $album['id']),
                 ];
             }),
-            ...$recentMosaics->map(function ($mosaic) {
+            ...$recentMosaics->map(function (array $mosaic): array {
                 return [
                     'id' => $mosaic['id'],
                     'type' => 'mosaic',

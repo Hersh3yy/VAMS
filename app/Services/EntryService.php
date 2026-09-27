@@ -10,6 +10,7 @@ use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -102,7 +103,7 @@ class EntryService extends BaseEntityService
         return $query
             ->with([
                 'entryType',
-                'images' => fn ($query) => $query->orderBy('field_name')->orderBy('order'),
+                'images' => fn (HasMany $query): HasMany => $query->orderBy('field_name')->orderBy('order'),
             ])
             ->orderBy('order')
             ->orderBy('updated_at', 'desc')
@@ -138,7 +139,7 @@ class EntryService extends BaseEntityService
         // Load relationships
         $entry->load([
             'entryType',
-            'images' => fn ($query) => $query->orderBy('field_name')->orderBy('order'),
+            'images' => fn (HasMany $query): HasMany => $query->orderBy('field_name')->orderBy('order'),
         ]);
 
         return $entry;

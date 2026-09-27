@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('blocks an unapproved user from the dashboard and logs them out', function () {
+it('blocks an unapproved user from the dashboard and logs them out', function (): void {
     $user = User::factory()->unapproved()->create();
 
     $response = $this->actingAs($user)->get('/');
@@ -16,7 +16,7 @@ it('blocks an unapproved user from the dashboard and logs them out', function ()
     $this->assertGuest();
 });
 
-it('shows a pending approval message after being blocked', function () {
+it('shows a pending approval message after being blocked', function (): void {
     $user = User::factory()->unapproved()->create();
 
     $response = $this->actingAs($user)->get('/');
@@ -24,7 +24,7 @@ it('shows a pending approval message after being blocked', function () {
     $response->assertSessionHas('error', 'Your account is pending approval by an administrator.');
 });
 
-it('allows an approved user to reach the dashboard', function () {
+it('allows an approved user to reach the dashboard', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/');
@@ -32,7 +32,7 @@ it('allows an approved user to reach the dashboard', function () {
     $response->assertSuccessful();
 });
 
-it('allows an unapproved admin to reach the dashboard', function () {
+it('allows an unapproved admin to reach the dashboard', function (): void {
     $admin = User::factory()->unapproved()->admin()->create();
 
     $response = $this->actingAs($admin)->get('/');
@@ -40,7 +40,7 @@ it('allows an unapproved admin to reach the dashboard', function () {
     $response->assertSuccessful();
 });
 
-it('blocks an unapproved user from album routes', function () {
+it('blocks an unapproved user from album routes', function (): void {
     $user = User::factory()->unapproved()->create();
 
     $response = $this->actingAs($user)->get(route('albums.index'));
@@ -48,7 +48,7 @@ it('blocks an unapproved user from album routes', function () {
     $response->assertRedirect(route('login'));
 });
 
-it('blocks an unapproved user from profile mutation routes', function () {
+it('blocks an unapproved user from profile mutation routes', function (): void {
     $user = User::factory()->unapproved()->create();
 
     $response = $this->actingAs($user)->patch(route('profile.update'), [

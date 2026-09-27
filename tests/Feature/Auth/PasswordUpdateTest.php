@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
-it('can update password', function () {
+it('can update password', function (): void {
     $user = User::factory()->create();
 
     $response = $this
@@ -27,7 +27,7 @@ it('can update password', function () {
     expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
 });
 
-it('requires correct password to update password', function () {
+it('requires correct password to update password', function (): void {
     $user = User::factory()->create();
 
     $response = $this

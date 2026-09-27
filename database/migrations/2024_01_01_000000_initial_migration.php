@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Users table
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->boolean('is_admin')->default(false);
             $table->string('name');
@@ -31,7 +31,7 @@ return new class extends Migration
         });
 
         // Albums table
-        Schema::create('albums', function (Blueprint $table) {
+        Schema::create('albums', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
@@ -42,7 +42,7 @@ return new class extends Migration
         });
 
         // Album images table
-        Schema::create('album_images', function (Blueprint $table) {
+        Schema::create('album_images', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->uuid('album_id');
             $table->string('path');
@@ -61,7 +61,7 @@ return new class extends Migration
         });
 
         // Mosaics table
-        Schema::create('mosaics', function (Blueprint $table) {
+        Schema::create('mosaics', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
@@ -72,7 +72,7 @@ return new class extends Migration
         });
 
         // Mosaic items table
-        Schema::create('mosaic_items', function (Blueprint $table) {
+        Schema::create('mosaic_items', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->uuid('mosaic_id');
             $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
@@ -88,7 +88,7 @@ return new class extends Migration
         });
 
         // Jobs table for queues
-        Schema::create('jobs', function (Blueprint $table) {
+        Schema::create('jobs', function (Blueprint $table): void {
             $table->bigIncrements('id');
             $table->string('queue')->index();
             $table->longText('payload');
@@ -99,7 +99,7 @@ return new class extends Migration
         });
 
         // Job batches table
-        Schema::create('job_batches', function (Blueprint $table) {
+        Schema::create('job_batches', function (Blueprint $table): void {
             $table->string('id')->primary();
             $table->string('name');
             $table->integer('total_jobs');
@@ -113,7 +113,7 @@ return new class extends Migration
         });
 
         // Failed jobs table
-        Schema::create('failed_jobs', function (Blueprint $table) {
+        Schema::create('failed_jobs', function (Blueprint $table): void {
             $table->id();
             $table->string('uuid')->unique();
             $table->text('connection');
@@ -124,7 +124,7 @@ return new class extends Migration
         });
 
         // Personal access tokens table
-        Schema::create('personal_access_tokens', function (Blueprint $table) {
+        Schema::create('personal_access_tokens', function (Blueprint $table): void {
             $table->id();
             $table->morphs('tokenable');
             $table->string('name');
@@ -136,14 +136,14 @@ return new class extends Migration
         });
 
         // Password reset tokens table
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
+        Schema::create('password_reset_tokens', function (Blueprint $table): void {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
         // Sessions table
-        Schema::create('sessions', function (Blueprint $table) {
+        Schema::create('sessions', function (Blueprint $table): void {
             $table->string('id')->primary();
             $table->foreignUuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
@@ -153,19 +153,19 @@ return new class extends Migration
         });
 
         // Cache table
-        Schema::create('cache', function (Blueprint $table) {
+        Schema::create('cache', function (Blueprint $table): void {
             $table->string('key')->primary();
             $table->mediumText('value');
             $table->integer('expiration');
         });
 
-        Schema::create('cache_locks', function (Blueprint $table) {
+        Schema::create('cache_locks', function (Blueprint $table): void {
             $table->string('key')->primary();
             $table->string('owner');
             $table->integer('expiration');
         });
 
-        Schema::create('media', function (Blueprint $table) {
+        Schema::create('media', function (Blueprint $table): void {
             $table->id();
             $table->string('type');
             $table->string('path');
@@ -175,7 +175,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('album_media', function (Blueprint $table) {
+        Schema::create('album_media', function (Blueprint $table): void {
             $table->id();
             $table->uuid('album_id');
             $table->foreign('album_id')->references('id')->on('albums')->onDelete('cascade');
@@ -184,7 +184,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('mosaic_media', function (Blueprint $table) {
+        Schema::create('mosaic_media', function (Blueprint $table): void {
             $table->id();
             $table->uuid('mosaic_id');
             $table->foreign('mosaic_id')->references('id')->on('mosaics')->onDelete('cascade');
@@ -193,7 +193,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('activities', function (Blueprint $table) {
+        Schema::create('activities', function (Blueprint $table): void {
             $table->id();
             $table->string('type');
             $table->text('description');

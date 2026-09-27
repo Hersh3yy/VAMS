@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-it('asserts that true is true', function () {
+it('asserts that true is true', function (): void {
     expect(true)->toBeTrue();
 });

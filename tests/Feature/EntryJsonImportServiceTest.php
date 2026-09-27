@@ -20,7 +20,7 @@ function makeImportNewsType(): EntryType
     ]);
 }
 
-it('prepares valid payloads without writing entries', function () {
+it('prepares valid payloads without writing entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -39,7 +39,7 @@ it('prepares valid payloads without writing entries', function () {
         ->and(Entry::query()->count())->toBe(0);
 });
 
-it('commits prepared payloads by creating entries', function () {
+it('commits prepared payloads by creating entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -57,7 +57,7 @@ it('commits prepared payloads by creating entries', function () {
         ->and(Entry::query()->where('user_id', $user->id)->count())->toBe(2);
 });
 
-it('returns field errors without creating anything', function () {
+it('returns field errors without creating anything', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',

@@ -34,7 +34,7 @@ function makeNewsType(): EntryType
     ]);
 }
 
-it('previews json import without creating entries', function () {
+it('previews json import without creating entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -60,7 +60,7 @@ it('previews json import without creating entries', function () {
     ]);
 
     $response->assertSuccessful()
-        ->assertInertia(fn (Assert $page) => $page
+        ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Entries/JsonPreview')
             ->where('entryType.slug', 'news')
             ->has('entries', 2)
@@ -72,7 +72,7 @@ it('previews json import without creating entries', function () {
     expect(Entry::query()->count())->toBe(0);
 });
 
-it('creates entries only after confirm from preview payload', function () {
+it('creates entries only after confirm from preview payload', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -110,7 +110,7 @@ it('creates entries only after confirm from preview payload', function () {
     ]);
 });
 
-it('creates many entries from a json array payload', function () {
+it('creates many entries from a json array payload', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -151,7 +151,7 @@ it('creates many entries from a json array payload', function () {
         ->and($third->content['url'])->toBe('https://flat.example');
 });
 
-it('rejects invalid content on preview and inserts nothing', function () {
+it('rejects invalid content on preview and inserts nothing', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -178,7 +178,7 @@ it('rejects invalid content on preview and inserts nothing', function () {
     expect(Entry::query()->where('user_id', $user->id)->count())->toBe(0);
 });
 
-it('returns to the create json editor with the drafted payload', function () {
+it('returns to the create json editor with the drafted payload', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'pro',
@@ -201,7 +201,7 @@ it('returns to the create json editor with the drafted payload', function () {
         ]);
 });
 
-it('prevents unauthorized entry types on preview', function () {
+it('prevents unauthorized entry types on preview', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['other'],
         'plan' => 'pro',
@@ -221,7 +221,7 @@ it('prevents unauthorized entry types on preview', function () {
     expect(Entry::query()->count())->toBe(0);
 });
 
-it('enforces plan limits before preview', function () {
+it('enforces plan limits before preview', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['news'],
         'plan' => 'free',
@@ -254,7 +254,7 @@ it('enforces plan limits before preview', function () {
     expect(Entry::query()->where('user_id', $user->id)->count())->toBe(99);
 });
 
-it('requires guests to authenticate for preview and store', function () {
+it('requires guests to authenticate for preview and store', function (): void {
     $entryType = makeNewsType();
 
     $this->post(route('entries.preview-json'), [

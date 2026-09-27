@@ -6,7 +6,7 @@ use App\Data\ImportEntryData;
 use App\Data\ImportEntryDataMapper;
 use App\Enums\EntryStatus;
 
-it('maps a single object into a one-item list of ImportEntryData', function () {
+it('maps a single object into a one-item list of ImportEntryData', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $result = $mapper->map([
@@ -23,7 +23,7 @@ it('maps a single object into a one-item list of ImportEntryData', function () {
         ->and($result[0]->status)->toBe(EntryStatus::Published);
 });
 
-it('maps an array of objects', function () {
+it('maps an array of objects', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $result = $mapper->map([
@@ -38,7 +38,7 @@ it('maps an array of objects', function () {
         ->and($result[1]->status)->toBe(EntryStatus::Draft);
 });
 
-it('maps flat field keys into a content object', function () {
+it('maps flat field keys into a content object', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $result = $mapper->map([
@@ -56,7 +56,7 @@ it('maps flat field keys into a content object', function () {
     ]);
 });
 
-it('maps legacy string content into statement', function () {
+it('maps legacy string content into statement', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $result = $mapper->map([
@@ -67,19 +67,19 @@ it('maps legacy string content into statement', function () {
     expect($result[0]->content)->toBe(['statement' => 'I am legacy']);
 });
 
-it('rejects a list item that is not an object', function () {
+it('rejects a list item that is not an object', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $mapper->map(['not-an-object'], []);
 })->throws(InvalidArgumentException::class, 'must be a JSON object');
 
-it('rejects entries without a title', function () {
+it('rejects entries without a title', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $mapper->map([['content' => ['statement' => 'nope']]], []);
 })->throws(InvalidArgumentException::class, 'title');
 
-it('treats empty content object as a valid object', function () {
+it('treats empty content object as a valid object', function (): void {
     $mapper = new ImportEntryDataMapper;
 
     $result = $mapper->map([

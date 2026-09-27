@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Models\EntryType;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class EntryTypeController
 {
     /**
      * Display a listing of entry types
      */
-    public function index()
+    public function index(): Response
     {
         $entryTypes = EntryType::withCount('entries')->get();
 
@@ -26,7 +28,7 @@ class EntryTypeController
     /**
      * Show the form for creating a new entry type
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Admin/EntryTypes/Create');
     }
@@ -34,7 +36,7 @@ class EntryTypeController
     /**
      * Store a newly created entry type
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -79,7 +81,7 @@ class EntryTypeController
     /**
      * Show the form for editing the entry type
      */
-    public function edit(EntryType $entryType)
+    public function edit(EntryType $entryType): Response
     {
         return Inertia::render('Admin/EntryTypes/Edit', [
             'entryType' => $entryType,
@@ -89,7 +91,7 @@ class EntryTypeController
     /**
      * Update the entry type
      */
-    public function update(Request $request, EntryType $entryType)
+    public function update(Request $request, EntryType $entryType): RedirectResponse
     {
         // Debug: Log the incoming request
         \Log::info('EntryType Update Request:', [
@@ -141,7 +143,7 @@ class EntryTypeController
     /**
      * Remove the entry type
      */
-    public function destroy(EntryType $entryType)
+    public function destroy(EntryType $entryType): RedirectResponse
     {
         // Check if there are existing entries of this type
         if ($entryType->entries()->count() > 0) {

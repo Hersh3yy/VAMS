@@ -11,6 +11,7 @@ use App\Models\Mosaic;
 use App\Models\MosaicItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
 class MosaicService extends BaseEntityService
@@ -29,7 +30,7 @@ class MosaicService extends BaseEntityService
      */
     public function getAll(bool $forApi = false): Collection
     {
-        $itemsRelation = ['items' => fn ($query) => $query->orderBy('column_index')->orderBy('order')];
+        $itemsRelation = ['items' => fn (HasMany $query): HasMany => $query->orderBy('column_index')->orderBy('order')];
 
         if ($forApi) {
             return Mosaic::query()
@@ -60,7 +61,7 @@ class MosaicService extends BaseEntityService
             return null;
         }
 
-        $mosaic->load(['items' => fn ($query) => $query->orderBy('column_index')->orderBy('order')]);
+        $mosaic->load(['items' => fn (HasMany $query): HasMany => $query->orderBy('column_index')->orderBy('order')]);
 
         return $mosaic;
     }

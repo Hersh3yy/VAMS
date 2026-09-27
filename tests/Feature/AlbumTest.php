@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 
-it('allows authenticated user to create an album', function () {
+it('allows authenticated user to create an album', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
     $albumData = [
@@ -24,7 +24,7 @@ it('allows authenticated user to create an album', function () {
     ]);
 });
 
-it('requires title when creating an album', function () {
+it('requires title when creating an album', function (): void {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -40,7 +40,7 @@ it('requires title when creating an album', function () {
     ]);
 });
 
-it('prevents guest users from creating albums', function () {
+it('prevents guest users from creating albums', function (): void {
     $this->assertGuest();
 
     $albumData = [

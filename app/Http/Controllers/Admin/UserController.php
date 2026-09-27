@@ -6,24 +6,26 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\EntryType;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController
 {
     /**
      * Display a listing of users.
      */
-    public function index()
+    public function index(): Response
     {
         $users = User::latest()
             ->with('albums')
             ->withCount('albums')
             ->get()
-            ->map(function ($user) {
+            ->map(function (User $user): array {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -45,7 +47,7 @@ class UserController
     /**
      * Show the form for creating a new user.
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Admin/Users/Create');
     }
@@ -53,7 +55,7 @@ class UserController
     /**
      * Store a newly created user.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -92,7 +94,7 @@ class UserController
     /**
      * Show the form for editing the user.
      */
-    public function edit(User $user)
+    public function edit(User $user): Response
     {
         return Inertia::render('Admin/Users/Edit', [
             'user' => [
@@ -113,7 +115,7 @@ class UserController
     /**
      * Update the user.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -158,7 +160,7 @@ class UserController
     /**
      * Remove the user.
      */
-    public function destroy(User $user)
+    public function destroy(User $user): RedirectResponse
     {
         // Prevent deleting self
         if (Auth::id() === $user->id) {
@@ -175,7 +177,7 @@ class UserController
     /**
      * Approve a user account.
      */
-    public function approve(User $user)
+    public function approve(User $user): RedirectResponse
     {
         $user->update([
             'is_approved' => true,
@@ -189,7 +191,7 @@ class UserController
     /**
      * Impersonate a user.
      */
-    public function impersonate(User $user)
+    public function impersonate(User $user): RedirectResponse
     {
         // Store the admin's ID in the session
         session()->put('admin_id', Auth::id());
@@ -204,7 +206,7 @@ class UserController
     /**
      * Stop impersonating a user.
      */
-    public function stopImpersonating()
+    public function stopImpersonating(): RedirectResponse
     {
         // Get the admin ID from session
         $adminId = session()->pull('admin_id');
@@ -225,7 +227,7 @@ class UserController
     /**
      * Regenerate API key for a user.
      */
-    public function regenerateApiKey(User $user)
+    public function regenerateApiKey(User $user): RedirectResponse
     {
         $newApiKey = $user->regenerateApiKey();
 

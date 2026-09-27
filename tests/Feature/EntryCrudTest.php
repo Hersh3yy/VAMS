@@ -6,6 +6,7 @@ use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -13,7 +14,7 @@ uses(RefreshDatabase::class);
 // HAPPY PATH TESTS - The glorious successes!
 // ================================
 
-it('displays the entry index page for authorized users with correct entry type', function () {
+it('displays the entry index page for authorized users with correct entry type', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -39,14 +40,14 @@ it('displays the entry index page for authorized users with correct entry type',
     $response = $this->actingAs($user)->get(route('entries.index', ['type' => 'i-ams']));
 
     $response->assertSuccessful()
-        ->assertInertia(fn ($page) => $page
+        ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Entries/Index')
             ->has('entries', 1)
             ->where('entryType.slug', 'i-ams')
         );
 });
 
-it('allows authorized users to create a new entry', function () {
+it('allows authorized users to create a new entry', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -77,7 +78,7 @@ it('allows authorized users to create a new entry', function () {
     ]);
 });
 
-it('defaults to published status when status is not provided', function () {
+it('defaults to published status when status is not provided', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -106,7 +107,7 @@ it('defaults to published status when status is not provided', function () {
     expect($entry->published_at)->not->toBeNull();
 });
 
-it('allows users to update their own entries', function () {
+it('allows users to update their own entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -143,7 +144,7 @@ it('allows users to update their own entries', function () {
     ]);
 });
 
-it('allows users to delete their own entries', function () {
+it('allows users to delete their own entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -173,7 +174,7 @@ it('allows users to delete their own entries', function () {
     ]);
 });
 
-it('allows users to reorder their entries', function () {
+it('allows users to reorder their entries', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -221,7 +222,7 @@ it('allows users to reorder their entries', function () {
 // SAD PATH TESTS - The dastardly failures!
 // ================================
 
-it('prevents unauthorized users from accessing entry types', function () {
+it('prevents unauthorized users from accessing entry types', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => [], // No permissions!
     ]);
@@ -238,7 +239,7 @@ it('prevents unauthorized users from accessing entry types', function () {
     $response->assertForbidden();
 });
 
-it('prevents users from creating entries for unauthorized entry types', function () {
+it('prevents users from creating entries for unauthorized entry types', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['other-type'],
     ]);
@@ -265,7 +266,7 @@ it('prevents users from creating entries for unauthorized entry types', function
     ]);
 });
 
-it('requires title when creating an entry', function () {
+it('requires title when creating an entry', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -286,7 +287,7 @@ it('requires title when creating an entry', function () {
     $response->assertSessionHasErrors('title');
 });
 
-it('requires content when creating an entry', function () {
+it('requires content when creating an entry', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -307,7 +308,7 @@ it('requires content when creating an entry', function () {
     $response->assertSessionHasErrors('content');
 });
 
-it('requires entry_type_id when creating an entry', function () {
+it('requires entry_type_id when creating an entry', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -321,7 +322,7 @@ it('requires entry_type_id when creating an entry', function () {
     $response->assertSessionHasErrors('entry_type_id');
 });
 
-it('validates status must be draft or published', function () {
+it('validates status must be draft or published', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -343,7 +344,7 @@ it('validates status must be draft or published', function () {
     $response->assertSessionHasErrors('status');
 });
 
-it('prevents users from updating entries they do not own', function () {
+it('prevents users from updating entries they do not own', function (): void {
     $user1 = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -384,7 +385,7 @@ it('prevents users from updating entries they do not own', function () {
     ]);
 });
 
-it('prevents users from deleting entries they do not own', function () {
+it('prevents users from deleting entries they do not own', function (): void {
     $user1 = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -421,7 +422,7 @@ it('prevents users from deleting entries they do not own', function () {
     ]);
 });
 
-it('returns 404 for non-existent entry types', function () {
+it('returns 404 for non-existent entry types', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['non-existent'],
     ]);
@@ -431,7 +432,7 @@ it('returns 404 for non-existent entry types', function () {
     $response->assertNotFound();
 });
 
-it('requires type parameter for entry index', function () {
+it('requires type parameter for entry index', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -442,7 +443,7 @@ it('requires type parameter for entry index', function () {
     $response->assertStatus(400);
 });
 
-it('requires type parameter for entry create', function () {
+it('requires type parameter for entry create', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams'],
     ]);
@@ -453,7 +454,7 @@ it('requires type parameter for entry create', function () {
     $response->assertStatus(400);
 });
 
-it('prevents guests from accessing entries', function () {
+it('prevents guests from accessing entries', function (): void {
     $entryType = EntryType::create([
         'name' => 'I AM',
         'slug' => 'i-ams',
@@ -467,7 +468,7 @@ it('prevents guests from accessing entries', function () {
     $response->assertRedirect(route('login'));
 });
 
-it('prevents reordering entries from different entry types', function () {
+it('prevents reordering entries from different entry types', function (): void {
     $user = User::factory()->create([
         'entry_type_permissions' => ['i-ams', 'gratitude'],
     ]);

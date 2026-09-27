@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,17 +50,17 @@ class EntryType extends Model
     /**
      * Auto-generate slug from name
      */
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
-        static::creating(function ($entryType) {
+        static::creating(function (EntryType $entryType): void {
             if (empty($entryType->slug)) {
                 $entryType->slug = Str::slug($entryType->name);
             }
         });
 
-        static::updating(function ($entryType) {
+        static::updating(function (EntryType $entryType): void {
             if ($entryType->isDirty('name') && empty($entryType->slug)) {
                 $entryType->slug = Str::slug($entryType->name);
             }
@@ -101,10 +102,10 @@ class EntryType extends Model
     /**
      * Scope for active entry types
      *
-     * @param \Illuminate\Database\Eloquent\Builder<EntryType> $query
+     * @param  \Illuminate\Database\Eloquent\Builder<EntryType>  $query
      * @return \Illuminate\Database\Eloquent\Builder<EntryType>
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }

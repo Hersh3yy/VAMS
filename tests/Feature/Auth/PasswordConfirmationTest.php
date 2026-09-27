@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('can render confirm password screen', function () {
+it('can render confirm password screen', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/confirm-password');
@@ -15,7 +15,7 @@ it('can render confirm password screen', function () {
     $response->assertSuccessful();
 });
 
-it('can confirm password', function () {
+it('can confirm password', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/confirm-password', [
@@ -26,7 +26,7 @@ it('can confirm password', function () {
     $response->assertSessionHasNoErrors();
 });
 
-it('does not confirm password with invalid password', function () {
+it('does not confirm password with invalid password', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/confirm-password', [

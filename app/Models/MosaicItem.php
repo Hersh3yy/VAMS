@@ -85,7 +85,7 @@ class MosaicItem extends Model
     public function removeImage(string $imagePath): static
     {
         $content = $this->content ?? [];
-        $content = array_filter($content, fn ($path) => $path !== $imagePath);
+        $content = array_filter($content, fn ($path): bool => $path !== $imagePath);
         $this->content = array_values($content);
 
         return $this;

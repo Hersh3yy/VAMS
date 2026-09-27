@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\EntryType;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -42,7 +43,7 @@ class HandleInertiaRequests extends Middleware
                     'logo_url' => $request->user()->logo_url,
                     'is_admin' => $request->user()->is_admin,
                     'album_display_settings' => $request->user()->album_display_settings,
-                    'allowed_entry_types' => $request->user()->allowedEntryTypes()->map(fn ($type) => [
+                    'allowed_entry_types' => $request->user()->allowedEntryTypes()->map(fn (EntryType $type): array => [
                         'id' => $type->id,
                         'name' => $type->name,
                         'slug' => $type->slug,
@@ -50,7 +51,7 @@ class HandleInertiaRequests extends Middleware
                     ]),
                 ] : null,
             ],
-            'ziggy' => fn () => [
+            'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
@@ -61,9 +62,9 @@ class HandleInertiaRequests extends Middleware
                 'secondary_color' => config('theme.default_secondary_color'),
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'message' => fn () => $request->session()->get('message'),
+                'success' => fn (): mixed => $request->session()->get('success'),
+                'error' => fn (): mixed => $request->session()->get('error'),
+                'message' => fn (): mixed => $request->session()->get('message'),
             ],
         ];
     }

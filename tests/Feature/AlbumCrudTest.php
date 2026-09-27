@@ -8,10 +8,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Storage::fake('spaces');
 
     $this->user = User::factory()->create([
@@ -25,7 +26,7 @@ beforeEach(function () {
     ]);
 });
 
-it('allows authenticated user to view albums index', function () {
+it('allows authenticated user to view albums index', function (): void {
     $this->actingAs($this->user);
 
     // Create some albums for this user
@@ -36,28 +37,28 @@ it('allows authenticated user to view albums index', function () {
     $response = $this->get(route('albums.index'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Albums/Index')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Albums/Index')
         ->has('albums', 3) // Only user's albums
         ->has('entities', 3)
     );
 });
 
-it('prevents guest from viewing albums index', function () {
+it('prevents guest from viewing albums index', function (): void {
     $response = $this->get(route('albums.index'));
     $response->assertRedirect('/login');
 });
 
-it('allows authenticated user to view create album page', function () {
+it('allows authenticated user to view create album page', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->get(route('albums.create'));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Albums/Create')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Albums/Create')
     );
 });
 
-it('allows authenticated user to create album', function () {
+it('allows authenticated user to create album', function (): void {
     $this->actingAs($this->user);
 
     $albumData = [
@@ -76,7 +77,7 @@ it('allows authenticated user to create album', function () {
     ]);
 });
 
-it('validates required fields for album creation', function () {
+it('validates required fields for album creation', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->post(route('albums.store'), []);
@@ -85,7 +86,7 @@ it('validates required fields for album creation', function () {
     $response->assertSessionHasErrors(['title']);
 });
 
-it('validates title length for album creation', function () {
+it('validates title length for album creation', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->post(route('albums.store'), [
@@ -97,7 +98,7 @@ it('validates title length for album creation', function () {
     $response->assertSessionHasErrors(['title']);
 });
 
-it('allows authenticated user to view album', function () {
+it('allows authenticated user to view album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -108,7 +109,7 @@ it('allows authenticated user to view album', function () {
     $response = $this->get(route('albums.show', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Albums/Show')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Albums/Show')
         ->has('Album')
         ->where('Album.id', $album->id)
         ->where('Album.title', $album->title)
@@ -116,7 +117,7 @@ it('allows authenticated user to view album', function () {
     );
 });
 
-it('prevents user from viewing other users album', function () {
+it('prevents user from viewing other users album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->otherUser)->create();
@@ -126,7 +127,7 @@ it('prevents user from viewing other users album', function () {
     $response->assertForbidden();
 });
 
-it('allows authenticated user to view edit album page', function () {
+it('allows authenticated user to view edit album page', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -134,13 +135,13 @@ it('allows authenticated user to view edit album page', function () {
     $response = $this->get(route('albums.edit', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->component('Albums/Edit')
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Albums/Edit')
         ->has('Album')
         ->where('Album.id', $album->id)
     );
 });
 
-it('prevents user from editing other users album', function () {
+it('prevents user from editing other users album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->otherUser)->create();
@@ -150,7 +151,7 @@ it('prevents user from editing other users album', function () {
     $response->assertForbidden();
 });
 
-it('allows authenticated user to update album', function () {
+it('allows authenticated user to update album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create([
@@ -172,7 +173,7 @@ it('allows authenticated user to update album', function () {
     expect($album->description)->toBe('Updated Description');
 });
 
-it('prevents user from updating other users album', function () {
+it('prevents user from updating other users album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->otherUser)->create();
@@ -185,7 +186,7 @@ it('prevents user from updating other users album', function () {
     $response->assertForbidden();
 });
 
-it('allows partial album updates without a title', function () {
+it('allows partial album updates without a title', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create([
@@ -205,7 +206,7 @@ it('allows partial album updates without a title', function () {
         ->and($album->description)->toBe('Updated description only');
 });
 
-it('allows authenticated user to upload cover image', function () {
+it('allows authenticated user to upload cover image', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -224,7 +225,7 @@ it('allows authenticated user to upload cover image', function () {
     expect($album->cover_image_path)->not->toBeNull();
 });
 
-it('validates cover image file type', function () {
+it('validates cover image file type', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -241,7 +242,7 @@ it('validates cover image file type', function () {
     $response->assertSessionHasErrors(['cover_image']);
 });
 
-it('allows authenticated user to delete album', function () {
+it('allows authenticated user to delete album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -252,7 +253,7 @@ it('allows authenticated user to delete album', function () {
     $this->assertModelMissing($album);
 });
 
-it('prevents user from deleting other users album', function () {
+it('prevents user from deleting other users album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->otherUser)->create();
@@ -263,7 +264,7 @@ it('prevents user from deleting other users album', function () {
     $this->assertModelExists($album);
 });
 
-it('deletes album images when deleting album', function () {
+it('deletes album images when deleting album', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -279,7 +280,7 @@ it('deletes album images when deleting album', function () {
     }
 });
 
-it('shows album with correct image ordering', function () {
+it('shows album with correct image ordering', function (): void {
     $this->actingAs($this->user);
 
     $album = Album::factory()->forUser($this->user)->create();
@@ -292,7 +293,7 @@ it('shows album with correct image ordering', function () {
     $response = $this->get(route('albums.show', $album));
 
     $response->assertSuccessful();
-    $response->assertInertia(fn ($page) => $page->has('Album.images', 3)
+    $response->assertInertia(fn (Assert $page): Assert => $page->has('Album.images', 3)
         ->where('Album.images.0.id', $image2->id) // order 0
         ->where('Album.images.1.id', $image3->id) // order 1
         ->where('Album.images.2.id', $image1->id) // order 2

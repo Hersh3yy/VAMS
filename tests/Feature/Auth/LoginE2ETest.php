@@ -3,15 +3,16 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create([
         'email' => 'test@example.com',
         'password' => bcrypt('password123'),
     ]);
 });
 
-it('allows user to login with valid credentials', function () {
+it('allows user to login with valid credentials', function (): void {
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'password123',
@@ -22,7 +23,7 @@ it('allows user to login with valid credentials', function () {
     $this->assertAuthenticated();
 });
 
-it('rejects login with invalid email', function () {
+it('rejects login with invalid email', function (): void {
     $response = $this->post('/login', [
         'email' => 'wrong@example.com',
         'password' => 'password123',
@@ -33,7 +34,7 @@ it('rejects login with invalid email', function () {
     $this->assertGuest();
 });
 
-it('rejects login with invalid password', function () {
+it('rejects login with invalid password', function (): void {
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'wrongpassword',
@@ -44,7 +45,7 @@ it('rejects login with invalid password', function () {
     $this->assertGuest();
 });
 
-it('allows user to login with remember me checked', function () {
+it('allows user to login with remember me checked', function (): void {
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'password123',
@@ -58,7 +59,7 @@ it('allows user to login with remember me checked', function () {
     $this->assertNotNull($this->user->fresh()->remember_token);
 });
 
-it('redirects authenticated user away from login page', function () {
+it('redirects authenticated user away from login page', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->get('/login');
@@ -66,14 +67,14 @@ it('redirects authenticated user away from login page', function () {
     $response->assertRedirect('/');
 });
 
-it('shows login form for guest users', function () {
+it('shows login form for guest users', function (): void {
     $response = $this->get('/login');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page->component('Auth/Login'));
+    $response->assertInertia(fn (Assert $page): Assert => $page->component('Auth/Login'));
 });
 
-it('allows user to logout', function () {
+it('allows user to logout', function (): void {
     $this->actingAs($this->user);
 
     $response = $this->post('/logout');

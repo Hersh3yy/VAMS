@@ -6,13 +6,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('can render registration screen', function () {
+it('can render registration screen', function (): void {
     $response = $this->get('/register');
 
     $response->assertSuccessful();
 });
 
-it('registers a new user pending approval and does not log them in', function () {
+it('registers a new user pending approval and does not log them in', function (): void {
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',
@@ -30,7 +30,7 @@ it('registers a new user pending approval and does not log them in', function ()
     $response->assertSessionHas('success');
 });
 
-it('requires terms acceptance to register', function () {
+it('requires terms acceptance to register', function (): void {
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',

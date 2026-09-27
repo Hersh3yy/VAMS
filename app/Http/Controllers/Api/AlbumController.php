@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Resources\AlbumImageResource;
 use App\Http\Resources\AlbumResource;
 use App\Models\Album;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,16 +30,16 @@ class AlbumController extends BaseApiController
         $withImages = $request->boolean('with_images', false);
 
         // Build query with count - only published albums for API
-        $query = $user->albums()->published()->withCount(['images' => fn ($query) => $query->published()]);
+        $query = $user->albums()->published()->withCount(['images' => fn (Builder $query): Builder => $query->published()]);
 
         // Optionally load images if requested (only published)
         if ($withImages) {
-            $query->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
+            $query->with(['images' => fn (HasMany $query): HasMany => $query->published()->orderBy('order')]);
         }
 
         $albums = $query->get();
 
-        $formattedAlbums = $albums->map(function (Album $album) use ($withImages) {
+        $formattedAlbums = $albums->map(function (Album $album) use ($withImages): array {
             $albumData = AlbumResource::make($album)->resolve();
 
             if ($withImages && $album->relationLoaded('images')) {
@@ -60,7 +62,7 @@ class AlbumController extends BaseApiController
         // User is automatically set by the api.key middleware
         $user = $request->user();
 
-        $album = $user->albums()->published()->with(['images' => fn ($query) => $query->published()->orderBy('order')])->find($id);
+        $album = $user->albums()->published()->with(['images' => fn (HasMany $query): HasMany => $query->published()->orderBy('order')])->find($id);
         if (! $album) {
             return $this->notFound('Album not found');
         }
@@ -85,7 +87,7 @@ class AlbumController extends BaseApiController
 
         $query = $user->albums()
             ->published()
-            ->with(['images' => fn ($query) => $query->published()->orderBy('order')]);
+            ->with(['images' => fn (HasMany $query): HasMany => $query->published()->orderBy('order')]);
 
         $album = $this->findByTitle($title, $query);
 

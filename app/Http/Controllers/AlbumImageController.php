@@ -181,7 +181,7 @@ final class AlbumImageController
         $item = $images->splice($fromIndex, 1)->first();
         $images->splice($toIndex, 0, [$item]);
 
-        DB::transaction(function () use ($images) {
+        DB::transaction(function () use ($images): void {
             foreach ($images as $index => $image) {
                 $image->order = $index;
                 $image->save();

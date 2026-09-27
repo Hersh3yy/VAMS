@@ -7,7 +7,7 @@ use App\Models\Activity;
 use App\Models\Album;
 use App\Models\User;
 
-it('has correct fillable attributes', function () {
+it('has correct fillable attributes', function (): void {
     $activity = new Activity;
     $fillable = $activity->getFillable();
 
@@ -19,7 +19,7 @@ it('has correct fillable attributes', function () {
     expect($fillable)->toContain('properties');
 });
 
-it('casts properties to array', function () {
+it('casts properties to array', function (): void {
     $activity = new Activity;
     $casts = $activity->getCasts();
 
@@ -27,7 +27,7 @@ it('casts properties to array', function () {
     expect($casts['user_id'])->toBe('string');
 });
 
-it('has user relationship method', function () {
+it('has user relationship method', function (): void {
     $activity = new Activity;
 
     // Check that the method exists and is callable
@@ -35,7 +35,7 @@ it('has user relationship method', function () {
     expect(is_callable([$activity, 'user']))->toBeTrue();
 });
 
-it('has subject relationship method', function () {
+it('has subject relationship method', function (): void {
     $activity = new Activity;
 
     // Check that the method exists and is callable
@@ -43,7 +43,7 @@ it('has subject relationship method', function () {
     expect(is_callable([$activity, 'subject']))->toBeTrue();
 });
 
-it('can be created with minimal data', function () {
+it('can be created with minimal data', function (): void {
     $activity = new Activity([
         'type' => ActivityType::CREATE->value,
         'description' => 'Test activity',
@@ -59,7 +59,7 @@ it('can be created with minimal data', function () {
     expect($activity->subject_id)->toBe('123e4567-e89b-12d3-a456-426614174000');
 });
 
-it('can be created with properties', function () {
+it('can be created with properties', function (): void {
     $properties = [
         'ip_address' => '192.168.1.1',
         'user_agent' => 'Mozilla/5.0',
@@ -80,7 +80,7 @@ it('can be created with properties', function () {
     expect($activity->properties['changes']['old'])->toBe('value1');
 });
 
-it('can access user through relationship', function () {
+it('can access user through relationship', function (): void {
     $user = Mockery::mock(User::class);
     $user->shouldReceive('getAttribute')
         ->with('id')
@@ -100,7 +100,7 @@ it('can access user through relationship', function () {
     expect($activity->user->name)->toBe('John Doe');
 });
 
-it('can access subject through relationship', function () {
+it('can access subject through relationship', function (): void {
     $album = Mockery::mock(Album::class);
     $album->shouldReceive('getAttribute')
         ->with('id')
@@ -121,7 +121,7 @@ it('can access subject through relationship', function () {
     expect($activity->subject->title)->toBe('Test Album');
 });
 
-it('can be serialized to array', function () {
+it('can be serialized to array', function (): void {
     $activity = new Activity([
         'type' => 'create',
         'description' => 'Created album',
@@ -143,7 +143,7 @@ it('can be serialized to array', function () {
     expect($array['properties'])->toBe(['key' => 'value']);
 });
 
-it('can be converted to json', function () {
+it('can be converted to json', function (): void {
     $activity = new Activity([
         'type' => 'update',
         'description' => 'Updated album',

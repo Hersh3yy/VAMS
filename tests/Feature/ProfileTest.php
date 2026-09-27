@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 
-it('displays profile page for authenticated user', function () {
+it('displays profile page for authenticated user', function (): void {
     $user = User::factory()->create();
 
     $response = $this
@@ -14,7 +14,7 @@ it('displays profile page for authenticated user', function () {
     $response->assertOk();
 });
 
-it('allows user to update profile information', function () {
+it('allows user to update profile information', function (): void {
     $user = User::factory()->create();
 
     $response = $this
@@ -35,7 +35,7 @@ it('allows user to update profile information', function () {
     expect($user->email_verified_at)->toBeNull();
 });
 
-it('preserves email verification status when email is unchanged', function () {
+it('preserves email verification status when email is unchanged', function (): void {
     $user = User::factory()->create();
 
     $response = $this
@@ -52,7 +52,7 @@ it('preserves email verification status when email is unchanged', function () {
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
-it('allows user to delete their account with correct password', function () {
+it('allows user to delete their account with correct password', function (): void {
     $user = User::factory()->create();
 
     $response = $this
@@ -69,7 +69,7 @@ it('allows user to delete their account with correct password', function () {
     expect($user->fresh())->toBeNull();
 });
 
-it('requires correct password to delete account', function () {
+it('requires correct password to delete account', function (): void {
     $user = User::factory()->create();
 
     $response = $this

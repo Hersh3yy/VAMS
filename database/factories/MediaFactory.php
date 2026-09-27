@@ -38,7 +38,7 @@ class MediaFactory extends Factory
      */
     public function video(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'video',
             'path' => 'media/'.$this->faker->uuid.'.mp4',
             'mime_type' => 'video/mp4',
@@ -58,7 +58,7 @@ class MediaFactory extends Factory
      */
     public function webp(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'path' => 'media/'.$this->faker->uuid.'.webp',
             'mime_type' => 'image/webp',
             'metadata' => array_merge($attributes['metadata'] ?? [], [

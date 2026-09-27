@@ -106,7 +106,7 @@ class StrapiImport extends Command
         if (! $user) {
             $this->error('User not found');
             $this->info('Available users:');
-            User::all(['id', 'name', 'email'])->each(function ($user) {
+            User::all(['id', 'name', 'email'])->each(function (User $user): void {
                 $this->info("ID: {$user->id}, Name: {$user->name}, Email: {$user->email}");
             });
 
@@ -138,7 +138,7 @@ class StrapiImport extends Command
 
         // Create or update album without activity logging
         // We'll use DB transaction to bypass model events temporarily
-        $album = Album::withoutEvents(function () use ($user, $albumName, $url) {
+        $album = Album::withoutEvents(function () use ($user, $albumName, $url): Album {
             return Album::firstOrCreate(
                 ['user_id' => $user->id, 'title' => $albumName],
                 [
@@ -172,7 +172,7 @@ class StrapiImport extends Command
 
         // Update album cover if needed (also without events)
         if ($firstImageObject && ! $album->cover_image_path) {
-            Album::withoutEvents(function () use ($album, $firstImageObject) {
+            Album::withoutEvents(function () use ($album, $firstImageObject): void {
                 $album->cover_image_path = $firstImageObject['url'];
                 $album->save();
             });
@@ -408,7 +408,7 @@ class StrapiImport extends Command
                 $properties['thumbnail_url'] = $thumbnailResult['url'];
             }
 
-            $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $order, $properties) {
+            $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $imageUrl, $media, $order, $properties): AlbumImage {
                 return $albumModel->images()->create([
                     'id' => (string) Str::uuid(),
                     'path' => $imageUrl,
@@ -454,7 +454,7 @@ class StrapiImport extends Command
                     $properties['year'] = $media['year'];
                 }
 
-                $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $order, $properties) {
+                $albumImage = AlbumImage::withoutEvents(function () use ($albumModel, $publicUrl, $media, $order, $properties): AlbumImage {
                     return $albumModel->images()->create([
                         'id' => (string) Str::uuid(),
                         'path' => $publicUrl,

@@ -67,7 +67,7 @@ class FixVideoThumbnails extends Command
             return 0;
         }
 
-        $this->withProgressBar($videos, function ($video) use ($force, $missingOnly) {
+        $this->withProgressBar($videos, function (AlbumImage $video) use ($force, $missingOnly): void {
             $this->processVideo($video, $force, $missingOnly);
         });
 

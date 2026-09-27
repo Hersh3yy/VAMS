@@ -43,7 +43,7 @@ class MosaicItemFactory extends Factory
      */
     public function mediaType(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'media',
             'album_id' => null,
             'content' => [
@@ -58,7 +58,7 @@ class MosaicItemFactory extends Factory
      */
     public function textType(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'text',
             'album_id' => null,
             'content' => [
@@ -73,7 +73,7 @@ class MosaicItemFactory extends Factory
      */
     public function forMosaic(Mosaic $mosaic): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'mosaic_id' => $mosaic->id,
         ]);
     }
@@ -83,7 +83,7 @@ class MosaicItemFactory extends Factory
      */
     public function inColumn(int $columnIndex): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'column_index' => $columnIndex,
         ]);
     }
@@ -93,7 +93,7 @@ class MosaicItemFactory extends Factory
      */
     public function withOrder(int $order): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'order' => $order,
         ]);
     }

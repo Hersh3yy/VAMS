@@ -37,7 +37,7 @@ class ValidateApiKey
         }
 
         // Set the authenticated user for the request
-        $request->setUserResolver(function () use ($user) {
+        $request->setUserResolver(function () use ($user): User {
             return $user;
         });
 

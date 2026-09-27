@@ -83,11 +83,11 @@ class User extends Authenticatable
         ];
     }
 
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
-        static::creating(function ($user) {
+        static::creating(function (User $user): void {
             if (! $user->api_key) {
                 $user->api_key = Str::random(32);
             }

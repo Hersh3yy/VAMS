@@ -47,7 +47,7 @@ class ActivityFactory extends Factory
      */
     public function created(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'create',
             'description' => 'Created '.class_basename($attributes['subject_type']),
         ]);
@@ -58,7 +58,7 @@ class ActivityFactory extends Factory
      */
     public function updated(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'update',
             'description' => 'Updated '.class_basename($attributes['subject_type']),
         ]);
@@ -69,7 +69,7 @@ class ActivityFactory extends Factory
      */
     public function deleted(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'type' => 'delete',
             'description' => 'Deleted '.class_basename($attributes['subject_type']),
         ]);
@@ -80,7 +80,7 @@ class ActivityFactory extends Factory
      */
     public function forUser(User $user): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'user_id' => $user->id,
         ]);
     }

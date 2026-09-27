@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
-it('can render email verification screen', function () {
+it('can render email verification screen', function (): void {
     $user = User::factory()->unverified()->create();
 
     $response = $this->actingAs($user)->get('/verify-email');
@@ -18,7 +18,7 @@ it('can render email verification screen', function () {
     $response->assertSuccessful();
 });
 
-it('can verify email', function () {
+it('can verify email', function (): void {
     $user = User::factory()->unverified()->create();
 
     Event::fake();
@@ -36,7 +36,7 @@ it('can verify email', function () {
     $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
 });
 
-it('does not verify email with invalid hash', function () {
+it('does not verify email with invalid hash', function (): void {
     $user = User::factory()->unverified()->create();
 
     $verificationUrl = URL::temporarySignedRoute(

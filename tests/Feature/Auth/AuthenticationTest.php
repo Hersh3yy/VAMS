@@ -7,13 +7,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('can render login screen', function () {
+it('can render login screen', function (): void {
     $response = $this->get('/login');
 
     $response->assertSuccessful();
 });
 
-it('allows users to authenticate using login screen', function () {
+it('allows users to authenticate using login screen', function (): void {
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
@@ -25,7 +25,7 @@ it('allows users to authenticate using login screen', function () {
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-it('prevents authentication with invalid password', function () {
+it('prevents authentication with invalid password', function (): void {
     $user = User::factory()->create();
 
     $this->post('/login', [
@@ -36,7 +36,7 @@ it('prevents authentication with invalid password', function () {
     $this->assertGuest();
 });
 
-it('allows users to logout', function () {
+it('allows users to logout', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/logout');
