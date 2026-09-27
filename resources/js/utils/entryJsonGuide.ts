@@ -12,6 +12,12 @@ function exampleValueForField(field: EntryField): unknown {
             return 0
         case 'checkbox':
             return false
+        case 'datetime':
+            return '2026-10-22T23:00:00+02:00'
+        case 'url':
+            return 'https://example.com'
+        case 'json':
+            return {}
         case 'repeatable':
             return [
                 Object.fromEntries(
@@ -51,6 +57,10 @@ function describeField(field: EntryField, indent = '    '): string {
 
     if (field.type === 'entry_relation') {
         line += `\n${indent}  (array of entry UUIDs${field.entry_type_slug ? ` for type "${field.entry_type_slug}"` : ''})`
+    }
+
+    if (field.type === 'datetime') {
+        line += `\n${indent}  (ISO 8601 string with a UTC offset, e.g. 2026-10-22T23:00:00+02:00)`
     }
 
     if (field.type === 'image_collection') {

@@ -40,6 +40,10 @@ final class EntryValidationService
                 'text', 'textarea' => $fieldRules[] = 'string',
                 'number' => $fieldRules[] = 'numeric',
                 'checkbox' => $fieldRules[] = 'boolean',
+                // datetime: an ISO 8601 string (e.g. 2026-10-22T23:00:00+02:00),
+                // stored verbatim so the original offset survives the round trip.
+                'datetime' => $fieldRules[] = 'date',
+                'url' => $fieldRules[] = 'url',
                 // json: a passthrough array/object (decoded JSON) stored verbatim.
                 // Needed for payloads with their own nested shape - e.g. a colour
                 // palette [{hex, lab:[L,a,b], share, ...}] - that the field-by-field

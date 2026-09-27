@@ -14,15 +14,15 @@
                         </div>
 
                         <!-- Debug info -->
-                        <div v-if="!isComplexEntryType" class="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900 rounded">
+                        <div v-if="!isFieldFormType" class="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900 rounded">
                             <p class="text-sm">Using simple form. Entry type: {{ entry.entry_type?.name || 'Unknown' }}</p>
                             <p class="text-xs">Has field_config: {{ !!entry.entry_type?.field_config }}</p>
                             <p class="text-xs">Field config length: {{ entry.entry_type?.field_config?.length || 0 }}</p>
                         </div>
 
-                        <!-- Use Dynamic Form for complex entry types, fallback to simple form for I AM -->
+                        <!-- Use Dynamic Form for entry types with real fields, fallback to simple form for I AM -->
                         <DynamicEntryForm
-                            v-if="isComplexEntryType && entry.entry_type"
+                            v-if="isFieldFormType && entry.entry_type"
                             :entryType="entry.entry_type"
                             :entry="entry"
                             submitText="Save Changes"
@@ -104,7 +104,7 @@
                         </form>
                         
                         <!-- Delete button for simple forms -->
-                        <div v-if="!isComplexEntryType" class="mt-6 flex justify-start">
+                        <div v-if="!isFieldFormType" class="mt-6 flex justify-start">
                             <button
                                 type="button"
                                 @click="deleteEntry"
@@ -123,6 +123,7 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import DynamicEntryForm from '@/Components/entries/DynamicEntryForm.vue'
+import { usesFieldForm } from '@/utils/entryTypes'
 import { computed } from 'vue'
 
 const props = defineProps({
@@ -132,28 +133,8 @@ const props = defineProps({
     }
 })
 
-// Check if this is a complex entry type (has complex field types)
-const isComplexEntryType = computed(() => {
-    if (!props.entry?.entry_type?.field_config) {
-        console.log('No entry_type or field_config found:', {
-            entry: props.entry,
-            entryType: props.entry?.entry_type,
-            fieldConfig: props.entry?.entry_type?.field_config
-        })
-        return false
-    }
-    
-    const hasComplex = props.entry.entry_type.field_config.some(field => 
-        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
-    )
-    
-    console.log('isComplexEntryType check:', {
-        fieldConfig: props.entry.entry_type.field_config,
-        hasComplex
-    })
-    
-    return hasComplex
-})
+// Field-by-field form for every type except the legacy single-textarea ("I AM") ones
+const isFieldFormType = computed(() => usesFieldForm(props.entry?.entry_type))
 
 // Extract content from JSON structure
 const getContent = () => {

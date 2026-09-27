@@ -28,14 +28,86 @@
             </span>
         </div>
 
-        <!-- Text/Textarea Display -->
-        <div 
+        <!-- Text/Textarea Display (http(s) links become clickable) -->
+        <div
             v-else-if="type === 'text' || type === 'textarea'"
             class="text-sm text-gray-900 dark:text-gray-100"
             :class="{ 'whitespace-pre-wrap': type === 'textarea' }"
         >
-            {{ value || '-' }}
+            <a
+                v-if="isHttpUrl(value)"
+                :href="formatUrl(value).href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="break-all text-secondary underline hover:text-indigo-800 dark:hover:text-indigo-300"
+                :title="value"
+            >
+                {{ formatUrl(value, 80).label }}
+            </a>
+            <template v-else>{{ value || '-' }}</template>
         </div>
+
+        <!-- Empty state (for all remaining types) -->
+        <div v-else-if="isEmptyValue(value)" class="text-sm text-gray-500 dark:text-gray-400">
+            No data
+        </div>
+
+        <!-- Number / Select Display -->
+        <div v-else-if="type === 'number'" class="text-sm tabular-nums text-gray-900 dark:text-gray-100">
+            {{ formatNumber(value) }}
+        </div>
+
+        <div v-else-if="type === 'select'" class="text-sm text-gray-900 dark:text-gray-100">
+            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 dark:bg-gray-700">{{ value }}</span>
+        </div>
+
+        <!-- Date & time Display (wall-clock time as stored, with its offset) -->
+        <div v-else-if="type === 'datetime'" class="text-sm text-gray-900 dark:text-gray-100">
+            <time :datetime="String(value)" :title="String(value)">{{ formatDateTime(value) }}</time>
+        </div>
+
+        <!-- URL Display -->
+        <div v-else-if="type === 'url'" class="text-sm">
+            <a
+                :href="formatUrl(value).href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="break-all text-secondary underline hover:text-indigo-800 dark:hover:text-indigo-300"
+                :title="String(value)"
+            >
+                {{ formatUrl(value).label }}
+            </a>
+        </div>
+
+        <!-- JSON Display: scalar arrays as chips, anything else pretty-printed -->
+        <div v-else-if="type === 'json'" class="text-sm">
+            <ul v-if="isScalarArray(value)" class="flex flex-wrap gap-2">
+                <li
+                    v-for="(item, index) in value"
+                    :key="index"
+                    class="rounded-full bg-gray-100 px-2.5 py-0.5 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                >
+                    {{ item }}
+                </li>
+            </ul>
+            <div v-else>
+                <pre
+                    class="overflow-x-auto rounded-md bg-gray-50 p-3 font-mono text-xs text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                    :class="{ 'max-h-40 overflow-y-hidden': jsonIsLong && !jsonExpanded }"
+                >{{ prettyJson }}</pre>
+                <button
+                    v-if="jsonIsLong"
+                    type="button"
+                    class="mt-1 text-xs text-secondary hover:text-indigo-800 dark:hover:text-indigo-300"
+                    @click="jsonExpanded = !jsonExpanded"
+                >
+                    {{ jsonExpanded ? 'Show less' : `Show all ${jsonLineCount} lines` }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Entry Relation Display: related entry titles, linking to each entry -->
+        <EntryRelationDisplay v-else-if="type === 'entry_relation'" :value="value" />
 
         <!-- Repeatable Section Display -->
         <div v-else-if="type === 'repeatable' && Array.isArray(value)" class="space-y-3">
@@ -98,11 +170,6 @@
             </div>
         </div>
 
-        <!-- Empty state -->
-        <div v-else-if="value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)" class="text-sm text-gray-500 dark:text-gray-400">
-            No data
-        </div>
-
         <!-- Fallback for unknown types -->
         <div v-else class="text-sm text-gray-900 dark:text-gray-100">
             {{ JSON.stringify(value) }}
@@ -111,13 +178,34 @@
 </template>
 
 <script setup lang="ts">
+import EntryRelationDisplay from '@/Components/molecules/EntryRelationDisplay.vue'
+import {
+    formatDateTime,
+    formatNumber,
+    formatUrl,
+    isEmptyValue,
+    isHttpUrl,
+    isScalarArray,
+} from '@/utils/entryFieldFormat'
+import { computed, ref } from 'vue'
+
 interface Props {
     label: string
     value: any
     type: string
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const JSON_COLLAPSE_LINES = 12
+
+const jsonExpanded = ref(false)
+
+const prettyJson = computed(() =>
+    typeof props.value === 'string' ? props.value : JSON.stringify(props.value, null, 2),
+)
+const jsonLineCount = computed(() => (prettyJson.value ?? '').split('\n').length)
+const jsonIsLong = computed(() => jsonLineCount.value > JSON_COLLAPSE_LINES)
 
 const formatFieldName = (name: string): string => {
     return name
@@ -125,4 +213,3 @@ const formatFieldName = (name: string): string => {
         .replace(/\b\w/g, l => l.toUpperCase())
 }
 </script>
-

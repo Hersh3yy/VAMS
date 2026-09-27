@@ -25,7 +25,7 @@
                 :label="field.label"
                 :placeholder="field.placeholder || `Enter ${field.label.toLowerCase()}...`"
                 :required="field.required"
-                :error="(form.errors as any)?.[`content.${field.name}`]"
+                :error="fieldError(field.name)"
             />
 
             <!-- Textarea Fields -->
@@ -38,7 +38,7 @@
                 :placeholder="field.placeholder || `Enter ${field.label.toLowerCase()}...`"
                 :required="field.required"
                 :rows="4"
-                :error="(form.errors as any)?.[`content.${field.name}`]"
+                :error="fieldError(field.name)"
             />
 
             <!-- Checkbox Fields -->
@@ -48,8 +48,94 @@
                     v-model="form.content[field.name]"
                     :label="field.label + (field.required ? ' *' : '')"
                 />
-                <BaseErrorMessage :error="(form.errors as any)?.[`content.${field.name}`]" />
+                <BaseErrorMessage :error="fieldError(field.name)" />
             </div>
+
+            <!-- Number Fields (stored as numbers, not strings) -->
+            <FormField
+                v-else-if="field.type === 'number'"
+                :id="field.name"
+                type="number"
+                :model-value="form.content[field.name] === null || form.content[field.name] === undefined ? '' : String(form.content[field.name])"
+                :label="field.label"
+                :placeholder="field.placeholder"
+                :required="field.required"
+                :error="fieldError(field.name)"
+                @update:model-value="setNumber(field.name, $event)"
+            />
+
+            <!-- URL Fields -->
+            <FormField
+                v-else-if="field.type === 'url'"
+                :id="field.name"
+                v-model="form.content[field.name]"
+                type="url"
+                :label="field.label"
+                :placeholder="field.placeholder || 'https://'"
+                :required="field.required"
+                :error="fieldError(field.name)"
+            />
+
+            <!-- Date & time Fields (ISO 8601 string with offset, round-tripped) -->
+            <FormField
+                v-else-if="field.type === 'datetime'"
+                :id="field.name"
+                type="datetime-local"
+                :model-value="toDateTimeLocalValue(form.content[field.name])"
+                :label="field.label"
+                :required="field.required"
+                :error="fieldError(field.name)"
+                :hint="datetimeHint(field.name)"
+                @update:model-value="setDateTime(field.name, $event)"
+            />
+
+            <!-- Select Fields -->
+            <div v-else-if="field.type === 'select'" class="mb-4">
+                <BaseLabel :text="field.label" :for-id="field.name" :required="field.required" />
+                <select
+                    :id="field.name"
+                    v-model="form.content[field.name]"
+                    :required="field.required"
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-secondary focus:outline-none focus:ring-secondary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                    <option value="">{{ field.placeholder || 'Select…' }}</option>
+                    <option v-for="option in selectOptions(field)" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                    </option>
+                </select>
+                <BaseErrorMessage :error="fieldError(field.name)" />
+            </div>
+
+            <!-- JSON Fields (validated on blur, stored decoded) -->
+            <FormField
+                v-else-if="field.type === 'json'"
+                :id="field.name"
+                type="textarea"
+                :rows="6"
+                :model-value="jsonDrafts[field.name] ?? ''"
+                :label="field.label"
+                :placeholder="field.placeholder || '{ } or [ ]'"
+                :required="field.required"
+                :error="jsonErrors[field.name] || fieldError(field.name)"
+                hint="A JSON object or array."
+                @update:model-value="jsonDrafts[field.name] = $event"
+                @blur="commitJson(field.name)"
+            />
+
+            <!-- Entry Relation Fields -->
+            <EntryRelationPicker
+                v-else-if="field.type === 'entry_relation'"
+                :id="field.name"
+                v-model="form.content[field.name]"
+                class="mb-4"
+                :label="field.label"
+                :entry-type-slug="field.entry_type_slug"
+                :required="field.required"
+                :min="field.min"
+                :max="field.max"
+                :exclude-id="field.exclude_current ? entry?.id : null"
+                :error="fieldError(field.name)"
+            />
 
             <!-- Repeatable Sections -->
             <div v-else-if="field.type === 'repeatable'" class="space-y-4">
@@ -237,9 +323,13 @@ import Sortable from 'sortablejs'
 import axios from 'axios'
 import BaseButton from '@/Components/Base/Button.vue'
 import BaseErrorMessage from '@/Components/Base/ErrorMessage.vue'
+import BaseLabel from '@/Components/Base/Label.vue'
 import Checkbox from '@/Components/atoms/Checkbox.vue'
+import EntryRelationPicker from '@/Components/molecules/EntryRelationPicker.vue'
 import FormField from '@/Components/molecules/FormField.vue'
 import ImageCollectionManager from '@/Components/molecules/ImageCollectionManager.vue'
+import { fromDateTimeLocalValue, parseIsoDateTime, toDateTimeLocalValue } from '@/utils/entryFieldFormat'
+import { legacyTextFor, normalizeEntryContent } from '@/utils/entryTypes'
 
 interface Props {
     entryType: any
@@ -258,21 +348,8 @@ const emit = defineEmits(['cancel', 'submit', 'delete'])
 const initializeContent = () => {
     const content: any = {}
     
-    // Normalize entry content - handle both object and string cases
-    let existingContent: any = {}
-    if (props.entry?.content) {
-        if (typeof props.entry.content === 'string') {
-            try {
-                existingContent = JSON.parse(props.entry.content)
-            } catch {
-                // If it's not valid JSON, treat as simple string content
-                existingContent = { statement: props.entry.content }
-            }
-        } else if (typeof props.entry.content === 'object') {
-            existingContent = props.entry.content
-        }
-    }
-    
+    const existingContent: any = normalizeEntryContent(props.entry?.content)
+
     // First, initialize all fields from field_config with default values
     props.entryType.field_config.forEach((field: any) => {
         if (field.type === 'repeatable' || field.type === 'image_collection') {
@@ -293,12 +370,28 @@ const initializeContent = () => {
             content[field.name] = { ...defaultObject, ...existingObject }
         } else if (field.type === 'checkbox') {
             content[field.name] = existingContent[field.name] ?? false
+        } else if (field.type === 'entry_relation') {
+            content[field.name] = Array.isArray(existingContent[field.name]) ? existingContent[field.name] : []
+        } else if (field.type === 'json' || field.type === 'number') {
+            content[field.name] = existingContent[field.name] ?? null
         } else {
             // Use existing value if present, otherwise default to empty string
             content[field.name] = existingContent[field.name] ?? ''
         }
     })
     
+    // Entries saved by the legacy single-textarea form keep their text under
+    // `statement`; prefill it into the first empty text field so it isn't lost.
+    const legacyText = legacyTextFor(props.entryType, existingContent)
+    if (legacyText) {
+        const target =
+            props.entryType.field_config.find((field: any) => field.type === 'textarea' && content[field.name] === '') ??
+            props.entryType.field_config.find((field: any) => field.type === 'text' && content[field.name] === '')
+        if (target) {
+            content[target.name] = legacyText
+        }
+    }
+
     // Preserve any additional fields that might exist in entry but not in field_config
     // (for backward compatibility)
     Object.keys(existingContent).forEach(key => {
@@ -343,6 +436,7 @@ watch(() => props.entry, (newEntry, oldEntry) => {
         form.title = newEntry.title || ''
         form.status = newEntry.status || 'published'
         form.content = initializeContent()
+        syncFieldDrafts()
         lastEntryId.value = newEntry.id
         isInitialized.value = true
     } else if (!isInitialized.value) {
@@ -350,6 +444,7 @@ watch(() => props.entry, (newEntry, oldEntry) => {
         form.title = newEntry.title || ''
         form.status = newEntry.status || 'published'
         form.content = initializeContent()
+        syncFieldDrafts()
         isInitialized.value = true
     }
     // Otherwise, keep the current form state (user's edits are preserved)
@@ -380,7 +475,102 @@ const toggleObjectCollapse = (fieldName: string) => {
     collapsedObjects[fieldName] = !collapsedObjects[fieldName]
 }
 
+// Server errors come keyed by field name (validateContent runs on the content
+// array), possibly per item ("lineup.0"); older code expected "content.<name>".
+const fieldError = (name: string): string | undefined => {
+    const errors = form.errors as Record<string, string | undefined>
+    if (errors[name] || errors[`content.${name}`]) {
+        return errors[name] || errors[`content.${name}`]
+    }
+    const nestedKey = Object.keys(errors).find(key => key.startsWith(`${name}.`) || key.startsWith(`content.${name}.`))
+    return nestedKey ? errors[nestedKey] : undefined
+}
+
+const setNumber = (name: string, value: string) => {
+    const number = Number(value)
+    form.content[name] = value === '' ? null : Number.isFinite(number) ? number : value
+}
+
+// datetime: remember each field's original value so its offset survives clearing and re-entering.
+const originalDatetimes: Record<string, unknown> = {}
+
+const setDateTime = (name: string, localValue: string) => {
+    form.content[name] = fromDateTimeLocalValue(localValue, form.content[name] || originalDatetimes[name])
+}
+
+const datetimeHint = (name: string): string => {
+    const offset = parseIsoDateTime(form.content[name] || originalDatetimes[name])?.offset
+    if (!offset) {
+        return 'Saved with your browser\'s time zone offset.'
+    }
+    return `Time zone offset: ${offset === 'Z' ? 'UTC' : `UTC${offset}`}`
+}
+
+const selectOptions = (field: any): Array<{ value: string; label: string }> =>
+    (field.options ?? []).map((option: any) =>
+        option !== null && typeof option === 'object'
+            ? { value: String(option.value ?? option.label), label: String(option.label ?? option.value) }
+            : { value: String(option), label: String(option) },
+    )
+
+// json: edit a text draft; parse into form.content on blur.
+const jsonDrafts = reactive<Record<string, string>>({})
+const jsonErrors = reactive<Record<string, string>>({})
+
+const jsonFieldNames = (): string[] =>
+    props.entryType.field_config.filter((field: any) => field.type === 'json').map((field: any) => field.name)
+
+const syncFieldDrafts = () => {
+    props.entryType.field_config.forEach((field: any) => {
+        if (field.type === 'datetime') {
+            originalDatetimes[field.name] = form.content[field.name]
+        }
+    })
+    jsonFieldNames().forEach(name => {
+        const value = form.content[name]
+        jsonDrafts[name] =
+            value === null || value === undefined || value === ''
+                ? ''
+                : typeof value === 'string'
+                  ? value
+                  : JSON.stringify(value, null, 2)
+        jsonErrors[name] = ''
+    })
+}
+
+const commitJson = (name: string): boolean => {
+    const text = (jsonDrafts[name] ?? '').trim()
+    if (text === '') {
+        form.content[name] = null
+        jsonErrors[name] = ''
+        return true
+    }
+
+    try {
+        const parsed = JSON.parse(text)
+        if (parsed === null || typeof parsed !== 'object') {
+            jsonErrors[name] = 'Enter a JSON object or array.'
+            return false
+        }
+        form.content[name] = parsed
+        jsonErrors[name] = ''
+        return true
+    } catch (error) {
+        jsonErrors[name] = `Invalid JSON: ${(error as Error).message}`
+        return false
+    }
+}
+
+syncFieldDrafts()
+
 const handleSubmit = () => {
+    const jsonValid = jsonFieldNames()
+        .map(name => commitJson(name))
+        .every(Boolean)
+    if (!jsonValid) {
+        return
+    }
+
     // Update lastEntryId to prevent re-initialization after save
     if (props.entry?.id) {
         lastEntryId.value = props.entry.id

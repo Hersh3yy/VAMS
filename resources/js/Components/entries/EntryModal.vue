@@ -7,9 +7,9 @@
         </template>
 
         <template #body>
-            <!-- Use Dynamic Form for complex entry types -->
+            <!-- Use Dynamic Form for entry types with real fields -->
             <DynamicEntryForm
-                v-if="isComplexEntryType && isEditing && entry && entryType"
+                v-if="isFieldFormType && isEditing && entry && entryType"
                 :entryType="entryType"
                 :entry="entry"
                 submitText="Save Changes"
@@ -18,9 +18,9 @@
                 @submit="handleDynamicSubmit"
             />
 
-            <!-- Read-only view for complex entries -->
+            <!-- Read-only view for entries with real fields -->
             <EntryReadView
-                v-else-if="isComplexEntryType && !isEditing && entry && entryType"
+                v-else-if="isFieldFormType && !isEditing && entry && entryType"
                 :entry="entry"
                 :entry-type="entryType"
             />
@@ -67,7 +67,7 @@
 
         <template #footer>
             <BaseButton
-                v-if="isEditing && !isComplexEntryType"
+                v-if="isEditing && !isFieldFormType"
                 variant="primary"
                 :disabled="saving"
                 @click="saveChanges"
@@ -117,6 +117,7 @@ import BaseModal from '@/Components/Base/Modal.vue'
 import BaseButton from '@/Components/Base/Button.vue'
 import DynamicEntryForm from './DynamicEntryForm.vue'
 import EntryReadView from './EntryReadView.vue'
+import { usesFieldForm } from '@/utils/entryTypes'
 
 interface Entry {
     id: string
@@ -169,12 +170,8 @@ const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString()
 }
 
-// Check if this is a complex entry type
-const isComplexEntryType = computed(() => {
-    return props.entryType?.field_config?.some((field: any) => 
-        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
-    )
-})
+// Field-by-field form/read view for every type except the legacy single-textarea ("I AM") ones
+const isFieldFormType = computed(() => usesFieldForm(props.entryType))
 
 const handleDynamicSubmit = (dynamicForm: any) => {
     saving.value = true

@@ -6,6 +6,7 @@ use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\AlbumImageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
+use App\Http\Controllers\EntryLookupController;
 use App\Http\Controllers\MosaicController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\JsonResponse;
@@ -31,6 +32,11 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function (): void {
     // Entry Frontend Pages
     Route::get('/entries', [EntryController::class, 'index'])->name('entries.index');
     Route::get('/entries/create', [EntryController::class, 'create'])->name('entries.create');
+    // JSON helpers for entry_relation fields (must stay above /entries/{entry})
+    Route::middleware('throttle:120,1')->group(function (): void {
+        Route::get('/entries/lookup', [EntryLookupController::class, 'lookup'])->name('entries.lookup');
+        Route::get('/entries/search', [EntryLookupController::class, 'search'])->name('entries.search');
+    });
     Route::get('/entries/{entry}', [EntryController::class, 'show'])->name('entries.show');
     Route::get('/entries/{entry}/edit', [EntryController::class, 'edit'])->name('entries.edit');
 

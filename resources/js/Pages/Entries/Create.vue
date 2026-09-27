@@ -33,7 +33,7 @@
 
                         <div v-else role="tabpanel" aria-label="Form">
                             <DynamicEntryForm
-                                v-if="isComplexEntryType"
+                                v-if="isFieldFormType"
                                 :entry-type="entryType"
                                 submit-text="Create"
                                 @cancel="router.visit(route('entries.index', { type: entryType.slug }))"
@@ -105,6 +105,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import DynamicEntryForm from '@/Components/entries/DynamicEntryForm.vue'
 import EntryJsonInsert from '@/Components/entries/EntryJsonInsert.vue'
 import SegmentedControl from '@/Components/molecules/SegmentedControl.vue'
+import { usesFieldForm } from '@/utils/entryTypes'
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
@@ -123,11 +124,7 @@ const modeOptions = [
     { label: 'Insert JSON', value: 'json' },
 ]
 
-const isComplexEntryType = computed(() => {
-    return props.entryType.field_config.some(field =>
-        ['repeatable', 'image_collection', 'object', 'entry_relation'].includes(field.type)
-    )
-});
+const isFieldFormType = computed(() => usesFieldForm(props.entryType));
 
 const form = useForm({
     title: '',

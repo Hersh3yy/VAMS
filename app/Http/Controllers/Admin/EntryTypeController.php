@@ -43,10 +43,11 @@ class EntryTypeController
             'description' => 'nullable|string',
             'field_config' => 'required|array|min:1',
             'field_config.*.name' => 'required|string',
-            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,json,repeatable,image_collection,entry_relation,object',
+            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,json,datetime,url,repeatable,image_collection,entry_relation,object',
             'field_config.*.label' => 'required|string',
             'field_config.*.required' => 'boolean',
             'field_config.*.placeholder' => 'nullable|string',
+            'field_config.*.summary' => 'nullable|boolean',
             'field_config.*.options' => 'nullable|array', // For select fields
             // Repeatable, object, and image_collection fields can have nested fields
             'field_config.*.fields' => 'nullable|array',
@@ -105,10 +106,11 @@ class EntryTypeController
             'description' => 'nullable|string',
             'field_config' => 'required|array|min:1',
             'field_config.*.name' => 'required|string',
-            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,json,repeatable,image_collection,entry_relation,object',
+            'field_config.*.type' => 'required|string|in:text,textarea,number,select,checkbox,image,json,datetime,url,repeatable,image_collection,entry_relation,object',
             'field_config.*.label' => 'required|string',
             'field_config.*.required' => 'boolean',
             'field_config.*.placeholder' => 'nullable|string',
+            'field_config.*.summary' => 'nullable|boolean',
             'field_config.*.options' => 'nullable|array',
             // Repeatable, object, and image_collection fields can have nested fields
             'field_config.*.fields' => 'nullable|array',

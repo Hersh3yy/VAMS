@@ -6,10 +6,12 @@ export interface BaseField {
     label: string
     required?: boolean
     placeholder?: string
+    /** Show this field's value in the one-line summary on the entries index card. */
+    summary?: boolean
 }
 
 export interface SimpleField extends BaseField {
-    type: 'text' | 'textarea' | 'number' | 'select' | 'checkbox' | 'image'
+    type: 'text' | 'textarea' | 'number' | 'select' | 'checkbox' | 'image' | 'json' | 'datetime' | 'url'
     options?: string[] // For select fields
 }
 
@@ -51,6 +53,13 @@ export interface EntryType {
     description?: string
     field_config: EntryField[]
     is_active: boolean
+}
+
+/** One row from GET /entries/lookup or /entries/search. */
+export interface EntryLookupItem {
+    id: string
+    title: string
+    entry_type_slug: string | null
 }
 
 export interface CaseEntryContent {

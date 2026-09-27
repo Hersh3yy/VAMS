@@ -16,6 +16,7 @@
                 :has-error="!!error"
                 :size="size"
                 @update:model-value="$emit('update:modelValue', $event)"
+                @blur="$emit('blur', $event)"
             />
             
             <textarea
@@ -29,6 +30,7 @@
                 :rows="rows"
                 :class="textareaClasses"
                 @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+                @blur="$emit('blur', $event)"
             />
 
             <slot name="append" />
@@ -77,6 +79,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     'update:modelValue': [value: string];
+    blur: [event: FocusEvent];
 }>();
 
 const containerClass = computed(() => {

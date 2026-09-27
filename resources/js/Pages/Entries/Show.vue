@@ -73,8 +73,11 @@
                             </p>
                         </div>
 
-                        <!-- Content -->
-                        <div class="prose prose-lg dark:prose-invert max-w-none">
+                        <!-- Content: field-by-field for types with real fields -->
+                        <EntryReadView v-if="isFieldFormType" :entry="entry" :entry-type="entry.entry_type" />
+
+                        <!-- Content: legacy single textarea ("I AM") -->
+                        <div v-else class="prose prose-lg dark:prose-invert max-w-none">
                             <div class="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap bg-gray-50 dark:bg-gray-700 p-6 rounded-xl border-l-4 border-blue-500">
                                 {{ getEntryContent }}
                             </div>
@@ -109,6 +112,8 @@
 </template>
 
 <script setup>
+import EntryReadView from '@/Components/entries/EntryReadView.vue'
+import { usesFieldForm } from '@/utils/entryTypes'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
@@ -118,6 +123,8 @@ const props = defineProps({
         required: true
     }
 })
+
+const isFieldFormType = computed(() => usesFieldForm(props.entry.entry_type))
 
 const getEntryContent = computed(() => {
     if (!props.entry.content) return ''

@@ -148,3 +148,49 @@ it('validates a full processed-image payload against the seeded types', function
         ->and(Entry::find($reloaded->content['parent_colors'][0])->title)->toBe('Legacy CSS 32')
         ->and($user->entry_type_permissions)->toContain('processed-image');
 });
+
+it('stores a datetime field as the given ISO string, offset intact', function (): void {
+    $type = entryTypeWith([
+        ['name' => 'starts_at', 'type' => 'datetime', 'label' => 'Starts at', 'required' => true],
+    ]);
+
+    $validated = $this->service->validateContent($type, ['starts_at' => '2026-10-22T23:00:00+02:00']);
+
+    expect($validated['starts_at'])->toBe('2026-10-22T23:00:00+02:00');
+});
+
+it('rejects a datetime field that is not a date', function (): void {
+    $type = entryTypeWith([
+        ['name' => 'starts_at', 'type' => 'datetime', 'label' => 'Starts at'],
+    ]);
+
+    expect(fn (): array => $this->service->validateContent($type, ['starts_at' => 'next thursday-ish']))
+        ->toThrow(ValidationException::class);
+});
+
+it('allows an optional datetime field to be null', function (): void {
+    $type = entryTypeWith([
+        ['name' => 'starts_at', 'type' => 'datetime', 'label' => 'Starts at'],
+    ]);
+
+    expect($this->service->validateContent($type, ['starts_at' => null]))->toBe(['starts_at' => null]);
+});
+
+it('accepts a url field with a valid url', function (): void {
+    $type = entryTypeWith([
+        ['name' => 'tickets', 'type' => 'url', 'label' => 'Tickets', 'required' => true],
+    ]);
+
+    $validated = $this->service->validateContent($type, ['tickets' => 'https://www.amsterdam-dance-event.nl/en/program/2026/bret/']);
+
+    expect($validated['tickets'])->toBe('https://www.amsterdam-dance-event.nl/en/program/2026/bret/');
+});
+
+it('rejects a url field that is not a url', function (): void {
+    $type = entryTypeWith([
+        ['name' => 'tickets', 'type' => 'url', 'label' => 'Tickets'],
+    ]);
+
+    expect(fn (): array => $this->service->validateContent($type, ['tickets' => 'not a url']))
+        ->toThrow(ValidationException::class);
+});

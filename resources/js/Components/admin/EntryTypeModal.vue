@@ -106,6 +106,9 @@
                                             <option value="number">Number</option>
                                             <option value="select">Select</option>
                                             <option value="checkbox">Checkbox</option>
+                                            <option value="datetime">Date &amp; Time</option>
+                                            <option value="url">URL</option>
+                                            <option value="json">JSON</option>
                                             <option value="repeatable">Repeatable Section</option>
                                             <option value="image_collection">Image Collection</option>
                                             <option value="entry_relation">Entry Relation</option>
@@ -118,10 +121,19 @@
                                             class="rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring-secondary text-sm"
                                         />
                                     </div>
-                                    <label class="flex items-center space-x-1 text-sm whitespace-nowrap ml-2">
-                                        <input v-model="field.required" type="checkbox" class="rounded" />
-                                        <span>Required</span>
-                                    </label>
+                                    <div class="ml-2 space-y-1">
+                                        <label class="flex items-center space-x-1 text-sm whitespace-nowrap">
+                                            <input v-model="field.required" type="checkbox" class="rounded" />
+                                            <span>Required</span>
+                                        </label>
+                                        <label
+                                            class="flex items-center space-x-1 text-sm whitespace-nowrap"
+                                            title="Show this value in the one-line summary on the entry list cards"
+                                        >
+                                            <input v-model="field.summary" type="checkbox" class="rounded" />
+                                            <span>Summary</span>
+                                        </label>
+                                    </div>
                                     <button
                                         type="button"
                                         @click="removeField(index)"

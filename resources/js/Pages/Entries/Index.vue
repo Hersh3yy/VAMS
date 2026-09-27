@@ -54,7 +54,18 @@
                                         </span>
                                         -->
                                     </div>
-                                    <p class="mb-3 whitespace-pre-wrap text-gray-600 dark:text-gray-400">
+                                    <!-- One-line summary of fields flagged `summary: true` -->
+                                    <p
+                                        v-if="hasSummary && summaryFor(entry)"
+                                        class="mb-2 truncate text-sm text-gray-500 dark:text-gray-400"
+                                        :title="summaryFor(entry)"
+                                    >
+                                        {{ summaryFor(entry) }}
+                                    </p>
+                                    <p
+                                        v-if="!hasSummary || getEntryContent(entry)"
+                                        class="mb-3 whitespace-pre-wrap text-gray-600 dark:text-gray-400"
+                                    >
                                         {{ getEntryContent(entry) }}
                                     </p>
                                     <div class="text-xs text-gray-500 dark:text-gray-500">
@@ -96,8 +107,12 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import EntryModal from '@/Components/entries/EntryModal.vue'
+import { useEntryLookup } from '@/composables/entries/useEntryLookup'
+import type { EntryField } from '@/types/entryField'
+import { formatSummaryLine, summaryFields } from '@/utils/entryFieldFormat'
+import { normalizeEntryContent } from '@/utils/entryTypes'
 import { Head, Link, router } from '@inertiajs/vue3'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import Sortable from 'sortablejs'
 
 interface Entry {
@@ -117,6 +132,7 @@ interface Props {
         name: string
         slug: string
         description?: string
+        field_config?: EntryField[]
     }
 }
 
@@ -135,6 +151,31 @@ watch(
         localEntries.value = [...newEntries]
     },
     { deep: true }
+)
+
+// Card summary line ("BRET · Wed 21 Oct, 22:00 · Sold out") from fields flagged `summary: true`
+const { titleFor, resolve: resolveEntryTitles } = useEntryLookup()
+const summaryFieldList = computed(() => summaryFields(props.entryType.field_config))
+const hasSummary = computed(() => summaryFieldList.value.length > 0)
+
+const summaryFor = (entry: Entry): string =>
+    formatSummaryLine(summaryFieldList.value, normalizeEntryContent(entry.content), titleFor)
+
+// Related-entry titles shown in summaries (the first two per card) need a lookup.
+watch(
+    localEntries,
+    entries => {
+        const relationFields = summaryFieldList.value.filter(field => field.type === 'entry_relation')
+        if (relationFields.length === 0) {
+            return
+        }
+        const ids = entries.flatMap(entry => {
+            const content = normalizeEntryContent(entry.content)
+            return relationFields.flatMap(field => (Array.isArray(content[field.name]) ? content[field.name].slice(0, 2) : []))
+        })
+        resolveEntryTitles(ids)
+    },
+    { immediate: true }
 )
 
 const getEntryContent = (entry: Entry): string => {
