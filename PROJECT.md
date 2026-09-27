@@ -11,11 +11,11 @@
 
 **What it is** · Laravel headless CMS. Albums, mosaics, and user-defined Entry Types, read over an API-key API. It is the backend for the Shawn York portfolio, benjamingijzel.nl, and the image-colors app.
 **Stack** · Laravel 13 · PHP 8.5 · PostgreSQL · Inertia + Vue 3 · Sanctum · Docker (multi-stage, nginx + php-fpm + supervisor)
-**Status** · 🟡 close. The `coolify-integration` branch is deploy-ready and now carries the Image Colors types, but it has not been deployed to Coolify yet and the database has not moved off DigitalOcean.
-**Repo** · `github.com/Hersh3yy/VAMS` · working on `coolify-integration` (merge to `main` only when sure)
-**Hosting** · DigitalOcean App Platform today (`app.use-vams.me`) · moving to Coolify on a VPS
+**Status** · 🟡 `main` now carries the coolify work (fast-forwarded 2026-09-27): Laravel 13.33, PHP 8.5, return types everywhere, media-delete fix, 241 tests green. Two databases exist: the live app on Laravel Cloud has its own, and the local container still points at the DigitalOcean one that no running app serves.
+**Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
+**Hosting** · live on Laravel Cloud (`vams-main-qvek1c.laravel.cloud`, needs PHP 8.5 set there) · DigitalOcean app and `app.use-vams.me` are gone · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-09-10
+**Last assessed** · 2026-09-27
 
 ---
 
@@ -40,7 +40,6 @@ Worst first.
 
 | Sev | Issue | Where |
 |---|---|---|
-| serious | `authorize()` returns `true`, so any authenticated user can delete any Spaces path | `app/Http/Requests/DeleteApiMediaRequest.php:13` |
 | serious | API keys stored and compared as plaintext, unindexed | `app/Http/Middleware/ValidateApiKey.php` |
 | warning | Running container points at the production DO database (operational footgun) | local `.env` |
 | verify | The old paginated-API 500 (`->items()->map()` on an array) looks fixed by the Eloquent-resource rewrite. Confirm with `?page=` before trusting it. | `app/Http/Controllers/Api` |
@@ -79,7 +78,8 @@ Worst first.
 - [ ] Repoint Shawn's portfolio env from the raw `sea-lion...ondigitalocean.app` host to `app.use-vams.me` before the DO app is deleted <!-- id:e4 -->
 - [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key <!-- id:e5 -->
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
-- [ ] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
+- [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
+- [ ] Decide which database is the real one (Laravel Cloud vs DigitalOcean), point the local `.env` at it, then run `db:seed --class=AdePlannerSeeder` and `ade:sync` there <!-- id:e8 -->
 
 ## Roadmap — far future
 
@@ -94,6 +94,13 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-09-27 — main merge, return types, ADE Planner commands
+- Added `ade-artist` / `ade-event` entry types (`AdePlannerSeeder`) and `ade:sync` / `ade:export` for hiren.ninja/ade-planner. Ran them from the local container, so the data sits in the DigitalOcean DB: 1,104 events plus 3,356 artists.
+- Found the live VAMS is Laravel Cloud with a separate DB; `app.use-vams.me` no longer resolves. The local container was also an old image (PHP 8.3, Laravel 12 in vendor).
+- Return types on 423 functions, arrow functions and closures (79 files). Ported the media-delete ownership check and the test bootstrap from AI-REFACTOR; the bootstrap now also forces in-memory SQLite so tests can never touch prod. Composer update to Laravel 13.33 (Guzzle 8). 241 tests pass on PHP 8.5.
+- Compared live API shapes (albums, mosaics, entries) with the branch: identical. Fast-forwarded `main`, deleted coolify, coolify-integration, dev, post-mvp-cleanup, EntriES, entry-type-updates and AI-REFACTOR (tagged `archive/AI-REFACTOR`).
+- Left: set PHP 8.5 on Laravel Cloud if the deploy fails; pick the real DB; rebuild the local container from the Dockerfile.
 
 ### 2026-09-10 — combine onto coolify, first cockpit on this branch
 - Used the other-machine briefing to remap the branches. `origin/coolify` is the real deploy branch (L13, PHP 8.5, Docker, Eloquent resources); `AI-REFACTOR` diverged and is no longer trunk.
