@@ -47,15 +47,7 @@ final class MediaController extends BaseApiController
     public function delete(DeleteApiMediaRequest $request): JsonResponse
     {
         try {
-            $path = $request->string('path')->toString();
-
-            if (str_contains($path, (string) config('filesystems.disks.spaces.endpoint'))) {
-                $bucket = config('filesystems.disks.spaces.bucket');
-                $endpoint = config('filesystems.disks.spaces.endpoint');
-                $path = str_replace("{$endpoint}/{$bucket}/", '', $path);
-            }
-
-            $deleted = Storage::disk('spaces')->delete($path);
+            $deleted = Storage::disk('spaces')->delete($request->storagePath());
 
             if (! $deleted) {
                 return $this->notFound('File not found or could not be deleted');

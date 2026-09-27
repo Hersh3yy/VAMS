@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -164,7 +165,7 @@ it('can delete media via api', function (): void {
         'Authorization' => 'Bearer '.$token,
         'Accept' => 'application/json',
     ])->deleteJson('/api/media', [
-        'path' => 'test/path/to/file.jpg',
+        'path' => "uploads/images/{$this->user->id}/file.jpg",
     ]);
 
     $response->assertSuccessful()
@@ -213,7 +214,7 @@ it('returns webp url when available', function (): void {
     $token = $this->user->createToken('test-token')->plainTextToken;
 
     // Mock ImageService to return WebP URL
-    $this->mock(\App\Services\ImageService::class, function (MockInterface $mock): void {
+    $this->mock(ImageService::class, function (MockInterface $mock): void {
         $mock->shouldReceive('storeImage')
             ->andReturn([
                 'url' => 'https://example.com/image.jpg',

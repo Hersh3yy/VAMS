@@ -64,14 +64,14 @@ it('validates file for media upload via API', function (): void {
         ->assertJsonValidationErrors(['file']);
 });
 
-it('deletes media via API', function (): void {
+it('deletes media from the caller\'s own upload folder', function (): void {
     $token = $this->user->createToken('test')->plainTextToken;
 
     $response = $this->withHeaders([
         'Authorization' => 'Bearer '.$token,
         'Accept' => 'application/json',
     ])->deleteJson('/api/media', [
-        'path' => 'test/path/file.jpg',
+        'path' => "uploads/images/{$this->user->id}/file.jpg",
     ]);
 
     $response->assertStatus(200)
@@ -79,6 +79,29 @@ it('deletes media via API', function (): void {
             'success' => true,
             'message' => 'File deleted successfully',
         ]);
+});
+
+it('refuses to delete another user\'s upload', function (): void {
+    $other = User::factory()->create();
+    $token = $this->user->createToken('test')->plainTextToken;
+
+    $this->withHeaders([
+        'Authorization' => 'Bearer '.$token,
+        'Accept' => 'application/json',
+    ])->deleteJson('/api/media', [
+        'path' => "uploads/images/{$other->id}/file.jpg",
+    ])->assertStatus(403);
+});
+
+it('refuses to delete a path that belongs to nobody the caller can edit', function (): void {
+    $token = $this->user->createToken('test')->plainTextToken;
+
+    $this->withHeaders([
+        'Authorization' => 'Bearer '.$token,
+        'Accept' => 'application/json',
+    ])->deleteJson('/api/media', [
+        'path' => 'test/path/file.jpg',
+    ])->assertStatus(403);
 });
 
 it('requires path for media deletion via API', function (): void {
