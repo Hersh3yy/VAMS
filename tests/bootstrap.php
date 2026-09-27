@@ -24,8 +24,12 @@ declare(strict_types=1);
 | `docker compose exec -e APP_ENV=testing`, but committed and portable (CI, other
 | machines, teammates) and touching nothing outside the test harness.
 */
-putenv('APP_ENV=testing');
-$_ENV['APP_ENV'] = 'testing';
-$_SERVER['APP_ENV'] = 'testing';
+// The database gets the same treatment: the local .env points at production,
+// and RefreshDatabase must never run against it.
+foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:'] as $key => $value) {
+    putenv("{$key}={$value}");
+    $_ENV[$key] = $value;
+    $_SERVER[$key] = $value;
+}
 
 require __DIR__.'/../vendor/autoload.php';
