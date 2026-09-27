@@ -11,9 +11,9 @@
 
 **What it is** · Laravel headless CMS. Albums, mosaics, and user-defined Entry Types, read over an API-key API. It is the backend for the Shawn York portfolio, benjamingijzel.nl, and the image-colors app.
 **Stack** · Laravel 13 · PHP 8.5 · PostgreSQL · Inertia + Vue 3 · Sanctum · Docker (multi-stage, nginx + php-fpm + supervisor)
-**Status** · 🟡 `main` now carries the coolify work (fast-forwarded 2026-09-27): Laravel 13.33, PHP 8.5, return types everywhere, media-delete fix, 241 tests green. Two databases exist: the live app on Laravel Cloud has its own, and the local container still points at the DigitalOcean one that no running app serves.
+**Status** · 🟡 `main` now carries the coolify work (fast-forwarded 2026-09-27): Laravel 13.33 on PHP 8.4 (pinned for the buildpack), return types everywhere, media-delete fix, 241 tests green. Live on DigitalOcean again since fc2c6f3.
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
-**Hosting** · live on Laravel Cloud (`vams-main-qvek1c.laravel.cloud`, needs PHP 8.5 set there) · DigitalOcean app and `app.use-vams.me` are gone · Coolify on a VPS still planned
+**Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
 **Last assessed** · 2026-09-27
 
@@ -79,7 +79,9 @@ Worst first.
 - [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key <!-- id:e5 -->
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
-- [ ] Decide which database is the real one (Laravel Cloud vs DigitalOcean), point the local `.env` at it, then run `db:seed --class=AdePlannerSeeder` and `ade:sync` there <!-- id:e8 -->
+- [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
+- [ ] Re-run `php artisan ade:sync --only=events` now and then until ADE (21-25 Oct) for sold-out and time changes <!-- id:e9 -->
+- [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
 
 ## Roadmap — far future
 
@@ -97,10 +99,11 @@ Worst first.
 
 ### 2026-09-27 — main merge, return types, ADE Planner commands
 - Added `ade-artist` / `ade-event` entry types (`AdePlannerSeeder`) and `ade:sync` / `ade:export` for hiren.ninja/ade-planner. Ran them from the local container, so the data sits in the DigitalOcean DB: 1,104 events plus 3,356 artists.
-- Found the live VAMS is Laravel Cloud with a separate DB; `app.use-vams.me` no longer resolves. The local container was also an old image (PHP 8.3, Laravel 12 in vendor).
+- The local container was an old image (PHP 8.3, Laravel 12 in vendor); my host `composer install` then broke it (platform check), rebuild it.
 - Return types on 423 functions, arrow functions and closures (79 files). Ported the media-delete ownership check and the test bootstrap from AI-REFACTOR; the bootstrap now also forces in-memory SQLite so tests can never touch prod. Composer update to Laravel 13.33 (Guzzle 8). 241 tests pass on PHP 8.5.
 - Compared live API shapes (albums, mosaics, entries) with the branch: identical. Fast-forwarded `main`, deleted coolify, coolify-integration, dev, post-mvp-cleanup, EntriES, entry-type-updates and AI-REFACTOR (tagged `archive/AI-REFACTOR`).
-- Left: set PHP 8.5 on Laravel Cloud if the deploy fails; pick the real DB; rebuild the local container from the Dockerfile.
+- The merge deploy (3ac536b) failed the readiness probe: the Heroku buildpack took `^8.5` as PHP 8.5, and `.user.ini` had been deleted and gitignored. VAMS was already unreachable before that (DO hostname NXDOMAIN). Pinned `8.4.*`, restored `.user.ini` (fc2c6f3): deploy healthy, `app.use-vams.me` serves again.
+- Left: rebuild the local container from the Dockerfile; decide if Coolify still replaces DigitalOcean.
 
 ### 2026-09-10 — combine onto coolify, first cockpit on this branch
 - Used the other-machine briefing to remap the branches. `origin/coolify` is the real deploy branch (L13, PHP 8.5, Docker, Eloquent resources); `AI-REFACTOR` diverged and is no longer trunk.
