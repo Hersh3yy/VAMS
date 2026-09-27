@@ -155,3 +155,23 @@ it('includes images when with_images parameter is true', function (): void {
         'updated_at',
     ]);
 });
+
+it('finds a published album by title, exact or case-insensitive', function (): void {
+    $album = Album::factory()->create(['user_id' => $this->user->id, 'title' => 'Art', 'published' => true]);
+    AlbumImage::factory()->create(['album_id' => $album->id, 'published' => true]);
+
+    foreach (['Art', 'art'] as $title) {
+        $this->withHeaders(['X-API-Key' => $this->user->api_key])
+            ->getJson("/api/albums/by-title/{$title}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.album.id', $album->id);
+    }
+});
+
+it('does not find another user\'s album by title', function (): void {
+    Album::factory()->create(['user_id' => User::factory()->create()->id, 'title' => 'Art', 'published' => true]);
+
+    $this->withHeaders(['X-API-Key' => $this->user->api_key])
+        ->getJson('/api/albums/by-title/Art')
+        ->assertStatus(404);
+});

@@ -70,3 +70,14 @@ it('returns 404 when accessing other users mosaic via API', function (): void {
 
     $response->assertStatus(404);
 });
+
+it('finds a mosaic by title, exact or case-insensitive', function (): void {
+    $mosaic = Mosaic::factory()->create(['user_id' => $this->user->id, 'title' => 'Live Music']);
+
+    foreach (['Live Music', 'live music'] as $title) {
+        $this->withHeaders(['X-API-Key' => $this->user->api_key])
+            ->getJson('/api/mosaics/by-title/'.rawurlencode($title))
+            ->assertStatus(200)
+            ->assertJsonPath('data.mosaic.id', $mosaic->id);
+    }
+});

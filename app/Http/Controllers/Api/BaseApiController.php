@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\BaseEntity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -103,16 +104,20 @@ abstract class BaseApiController
     }
 
     /**
-     * @param  Builder<BaseEntity>  $query
+     * Callers pass a relation such as $user->albums(), so accept a Relation as
+     * well as a Builder. Each lookup runs on a clone: reusing one query would
+     * stack the case-insensitive where on top of the exact one.
+     *
+     * @param  Builder<BaseEntity>|Relation<BaseEntity, User, mixed>  $query
      */
-    protected function findByTitle(string $title, Builder $query, bool $caseSensitive = false): ?BaseEntity
+    protected function findByTitle(string $title, Builder|Relation $query, bool $caseSensitive = false): ?BaseEntity
     {
         $decodedTitle = urldecode($title);
 
-        $entity = $query->where('title', $decodedTitle)->first();
+        $entity = (clone $query)->where('title', $decodedTitle)->first();
 
         if (! $entity instanceof BaseEntity && ! $caseSensitive) {
-            $entity = $query->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])->first();
+            $entity = (clone $query)->whereRaw('LOWER(title) = LOWER(?)', [$decodedTitle])->first();
         }
 
         return $entity instanceof BaseEntity ? $entity : null;
