@@ -20,21 +20,24 @@ use Illuminate\Support\Str;
 
 /**
  * Copies the Amsterdam Dance Event festival program into the ade-artist and
- * ade-event entry types (see AdePlannerSeeder).
+ * ade-event entry types (see AdePlannerSeeder), linked both ways:
+ * ade-event.lineup -> ade-artist entries, ade-artist.events -> ade-event entries.
  *
  * ADE has no public API. The program pages load their lists from an
  * undocumented JSON endpoint (40 rows per page, empty `data` past the end).
  * The events list has no lineup, so each artist page is fetched for the ids
- * of the events that artist plays.
+ * of the events that artist plays; the lineups are that list reversed.
  *
- *   php artisan ade:sync                 full run, about 20-25 minutes
- *   php artisan ade:sync --only=events   refresh times and sold-out, about 1 minute
+ *   php artisan ade:sync                 full run, about 25-30 minutes
+ *   php artisan ade:sync --reuse-pages   relink from artist pages fetched before, about 2 minutes
+ *   php artisan ade:sync --only=events   refresh times and sold-out, keeps lineups, about 1 minute
  *   php artisan ade:sync --limit=20      test run
  */
 class AdeSync extends Command
 {
     protected $signature = 'ade:sync
-        {--only= : "events" or "artists"}
+        {--only= : "events" to refresh events only}
+        {--reuse-pages : Use artist page data already stored instead of fetching every artist page}
         {--limit=0 : Stop after this many artists (testing)}
         {--concurrency=3 : Parallel artist page requests}
         {--from=2026-10-21} {--to=2026-10-25}';
@@ -52,25 +55,31 @@ class AdeSync extends Command
     public function handle(): int
     {
         $this->owner = User::where('email', AdePlannerSeeder::OWNER_EMAIL)->firstOrFail();
-        $only = $this->option('only');
 
-        if ($only !== 'artists') {
-            $this->syncEvents();
-        }
-        if ($only !== 'events') {
-            $this->syncArtists();
+        $eventIds = $this->syncEvents();
+
+        if ($this->option('only') !== 'events') {
+            $lineups = $this->syncArtists($eventIds);
+
+            // A limited test run only knows part of each lineup; don't overwrite the full ones.
+            if ((int) $this->option('limit') === 0) {
+                $this->saveLineups($eventIds, $lineups);
+            }
         }
 
         return self::SUCCESS;
     }
 
-    private function syncEvents(): void
+    /**
+     * @return array<string, string> ADE event id => VAMS entry id
+     */
+    private function syncEvents(): array
     {
         $rows = $this->fetchList('events');
         $this->info('Events from ADE: '.count($rows));
 
         $now = now()->toIso8601String();
-        $saved = $this->upsert('ade-event', collect($rows)->map(fn (array $row): array => [
+        $items = collect($rows)->map(fn (array $row): array => [
             'title' => $row['title'],
             'content' => [
                 'externalId' => (string) $row['id'],
@@ -83,12 +92,20 @@ class AdeSync extends Command
                 'adeUrl' => $row['url'],
                 'syncedAt' => $now,
             ],
-        ])->sortBy('content.startsAt')->values());
+        ])->sortBy('content.startsAt')->values();
 
-        $this->info("ade-event saved: {$saved}");
+        // The lineup comes from the artist pass; keep it when only events are refreshed.
+        $ids = $this->upsert('ade-event', $items, preserve: ['lineup']);
+        $this->info('ade-event saved: '.count($ids));
+
+        return $ids;
     }
 
-    private function syncArtists(): void
+    /**
+     * @param  array<string, string>  $eventIds  ADE event id => VAMS entry id
+     * @return array<string, list<string>> VAMS event entry id => VAMS artist entry ids
+     */
+    private function syncArtists(array $eventIds): array
     {
         $rows = collect($this->fetchList('persons'));
         $limit = (int) $this->option('limit');
@@ -97,23 +114,56 @@ class AdeSync extends Command
         }
         $this->info('Artists from ADE: '.$rows->count());
 
-        $details = $this->fetchArtistDetails($rows);
+        $details = $this->option('reuse-pages')
+            ? $this->storedArtistDetails($eventIds)
+            : $this->fetchArtistDetails($rows);
 
         $now = now()->toIso8601String();
-        $saved = $this->upsert('ade-artist', $rows->map(fn (array $row): array => [
+        $items = $rows->map(fn (array $row): array => [
             'title' => $this->cleanName($row['title']),
             'content' => [
                 'externalId' => (string) $row['id'],
-                'country' => $row['country']['value'] ?? null ?: null,
-                'spotifyId' => $details[$row['id']]['spotifyId'] ?? null,
+                'country' => ($row['country']['value'] ?? '') ?: null,
+                'spotifyId' => $details[(string) $row['id']]['spotifyId'] ?? null,
                 'adeUrl' => $row['url'],
-                'eventIds' => $details[$row['id']]['eventIds'] ?? [],
+                // Festival events only; artist pages also link conference sessions.
+                'events' => array_values(array_filter(array_map(
+                    fn (string $adeEventId): ?string => $eventIds[$adeEventId] ?? null,
+                    $details[(string) $row['id']]['eventIds'] ?? [],
+                ))),
                 'syncedAt' => $now,
             ],
-        ])->values());
+        ])->values();
 
-        $failed = $rows->count() - count($details);
-        $this->info("ade-artist saved: {$saved}".($failed > 0 ? ", artist pages failed: {$failed}" : ''));
+        $artistIds = $this->upsert('ade-artist', $items);
+        $this->info('ade-artist saved: '.count($artistIds).', artist pages missing: '.($rows->count() - count($details)));
+
+        $lineups = [];
+        foreach ($items as $item) {
+            $artistId = $artistIds[$item['content']['externalId']];
+            foreach ($item['content']['events'] as $eventId) {
+                $lineups[$eventId][] = $artistId;
+            }
+        }
+
+        return $lineups;
+    }
+
+    /**
+     * @param  array<string, string>  $eventIds
+     * @param  array<string, list<string>>  $lineups
+     */
+    private function saveLineups(array $eventIds, array $lineups): void
+    {
+        Entry::withoutEvents(function () use ($eventIds, $lineups): void {
+            foreach (Entry::whereIn('id', array_values($eventIds))->get() as $event) {
+                $content = $event->content;
+                $content['lineup'] = $lineups[$event->id] ?? [];
+                $event->update(['content' => $content]);
+            }
+        });
+
+        $this->info('Lineups saved: '.count($lineups).' of '.count($eventIds).' events have artists');
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -141,7 +191,7 @@ class AdeSync extends Command
 
     /**
      * @param  Collection<int, array<string, mixed>>  $rows
-     * @return array<int, array{spotifyId: ?string, eventIds: list<string>}>
+     * @return array<string, array{spotifyId: ?string, eventIds: list<string>}> keyed by ADE artist id
      */
     private function fetchArtistDetails(Collection $rows): array
     {
@@ -159,7 +209,7 @@ class AdeSync extends Command
 
             foreach ($responses as $id => $response) {
                 if ($response instanceof Response && $response->successful()) {
-                    $details[(int) $id] = $this->parseArtistPage($response->body());
+                    $details[(string) $id] = $this->parseArtistPage($response->body());
                 }
             }
             $bar->advance($chunk->count());
@@ -170,6 +220,29 @@ class AdeSync extends Command
         $this->newLine();
 
         return $details;
+    }
+
+    /**
+     * Artist page data from an earlier sync: `events` (entry ids) or the older `eventIds` (ADE ids).
+     *
+     * @param  array<string, string>  $eventIds
+     * @return array<string, array{spotifyId: ?string, eventIds: list<string>}>
+     */
+    private function storedArtistDetails(array $eventIds): array
+    {
+        $adeIdByEntryId = array_flip($eventIds);
+
+        return $this->ownedEntries('ade-artist')
+            ->mapWithKeys(fn (Entry $entry): array => [
+                (string) ($entry->content['externalId'] ?? '') => [
+                    'spotifyId' => $entry->content['spotifyId'] ?? null,
+                    'eventIds' => array_values(array_filter(array_merge(
+                        array_map('strval', $entry->content['eventIds'] ?? []),
+                        array_map(fn (string $id): ?string => $adeIdByEntryId[$id] ?? null, $entry->content['events'] ?? []),
+                    ))),
+                ],
+            ])
+            ->all();
     }
 
     /** @return array{spotifyId: ?string, eventIds: list<string>} */
@@ -188,40 +261,63 @@ class AdeSync extends Command
      * Update entries matched on content.externalId, create the rest.
      *
      * @param  Collection<int, array{title: string, content: array<string, mixed>}>  $items
+     * @param  list<string>  $preserve  content keys kept from the stored entry
+     * @return array<string, string> externalId => VAMS entry id
      */
-    private function upsert(string $slug, Collection $items): int
+    private function upsert(string $slug, Collection $items, array $preserve = []): array
     {
         $type = EntryType::where('slug', $slug)->firstOrFail();
-        $existing = Entry::where('entry_type_id', $type->id)
-            ->where('user_id', $this->owner->id)
-            ->get()
+        $existing = $this->ownedEntries($slug)
             ->keyBy(fn (Entry $entry): ?string => $entry->content['externalId'] ?? null);
 
+        $ids = [];
+
         // Without model events: thousands of rows would each write an activity log line.
-        Entry::withoutEvents(function () use ($items, $existing, $type): void {
+        Entry::withoutEvents(function () use ($items, $existing, $type, $preserve, &$ids): void {
             foreach ($items as $order => $item) {
+                $externalId = $item['content']['externalId'];
+                $entry = $existing->get($externalId);
+                $content = $item['content'];
+
+                foreach ($preserve as $key) {
+                    if ($entry && array_key_exists($key, $entry->content ?? [])) {
+                        $content[$key] = $entry->content[$key];
+                    }
+                }
+
                 $attributes = [
                     'title' => Str::limit($item['title'], 250, ''),
-                    'content' => $item['content'],
+                    'content' => $content,
                     'status' => 'published',
                     'order' => $order,
                 ];
 
-                $entry = $existing->get($item['content']['externalId']);
                 if ($entry) {
                     $entry->update($attributes);
                 } else {
-                    Entry::create($attributes + [
+                    $entry = Entry::create($attributes + [
                         'id' => (string) Str::uuid(),
                         'user_id' => $this->owner->id,
                         'entry_type_id' => $type->id,
                         'published_at' => now(),
                     ]);
                 }
+
+                $ids[$externalId] = $entry->id;
             }
         });
 
-        return $items->count();
+        return $ids;
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Collection<int, Entry> */
+    private function ownedEntries(string $slug): \Illuminate\Database\Eloquent\Collection
+    {
+        $type = EntryType::where('slug', $slug)->firstOrFail();
+
+        return Entry::where('entry_type_id', $type->id)
+            ->where('user_id', $this->owner->id)
+            ->get();
     }
 
     /** @param  array{date?: string, timezone?: string}|null  $value */
@@ -236,7 +332,7 @@ class AdeSync extends Command
 
     private function cleanName(string $name): string
     {
-        return trim(preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $name));
+        return trim((string) preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $name));
     }
 
     private function http(): PendingRequest

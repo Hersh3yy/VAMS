@@ -34,13 +34,13 @@ class AdePlannerSeeder extends Seeder
                 'description' => 'An artist on the Amsterdam Dance Event lineup. The entry title is the artist name. Filled by ade:sync.',
                 'is_active' => true,
                 'field_config' => [
-                    ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
-                    ['name' => 'country', 'type' => 'text', 'label' => 'Country code', 'required' => false],
+                    ['name' => 'country', 'type' => 'text', 'label' => 'Country', 'required' => false, 'summary' => true],
+                    // ADE event entries this artist plays; the reverse of ade-event.lineup.
+                    ['name' => 'events', 'type' => 'entry_relation', 'label' => 'Events', 'required' => false, 'entry_type_slug' => 'ade-event', 'min' => 0],
                     ['name' => 'spotifyId', 'type' => 'text', 'label' => 'Spotify artist id', 'required' => false],
-                    ['name' => 'adeUrl', 'type' => 'text', 'label' => 'ADE page', 'required' => true],
-                    // ADE event ids (strings), joined to ade-event.externalId
-                    ['name' => 'eventIds', 'type' => 'json', 'label' => 'Event ids', 'required' => false],
-                    ['name' => 'syncedAt', 'type' => 'text', 'label' => 'Synced at', 'required' => false],
+                    ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
+                    ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
+                    ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]
         );
@@ -53,15 +53,17 @@ class AdePlannerSeeder extends Seeder
                 'description' => 'An Amsterdam Dance Event festival event. The entry title is the event title. Filled by ade:sync.',
                 'is_active' => true,
                 'field_config' => [
-                    ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
+                    ['name' => 'venue', 'type' => 'text', 'label' => 'Venue', 'required' => false, 'summary' => true],
+                    ['name' => 'startsAt', 'type' => 'datetime', 'label' => 'Starts', 'required' => true, 'summary' => true],
+                    ['name' => 'endsAt', 'type' => 'datetime', 'label' => 'Ends', 'required' => false],
+                    ['name' => 'soldOut', 'type' => 'checkbox', 'label' => 'Sold out', 'required' => false, 'summary' => true],
+                    // ADE artist entries on this event, from their artist pages (ADE lists every act it links).
+                    ['name' => 'lineup', 'type' => 'entry_relation', 'label' => 'Lineup', 'required' => false, 'entry_type_slug' => 'ade-artist', 'min' => 0],
                     ['name' => 'subtitle', 'type' => 'text', 'label' => 'Subtitle', 'required' => false],
-                    ['name' => 'startsAt', 'type' => 'text', 'label' => 'Starts at (ISO 8601)', 'required' => true],
-                    ['name' => 'endsAt', 'type' => 'text', 'label' => 'Ends at (ISO 8601)', 'required' => false],
-                    ['name' => 'venue', 'type' => 'text', 'label' => 'Venue', 'required' => false],
-                    ['name' => 'categories', 'type' => 'text', 'label' => 'Categories', 'required' => false],
-                    ['name' => 'soldOut', 'type' => 'json', 'label' => 'Sold out', 'required' => false],
-                    ['name' => 'adeUrl', 'type' => 'text', 'label' => 'ADE page', 'required' => true],
-                    ['name' => 'syncedAt', 'type' => 'text', 'label' => 'Synced at', 'required' => false],
+                    ['name' => 'categories', 'type' => 'text', 'label' => 'Genres and categories', 'required' => false],
+                    ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
+                    ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
+                    ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]
         );

@@ -27,16 +27,16 @@ class AdeExport extends Command
     public function handle(): int
     {
         $artists = $this->entries('ade-artist')->map(fn (Entry $entry): array => [
-            'id' => $entry->content['externalId'],
+            'id' => $entry->id,
             'name' => $entry->title,
             'country' => $entry->content['country'] ?? null,
             'spotifyId' => $entry->content['spotifyId'] ?? null,
             'adeUrl' => $entry->content['adeUrl'],
-            'eventIds' => $entry->content['eventIds'] ?? [],
+            'eventIds' => $entry->content['events'] ?? [],
         ]);
 
         $events = $this->entries('ade-event')->map(fn (Entry $entry): array => [
-            'id' => $entry->content['externalId'],
+            'id' => $entry->id,
             'title' => $entry->title,
             'subtitle' => $entry->content['subtitle'] ?? null,
             'startsAt' => $entry->content['startsAt'],
@@ -45,6 +45,7 @@ class AdeExport extends Command
             'categories' => $entry->content['categories'] ?? null,
             'soldOut' => (bool) ($entry->content['soldOut'] ?? false),
             'adeUrl' => $entry->content['adeUrl'],
+            'lineup' => $entry->content['lineup'] ?? [],
         ]);
 
         $path = base_path($this->argument('path'));
