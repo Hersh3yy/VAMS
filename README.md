@@ -12,7 +12,7 @@ VAMS is a headless CMS for visual content: albums, mosaics, and structured entri
 
 ## Tech Stack
 
-- PHP 8.5 / Laravel 13
+- PHP 8.4 / Laravel 13 (pinned to 8.4 for the DigitalOcean buildpack)
 - PostgreSQL (containerized locally, managed in production)
 - Docker & Docker Compose
 - Vue.js 3 + Inertia (admin)
