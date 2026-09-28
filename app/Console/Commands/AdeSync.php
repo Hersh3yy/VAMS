@@ -28,16 +28,16 @@ use Illuminate\Support\Str;
  * The events list has no lineup, so each artist page is fetched for the ids
  * of the events that artist plays; the lineups are that list reversed.
  *
- *   php artisan ade:sync                 full run, about 25-30 minutes
- *   php artisan ade:sync --reuse-pages   relink from artist pages fetched before, about 2 minutes
- *   php artisan ade:sync --only=events   refresh times and sold-out, keeps lineups, about 1 minute
+ *   php artisan ade:sync                 full run (artist + event pages), about 35-40 minutes
+ *   php artisan ade:sync --reuse-pages   relink and reclassify from pages fetched before, about 8 minutes
+ *   php artisan ade:sync --only=events   refresh events, tickets and sold-out; keeps lineups, about 10 minutes
  *   php artisan ade:sync --limit=20      test run
  */
 class AdeSync extends Command
 {
     protected $signature = 'ade:sync
         {--only= : "events" to refresh events only}
-        {--reuse-pages : Use artist page data already stored instead of fetching every artist page}
+        {--reuse-pages : Use artist and event page data already stored instead of fetching every page}
         {--limit=0 : Stop after this many artists (testing)}
         {--concurrency=3 : Parallel artist page requests}
         {--from=2026-10-21} {--to=2026-10-25}';
@@ -49,6 +49,9 @@ class AdeSync extends Command
     private const FESTIVAL_TYPES = '8262,8263';
 
     private const USER_AGENT = 'hiren.ninja ADE Planner (info@hiren.ninja)';
+
+    /** Area labels in ADE's categories; everything else is a genre, an event type or a loose tag. */
+    private const AREAS = ['Centre', 'West', 'East', 'South', 'North', 'Nieuw-West', 'Zuidoost', 'South-East', 'Noord', 'Oost', 'Zuid'];
 
     private User $owner;
 
@@ -78,27 +81,127 @@ class AdeSync extends Command
         $rows = $this->fetchList('events');
         $this->info('Events from ADE: '.count($rows));
 
+        $withTickets = array_flip(array_map(
+            fn (array $row): string => (string) $row['id'],
+            $this->fetchList('events', ['ticketsAvailable' => 'true']),
+        ));
+        $this->info('With tickets available: '.count($withTickets));
+
+        $groups = $this->fetchCategoryGroups();
+        $pages = $this->option('reuse-pages')
+            ? $this->storedEventDetails()
+            : $this->fetchPageDetails(collect($rows), fn (string $html): array => $this->parseEventPage($html));
+
         $now = now()->toIso8601String();
-        $items = collect($rows)->map(fn (array $row): array => [
-            'title' => $row['title'],
-            'content' => [
-                'externalId' => (string) $row['id'],
-                'subtitle' => $row['subtitle'] ?? null,
-                'startsAt' => $this->toIso($row['start_date_time'] ?? null),
-                'endsAt' => $this->toIso($row['end_date_time'] ?? null),
-                'venue' => $row['venue']['title'] ?? null,
-                'categories' => $row['categories'] ?? null,
-                'soldOut' => (bool) ($row['soldOut'] ?? false),
-                'adeUrl' => $row['url'],
-                'syncedAt' => $now,
-            ],
-        ])->sortBy('content.startsAt')->values();
+        $items = collect($rows)->map(function (array $row) use ($withTickets, $groups, $pages, $now): array {
+            $id = (string) $row['id'];
+            $labels = $this->splitCategories($row['categories'] ?? '');
+            $types = array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'type'));
+            $page = $pages[$id] ?? [];
+
+            return [
+                'title' => $row['title'],
+                'content' => [
+                    'externalId' => $id,
+                    'subtitle' => $row['subtitle'] ?? null,
+                    'startsAt' => $this->toIso($row['start_date_time'] ?? null),
+                    'endsAt' => $this->toIso($row['end_date_time'] ?? null),
+                    'venue' => $row['venue']['title'] ?? null,
+                    'address' => $page['address'] ?? null,
+                    'area' => array_values(array_intersect($labels, self::AREAS))[0] ?? null,
+                    'genres' => array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'genre')),
+                    'eventTypes' => $types,
+                    'tags' => array_values(array_filter($labels, fn (string $label): bool => ! isset($groups[$label]) && ! in_array($label, self::AREAS, true))),
+                    'ticketStatus' => $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
+                    'soldOut' => (bool) ($row['soldOut'] ?? false),
+                    'ticketUrl' => $page['ticketUrl'] ?? null,
+                    'ticketLabel' => $page['ticketLabel'] ?? null,
+                    'categories' => $row['categories'] ?? null,
+                    'adeUrl' => $row['url'],
+                    'syncedAt' => $now,
+                ],
+            ];
+        })->sortBy('content.startsAt')->values();
 
         // The lineup comes from the artist pass; keep it when only events are refreshed.
         $ids = $this->upsert('ade-event', $items, preserve: ['lineup']);
-        $this->info('ade-event saved: '.count($ids));
+        $this->info('ade-event saved: '.count($ids).', event pages read: '.count($pages));
 
         return $ids;
+    }
+
+    /** @param  list<string>  $types */
+    private function ticketStatus(bool $soldOut, bool $available, array $types): string
+    {
+        return match (true) {
+            $soldOut => 'sold out',
+            $available => 'available',
+            (bool) array_filter($types, fn (string $type): bool => str_starts_with($type, 'Free')) => 'free',
+            default => 'unknown',
+        };
+    }
+
+    /** @return list<string> */
+    private function splitCategories(string $categories): array
+    {
+        return array_values(array_filter(array_map('trim', explode(' / ', $categories))));
+    }
+
+    /**
+     * The program filter page lists every label with its group ("Genre", "Type"), which
+     * tells a genre like "Techno" apart from an event type like "Club nights".
+     *
+     * @return array<string, 'genre'|'type'>
+     */
+    private function fetchCategoryGroups(): array
+    {
+        $html = Http::withUserAgent(self::USER_AGENT)->timeout(30)->retry(2, 1000)
+            ->get(self::BASE.'/en/program/filter/', ['section' => 'events', 'type' => self::FESTIVAL_TYPES])
+            ->throw()->body();
+
+        preg_match_all('~<[^>]*filter-popup__item[^>]*>~', $html, $items);
+        $groups = [];
+        foreach ($items[0] as $item) {
+            preg_match('~data-filter-type="([^"]*)"~', $item, $type);
+            preg_match('~data-name-readable="([^"]*)"~', $item, $name);
+            $group = match ($type[1] ?? '') {
+                'Genre' => 'genre',
+                'Type' => 'type',
+                default => null,
+            };
+            if ($group && isset($name[1])) {
+                $groups[html_entity_decode($name[1], ENT_QUOTES | ENT_HTML5)] = $group;
+            }
+        }
+
+        return $groups;
+    }
+
+    /** @return array{ticketUrl: ?string, ticketLabel: ?string, address: ?string} */
+    private function parseEventPage(string $html): array
+    {
+        preg_match('~<a href="([^"]+)"[^>]*class="[^"]*ade-info-bar__button[^"]*"[^>]*>(.*?)</a>~s', $html, $button);
+        preg_match('~google\.[a-z.]+/maps/search/\?api=1&(?:amp;)?query=[^"]*"[^>]*>\s*([^<]+?)\s*<~', $html, $address);
+
+        return [
+            'ticketUrl' => isset($button[1]) ? html_entity_decode($button[1]) : null,
+            'ticketLabel' => isset($button[2]) ? (trim(html_entity_decode(strip_tags($button[2]))) ?: null) : null,
+            'address' => isset($address[1]) ? html_entity_decode($address[1]) : null,
+        ];
+    }
+
+    /** @return array<string, array{ticketUrl: ?string, ticketLabel: ?string, address: ?string}> keyed by ADE event id */
+    private function storedEventDetails(): array
+    {
+        return $this->ownedEntries('ade-event')
+            ->mapWithKeys(fn (Entry $entry): array => [
+                (string) ($entry->content['externalId'] ?? '') => [
+                    'ticketUrl' => $entry->content['ticketUrl'] ?? null,
+                    'ticketLabel' => $entry->content['ticketLabel'] ?? null,
+                    'address' => $entry->content['address'] ?? null,
+                ],
+            ])
+            ->all();
     }
 
     /**
@@ -116,7 +219,7 @@ class AdeSync extends Command
 
         $details = $this->option('reuse-pages')
             ? $this->storedArtistDetails($eventIds)
-            : $this->fetchArtistDetails($rows);
+            : $this->fetchPageDetails($rows, fn (string $html): array => $this->parseArtistPage($html));
 
         $now = now()->toIso8601String();
         $items = $rows->map(fn (array $row): array => [
@@ -166,8 +269,11 @@ class AdeSync extends Command
         $this->info('Lineups saved: '.count($lineups).' of '.count($eventIds).' events have artists');
     }
 
-    /** @return array<int, array<string, mixed>> */
-    private function fetchList(string $section): array
+    /**
+     * @param  array<string, string>  $extra  additional filter params, e.g. ticketsAvailable
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchList(string $section, array $extra = []): array
     {
         $rows = [];
         for ($page = 0; ; $page++) {
@@ -177,7 +283,7 @@ class AdeSync extends Command
                 'from' => $this->option('from'),
                 'to' => $this->option('to'),
                 'page' => $page,
-            ])->throw();
+            ] + $extra)->throw();
 
             // Sent as text/html, so decode the body ourselves.
             $data = json_decode($response->body(), true)['data'] ?? [];
@@ -190,10 +296,15 @@ class AdeSync extends Command
     }
 
     /**
+     * Fetch each row's ADE page, a few at a time, and parse it.
+     *
+     * @template T of array
+     *
      * @param  Collection<int, array<string, mixed>>  $rows
-     * @return array<string, array{spotifyId: ?string, eventIds: list<string>}> keyed by ADE artist id
+     * @param  callable(string): T  $parse
+     * @return array<string, T> keyed by ADE id
      */
-    private function fetchArtistDetails(Collection $rows): array
+    private function fetchPageDetails(Collection $rows, callable $parse): array
     {
         $details = [];
         $bar = $this->output->createProgressBar($rows->count());
@@ -209,7 +320,7 @@ class AdeSync extends Command
 
             foreach ($responses as $id => $response) {
                 if ($response instanceof Response && $response->successful()) {
-                    $details[(string) $id] = $this->parseArtistPage($response->body());
+                    $details[(string) $id] = $parse($response->body());
                 }
             }
             $bar->advance($chunk->count());
