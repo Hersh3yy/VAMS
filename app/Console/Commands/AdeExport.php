@@ -46,6 +46,13 @@ class AdeExport extends Command
             'soldOut' => (bool) ($entry->content['soldOut'] ?? false),
             'adeUrl' => $entry->content['adeUrl'],
             'lineup' => $entry->content['lineup'] ?? [],
+            'ticketStatus' => $entry->content['ticketStatus'] ?? null,
+            'ticketUrl' => $entry->content['ticketUrl'] ?? null,
+            'ticketLabel' => $entry->content['ticketLabel'] ?? null,
+            'genres' => $entry->content['genres'] ?? null,
+            'eventTypes' => $entry->content['eventTypes'] ?? null,
+            'area' => $entry->content['area'] ?? null,
+            'address' => $entry->content['address'] ?? null,
         ]);
 
         $path = base_path($this->argument('path'));
