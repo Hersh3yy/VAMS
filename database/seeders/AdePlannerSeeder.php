@@ -34,6 +34,9 @@ class AdePlannerSeeder extends Seeder
                 'description' => 'An artist on the Amsterdam Dance Event lineup. The entry title is the artist name. Filled by ade:sync.',
                 'is_active' => true,
                 'field_config' => [
+                    ['name' => 'role', 'type' => 'select', 'label' => 'Role', 'required' => false, 'summary' => true, 'options' => ['artist', 'speaker', 'artist and speaker']],
+                    // Speakers: job and company. Festival artists: ADE's own tagline, if any.
+                    ['name' => 'subtitle', 'type' => 'text', 'label' => 'Job and company', 'required' => false, 'summary' => true],
                     ['name' => 'country', 'type' => 'text', 'label' => 'Country', 'required' => false, 'summary' => true],
                     // ADE event entries this artist plays; the reverse of ade-event.lineup.
                     ['name' => 'events', 'type' => 'entry_relation', 'label' => 'Events', 'required' => false, 'entry_type_slug' => 'ade-event', 'min' => 0],
@@ -53,11 +56,12 @@ class AdePlannerSeeder extends Seeder
                 'description' => 'An Amsterdam Dance Event festival event. The entry title is the event title. Filled by ade:sync.',
                 'is_active' => true,
                 'field_config' => [
+                    ['name' => 'program', 'type' => 'select', 'label' => 'Program', 'required' => false, 'options' => ['festival', 'pro']],
                     ['name' => 'venue', 'type' => 'text', 'label' => 'Venue', 'required' => false, 'summary' => true],
                     ['name' => 'startsAt', 'type' => 'datetime', 'label' => 'Starts', 'required' => true, 'summary' => true],
                     ['name' => 'endsAt', 'type' => 'datetime', 'label' => 'Ends', 'required' => false],
-                    // available: ADE lists it under "tickets available"; free: a free event; unknown: neither.
-                    ['name' => 'ticketStatus', 'type' => 'select', 'label' => 'Tickets', 'required' => false, 'summary' => true, 'options' => ['available', 'sold out', 'free', 'unknown']],
+                    // available: ADE lists it under "tickets available"; free: a free event; pro pass: ADE Pro conference; unknown: none of these.
+                    ['name' => 'ticketStatus', 'type' => 'select', 'label' => 'Tickets', 'required' => false, 'summary' => true, 'options' => ['available', 'sold out', 'free', 'pro pass', 'unknown']],
                     ['name' => 'ticketUrl', 'type' => 'url', 'label' => 'Ticket shop', 'required' => false],
                     ['name' => 'ticketLabel', 'type' => 'text', 'label' => 'Ticket button text', 'required' => false],
                     // ADE artist entries on this event, from their artist pages (ADE lists every act it links).

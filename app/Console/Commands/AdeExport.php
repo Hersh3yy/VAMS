@@ -29,6 +29,8 @@ class AdeExport extends Command
         $artists = $this->entries('ade-artist')->map(fn (Entry $entry): array => [
             'id' => $entry->id,
             'name' => $entry->title,
+            'role' => $entry->content['role'] ?? 'artist',
+            'subtitle' => $entry->content['subtitle'] ?? null,
             'country' => $entry->content['country'] ?? null,
             'spotifyId' => $entry->content['spotifyId'] ?? null,
             'adeUrl' => $entry->content['adeUrl'],
@@ -38,6 +40,7 @@ class AdeExport extends Command
         $events = $this->entries('ade-event')->map(fn (Entry $entry): array => [
             'id' => $entry->id,
             'title' => $entry->title,
+            'program' => $entry->content['program'] ?? 'festival',
             'subtitle' => $entry->content['subtitle'] ?? null,
             'startsAt' => $entry->content['startsAt'],
             'endsAt' => $entry->content['endsAt'] ?? null,
@@ -78,6 +81,7 @@ class AdeExport extends Command
 
         return Entry::where('entry_type_id', $type->id)
             ->where('user_id', $owner->id)
+            ->where('status', 'published')
             ->orderBy('order')
             ->get();
     }

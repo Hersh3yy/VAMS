@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
- * Copies the Amsterdam Dance Event festival program into the ade-artist and
- * ade-event entry types (see AdePlannerSeeder), linked both ways:
+ * Copies the Amsterdam Dance Event program (festival and the ADE Pro conference)
+ * into the ade-artist and ade-event entry types (see AdePlannerSeeder), linked both ways:
  * ade-event.lineup -> ade-artist entries, ade-artist.events -> ade-event entries.
  *
  * ADE has no public API. The program pages load their lists from an
@@ -37,7 +37,7 @@ class AdeSync extends Command
 {
     protected $signature = 'ade:sync
         {--only= : "events" to refresh events only}
-        {--reuse-pages : Use artist and event page data already stored instead of fetching every page}
+        {--reuse-pages : Reuse artist and event page data already stored; only fetch pages not seen before}
         {--limit=0 : Stop after this many artists (testing)}
         {--concurrency=3 : Parallel artist page requests}
         {--from=2026-10-21} {--to=2026-10-25}';
@@ -47,6 +47,9 @@ class AdeSync extends Command
     private const BASE = 'https://www.amsterdam-dance-event.nl';
 
     private const FESTIVAL_TYPES = '8262,8263';
+
+    /** ADE Pro, the conference program (talks, panels, masterclasses). */
+    private const PRO_TYPES = '8264';
 
     private const USER_AGENT = 'hiren.ninja ADE Planner (info@hiren.ninja)';
 
@@ -78,8 +81,11 @@ class AdeSync extends Command
      */
     private function syncEvents(): array
     {
-        $rows = $this->fetchList('events');
-        $this->info('Events from ADE: '.count($rows));
+        $festival = $this->fetchList('events');
+        $pro = $this->fetchList('events', types: self::PRO_TYPES);
+        $proIds = array_flip(array_map(fn (array $row): string => (string) $row['id'], $pro));
+        $rows = $this->uniqueById([...$festival, ...$pro]);
+        $this->info('Events from ADE: '.count($festival).' festival, '.count($pro).' ADE Pro');
 
         $withTickets = array_flip(array_map(
             fn (array $row): string => (string) $row['id'],
@@ -87,14 +93,17 @@ class AdeSync extends Command
         ));
         $this->info('With tickets available: '.count($withTickets));
 
-        $groups = $this->fetchCategoryGroups();
-        $pages = $this->option('reuse-pages')
-            ? $this->storedEventDetails()
-            : $this->fetchPageDetails(collect($rows), fn (string $html): array => $this->parseEventPage($html));
+        $groups = $this->fetchCategoryGroups(self::FESTIVAL_TYPES) + $this->fetchCategoryGroups(self::PRO_TYPES);
+        $pages = $this->pageDetails(
+            collect($rows),
+            $this->option('reuse-pages') ? $this->storedEventDetails() : [],
+            fn (string $html): array => $this->parseEventPage($html),
+        );
 
         $now = now()->toIso8601String();
-        $items = collect($rows)->map(function (array $row) use ($withTickets, $groups, $pages, $now): array {
+        $items = collect($rows)->map(function (array $row) use ($withTickets, $groups, $pages, $proIds, $now): array {
             $id = (string) $row['id'];
+            $isPro = isset($proIds[$id]);
             $labels = $this->splitCategories($row['categories'] ?? '');
             $types = array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'type'));
             $page = $pages[$id] ?? [];
@@ -103,6 +112,7 @@ class AdeSync extends Command
                 'title' => $row['title'],
                 'content' => [
                     'externalId' => $id,
+                    'program' => $isPro ? 'pro' : 'festival',
                     'subtitle' => $row['subtitle'] ?? null,
                     'startsAt' => $this->toIso($row['start_date_time'] ?? null),
                     'endsAt' => $this->toIso($row['end_date_time'] ?? null),
@@ -112,7 +122,7 @@ class AdeSync extends Command
                     'genres' => array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'genre')),
                     'eventTypes' => $types,
                     'tags' => array_values(array_filter($labels, fn (string $label): bool => ! isset($groups[$label]) && ! in_array($label, self::AREAS, true))),
-                    'ticketStatus' => $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
+                    'ticketStatus' => $isPro ? 'pro pass' : $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
                     'soldOut' => (bool) ($row['soldOut'] ?? false),
                     'ticketUrl' => $page['ticketUrl'] ?? null,
                     'ticketLabel' => $page['ticketLabel'] ?? null,
@@ -153,10 +163,10 @@ class AdeSync extends Command
      *
      * @return array<string, 'genre'|'type'>
      */
-    private function fetchCategoryGroups(): array
+    private function fetchCategoryGroups(string $types): array
     {
         $html = Http::withUserAgent(self::USER_AGENT)->timeout(30)->retry(2, 1000)
-            ->get(self::BASE.'/en/program/filter/', ['section' => 'events', 'type' => self::FESTIVAL_TYPES])
+            ->get(self::BASE.'/en/program/filter/', ['section' => 'events', 'type' => $types])
             ->throw()->body();
 
         preg_match_all('~<[^>]*filter-popup__item[^>]*>~', $html, $items);
@@ -210,22 +220,34 @@ class AdeSync extends Command
      */
     private function syncArtists(array $eventIds): array
     {
-        $rows = collect($this->fetchList('persons'));
+        $festival = $this->fetchList('persons');
+        $pro = $this->fetchList('persons', types: self::PRO_TYPES);
+        $festivalIds = array_flip(array_map(fn (array $row): string => (string) $row['id'], $festival));
+        $proIds = array_flip(array_map(fn (array $row): string => (string) $row['id'], $pro));
+        $rows = collect($this->uniqueById([...$festival, ...$pro]));
+        $this->info('People from ADE: '.count($festival).' festival artists, '.count($pro).' ADE Pro speakers');
         $limit = (int) $this->option('limit');
         if ($limit > 0) {
             $rows = $rows->take($limit);
         }
-        $this->info('Artists from ADE: '.$rows->count());
-
-        $details = $this->option('reuse-pages')
-            ? $this->storedArtistDetails($eventIds)
-            : $this->fetchPageDetails($rows, fn (string $html): array => $this->parseArtistPage($html));
+        $details = $this->pageDetails(
+            $rows,
+            $this->option('reuse-pages') ? $this->storedArtistDetails($eventIds) : [],
+            fn (string $html): array => $this->parseArtistPage($html),
+        );
 
         $now = now()->toIso8601String();
         $items = $rows->map(fn (array $row): array => [
             'title' => $this->cleanName($row['title']),
             'content' => [
                 'externalId' => (string) $row['id'],
+                'role' => match (true) {
+                    isset($festivalIds[(string) $row['id']], $proIds[(string) $row['id']]) => 'artist and speaker',
+                    isset($proIds[(string) $row['id']]) => 'speaker',
+                    default => 'artist',
+                },
+                // Speakers: job and company, e.g. "Warner Chappell Music, Sync & Licensing Manager".
+                'subtitle' => $row['subtitle'] ?? null,
                 'country' => ($row['country']['value'] ?? '') ?: null,
                 'spotifyId' => $details[(string) $row['id']]['spotifyId'] ?? null,
                 'adeUrl' => $row['url'],
@@ -239,7 +261,8 @@ class AdeSync extends Command
         ])->values();
 
         $artistIds = $this->upsert('ade-artist', $items);
-        $this->info('ade-artist saved: '.count($artistIds).', artist pages missing: '.($rows->count() - count($details)));
+        $missing = $rows->reject(fn (array $row): bool => isset($details[(string) $row['id']]))->count();
+        $this->info('ade-artist saved: '.count($artistIds).', artist pages missing: '.$missing);
 
         $lineups = [];
         foreach ($items as $item) {
@@ -273,13 +296,13 @@ class AdeSync extends Command
      * @param  array<string, string>  $extra  additional filter params, e.g. ticketsAvailable
      * @return array<int, array<string, mixed>>
      */
-    private function fetchList(string $section, array $extra = []): array
+    private function fetchList(string $section, array $extra = [], string $types = self::FESTIVAL_TYPES): array
     {
         $rows = [];
         for ($page = 0; ; $page++) {
             $response = $this->http()->get(self::BASE.'/api/program/filter/', [
                 'section' => $section,
-                'type' => self::FESTIVAL_TYPES,
+                'type' => $types,
                 'from' => $this->option('from'),
                 'to' => $this->option('to'),
                 'page' => $page,
@@ -293,6 +316,42 @@ class AdeSync extends Command
             }
             array_push($rows, ...$data);
         }
+    }
+
+    /**
+     * Stored page data where there is some, fetched pages for the rest.
+     *
+     * @template T of array
+     *
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  array<string, T>  $stored  keyed by ADE id
+     * @param  callable(string): T  $parse
+     * @return array<string, T>
+     */
+    private function pageDetails(Collection $rows, array $stored, callable $parse): array
+    {
+        $missing = $rows->reject(fn (array $row): bool => isset($stored[(string) $row['id']]))->values();
+        if ($stored !== []) {
+            $this->info('Pages reused: '.count($stored).', fetching new: '.$missing->count());
+        }
+
+        return $stored + ($missing->isEmpty() ? [] : $this->fetchPageDetails($missing, $parse));
+    }
+
+    /**
+     * Festival and Pro lists overlap (an artist can also speak); keep the first row per id.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function uniqueById(array $rows): array
+    {
+        $seen = [];
+        foreach ($rows as $row) {
+            $seen[(string) $row['id']] ??= $row;
+        }
+
+        return array_values($seen);
     }
 
     /**
@@ -349,7 +408,8 @@ class AdeSync extends Command
                     'spotifyId' => $entry->content['spotifyId'] ?? null,
                     'eventIds' => array_values(array_filter(array_merge(
                         array_map('strval', $entry->content['eventIds'] ?? []),
-                        array_map(fn (string $id): ?string => $adeIdByEntryId[$id] ?? null, $entry->content['events'] ?? []),
+                        // ADE ids are numeric, so PHP made them int keys; cast back.
+                        array_map(fn (string $id): ?string => isset($adeIdByEntryId[$id]) ? (string) $adeIdByEntryId[$id] : null, $entry->content['events'] ?? []),
                     ))),
                 ],
             ])
@@ -384,7 +444,7 @@ class AdeSync extends Command
         $ids = [];
 
         // Without model events: thousands of rows would each write an activity log line.
-        Entry::withoutEvents(function () use ($items, $existing, $type, $preserve, &$ids): void {
+        Entry::withoutEvents(function () use ($items, $existing, $type, $preserve, $slug, &$ids): void {
             foreach ($items as $order => $item) {
                 $externalId = $item['content']['externalId'];
                 $entry = $existing->get($externalId);
@@ -415,6 +475,19 @@ class AdeSync extends Command
                 }
 
                 $ids[$externalId] = $entry->id;
+            }
+
+            // Off the ADE program now: unpublish, so the API stops serving it. A limited
+            // test run doesn't see the whole program, so it never unpublishes.
+            if ((int) $this->option('limit') === 0) {
+                $stale = $existing->reject(fn (Entry $entry, int|string|null $externalId): bool => $externalId === null || $externalId === '' || isset($ids[$externalId]))
+                    ->filter(fn (Entry $entry): bool => $entry->status === 'published');
+                foreach ($stale as $entry) {
+                    $entry->update(['status' => 'draft']);
+                }
+                if ($stale->isNotEmpty()) {
+                    $this->info("{$slug}: unpublished ".$stale->count().' no longer on the ADE program');
+                }
             }
         });
 
