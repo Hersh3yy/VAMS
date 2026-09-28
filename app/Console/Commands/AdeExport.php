@@ -53,6 +53,7 @@ class AdeExport extends Command
             'eventTypes' => $entry->content['eventTypes'] ?? null,
             'area' => $entry->content['area'] ?? null,
             'address' => $entry->content['address'] ?? null,
+            'tags' => $entry->content['tags'] ?? null,
         ]);
 
         $path = base_path($this->argument('path'));
