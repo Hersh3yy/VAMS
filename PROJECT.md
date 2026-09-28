@@ -97,6 +97,13 @@ Worst first.
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
 
+### 2026-09-28 — entry field system polish, ADE relations and tickets
+- One shared `usesFieldForm()` rule: types with real fields now use the field form and read view everywhere (was only for repeatable/image/object/relation). New field types `datetime` and `url`, per-field `summary` flag for list cards, relation picker and clickable relation chips, `GET /entries/lookup` and `/entries/search`. 259 tests.
+- ADE: events and artists linked both ways (lineup / events), ticket status from ADE's ticketsAvailable filter, ticket link and address from event pages, categories split into genres / event types / area / tags.
+- Fixed by-title 500 for albums and mosaics (benjamingijzel.nl fallback images), pinned PHP 8.4 + restored `.user.ini` for the DigitalOcean buildpack.
+- Open: this Mac's IP can't reach the DigitalOcean DB anymore (trusted sources?), so `db:seed --class=AdePlannerSeeder` + `ade:sync --only=events` must run in the App Platform console.
+
+
 ### 2026-09-27 — main merge, return types, ADE Planner commands
 - Added `ade-artist` / `ade-event` entry types (`AdePlannerSeeder`) and `ade:sync` / `ade:export` for hiren.ninja/ade-planner. Ran them from the local container, so the data sits in the DigitalOcean DB: 1,104 events plus 3,356 artists.
 - The local container was an old image (PHP 8.3, Laravel 12 in vendor); my host `composer install` then broke it (platform check), rebuild it.
