@@ -117,3 +117,11 @@ Worst first.
 - Cut `coolify-integration` off `origin/coolify`. Ported the Image Colors entry types + `json` field (cherry-pick `190678f`). Resolved the conflict by adding `json` to the `EntryTypeController` whitelist, since coolify had deleted `StoreEntryTypeRequest`. PHP lint clean. Seeder verified against coolify's L13 `User`.
 - Wrote `docs/coolify-integration-status.md` (the ordered remainder) and this cockpit. Confirmed the repo already ships `docs/COOLIFY_DB_MIGRATION_GUIDE.md` for the data move.
 - Left red: not deployed to Coolify, DB not moved, `DeleteApiMediaRequest::authorize()` still returns `true`, test suite not yet run on L13/PHP 8.5. Nothing pushed; `main` untouched.
+
+### 2026-09-29 — Itamar's website content (branch `itamar-website`)
+- The DigitalOcean Strapi behind itamargilboa.com went down (it answered again when checked). Snapshotted its four collections into `database/data/itamargilboa-strapi-snapshot.json` so the move no longer depends on Strapi staying up.
+- `ItamarWebsiteSeeder` adds entry types `ig-biography`, `news-articles`, `ig-projects`, `ig-landing-page-slideshow-images` (same slugs as Strapi) and grants them to `itamar@gilboa.net`. If his account is missing it is created with a random password, never a default one.
+- `strapi:import-itamar-website` (with `--dry-run`) writes 37 entries, matched by `content.strapi_id` so re-runs update in place. Images keep their `bengijzel` Spaces URLs; `path` is the in-bucket path, so VAMS media handling still works on them.
+- 3 new tests; suite 262 passed, 3 skipped. Also ran seeder + import twice on a scratch local Postgres (37 entries, no duplicates) and served it to the site locally.
+- Not yet on production: the prod DB refused connections from this machine (DO trusted sources). Run on prod: `php artisan db:seed --class=ItamarWebsiteSeeder --force` then `php artisan strapi:import-itamar-website`.
+- Side note: the `vams-api` container runs PHP 8.3 and can no longer boot the current vendor (needs >= 8.4.1). Host PHP 8.5 works.
