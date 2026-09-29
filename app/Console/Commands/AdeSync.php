@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Entry;
 use App\Models\EntryType;
 use App\Models\User;
+use App\Support\Ade\AdeEventClassifier;
 use Carbon\CarbonImmutable;
 use Database\Seeders\AdePlannerSeeder;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -119,7 +120,8 @@ class AdeSync extends Command
                     'venue' => $row['venue']['title'] ?? null,
                     'address' => $page['address'] ?? null,
                     'area' => array_values(array_intersect($labels, self::AREAS))[0] ?? null,
-                    'genres' => array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'genre')),
+                    // "Other" and "Live" are in ADE's genre list but help nobody choose.
+                    'genres' => array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'genre' && ! in_array($label, ['Other', 'Live'], true))),
                     'eventTypes' => $types,
                     'tags' => array_values(array_filter($labels, fn (string $label): bool => ! isset($groups[$label]) && ! in_array($label, self::AREAS, true))),
                     'ticketStatus' => $isPro ? 'pro pass' : $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
@@ -131,13 +133,41 @@ class AdeSync extends Command
                     'syncedAt' => $now,
                 ],
             ];
-        })->sortBy('content.startsAt')->values();
+        })->map(fn (array $item): array => [
+            ...$item,
+            'content' => [...$item['content'], ...AdeEventClassifier::classify(['title' => $item['title'], ...$item['content']])],
+        ])->sortBy('content.startsAt')->values();
+
+        $items = $this->withSeries($items);
 
         // The lineup comes from the artist pass; keep it when only events are refreshed.
         $ids = $this->upsert('ade-event', $items, preserve: ['lineup']);
         $this->info('ade-event saved: '.count($ids).', event pages read: '.count($pages));
 
         return $ids;
+    }
+
+    /**
+     * Same title at the same venue on several days (exhibitions, labs, hubs) gets one
+     * series key and the list of its dates, so clients can show it once.
+     *
+     * @param  Collection<int, array{title: string, content: array<string, mixed>}>  $items
+     * @return Collection<int, array{title: string, content: array<string, mixed>}>
+     */
+    private function withSeries(Collection $items): Collection
+    {
+        $keyOf = fn (array $item): string => AdeEventClassifier::seriesKey($item['title'], $item['content']['venue'] ?? null);
+        $dates = $items->groupBy($keyOf)->map(fn (Collection $group): array => $group
+            ->map(fn (array $item): string => substr((string) $item['content']['startsAt'], 0, 10))
+            ->unique()->sort()->values()->all());
+
+        return $items->map(function (array $item) use ($keyOf, $dates): array {
+            $seriesDates = $dates[$keyOf($item)];
+            $item['content']['series'] = count($seriesDates) > 1 ? $keyOf($item) : null;
+            $item['content']['seriesDates'] = count($seriesDates) > 1 ? $seriesDates : [];
+
+            return $item;
+        });
     }
 
     /** @param  list<string>  $types */

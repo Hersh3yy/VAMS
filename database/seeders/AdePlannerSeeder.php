@@ -57,6 +57,16 @@ class AdePlannerSeeder extends Seeder
                 'is_active' => true,
                 'field_config' => [
                     ['name' => 'program', 'type' => 'select', 'label' => 'Program', 'required' => false, 'options' => ['festival', 'pro']],
+                    // Derived by AdeEventClassifier on every sync.
+                    ['name' => 'intent', 'type' => 'select', 'label' => 'Intent', 'required' => false, 'summary' => true, 'options' => ['party', 'learn', 'meet', 'listen', 'recharge', 'other']],
+                    ['name' => 'format', 'type' => 'select', 'label' => 'Format', 'required' => false, 'options' => ['session', 'drop-in', 'tba']],
+                    ['name' => 'durationMinutes', 'type' => 'number', 'label' => 'Duration (minutes)', 'required' => false],
+                    ['name' => 'timeOfDay', 'type' => 'select', 'label' => 'Time of day', 'required' => false, 'options' => ['morning', 'afternoon', 'evening', 'night', 'all-day', 'tba']],
+                    ['name' => 'isParty', 'type' => 'checkbox', 'label' => 'Party or concert', 'required' => false],
+                    ['name' => 'access', 'type' => 'select', 'label' => 'Access', 'required' => false, 'options' => ['free', 'ticket', 'pro']],
+                    ['name' => 'kinds', 'type' => 'json', 'label' => 'Kinds', 'required' => false],
+                    ['name' => 'series', 'type' => 'text', 'label' => 'Series key (same event on several days)', 'required' => false],
+                    ['name' => 'seriesDates', 'type' => 'json', 'label' => 'Series dates', 'required' => false],
                     ['name' => 'venue', 'type' => 'text', 'label' => 'Venue', 'required' => false, 'summary' => true],
                     ['name' => 'startsAt', 'type' => 'datetime', 'label' => 'Starts', 'required' => true, 'summary' => true],
                     ['name' => 'endsAt', 'type' => 'datetime', 'label' => 'Ends', 'required' => false],

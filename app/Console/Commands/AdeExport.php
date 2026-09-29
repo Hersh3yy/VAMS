@@ -57,6 +57,9 @@ class AdeExport extends Command
             'area' => $entry->content['area'] ?? null,
             'address' => $entry->content['address'] ?? null,
             'tags' => $entry->content['tags'] ?? null,
+            ...array_intersect_key($entry->content, array_flip([
+                'kinds', 'intent', 'timeOfDay', 'isParty', 'access', 'format', 'durationMinutes', 'series', 'seriesDates',
+            ])),
         ]);
 
         $path = base_path($this->argument('path'));
