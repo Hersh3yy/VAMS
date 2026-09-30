@@ -48,3 +48,31 @@ it('groups the same event at the same venue into one series key', function (): v
 it('gives no duration when ADE lists the end before the start', function (): void {
     expect(AdeEventClassifier::durationMinutes('2026-10-22T13:00:00+02:00', '2026-09-22T17:00:00+02:00'))->toBeNull();
 });
+
+it('splits interviews off talks, but only for talks and ADE Pro', function () use ($base): void {
+    $pro = [...$base, 'program' => 'pro', 'eventTypes' => ['Keynotes, Talks & Panels'], 'genres' => []];
+
+    expect(AdeEventClassifier::kinds([...$pro, 'title' => 'Luciano In Conversation with Marcel Dettman']))->toBe(['interviews'])
+        ->and(AdeEventClassifier::kinds([...$pro, 'title' => 'Nastia meets Thys (Noisia): Underground Forever']))->toBe(['interviews'])
+        ->and(AdeEventClassifier::kinds([...$pro, 'title' => "'The Industry We Want to Build' with Troy Carter"]))->toBe(['interviews'])
+        ->and(AdeEventClassifier::kinds([...$pro, 'title' => 'Busy Signal Campfire Q&A']))->toBe(['interviews'])
+        ->and(AdeEventClassifier::kinds([...$pro, 'title' => 'The State of the Live Industry: One Year On']))->toBe(['talks'])
+        ->and(AdeEventClassifier::classify([...$base, 'title' => 'DJ International Records: Chicago Meets Amsterdam', 'eventTypes' => ['Daytime events'], 'genres' => ['House']])['isParty'])->toBeTrue();
+});
+
+it('keeps Meet the... sessions apart from general networking', function () use ($base): void {
+    expect(AdeEventClassifier::classify([...$base, 'program' => 'pro', 'title' => 'Meet The Agents', 'eventTypes' => ['Networking events'], 'tags' => ['Meet the... Sessions', 'Networking']]))
+        ->toMatchArray(['kinds' => ['meet-the'], 'intent' => 'meet']);
+});
+
+it('files brand demos as gear and ADE Lab Discovery as free', function () use ($base): void {
+    expect(AdeEventClassifier::classify([...$base, 'program' => 'pro', 'title' => 'Gear Test Lab - Wednesday', 'eventTypes' => ['Brand demo'], 'tags' => ['Gear', 'Lab Discovery', 'ADE Lab']]))
+        ->toMatchArray(['kinds' => ['gear'], 'intent' => 'learn', 'access' => 'free'])
+        ->and(AdeEventClassifier::kinds([...$base, 'title' => 'Meet the Makers | Bitwig', 'eventTypes' => ['Music Culture']]))->toBe(['gear', 'culture']);
+});
+
+it('keeps concerts as parties now live performances are their own kind', function () use ($base): void {
+    expect(AdeEventClassifier::classify([...$base, 'title' => 'Orchestra meets Techno', 'eventTypes' => ['Live Performances'], 'genres' => ['Techno']])['isParty'])->toBeTrue()
+        ->and(AdeEventClassifier::classify([...$base, 'program' => 'pro', 'title' => 'Demolition XXIX', 'eventTypes' => ['Live Performances'], 'genres' => []]))
+        ->toMatchArray(['kinds' => ['performances'], 'intent' => 'listen', 'isParty' => false]);
+});

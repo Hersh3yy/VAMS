@@ -124,7 +124,11 @@ class AdeSync extends Command
                     'genres' => array_values(array_filter($labels, fn (string $label): bool => ($groups[$label] ?? null) === 'genre' && ! in_array($label, ['Other', 'Live'], true))),
                     'eventTypes' => $types,
                     'tags' => array_values(array_filter($labels, fn (string $label): bool => ! isset($groups[$label]) && ! in_array($label, self::AREAS, true))),
-                    'ticketStatus' => $isPro ? 'pro pass' : $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
+                    'ticketStatus' => match (true) {
+                        AdeEventClassifier::isLabDiscovery(['tags' => $labels]) => 'free',
+                        $isPro => 'pro pass',
+                        default => $this->ticketStatus((bool) ($row['soldOut'] ?? false), isset($withTickets[$id]), $types),
+                    },
                     'soldOut' => (bool) ($row['soldOut'] ?? false),
                     'ticketUrl' => $page['ticketUrl'] ?? null,
                     'ticketLabel' => $page['ticketLabel'] ?? null,
