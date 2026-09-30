@@ -80,7 +80,7 @@ Worst first.
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
 - [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
-- [ ] Re-run `php artisan ade:sync --only=events` now and then until ADE (21-25 Oct) for sold-out and time changes <!-- id:e9 -->
+- [x] Daily `ade:sync --reuse-pages` until ADE: launchd on Hiren's Mac (`scripts/ade-sync-daily.sh`) <!-- id:e9 -->
 - [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
 
 ## Roadmap — far future
@@ -96,6 +96,12 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-09-30 — ADE classifier: interviews, Meet the..., demos; daily sync
+- `AdeEventClassifier`: new kinds `interviews` (split off talks for talks and ADE Pro only, so "Chicago Meets Amsterdam" stays a party), `meet-the` (ADE's "Meet the... Sessions", split off networking), `performances` (Live Performances, still party-compatible). `gear` now also from ADE's "Brand demo"/"Gear" labels and "Meet the Makers". ADE Lab Discovery counts as free. 11 classifier tests.
+- ADE published the Pro timetable on 30 Sep; resynced with `--reuse-pages` (14 min: 1,349 events, 3,946 artists, 972 events with a lineup). Daily resync on Hiren's Mac, not a DO worker: `scripts/ade-sync-daily.sh` via launchd `ninja.hiren.ade-sync` (07:00, runs on wake if asleep, stops after 26 Oct, log `~/Library/Logs/ade-sync.log`).
+- `POST /api/ade-planner/stats` (API key, own 600/min limit): anonymous counters `hits` on ade-artist and `favorites` on ade-event, row-locked, never below zero, only the key owner's ADE entries. `ade:sync` preserves both. Seeder adds the two fields. The API's one write.
+- New project entry "ADE Planner" for hiren.ninja (order 0), all project orders made unique.
 
 ### 2026-09-28 — entry field system polish, ADE relations and tickets
 - One shared `usesFieldForm()` rule: types with real fields now use the field form and read view everywhere (was only for repeatable/image/object/relation). New field types `datetime` and `url`, per-field `summary` flag for list cards, relation picker and clickable relation chips, `GET /entries/lookup` and `/entries/search`. 259 tests.
