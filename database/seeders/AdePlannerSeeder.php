@@ -43,6 +43,7 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'spotifyId', 'type' => 'text', 'label' => 'Spotify artist id', 'required' => false],
                     ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
                     ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
+                    ['name' => 'hits', 'type' => 'number', 'label' => 'Found in ADE Planner searches', 'required' => false, 'summary' => true],
                     ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]
@@ -86,6 +87,7 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'categories', 'type' => 'text', 'label' => 'ADE categories (raw)', 'required' => false],
                     ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
                     ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
+                    ['name' => 'favorites', 'type' => 'number', 'label' => 'Starred in ADE Planner', 'required' => false, 'summary' => true],
                     ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]

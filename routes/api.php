@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\AdePlannerStatsController;
 use App\Http\Controllers\Api\AlbumController;
 use App\Http\Controllers\Api\EntryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\MosaicController;
+use App\Http\Middleware\ValidateApiKey;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,12 +17,18 @@ use Illuminate\Support\Facades\Route;
 |
 | These routes are designed for external websites/applications that need
 | to display your albums and mosaics using API key authentication.
-| They are READ-ONLY by design for security.
+| They are READ-ONLY by design for security, with one exception: the
+| anonymous ADE Planner counters (AdePlannerStatsController).
 |
 */
 
+// Counters only (artist hits, event favorites) on the key owner's ADE entries. Its own
+// limit: every search and star on hiren.ninja lands here, from a handful of server IPs.
+Route::middleware([ValidateApiKey::class, 'throttle:600,1'])
+    ->post('/ade-planner/stats', [AdePlannerStatsController::class, 'store']);
+
 // API Key protected routes - READ-ONLY for external frontends
-Route::middleware([\App\Http\Middleware\ValidateApiKey::class, 'throttle:60,1'])->group(function (): void {
+Route::middleware([ValidateApiKey::class, 'throttle:60,1'])->group(function (): void {
 
     // Test connection endpoint
     Route::get('/test', function (Request $request): JsonResponse {

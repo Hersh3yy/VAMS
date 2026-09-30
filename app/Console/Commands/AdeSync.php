@@ -145,7 +145,8 @@ class AdeSync extends Command
         $items = $this->withSeries($items);
 
         // The lineup comes from the artist pass; keep it when only events are refreshed.
-        $ids = $this->upsert('ade-event', $items, preserve: ['lineup']);
+        // Favorites are counted by ADE Planner (AdePlannerStatsController), not by ADE.
+        $ids = $this->upsert('ade-event', $items, preserve: ['lineup', 'favorites']);
         $this->info('ade-event saved: '.count($ids).', event pages read: '.count($pages));
 
         return $ids;
@@ -294,7 +295,8 @@ class AdeSync extends Command
             ],
         ])->values();
 
-        $artistIds = $this->upsert('ade-artist', $items);
+        // Hits are counted by ADE Planner (AdePlannerStatsController), not by ADE.
+        $artistIds = $this->upsert('ade-artist', $items, preserve: ['hits']);
         $missing = $rows->reject(fn (array $row): bool => isset($details[(string) $row['id']]))->count();
         $this->info('ade-artist saved: '.count($artistIds).', artist pages missing: '.$missing);
 
