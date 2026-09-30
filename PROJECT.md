@@ -80,7 +80,7 @@ Worst first.
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
 - [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
-- [x] Daily `ade:sync --reuse-pages` until ADE: launchd on Hiren's Mac (`scripts/ade-sync-daily.sh`) <!-- id:e9 -->
+- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out), then `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
 - [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
 
 ## Roadmap — far future
@@ -99,7 +99,7 @@ Worst first.
 
 ### 2026-09-30 — ADE classifier: interviews, Meet the..., demos; daily sync
 - `AdeEventClassifier`: new kinds `interviews` (split off talks for talks and ADE Pro only, so "Chicago Meets Amsterdam" stays a party), `meet-the` (ADE's "Meet the... Sessions", split off networking), `performances` (Live Performances, still party-compatible). `gear` now also from ADE's "Brand demo"/"Gear" labels and "Meet the Makers". ADE Lab Discovery counts as free. 11 classifier tests.
-- ADE published the Pro timetable on 30 Sep; resynced with `--reuse-pages` (14 min: 1,349 events, 3,946 artists, 972 events with a lineup). Daily resync on Hiren's Mac, not a DO worker: `scripts/ade-sync-daily.sh` via launchd `ninja.hiren.ade-sync` (07:00, runs on wake if asleep, stops after 26 Oct, log `~/Library/Logs/ade-sync.log`).
+- ADE published the Pro timetable on 30 Sep; resynced with `--reuse-pages` (14 min: 1,349 events, 3,946 artists, 972 events with a lineup). No schedule: run `php artisan ade:sync --reuse-pages` by hand when ADE updates (about 8-15 min).
 - `POST /api/ade-planner/stats` (API key, own 600/min limit): anonymous counters `hits` on ade-artist and `favorites` on ade-event, row-locked, never below zero, only the key owner's ADE entries. `ade:sync` preserves both. Seeder adds the two fields. The API's one write.
 - New project entry "ADE Planner" for hiren.ninja (order 0), all project orders made unique.
 
