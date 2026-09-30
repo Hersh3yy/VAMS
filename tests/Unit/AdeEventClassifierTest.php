@@ -44,3 +44,7 @@ it('groups the same event at the same venue into one series key', function (): v
         ->toBe(AdeEventClassifier::seriesKey('Het Ei  by Touki Delphine!', 'ADE Lab Village'))
         ->not->toBe(AdeEventClassifier::seriesKey('Het Ei by Touki Delphine', 'Paradiso'));
 });
+
+it('gives no duration when ADE lists the end before the start', function (): void {
+    expect(AdeEventClassifier::durationMinutes('2026-10-22T13:00:00+02:00', '2026-09-22T17:00:00+02:00'))->toBeNull();
+});

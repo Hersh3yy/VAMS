@@ -151,7 +151,10 @@ final class AdeEventClassifier
             return null;
         }
 
-        return (int) CarbonImmutable::parse($startsAt)->diffInMinutes(CarbonImmutable::parse($endsAt));
+        $minutes = (int) CarbonImmutable::parse($startsAt)->diffInMinutes(CarbonImmutable::parse($endsAt));
+
+        // ADE sometimes lists an end before the start; that's no duration, not a negative one.
+        return $minutes > 0 ? $minutes : null;
     }
 
     /** Same title at the same venue on several days is one exhibition, lab or hub. */
