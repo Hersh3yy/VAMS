@@ -15,7 +15,7 @@
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
 **Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-09-27
+**Last assessed** · 2026-10-01 (branch `image-colors-v2` adds the API-key write API — merge to `main` when sure; `main` auto-deploys)
 
 ---
 
@@ -70,6 +70,22 @@ Worst first.
 
 🗣️ **Say it to a senior** — "Same-engine Postgres move. Laravel owns the schema on the new box, I copy data only, then reset the sequences. No dialect rewrite, no ownership drift."
 
+### API-key writes without a permission layer
+
+🔭 **What it does** — `ValidateApiKey` resolves `X-API-Key` to a `User` and installs it as `request->user()`. The new `storeWithApiKey`/`updateWithApiKey`/`destroyWithApiKey` then query through `$user->entries()->find($id)` — already filtered to that user — so another key's entry does not exist from this caller's point of view (404), and `hasEntryTypePermission()` gates which types the key may create. The same `EntryService` + `field_config` validation the Inertia UI uses performs the write.
+
+⚖️ **Why this way** — A per-key scope/ACL system is the "proper" shape, but Hiren wanted no plan/rate/permission machinery. Owner-scoped queries plus the existing type grants give the same safety for one key = one account, with zero new concepts. 404 instead of 403 also avoids leaking which uuids exist.
+
+🗣️ **Say it to a senior** — "API-key writes act as the key's user: ownership is enforced by querying through `$user->entries()`, type access by the existing grants — no new permission layer."
+
+### Normalized Image Colors presets
+
+🔭 **What it does** — Strapi held a preset as one row embedding every analysed image (hence its 413s). VAMS stores one `preset` entry plus one `processed-image` entry per image, linked by an `entry_relation` field — an array of entry uuids in `content.preset` (`['preset.*' => 'string|exists:entries,id']`). `strapi:import-image-colors` writes both from a bundled snapshot, idempotent by `content.strapi_id`; the app's gateway re-stitches them into the old embedded shape at the boundary.
+
+⚖️ **Why this way** — Relations live in `content` json (no pivot table), which is what the field system already supports; a dedicated table would mean a parallel relation model for one consumer.
+
+🗣️ **Say it to a senior** — "Presets are normalized into parent + child entries linked by an entry_relation uuid array; the client re-embeds them, so the 413 blob problem is gone without a new table."
+
 ## Roadmap — near future
 
 - [ ] Deploy `coolify-integration` to Coolify: Postgres 17, the env block (`APP_KEY`, `APP_URL`, `RUN_MIGRATIONS=true`, `DO_SPACES_*` on the prod bucket, session/CORS/Sanctum on the new host), `/up` health check, domain <!-- id:e1 -->
@@ -87,7 +103,7 @@ Worst first.
 
 - [ ] Hash API keys (store sha256, unique index, look up by hash) <!-- id:f1 -->
 - [ ] Carry over the useful docs from `AI-REFACTOR` (adversarial review, roadmap, cockpit history) if wanted <!-- id:f2 -->
-- [ ] Write API for entries plus token auth, which unblocks image-colors persistence into VAMS <!-- id:f3 -->
+- [x] Write API for entries plus token auth, which unblocks image-colors persistence into VAMS — done 2026-10-01 on branch `image-colors-v2`: `POST/PUT/PATCH/DELETE /api/entries[/{id}]` under `ValidateApiKey`, owner-scoped, 5 feature tests. Merge to `main` = deploy (DO auto-deploys `main`) <!-- id:f3 -->
 - [ ] Account tiers (deferred: a product decision, not a build) <!-- id:f4 -->
 - [ ] Decide Redis or database for session/cache/queue once real traffic is known <!-- id:f5 -->
 
@@ -96,6 +112,12 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-10-01 — Image Colors v2: write API + preset migration (branch `image-colors-v2`)
+- Hiren's prio: the image-colors app must **create new presets** in VAMS. API-key routes were read-only by design, so added `storeWithApiKey`/`updateWithApiKey`/`destroyWithApiKey` to `Api\EntryController` + routes; reuses `EntryService` + `EntryValidationService` + `hasEntryTypePermission`; writes scoped to the key owner via `$user->entries()`; deliberately no plan/rate gate. `tests/Api/EntryWriteApiTest.php` 5 green. Commit `22d0fb6`.
+- `strapi:import-image-colors` (mirrors `ImportItamarWebsite`): bundled snapshot `database/data/image-colors-strapi-snapshot.json`, idempotent by `content.strapi_id`. **Ran on prod**: 22 `preset` + 173 `processed-image` entries for itamar@gilboa.net. Commit `6a5ca5d`. `parent-colors` still empty.
+- Ran `ImageColorsSeeder` on prod (idempotent; types already existed) — itamar's api_key unchanged.
+- Gotchas: the local `api` container is php 8.3 while composer now needs 8.4.* → `docker compose exec api artisan` fatals; ran artisan on the host (php 8.5), which — per the Run-it warning — hits the **prod** DB. Branch code was served on host `:8787` to verify write routes before any deploy. Not merged, not pushed.
 
 ### 2026-09-30 — ADE classifier: interviews, Meet the..., demos; daily sync
 - `AdeEventClassifier`: new kinds `interviews` (split off talks for talks and ADE Pro only, so "Chicago Meets Amsterdam" stays a party), `meet-the` (ADE's "Meet the... Sessions", split off networking), `performances` (Live Performances, still party-compatible). `gear` now also from ADE's "Brand demo"/"Gear" labels and "Meet the Makers". ADE Lab Discovery counts as free. 11 classifier tests.
