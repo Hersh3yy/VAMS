@@ -21,7 +21,7 @@ use Illuminate\Database\Seeder;
  */
 class AdePlannerSeeder extends Seeder
 {
-    public const SLUGS = ['ade-artist', 'ade-event'];
+    public const SLUGS = ['ade-artist', 'ade-event', 'ade-search'];
 
     public const OWNER_EMAIL = 'info@hiren.ninja';
 
@@ -93,6 +93,36 @@ class AdePlannerSeeder extends Seeder
             ]
         );
         $this->command->info('Entry type ready: ade-event');
+
+        // Written by ADE Planner (AdePlannerStatsController), one per search. Anonymous:
+        // what was searched and what matched, never who (no IP, no browser details).
+        // Stored as draft, so the read API never serves them.
+        EntryType::updateOrCreate(
+            ['slug' => 'ade-search'],
+            [
+                'name' => 'ADE Search',
+                'description' => 'One ADE Planner search: a playlist link, typed artist names or a daytime query, and what it found. Anonymous. Filled by hiren.ninja.',
+                'is_active' => true,
+                'field_config' => [
+                    ['name' => 'kind', 'type' => 'select', 'label' => 'Kind', 'required' => true, 'summary' => true, 'options' => ['playlist', 'names', 'daytime']],
+                    ['name' => 'source', 'type' => 'select', 'label' => 'Source', 'required' => false, 'summary' => true, 'options' => ['spotify', 'apple-music', 'youtube-music', 'names', 'daytime']],
+                    ['name' => 'searchedAt', 'type' => 'datetime', 'label' => 'Searched at', 'required' => true, 'summary' => true],
+                    ['name' => 'playlistUrl', 'type' => 'url', 'label' => 'Playlist link', 'required' => false],
+                    ['name' => 'playlistTitle', 'type' => 'text', 'label' => 'Playlist title', 'required' => false],
+                    ['name' => 'trackCount', 'type' => 'number', 'label' => 'Tracks read', 'required' => false],
+                    ['name' => 'partial', 'type' => 'checkbox', 'label' => 'Playlist only partly read', 'required' => false],
+                    ['name' => 'query', 'type' => 'textarea', 'label' => 'Typed names or daytime query', 'required' => false],
+                    ['name' => 'artistCount', 'type' => 'number', 'label' => 'Artists searched', 'required' => false, 'summary' => true],
+                    ['name' => 'matchedCount', 'type' => 'number', 'label' => 'Artists on ADE', 'required' => false, 'summary' => true],
+                    ['name' => 'matchedArtists', 'type' => 'entry_relation', 'label' => 'Matched artists', 'required' => false, 'entry_type_slug' => 'ade-artist', 'min' => 0],
+                    // Wanted but not playing ADE: who the crowd would come for.
+                    ['name' => 'unmatched', 'type' => 'json', 'label' => 'Not on the lineup', 'required' => false],
+                    ['name' => 'resultCount', 'type' => 'number', 'label' => 'Daytime results', 'required' => false],
+                    ['name' => 'example', 'type' => 'checkbox', 'label' => '"Try an example" search', 'required' => false],
+                ],
+            ]
+        );
+        $this->command->info('Entry type ready: ade-search');
 
         $user = User::where('email', self::OWNER_EMAIL)->firstOrFail();
         $user->entry_type_permissions = array_values(array_unique(array_merge(

@@ -24,6 +24,7 @@ beforeEach(function (): void {
     $this->user = User::factory()->create(['api_key' => 'key-owner', 'is_approved' => true]);
     $this->artistType = adeStatsType('ade-artist');
     $this->eventType = adeStatsType('ade-event');
+    $this->searchType = adeStatsType('ade-search');
 });
 
 it('counts artist hits and event favorites, never below zero', function (): void {
@@ -57,4 +58,33 @@ it('only touches the key owner\'s ADE entries', function (): void {
 it('needs an API key and a valid body', function (): void {
     $this->postJson('/api/ade-planner/stats', ['hits' => []])->assertUnauthorized();
     $this->postJson('/api/ade-planner/stats', ['favorites' => [['id' => 'nope', 'delta' => 5]]], ['X-API-Key' => 'key-owner'])->assertUnprocessable();
+});
+
+it('logs a search as a draft entry, without who searched', function (): void {
+    $artist = adeStatsEntry($this->user, $this->artistType);
+
+    $response = $this->postJson('/api/ade-planner/stats', [
+        'hits' => [$artist->id],
+        'search' => [
+            'kind' => 'playlist', 'source' => 'spotify', 'playlistUrl' => 'https://open.spotify.com/playlist/abc',
+            'playlistTitle' => 'Techno bangers', 'trackCount' => 120, 'artistCount' => 80,
+            'matchedArtists' => [$artist->id], 'unmatched' => ['Nobody'],
+        ],
+    ], ['X-API-Key' => 'key-owner'])->assertOk();
+
+    $search = Entry::find($response->json('data.search'));
+    expect($search->title)->toBe('Techno bangers')
+        ->and($search->status)->toBe('draft')
+        ->and($search->entry_type_id)->toBe($this->searchType->id)
+        ->and($search->content)->toMatchArray(['kind' => 'playlist', 'matchedCount' => 1, 'unmatched' => ['Nobody'], 'trackCount' => 120])
+        ->and($search->content)->toHaveKey('searchedAt')
+        ->and($search->content)->not->toHaveKeys(['ip', 'userAgent']);
+});
+
+it('titles typed-name searches by their first names', function (): void {
+    $response = $this->postJson('/api/ade-planner/stats', [
+        'search' => ['kind' => 'names', 'source' => 'names', 'query' => "Amelie Lens\nNTO, Adam Beyer\nKerri Chandler\nPaul Kalkbrenner", 'example' => false],
+    ], ['X-API-Key' => 'key-owner'])->assertOk();
+
+    expect(Entry::find($response->json('data.search'))->title)->toBe('Amelie Lens, NTO, Adam Beyer, Kerri Chandler');
 });

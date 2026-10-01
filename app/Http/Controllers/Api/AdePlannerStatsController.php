@@ -10,11 +10,13 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
- * The one write in the API-key API: anonymous counters for ADE Planner (hiren.ninja).
+ * The one write in the API-key API: anonymous ADE Planner data (hiren.ninja).
  * `hits` on an ade-artist = searches that found that artist; `favorites` on an ade-event
- * = people who starred it. Only counts, never who. ade:sync keeps both on resync.
+ * = people who starred it; one ade-search entry per search (what, never who).
+ * ade:sync keeps hits and favorites on resync.
  */
 class AdePlannerStatsController extends BaseApiController
 {
@@ -26,6 +28,21 @@ class AdePlannerStatsController extends BaseApiController
             'favorites' => ['array', 'max:50'],
             'favorites.*.id' => ['required', 'uuid'],
             'favorites.*.delta' => ['required', 'integer', 'in:-1,1'],
+            'search' => ['array'],
+            'search.kind' => ['required_with:search', 'in:playlist,names,daytime'],
+            'search.source' => ['nullable', 'in:spotify,apple-music,youtube-music,names,daytime'],
+            'search.playlistUrl' => ['nullable', 'url', 'max:500'],
+            'search.playlistTitle' => ['nullable', 'string', 'max:250'],
+            'search.trackCount' => ['nullable', 'integer', 'min:0'],
+            'search.partial' => ['nullable', 'boolean'],
+            'search.query' => ['nullable', 'string', 'max:5000'],
+            'search.artistCount' => ['nullable', 'integer', 'min:0'],
+            'search.matchedArtists' => ['nullable', 'array', 'max:500'],
+            'search.matchedArtists.*' => ['uuid'],
+            'search.unmatched' => ['nullable', 'array', 'max:200'],
+            'search.unmatched.*' => ['string', 'max:200'],
+            'search.resultCount' => ['nullable', 'integer', 'min:0'],
+            'search.example' => ['nullable', 'boolean'],
         ]);
 
         /** @var User $user */
@@ -40,7 +57,54 @@ class AdePlannerStatsController extends BaseApiController
         return $this->success([
             'hits' => $this->increment($user, 'ade-artist', 'hits', $hits),
             'favorites' => $this->increment($user, 'ade-event', 'favorites', $favorites),
+            'search' => isset($data['search']) ? $this->logSearch($user, $data['search']) : null,
         ]);
+    }
+
+    /**
+     * One ade-search entry, as a draft so the read API never serves it.
+     *
+     * @param  array<string, mixed>  $search  validated
+     * @return string the new entry id
+     */
+    private function logSearch(User $user, array $search): string
+    {
+        $typeId = EntryType::where('slug', 'ade-search')->value('id');
+        $matched = array_values(array_unique($search['matchedArtists'] ?? []));
+        $query = trim((string) ($search['query'] ?? ''));
+
+        $title = match ($search['kind']) {
+            'playlist' => Str::limit(($search['playlistTitle'] ?? '') ?: 'Playlist', 120),
+            'daytime' => 'Daytime: '.Str::limit($query, 100),
+            default => Str::limit(implode(', ', array_slice(preg_split('/\s*[\n,]\s*/', $query) ?: [], 0, 4)), 120) ?: 'Names',
+        };
+
+        $entry = Entry::withoutEvents(fn (): Entry => Entry::create([
+            'id' => (string) Str::uuid(),
+            'user_id' => $user->id,
+            'entry_type_id' => $typeId,
+            'title' => $title,
+            'status' => 'draft',
+            'order' => 0,
+            'content' => array_filter([
+                'kind' => $search['kind'],
+                'source' => $search['source'] ?? null,
+                'searchedAt' => now()->toIso8601String(),
+                'playlistUrl' => $search['playlistUrl'] ?? null,
+                'playlistTitle' => $search['playlistTitle'] ?? null,
+                'trackCount' => $search['trackCount'] ?? null,
+                'partial' => $search['partial'] ?? null,
+                'query' => $query !== '' ? $query : null,
+                'artistCount' => $search['artistCount'] ?? null,
+                'matchedCount' => count($matched),
+                'matchedArtists' => $matched,
+                'unmatched' => $search['unmatched'] ?? null,
+                'resultCount' => $search['resultCount'] ?? null,
+                'example' => $search['example'] ?? null,
+            ], fn (mixed $value): bool => $value !== null),
+        ]));
+
+        return $entry->id;
     }
 
     /**
