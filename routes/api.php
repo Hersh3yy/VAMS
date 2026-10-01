@@ -53,11 +53,16 @@ Route::middleware([ValidateApiKey::class, 'throttle:60,1'])->group(function (): 
         Route::get('/{id}', [MosaicController::class, 'showWithApiKey']);
     });
 
-    // READ-ONLY Entry access (I AMS, Recipes, etc.)
+    // Entry access (I AMS, Recipes, presets, etc.)
     Route::prefix('entries')->group(function (): void {
         Route::get('/', [EntryController::class, 'indexWithApiKey']);
         Route::get('/by-type/{type}', [EntryController::class, 'indexByTypeWithApiKey']);
         Route::get('/{id}', [EntryController::class, 'showWithApiKey']);
+        // Writes act as the key owner, limited to granted entry types.
+        Route::post('/', [EntryController::class, 'storeWithApiKey']);
+        Route::put('/{id}', [EntryController::class, 'updateWithApiKey']);
+        Route::patch('/{id}', [EntryController::class, 'updateWithApiKey']);
+        Route::delete('/{id}', [EntryController::class, 'destroyWithApiKey']);
     });
 
 });
