@@ -296,7 +296,7 @@ class AdeSync extends Command
         ])->values();
 
         // Hits are counted by ADE Planner (AdePlannerStatsController), not by ADE.
-        $artistIds = $this->upsert('ade-artist', $items, preserve: ['hits']);
+        $artistIds = $this->upsert('ade-artist', $items, preserve: ['hits', 'searches']);
         $missing = $rows->reject(fn (array $row): bool => isset($details[(string) $row['id']]))->count();
         $this->info('ade-artist saved: '.count($artistIds).', artist pages missing: '.$missing);
 

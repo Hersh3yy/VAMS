@@ -14,9 +14,10 @@ use Illuminate\Support\Str;
 
 /**
  * The one write in the API-key API: anonymous ADE Planner data (hiren.ninja).
- * `hits` on an ade-artist = searches that found that artist; `favorites` on an ade-event
+ * `hits` on an ade-artist = searches that found that artist (playlist or typed), `searches`
+ * = typed by name, the stronger signal; `favorites` on an ade-event
  * = people who starred it; one ade-search entry per search (what, never who).
- * ade:sync keeps hits and favorites on resync.
+ * ade:sync keeps these counters on resync.
  */
 class AdePlannerStatsController extends BaseApiController
 {
@@ -25,6 +26,8 @@ class AdePlannerStatsController extends BaseApiController
         $data = $request->validate([
             'hits' => ['array', 'max:500'],
             'hits.*' => ['uuid'],
+            'searched' => ['array', 'max:500'],
+            'searched.*' => ['uuid'],
             'favorites' => ['array', 'max:50'],
             'favorites.*.id' => ['required', 'uuid'],
             'favorites.*.delta' => ['required', 'integer', 'in:-1,1'],
@@ -49,6 +52,7 @@ class AdePlannerStatsController extends BaseApiController
         $user = $request->user();
 
         $hits = array_fill_keys(array_unique($data['hits'] ?? []), 1);
+        $searched = array_fill_keys(array_unique($data['searched'] ?? []), 1);
         $favorites = [];
         foreach ($data['favorites'] ?? [] as $favorite) {
             $favorites[$favorite['id']] = ($favorites[$favorite['id']] ?? 0) + (int) $favorite['delta'];
@@ -56,6 +60,7 @@ class AdePlannerStatsController extends BaseApiController
 
         return $this->success([
             'hits' => $this->increment($user, 'ade-artist', 'hits', $hits),
+            'searched' => $this->increment($user, 'ade-artist', 'searches', $searched),
             'favorites' => $this->increment($user, 'ade-event', 'favorites', $favorites),
             'search' => isset($data['search']) ? $this->logSearch($user, $data['search']) : null,
         ]);

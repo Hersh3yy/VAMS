@@ -43,6 +43,15 @@ it('counts artist hits and event favorites, never below zero', function (): void
     expect($event->fresh()->content['favorites'])->toBe(1);
 });
 
+it('counts artists typed by name separately from all finds', function (): void {
+    $artist = adeStatsEntry($this->user, $this->artistType, ['hits' => 5]);
+
+    $this->postJson('/api/ade-planner/stats', ['hits' => [$artist->id], 'searched' => [$artist->id]], ['X-API-Key' => 'key-owner'])
+        ->assertOk()->assertJsonPath('data.searched', 1);
+
+    expect($artist->fresh()->content)->toMatchArray(['hits' => 6, 'searches' => 1]);
+});
+
 it('only touches the key owner\'s ADE entries', function (): void {
     $other = User::factory()->create();
     $foreign = adeStatsEntry($other, $this->eventType);

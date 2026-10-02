@@ -44,6 +44,7 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
                     ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
                     ['name' => 'hits', 'type' => 'number', 'label' => 'Found in ADE Planner searches', 'required' => false, 'summary' => true],
+                    ['name' => 'searches', 'type' => 'number', 'label' => 'Searched by name in ADE Planner', 'required' => false, 'summary' => true],
                     ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]
