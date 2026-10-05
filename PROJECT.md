@@ -96,7 +96,7 @@ Worst first.
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
 - [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
-- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out), then `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
+- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
 - [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
 
 ## Roadmap — far future
