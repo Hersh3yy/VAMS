@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 /**
  * The one write in the API-key API: anonymous ADE Planner data (hiren.ninja).
  * `hits` on an ade-artist = searches that found that artist (playlist or typed), `searches`
- * = typed by name, the stronger signal; `favorites` on an ade-event
+ * = typed by name, the stronger signal; on an ade-event `opens` (details opened),
+ * `ticketClicks` (ticket shop, resale or ADE page) and `favorites`
  * = people who starred it; one ade-search entry per search (what, never who).
  * ade:sync keeps these counters on resync.
  */
@@ -28,6 +29,10 @@ class AdePlannerStatsController extends BaseApiController
             'hits.*' => ['uuid'],
             'searched' => ['array', 'max:500'],
             'searched.*' => ['uuid'],
+            'opens' => ['array', 'max:50'],
+            'opens.*' => ['uuid'],
+            'ticketClicks' => ['array', 'max:50'],
+            'ticketClicks.*' => ['uuid'],
             'favorites' => ['array', 'max:50'],
             'favorites.*.id' => ['required', 'uuid'],
             'favorites.*.delta' => ['required', 'integer', 'in:-1,1'],
@@ -61,6 +66,8 @@ class AdePlannerStatsController extends BaseApiController
         return $this->success([
             'hits' => $this->increment($user, 'ade-artist', 'hits', $hits),
             'searched' => $this->increment($user, 'ade-artist', 'searches', $searched),
+            'opens' => $this->increment($user, 'ade-event', 'opens', array_fill_keys(array_unique($data['opens'] ?? []), 1)),
+            'ticketClicks' => $this->increment($user, 'ade-event', 'ticketClicks', array_fill_keys(array_unique($data['ticketClicks'] ?? []), 1)),
             'favorites' => $this->increment($user, 'ade-event', 'favorites', $favorites),
             'search' => isset($data['search']) ? $this->logSearch($user, $data['search']) : null,
         ]);

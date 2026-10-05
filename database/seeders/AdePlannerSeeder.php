@@ -89,6 +89,8 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'adeUrl', 'type' => 'url', 'label' => 'ADE page', 'required' => true],
                     ['name' => 'externalId', 'type' => 'text', 'label' => 'ADE id', 'required' => true],
                     ['name' => 'favorites', 'type' => 'number', 'label' => 'Starred in ADE Planner', 'required' => false, 'summary' => true],
+                    ['name' => 'opens', 'type' => 'number', 'label' => 'Details opened in ADE Planner', 'required' => false, 'summary' => true],
+                    ['name' => 'ticketClicks', 'type' => 'number', 'label' => 'Ticket or ADE page clicks from ADE Planner', 'required' => false, 'summary' => true],
                     ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]

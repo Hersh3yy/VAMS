@@ -146,7 +146,7 @@ class AdeSync extends Command
 
         // The lineup comes from the artist pass; keep it when only events are refreshed.
         // Favorites are counted by ADE Planner (AdePlannerStatsController), not by ADE.
-        $ids = $this->upsert('ade-event', $items, preserve: ['lineup', 'favorites']);
+        $ids = $this->upsert('ade-event', $items, preserve: ['lineup', 'favorites', 'opens', 'ticketClicks']);
         $this->info('ade-event saved: '.count($ids).', event pages read: '.count($pages));
 
         return $ids;
