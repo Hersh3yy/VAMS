@@ -38,7 +38,7 @@ class AdePlannerStatsController extends BaseApiController
             'favorites.*.delta' => ['required', 'integer', 'in:-1,1'],
             'search' => ['array'],
             'search.kind' => ['required_with:search', 'in:playlist,names,daytime'],
-            'search.source' => ['nullable', 'in:spotify,apple-music,youtube-music,names,daytime'],
+            'search.source' => ['nullable', 'in:spotify,apple-music,youtube-music,tidal,deezer,names,daytime'],
             'search.playlistUrl' => ['nullable', 'url', 'max:500'],
             'search.playlistTitle' => ['nullable', 'string', 'max:250'],
             'search.trackCount' => ['nullable', 'integer', 'min:0'],

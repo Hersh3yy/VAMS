@@ -108,7 +108,7 @@ class AdePlannerSeeder extends Seeder
                 'is_active' => true,
                 'field_config' => [
                     ['name' => 'kind', 'type' => 'select', 'label' => 'Kind', 'required' => true, 'summary' => true, 'options' => ['playlist', 'names', 'daytime']],
-                    ['name' => 'source', 'type' => 'select', 'label' => 'Source', 'required' => false, 'summary' => true, 'options' => ['spotify', 'apple-music', 'youtube-music', 'names', 'daytime']],
+                    ['name' => 'source', 'type' => 'select', 'label' => 'Source', 'required' => false, 'summary' => true, 'options' => ['spotify', 'apple-music', 'youtube-music', 'tidal', 'deezer', 'names', 'daytime']],
                     ['name' => 'searchedAt', 'type' => 'datetime', 'label' => 'Searched at', 'required' => true, 'summary' => true],
                     ['name' => 'playlistUrl', 'type' => 'url', 'label' => 'Playlist link', 'required' => false],
                     ['name' => 'playlistTitle', 'type' => 'text', 'label' => 'Playlist title', 'required' => false],
