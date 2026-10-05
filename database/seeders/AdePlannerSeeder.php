@@ -67,6 +67,8 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'isParty', 'type' => 'checkbox', 'label' => 'Party or concert', 'required' => false],
                     ['name' => 'access', 'type' => 'select', 'label' => 'Access', 'required' => false, 'options' => ['free', 'ticket', 'pro']],
                     ['name' => 'kinds', 'type' => 'json', 'label' => 'Kinds', 'required' => false],
+                    // Daytime events: classified by judgment (ade:topics), kept on resync.
+                    ['name' => 'topics', 'type' => 'json', 'label' => 'Topics', 'required' => false],
                     ['name' => 'series', 'type' => 'text', 'label' => 'Series key (same event on several days)', 'required' => false],
                     ['name' => 'seriesDates', 'type' => 'json', 'label' => 'Series dates', 'required' => false],
                     ['name' => 'venue', 'type' => 'text', 'label' => 'Venue', 'required' => false, 'summary' => true],
