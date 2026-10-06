@@ -15,7 +15,7 @@
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
 **Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-10-01 (branch `image-colors-v2` adds the API-key write API — merge to `main` when sure; `main` auto-deploys)
+**Last assessed** · 2026-10-06 (API-key write API live on prod; single branch `main`)
 
 ---
 
@@ -112,6 +112,11 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-10-06 — write API confirmed live; branch retired
+- `main` (with `6a5ca5d` migration, `22d0fb6` API-key write API, `252fd2b` docs) was pushed by a later sitting and auto-deployed: `POST/PUT/DELETE https://app.use-vams.me/api/entries` answer 401 without a key (route live, middleware gating). Image Colors v2 can now create/update/delete presets against prod.
+- Deleted local branch `image-colors-v2` (superseded by `main`). Single branch again: `main`.
+- Still open from this arc: `parent-colors` type empty (app task V6b in img-clrs); API keys still plaintext (f1).
 
 ### 2026-10-01 — Image Colors v2: write API + preset migration (branch `image-colors-v2`)
 - Hiren's prio: the image-colors app must **create new presets** in VAMS. API-key routes were read-only by design, so added `storeWithApiKey`/`updateWithApiKey`/`destroyWithApiKey` to `Api\EntryController` + routes; reuses `EntryService` + `EntryValidationService` + `hasEntryTypePermission`; writes scoped to the key owner via `$user->entries()`; deliberately no plan/rate gate. `tests/Api/EntryWriteApiTest.php` 5 green. Commit `22d0fb6`.
