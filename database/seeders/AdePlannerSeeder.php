@@ -21,7 +21,7 @@ use Illuminate\Database\Seeder;
  */
 class AdePlannerSeeder extends Seeder
 {
-    public const SLUGS = ['ade-artist', 'ade-event', 'ade-search'];
+    public const SLUGS = ['ade-artist', 'ade-event', 'ade-search', 'ade-venue'];
 
     public const OWNER_EMAIL = 'info@hiren.ninja';
 
@@ -128,6 +128,27 @@ class AdePlannerSeeder extends Seeder
             ]
         );
         $this->command->info('Entry type ready: ade-search');
+
+        // Filled by ade:venues: one per venue name, geocoded once (PDOK + Amsterdam).
+        EntryType::updateOrCreate(
+            ['slug' => 'ade-venue'],
+            [
+                'name' => 'ADE Venue',
+                'description' => 'A venue on the ADE program with its place: coordinates, neighbourhood and Amsterdam district. The entry title is the venue name as ADE lists it. Filled by ade:venues.',
+                'is_active' => true,
+                'field_config' => [
+                    ['name' => 'address', 'type' => 'text', 'label' => 'Address', 'required' => false, 'summary' => true],
+                    ['name' => 'area', 'type' => 'text', 'label' => 'District', 'required' => false, 'summary' => true],
+                    ['name' => 'neighbourhood', 'type' => 'text', 'label' => 'Neighbourhood', 'required' => false, 'summary' => true],
+                    ['name' => 'lat', 'type' => 'number', 'label' => 'Latitude', 'required' => false],
+                    ['name' => 'lng', 'type' => 'number', 'label' => 'Longitude', 'required' => false],
+                    ['name' => 'acrossIj', 'type' => 'checkbox', 'label' => 'North of the IJ (ferry)', 'required' => false],
+                    ['name' => 'precision', 'type' => 'text', 'label' => 'Match (adres = exact)', 'required' => false],
+                    ['name' => 'geocodedAt', 'type' => 'datetime', 'label' => 'Looked up at', 'required' => false],
+                ],
+            ]
+        );
+        $this->command->info('Entry type ready: ade-venue');
 
         $user = User::where('email', self::OWNER_EMAIL)->firstOrFail();
         $user->entry_type_permissions = array_values(array_unique(array_merge(

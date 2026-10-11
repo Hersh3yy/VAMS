@@ -62,12 +62,18 @@ class AdeExport extends Command
             ])),
         ]);
 
+        $venues = $this->entries('ade-venue')->map(fn (Entry $entry): array => [
+            'name' => $entry->title,
+            ...array_intersect_key($entry->content, array_flip(['address', 'lat', 'lng', 'neighbourhood', 'area', 'acrossIj'])),
+        ]);
+
         $path = base_path($this->argument('path'));
         File::ensureDirectoryExists(dirname($path));
         File::put($path, json_encode([
             'exportedAt' => now()->toIso8601String(),
             'artists' => $artists->values(),
             'events' => $events->values(),
+            'venues' => $venues->values(),
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         $this->info("Wrote {$artists->count()} artists and {$events->count()} events to {$path}");
