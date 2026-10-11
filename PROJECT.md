@@ -11,11 +11,11 @@
 
 **What it is** · Laravel headless CMS. Albums, mosaics, and user-defined Entry Types, read over an API-key API. It is the backend for the Shawn York portfolio, benjamingijzel.nl, and the image-colors app.
 **Stack** · Laravel 13 · PHP 8.5 · PostgreSQL · Inertia + Vue 3 · Sanctum · Docker (multi-stage, nginx + php-fpm + supervisor)
-**Status** · 🟡 `main` now carries the coolify work (fast-forwarded 2026-09-27): Laravel 13.33 on PHP 8.4 (pinned for the buildpack), return types everywhere, media-delete fix, 241 tests green. Live on DigitalOcean again since fc2c6f3.
+**Status** · 🟢 Live on DigitalOcean from `main`: Laravel 13 on PHP 8.4 (pinned for the buildpack), API-key read and write API, ADE Planner data and commands (`ade:sync`, `ade:topics`, `ade:venues`, `ade:export`), 288 tests green (3 skipped).
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
 **Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-10-06 (API-key write API live on prod; single branch `main`)
+**Last assessed** · 2026-10-11 (ADE venues and topics on prod; single branch `main`)
 
 ---
 
@@ -32,7 +32,7 @@ Watch out: the currently running `vams-api` container reads a `.env` that points
 
 ## Status
 
-`coolify-integration` was cut from `origin/coolify`, the real deploy branch. That branch is `origin/main` plus 11 commits: Laravel 13, PHP 8.5, local Postgres, a working multi-stage Dockerfile, and Eloquent API resources. On top of it I ported the Image Colors entry types and the `json` field type from `AI-REFACTOR`, which coolify was missing. Nothing is deployed to Coolify yet, the DB has not moved, and two security items are still open. `main` is the older DigitalOcean version and has diverged from coolify.
+One branch, `main`, auto-deployed to DigitalOcean. The coolify work is merged; Coolify itself is not deployed and the DB has not moved (e1-e6 still open). Three clients read VAMS: Shawn York's portfolio, benjamingijzel.nl, Image Colors v2 (which also writes). hiren.ninja's ADE Planner reads the ADE entry types and writes anonymous counters through `POST /api/ade-planner/stats`. ADE data on prod: about 1,350 events, 3,900+ artists, 348 venues (338 with coordinates), daytime events tagged with 16 topics. The sync runs by hand, no worker or schedule.
 
 ## Issues
 
@@ -50,6 +50,12 @@ Worst first.
 - Entry Types define a record's shape with a JSON `field_config`; `Entry.content` is a native Postgres JSON column. The `json` field type (ported this session) is a passthrough array, so a nested colour palette survives instead of being flattened to strings. Its whitelist lives in `EntryTypeController`, not a Form Request (coolify moved it there).
 - Image Colors entry types are `parent-colors`, `preset`, `processed-image`, seeded by `ImageColorsSeeder` and granted to `itamar@gilboa.net`.
 - Deploy is Dockerfile-based. The entrypoint runs `storage:link`, caches config and views, and runs `migrate --force` on boot (gated by `RUN_MIGRATIONS`). So a fresh deploy against an empty Postgres builds its own schema.
+- ADE Planner commands (all run on the host against the prod DB, see Run it):
+  - `php artisan ade:sync --reuse-pages` pulls the ADE program into `ade-event` and `ade-artist` (about 15-60 min, the artist pass is slow). It keeps the counters (hits, searches, favorites, opens, ticketClicks), lineups and topics.
+  - `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl` lists daytime events without topics; Claude classifies them into the 16 slugs in `AdeTopics::TOPICS`; `php artisan ade:topics <file>` imports.
+  - `php artisan ade:venues` geocodes new venues into `ade-venue` (PDOK + Amsterdam districts); `--refresh` redoes all.
+  - `php artisan ade:export` writes the snapshot hiren-ninja ships as its fallback (`server/assets/ade-planner/snapshot.json`).
+  - `POST /api/ade-planner/stats` (API key, 600/min): anonymous counters and the `ade-search` log. The only ADE write.
 - The DB move is documented: `docs/COOLIFY_DB_MIGRATION_GUIDE.md`. The strategy and the eight-point client smoke test are in `docs/coolify-integration-status.md` and `OTHER-MACHINE-BRIEFING-2026-09-09.txt`.
 
 ## Hard parts
@@ -86,6 +92,14 @@ Worst first.
 
 🗣️ **Say it to a senior** — "Presets are normalized into parent + child entries linked by an entry_relation uuid array; the client re-embeds them, so the 413 blob problem is gone without a new table."
 
+### Venue geocoding with Dutch open data
+
+🔭 **What it does** — `ade:venues` takes every distinct venue name and address from the ADE events and asks PDOK's Locatieserver (the national address register, free, no key) for a point. When the address says Amsterdam, the query carries `fq=gemeentenaam:Amsterdam`, so "Oosterdok 2" can't land in Utrecht. A town-level hit (no street) gets no coordinates, because a dot in the middle of a town is worse than none. The point then goes to Amsterdam's own geosearch for the stadsdeel, mapped to the planner's areas, plus an `acrossIj` flag for Noord (ferry time).
+
+⚖️ **Why this way** — Google or Mapbox need keys and terms; PDOK is the government's authoritative register, exact for Dutch addresses. Filtering by municipality fixed the wrong-town matches without hand-fixing rows.
+
+🗣️ **Say it to a senior** — "Venues are geocoded against PDOK with a municipality filter, town-only matches are dropped, and the district comes from Amsterdam's stadsdelen layer: 293 of 348 exact, 338 with coordinates."
+
 ## Roadmap — near future
 
 - [ ] Deploy `coolify-integration` to Coolify: Postgres 17, the env block (`APP_KEY`, `APP_URL`, `RUN_MIGRATIONS=true`, `DO_SPACES_*` on the prod bucket, session/CORS/Sanctum on the new host), `/up` health check, domain <!-- id:e1 -->
@@ -96,7 +110,7 @@ Worst first.
 - [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
 - [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
-- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
+- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, `php artisan ade:venues` for new venues, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
 - [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
 
 ## Roadmap — far future
@@ -112,6 +126,13 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-10-11 — venues, topics, resync with diff
+- `ade:venues` (new): geocodes each distinct venue once into `ade-venue` (PDOK Locatieserver with `fq=gemeentenaam:Amsterdam` when the address says Amsterdam, district from Amsterdam's geosearch stadsdelen, `acrossIj` for Noord; town-level hits get no coordinates). 348 venues, 293 exact, 46 street-level, 338 with coordinates. Commit `6dee296`.
+- `ade:topics` (new): imports Claude's per-event topic classification (16 slugs in `AdeTopics::TOPICS`), `--missing=` lists what's left. `ade:sync` keeps `topics`; `ade:export` now includes topics and venues. Commit `97d8de8`.
+- Stats endpoint takes `opens`/`ticketClicks` per event and the `ade-search` log (commit `afbbd68`); Tidal/Deezer as search sources (`b98f20e`). 288 tests green.
+- Resync `ade:sync --reuse-pages` took about 45 min (394 new artist pages). Diff against the pre-sync export: events 1,405 -> 1,602 (+206: 121 daytime, 72 ADE Pro; -9 unpublished, incl. Amsterdam Rave, Luciano ALIVE, LEHAR & Friends x Crane Sessions), artists 4,154 -> 4,504 (+398, 48 unpublished), sold out 36 -> 45 (DGTL Thursday and Friday, Warhaus, Christian Löffler & Adna). 13 start and 21 end times moved, 38 titles, 99 lineups, 2 venues (De Wester -> WestWeelde). Lineups on 1,112 of 1,602 events.
+- 106 daytime events classified and imported (0 left). `ade:venues`: nothing new to look up. Snapshot exported to hiren-ninja.
 
 ### 2026-10-06 — write API confirmed live; branch retired
 - `main` (with `6a5ca5d` migration, `22d0fb6` API-key write API, `252fd2b` docs) was pushed by a later sitting and auto-deployed: `POST/PUT/DELETE https://app.use-vams.me/api/entries` answer 401 without a key (route live, middleware gating). Image Colors v2 can now create/update/delete presets against prod.
