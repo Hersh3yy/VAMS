@@ -93,6 +93,9 @@ class AdePlannerSeeder extends Seeder
                     ['name' => 'favorites', 'type' => 'number', 'label' => 'Starred in ADE Planner', 'required' => false, 'summary' => true],
                     ['name' => 'opens', 'type' => 'number', 'label' => 'Details opened in ADE Planner', 'required' => false, 'summary' => true],
                     ['name' => 'ticketClicks', 'type' => 'number', 'label' => 'Ticket or ADE page clicks from ADE Planner', 'required' => false, 'summary' => true],
+                    ['name' => 'priceFrom', 'type' => 'number', 'label' => 'Lowest ticket price, euros (ade:prices)', 'required' => false, 'summary' => true],
+                    ['name' => 'priceSource', 'type' => 'text', 'label' => 'Price read from (weeztix, ra)', 'required' => false],
+                    ['name' => 'priceCheckedAt', 'type' => 'datetime', 'label' => 'Price checked at', 'required' => false],
                     ['name' => 'syncedAt', 'type' => 'datetime', 'label' => 'Synced at', 'required' => false],
                 ],
             ]
