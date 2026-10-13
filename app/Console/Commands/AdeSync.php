@@ -560,7 +560,9 @@ class AdeSync extends Command
         return Http::withUserAgent(self::USER_AGENT)
             ->accept('application/json')
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
-            ->timeout(30)
-            ->retry(2, 1000);
+            // ADE's persons list takes ~12 s a page over 100+ pages: ride out slow pages and
+            // short network drops (DNS, Wi-Fi) instead of losing a 40-minute sync.
+            ->timeout(60)
+            ->retry([2000, 5000, 15000, 30000]);
     }
 }
