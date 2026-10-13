@@ -106,3 +106,24 @@ it('titles typed-name searches by their first names', function (): void {
 
     expect(Entry::find($response->json('data.search'))->title)->toBe('Amelie Lens, NTO, Adam Beyer, Kerri Chandler');
 });
+
+it('counts planner features on one ade-usage entry per day', function (): void {
+    $usageType = adeStatsType('ade-usage');
+    $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-22 23:30:00', 'UTC')); // already the 23rd in Amsterdam
+
+    $this->postJson('/api/ade-planner/stats', ['features' => ['ade-free-open', 'ade-budget:25', 'ade-free-open']], ['X-API-Key' => 'key-owner'])
+        ->assertOk()->assertJsonPath('data.features', 3);
+    $this->postJson('/api/ade-planner/stats', ['features' => ['ade-budget:25']], ['X-API-Key' => 'key-owner'])->assertOk();
+    $this->postJson('/api/ade-planner/stats', ['features' => ['DROP TABLE']], ['X-API-Key' => 'key-owner'])->assertUnprocessable();
+
+    $days = Entry::where('entry_type_id', $usageType->id)->get();
+    expect($days)->toHaveCount(1)
+        ->and($days[0]->title)->toBe('2026-10-23')
+        ->and($days[0]->status)->toBe('draft')
+        ->and($days[0]->content['counters'])->toBe(['ade-budget:25' => 2, 'ade-free-open' => 2]);
+});
+
+it('skips feature counts until the ade-usage type exists', function (): void {
+    $this->postJson('/api/ade-planner/stats', ['features' => ['ade-free-open']], ['X-API-Key' => 'key-owner'])
+        ->assertOk()->assertJsonPath('data.features', 0);
+});

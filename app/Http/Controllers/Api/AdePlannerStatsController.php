@@ -18,7 +18,8 @@ use Illuminate\Support\Str;
  * = typed by name, the stronger signal; on an ade-event `opens` (details opened),
  * `ticketClicks` (ticket shop, resale or ADE page) and `favorites`
  * = people who starred it; one ade-search entry per search (what, never who).
- * ade:sync keeps these counters on resync.
+ * ade:sync keeps these counters on resync. `features` counts planner features used
+ * ("ade-free-open", "ade-budget:25") on one ade-usage entry per day.
  */
 class AdePlannerStatsController extends BaseApiController
 {
@@ -51,6 +52,8 @@ class AdePlannerStatsController extends BaseApiController
             'search.unmatched.*' => ['string', 'max:200'],
             'search.resultCount' => ['nullable', 'integer', 'min:0'],
             'search.example' => ['nullable', 'boolean'],
+            'features' => ['array', 'max:50'],
+            'features.*' => ['string', 'regex:/^ade-[a-z-]{2,40}(:[a-z0-9-]{1,30})?$/'],
         ]);
 
         /** @var User $user */
@@ -70,7 +73,41 @@ class AdePlannerStatsController extends BaseApiController
             'ticketClicks' => $this->increment($user, 'ade-event', 'ticketClicks', array_fill_keys(array_unique($data['ticketClicks'] ?? []), 1)),
             'favorites' => $this->increment($user, 'ade-event', 'favorites', $favorites),
             'search' => isset($data['search']) ? $this->logSearch($user, $data['search']) : null,
+            'features' => $this->countFeatures($user, $data['features'] ?? []),
         ]);
+    }
+
+    /**
+     * Add the features to today's ade-usage counters (one draft entry per Amsterdam day).
+     *
+     * @param  list<string>  $features  validated
+     * @return int features counted (0 when the ade-usage type isn't seeded yet)
+     */
+    private function countFeatures(User $user, array $features): int
+    {
+        $typeId = EntryType::where('slug', 'ade-usage')->value('id');
+        if ($features === [] || ! $typeId) {
+            return 0;
+        }
+        $day = now('Europe/Amsterdam')->toDateString();
+
+        return DB::transaction(function () use ($user, $typeId, $features, $day): int {
+            $entry = Entry::where('user_id', $user->id)->where('entry_type_id', $typeId)->where('title', $day)->lockForUpdate()->first();
+            $counters = $entry?->content['counters'] ?? [];
+            foreach ($features as $feature) {
+                $counters[$feature] = ($counters[$feature] ?? 0) + 1;
+            }
+            ksort($counters);
+
+            Entry::withoutEvents(fn () => $entry
+                ? $entry->update(['content' => ['counters' => $counters]])
+                : Entry::create([
+                    'id' => (string) Str::uuid(), 'user_id' => $user->id, 'entry_type_id' => $typeId, 'title' => $day,
+                    'status' => 'draft', 'order' => 0, 'content' => ['counters' => $counters],
+                ]));
+
+            return count($features);
+        });
     }
 
     /**

@@ -21,7 +21,7 @@ use Illuminate\Database\Seeder;
  */
 class AdePlannerSeeder extends Seeder
 {
-    public const SLUGS = ['ade-artist', 'ade-event', 'ade-search', 'ade-venue'];
+    public const SLUGS = ['ade-artist', 'ade-event', 'ade-search', 'ade-venue', 'ade-usage'];
 
     public const OWNER_EMAIL = 'info@hiren.ninja';
 
@@ -131,6 +131,21 @@ class AdePlannerSeeder extends Seeder
             ]
         );
         $this->command->info('Entry type ready: ade-search');
+
+        // One draft entry per day (title YYYY-MM-DD, Amsterdam): how often each planner
+        // feature was used, e.g. {"ade-free-open": 12, "ade-budget:25": 4}. Counts only.
+        EntryType::updateOrCreate(
+            ['slug' => 'ade-usage'],
+            [
+                'name' => 'ADE Usage',
+                'description' => 'ADE Planner feature use per day (Amsterdam time): counters keyed by feature, e.g. ade-free-open or ade-budget:25. Anonymous. Filled by hiren.ninja.',
+                'is_active' => true,
+                'field_config' => [
+                    ['name' => 'counters', 'type' => 'json', 'label' => 'Feature counters', 'required' => false],
+                ],
+            ]
+        );
+        $this->command->info('Entry type ready: ade-usage');
 
         // Filled by ade:venues: one per venue name, geocoded once (PDOK + Amsterdam).
         EntryType::updateOrCreate(
