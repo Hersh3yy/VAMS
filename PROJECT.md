@@ -15,7 +15,7 @@
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
 **Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-10-11 (ADE venues and topics on prod; single branch `main`)
+**Last assessed** · 2026-10-14 (two-month recap and Coolify deploy handoff for the other laptop)
 
 ---
 
@@ -100,14 +100,22 @@ Worst first.
 
 🗣️ **Say it to a senior** — "Venues are geocoded against PDOK with a municipality filter, town-only matches are dropped, and the district comes from Amsterdam's stadsdelen layer: 293 of 348 exact, 338 with coordinates."
 
+### The Coolify VPS was cryptojacked, and why the redeploy has guardrails
+
+🔭 **What it does** — On 2026-09-13 the Coolify VPS was found mining Monero and running bandwidth-selling proxyware for about seven weeks. The way in was an old, manually-run VAMS container that published php-fpm's FastCGI port 9000 straight to the internet; port 9000 lets anyone run code, no app bug needed. It never escaped the container, the host was clean, and the box was trimmed down to Coolify only. The one tainted thing left is the set of secrets that container's `.env` could read. See [[vams-vps-incident]] in memory.
+
+⚖️ **Why this way** — So the Coolify redeploy has three non-negotiables. Publish no host ports and let Traefik reach the app on the internal network only (that is the whole fix for the entry vector). Rotate every secret that container held before go-live (`APP_KEY`, DO Spaces, DB password). And let Coolify generate the Postgres password via `SERVICE_PASSWORD_POSTGRES` rather than hand-copying it, because the first attempt returned a 500 on a password the Coolify UI showed but the database had never actually been set to.
+
+🗣️ **Say it to a senior** — "The old box got popped through an exposed php-fpm port. The new deploy sits behind Traefik with zero published ports, rotated secrets, and a Coolify-generated DB password so the app and database can't drift."
+
 ## Roadmap — near future
 
-- [ ] Deploy `coolify-integration` to Coolify: Postgres 17, the env block (`APP_KEY`, `APP_URL`, `RUN_MIGRATIONS=true`, `DO_SPACES_*` on the prod bucket, session/CORS/Sanctum on the new host), `/up` health check, domain <!-- id:e1 -->
-- [ ] Rebuild for L13/PHP 8.5 and run the suite; confirm the gd image tests pass now (mlocati installer keeps the runtime libs) <!-- id:e2 -->
-- [ ] Move the database per `docs/COOLIFY_DB_MIGRATION_GUIDE.md`: deploy once to build the schema, then data-only dump from DO, restore, reset sequences, verify counts <!-- id:e3 -->
-- [ ] Repoint Shawn's portfolio env from the raw `sea-lion...ondigitalocean.app` host to `app.use-vams.me` before the DO app is deleted <!-- id:e4 -->
-- [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key <!-- id:e5 -->
-- [ ] Run the eight-point client smoke on a staging domain, then cut over DNS <!-- id:e6 -->
+- [ ] Deploy VAMS to Coolify from `main` using a repo `docker-compose` (app + Postgres), not the Coolify GUI resources. No published host ports (an exposed php-fpm:9000 is what got the box cryptojacked, see Hard parts); Coolify routes via Traefik with `SERVICE_FQDN_app_80`, and the Postgres password comes from `SERVICE_PASSWORD_POSTGRES` so app and DB can never drift (that drift was the 500 on the first attempt). Exposed port 80, health check `/up`, database drivers (no Redis). Compose shape drafted in the 2026-10-14 diary <!-- id:e1 -->
+- [ ] Before go-live, rotate the credentials the cryptojacker could read: a fresh `APP_KEY` (do NOT reuse the leaked one), the DO Spaces key/secret, and the DO database password (see the incident memory) <!-- id:e2 -->
+- [ ] Move the database per `docs/COOLIFY_DB_MIGRATION_GUIDE.md`: deploy once so `RUN_MIGRATIONS` builds the schema on the empty Postgres 18, then data-only dump from DO (db `main`, user `vams-user`), restore into the Coolify `vams` db, reset sequences, verify counts <!-- id:e3 -->
+- [ ] Repoint every client env to the new host before deleting the DO app: Shawn's portfolio (off the raw `sea-lion...ondigitalocean.app` host), benjamingijzel.nl, Image Colors, hiren.ninja <!-- id:e4 -->
+- [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key on the Coolify host, and confirm the ADE reads work <!-- id:e5 -->
+- [ ] Run the eight-point client smoke on the staging domain, then cut DNS; keep the DO app up as a rollback for a week <!-- id:e6 -->
 - [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
 - [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
 - [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, `php artisan ade:venues` for new venues, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
@@ -126,6 +134,62 @@ Worst first.
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-10-14 — two-month recap and Coolify deploy handoff
+- Assessment only, no app-code changes. `main` is 0 ahead of origin (everything already pushed), single branch, clean hygiene. Pushed the refreshed cockpit so the other laptop picks up current.
+- The last two months in one line: merged the coolify-integration work into `main` and deleted every old branch (27 Sep), fixed the by-title 500 and pinned PHP 8.4 for the DO buildpack, built the whole **ADE Planner** data layer for hiren.ninja (`ade:sync`/`ade:topics`/`ade:venues`/`ade:export`/`ade:prices`, event classifier, PDOK venue geocoding, anonymous stats API, about 1,600 events, 4,500 artists, 348 venues on prod), hosted Itamar Gilboa's website content, and shipped the API-key **write** API plus migrated Image Colors presets out of Strapi (f3 done, live on prod 6 Oct).
+- Reframed the stale Coolify roadmap (e1-e6) to the real plan: deploy from `main` via a repo docker-compose (app + Postgres), no published ports, Traefik via `SERVICE_FQDN_app_80`, DB password via `SERVICE_PASSWORD_POSTGRES`, port 80, health `/up`, database drivers (no Redis). Added a Hard-parts block on the September cryptojacking so the next laptop deploys with the guardrails. The compose shape for that deploy:
+
+```yaml
+services:
+  app:
+    build: { context: ., target: app }
+    environment:
+      - SERVICE_FQDN_APP_80            # Coolify makes the domain + Traefik route to app:80
+      - APP_NAME=VAMS
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}             # set once in Coolify env (rotated secret)
+      - APP_URL=${SERVICE_URL_APP_80}
+      - RUN_MIGRATIONS=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=vams
+      - DB_USERNAME=vams
+      - DB_PASSWORD=${SERVICE_PASSWORD_POSTGRES}   # generated + synced by Coolify
+      - SESSION_DRIVER=database
+      - SESSION_SECURE_COOKIE=false    # http sslip.io; true on a real https domain
+      - SANCTUM_STATEFUL_DOMAINS=${SERVICE_FQDN_APP_80}
+      - CACHE_STORE=database
+      - QUEUE_CONNECTION=database
+      - FILESYSTEM_DISK=local
+      - MAIL_MAILER=log
+      - DO_SPACES_KEY=${DO_SPACES_KEY}
+      - DO_SPACES_SECRET=${DO_SPACES_SECRET}
+      - DO_SPACES_REGION=${DO_SPACES_REGION:-ams3}
+      - DO_SPACES_BUCKET=${DO_SPACES_BUCKET:-bengijzel}
+      - DO_SPACES_ENDPOINT=${DO_SPACES_ENDPOINT:-https://ams3.digitaloceanspaces.com}
+    depends_on:
+      postgres: { condition: service_healthy }
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      - POSTGRES_USER=vams
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=vams
+    volumes: [ "pg-data:/var/lib/postgresql/data" ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vams -d vams"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  pg-data:
+```
+  Secrets that still live in the Coolify env UI (not the repo): `APP_KEY`, `DO_SPACES_KEY`, `DO_SPACES_SECRET`. A compose Postgres is not a managed database, so backups become a scheduled `pg_dump`, not a GUI button.
+- Still red before Coolify go-live: rotate the leaked creds (`APP_KEY`, DO Spaces, DB password); the DB move (e3) has not run.
+- Housekeeping: the untracked 606 KB SQLite file `vams` (a stray local DB) is now gitignored, not committed. Also produced an explain-like-im-nami deck of the project.
 
 ### 2026-10-11 — venues, topics, resync with diff
 - `ade:venues` (new): geocodes each distinct venue once into `ade-venue` (PDOK Locatieserver with `fq=gemeentenaam:Amsterdam` when the address says Amsterdam, district from Amsterdam's geosearch stadsdelen, `acrossIj` for Noord; town-level hits get no coordinates). 348 venues, 293 exact, 46 street-level, 338 with coordinates. Commit `6dee296`.
