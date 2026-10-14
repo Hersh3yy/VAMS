@@ -11,11 +11,11 @@
 
 **What it is** · Laravel headless CMS. Albums, mosaics, and user-defined Entry Types, read over an API-key API. It is the backend for the Shawn York portfolio, benjamingijzel.nl, and the image-colors app.
 **Stack** · Laravel 13 · PHP 8.5 · PostgreSQL · Inertia + Vue 3 · Sanctum · Docker (multi-stage, nginx + php-fpm + supervisor)
-**Status** · 🟢 Live on DigitalOcean from `main`: Laravel 13 on PHP 8.4 (pinned for the buildpack), API-key read and write API, ADE Planner data and commands (`ade:sync`, `ade:topics`, `ade:venues`, `ade:export`), 288 tests green (3 skipped).
+**Status** · 🟢 Live on DigitalOcean from `main`: Laravel 13 on PHP 8.4 (pinned for the buildpack), API-key read and write API, ADE Planner data and commands (`ade:sync`, `ade:topics`, `ade:venues`, `ade:prices`, `ade:export`), 288 tests green at last run (3 skipped).
 **Repo** · `github.com/Hersh3yy/VAMS` · single branch `main` (old branches deleted; `AI-REFACTOR` kept as tag `archive/AI-REFACTOR`)
 **Hosting** · DigitalOcean App Platform app `sea-lion-app` at `https://app.use-vams.me` (CNAME to `sea-lion-app-h6f2o.ondigitalocean.app`), auto-deploys `main` with the Heroku PHP buildpack (`heroku-php-apache2 public/`, port 8080, TCP check), not the Dockerfile · Laravel Cloud is not used · Coolify on a VPS still planned
 **ClickUp** · list `901508387774`
-**Last assessed** · 2026-10-14 (two-month recap and Coolify deploy handoff for the other laptop)
+**Last assessed** · 2026-10-14 (re-assessment pass: clean tree, all pushed; caught the Guide up to the `ade:prices` / `ade-usage` work. Tests not re-run — Docker daemon down)
 
 ---
 
@@ -54,8 +54,9 @@ Worst first.
   - `php artisan ade:sync --reuse-pages` pulls the ADE program into `ade-event` and `ade-artist` (about 15-60 min, the artist pass is slow). It keeps the counters (hits, searches, favorites, opens, ticketClicks), lineups and topics.
   - `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl` lists daytime events without topics; Claude classifies them into the 16 slugs in `AdeTopics::TOPICS`; `php artisan ade:topics <file>` imports.
   - `php artisan ade:venues` geocodes new venues into `ade-venue` (PDOK + Amsterdam districts); `--refresh` redoes all.
+  - `php artisan ade:prices` reads the lowest ticket price from the shop ADE links to (Weeztix and Resident Advisor, public data, no key), for published events with an available ticket; stored on the `ade-event` as `priceFrom`/`priceSource`/`priceCheckedAt`, re-checked after 12 hours unless `--refresh`. `ade:sync` and `ade:export` keep the prices.
   - `php artisan ade:export` writes the snapshot hiren-ninja ships as its fallback (`server/assets/ade-planner/snapshot.json`).
-  - `POST /api/ade-planner/stats` (API key, 600/min): anonymous counters and the `ade-search` log. The only ADE write.
+  - `POST /api/ade-planner/stats` (API key, 600/min): anonymous counters (`hits`/`searches` on artists, `opens`/`ticketClicks`/`favorites` on events) plus the `ade-search` log and one per-day `ade-usage` entry of feature flags. The only ADE write.
 - The DB move is documented: `docs/COOLIFY_DB_MIGRATION_GUIDE.md`. The strategy and the eight-point client smoke test are in `docs/coolify-integration-status.md` and `OTHER-MACHINE-BRIEFING-2026-09-09.txt`.
 
 ## Hard parts
@@ -110,30 +111,35 @@ Worst first.
 
 ## Roadmap — near future
 
-- [ ] Deploy VAMS to Coolify from `main` using a repo `docker-compose` (app + Postgres), not the Coolify GUI resources. No published host ports (an exposed php-fpm:9000 is what got the box cryptojacked, see Hard parts); Coolify routes via Traefik with `SERVICE_FQDN_app_80`, and the Postgres password comes from `SERVICE_PASSWORD_POSTGRES` so app and DB can never drift (that drift was the 500 on the first attempt). Exposed port 80, health check `/up`, database drivers (no Redis). Compose shape drafted in the 2026-10-14 diary <!-- id:e1 -->
-- [ ] Before go-live, rotate the credentials the cryptojacker could read: a fresh `APP_KEY` (do NOT reuse the leaked one), the DO Spaces key/secret, and the DO database password (see the incident memory) <!-- id:e2 -->
-- [ ] Move the database per `docs/COOLIFY_DB_MIGRATION_GUIDE.md`: deploy once so `RUN_MIGRATIONS` builds the schema on the empty Postgres 18, then data-only dump from DO (db `main`, user `vams-user`), restore into the Coolify `vams` db, reset sequences, verify counts <!-- id:e3 -->
-- [ ] Repoint every client env to the new host before deleting the DO app: Shawn's portfolio (off the raw `sea-lion...ondigitalocean.app` host), benjamingijzel.nl, Image Colors, hiren.ninja <!-- id:e4 -->
-- [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key on the Coolify host, and confirm the ADE reads work <!-- id:e5 -->
-- [ ] Run the eight-point client smoke on the staging domain, then cut DNS; keep the DO app up as a rollback for a week <!-- id:e6 -->
-- [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 -->
-- [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 -->
-- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, `php artisan ade:venues` for new venues, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 -->
-- [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 -->
+- [ ] Deploy VAMS to Coolify from `main` using a repo `docker-compose` (app + Postgres), not the Coolify GUI resources. No published host ports (an exposed php-fpm:9000 is what got the box cryptojacked, see Hard parts); Coolify routes via Traefik with `SERVICE_FQDN_app_80`, and the Postgres password comes from `SERVICE_PASSWORD_POSTGRES` so app and DB can never drift (that drift was the 500 on the first attempt). Exposed port 80, health check `/up`, database drivers (no Redis). Compose shape drafted in the 2026-10-14 diary <!-- id:e1 cu:123kjkdmpnp -->
+- [ ] Before go-live, rotate the credentials the cryptojacker could read: a fresh `APP_KEY` (do NOT reuse the leaked one), the DO Spaces key/secret, and the DO database password (see the incident memory) <!-- id:e2 cu:123kjkdmpnq -->
+- [ ] Move the database per `docs/COOLIFY_DB_MIGRATION_GUIDE.md`: deploy once so `RUN_MIGRATIONS` builds the schema on the empty Postgres 18, then data-only dump from DO (db `main`, user `vams-user`), restore into the Coolify `vams` db, reset sequences, verify counts <!-- id:e3 cu:123kjkdmpnr -->
+- [ ] Repoint every client env to the new host before deleting the DO app: Shawn's portfolio (off the raw `sea-lion...ondigitalocean.app` host), benjamingijzel.nl, Image Colors, hiren.ninja <!-- id:e4 cu:123kjkdmpnt -->
+- [ ] Seed and smoke a nested `json` palette through `/api/entries/{id}` with Itamar's key on the Coolify host, and confirm the ADE reads work <!-- id:e5 cu:123kjkdmpnu -->
+- [ ] Run the eight-point client smoke on the staging domain, then cut DNS; keep the DO app up as a rollback for a week <!-- id:e6 cu:123kjkdmpnv -->
+- [x] Port the media-delete ownership check onto `DeleteApiMediaRequest::authorize()` <!-- id:e7 cu:123kjkdmpnw -->
+- [x] ADE Planner data in the real (DigitalOcean) DB: `AdePlannerSeeder` + `ade:sync` ran there <!-- id:e8 cu:123kjkdmpnx -->
+- [ ] Until ADE (21-25 Oct): run `php artisan ade:sync --reuse-pages` by hand now and then (new events, Pro times, sold out); then `php artisan ade:topics --missing=storage/app/ade-topics-todo.jsonl`, have Claude classify the new daytime events into the 16 topics, import with `php artisan ade:topics <file>`, `php artisan ade:venues` for new venues, `php artisan ade:prices` for new/updated ticket prices, and `ade:export` into hiren-ninja's snapshot <!-- id:e9 cu:123kjkdmpny -->
+- [ ] benjamingijzel.nl ships its VAMS API key in the page (`vamsBgApiKey`); move the fetch behind a server route <!-- id:e10 cu:123kjkdmpnz -->
 
 ## Roadmap — far future
 
-- [ ] Hash API keys (store sha256, unique index, look up by hash) <!-- id:f1 -->
-- [ ] Carry over the useful docs from `AI-REFACTOR` (adversarial review, roadmap, cockpit history) if wanted <!-- id:f2 -->
-- [x] Write API for entries plus token auth, which unblocks image-colors persistence into VAMS — done 2026-10-01 on branch `image-colors-v2`: `POST/PUT/PATCH/DELETE /api/entries[/{id}]` under `ValidateApiKey`, owner-scoped, 5 feature tests. Merge to `main` = deploy (DO auto-deploys `main`) <!-- id:f3 -->
-- [ ] Account tiers (deferred: a product decision, not a build) <!-- id:f4 -->
-- [ ] Decide Redis or database for session/cache/queue once real traffic is known <!-- id:f5 -->
+- [ ] Hash API keys (store sha256, unique index, look up by hash) <!-- id:f1 cu:123kjkdmpp0 -->
+- [ ] Carry over the useful docs from `AI-REFACTOR` (adversarial review, roadmap, cockpit history) if wanted <!-- id:f2 cu:123kjkdmpp1 -->
+- [x] Write API for entries plus token auth, which unblocks image-colors persistence into VAMS — done 2026-10-01 on branch `image-colors-v2`: `POST/PUT/PATCH/DELETE /api/entries[/{id}]` under `ValidateApiKey`, owner-scoped, 5 feature tests. Merge to `main` = deploy (DO auto-deploys `main`) <!-- id:f3 cu:123kjkdmpp2 -->
+- [ ] Account tiers (deferred: a product decision, not a build) <!-- id:f4 cu:123kjkdmpp3 -->
+- [ ] Decide Redis or database for session/cache/queue once real traffic is known <!-- id:f5 cu:123kjkdmpp4 -->
 
 ---
 
 ## Diary
 
 <!-- Newest first. One entry per working session. Terse, factual, honest. Append only. -->
+
+### 2026-10-14 — re-assessment pass, Guide catch-up on ADE pricing
+- Assessment only, no app-code changes. `main` is clean and 0 ahead / 0 behind `origin/main`: everything is pushed. Docker daemon is down, so the test suite was not re-run (still 288 green at the last run).
+- Caught the map up to the ADE work that landed since the 10-11 detailed update but was only mentioned in passing by the 10-14 recap: `ade:prices` (new command, commit `c58156f`; lowest ticket price from Weeztix + Resident Advisor onto `ade-event`, re-checked after 12h; `ade:export` now includes it, `068e508`), the per-day `ade-usage` feature-flag counter on the stats endpoint (`36a8684`), and two `ade:sync` resilience fixes (ride out slow pages / drops `0ab7534`, raise memory to 1G `e0011f3`). Added `ade:prices` to Status, the Guide command list, and the ADE sync routine (e9); documented the fuller stats-endpoint shape in the Guide.
+- Nothing new is red that wasn't already: Coolify deploy (e1-e6) and the credential rotation (e2) remain the open front; the DB move has not run.
 
 ### 2026-10-14 — two-month recap and Coolify deploy handoff
 - Assessment only, no app-code changes. `main` is 0 ahead of origin (everything already pushed), single branch, clean hygiene. Pushed the refreshed cockpit so the other laptop picks up current.
