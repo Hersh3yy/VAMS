@@ -61,6 +61,9 @@ class AdeSync extends Command
 
     public function handle(): int
     {
+        // ~4,900 artists with their pages and events no longer fit PHP's default 128M;
+        // the run died silently after the artist pages (Oct 2026).
+        ini_set('memory_limit', '1G');
         $this->owner = User::where('email', AdePlannerSeeder::OWNER_EMAIL)->firstOrFail();
 
         $eventIds = $this->syncEvents();
