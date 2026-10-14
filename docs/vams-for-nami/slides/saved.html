@@ -1,0 +1,26 @@
+<section id="saved" data-transition="fade" style="background:#FFF7EC;color:#17183B;font-family:'Nunito', Verdana, sans-serif;padding:128px;display:flex;flex-direction:column;gap:28px">
+<p style="font-size:28px;font-weight:800;color:#7B5BE8;letter-spacing:3px;text-transform:uppercase">Where things are kept</p>
+<h2 style="font-family:'Fredoka', Verdana, sans-serif;font-size:80px;font-weight:600;line-height:1.1">Linked tabs in a spreadsheet</h2>
+<p style="font-size:32px;line-height:1.4;color:#55527A;width:1560px">Everything lives in boxes that point at each other, like tabs in a spreadsheet joined by matching names. Follow the arrows.</p>
+<div style="display:flex;gap:28px;align-items:center;margin-top:16px">
+<div style="flex:1;background:#242653;color:#FFF7EC;padding:34px;border-radius:26px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Fredoka', Verdana, sans-serif;font-size:40px;font-weight:600;color:#FFC23C">Owners</h3>
+<p style="font-size:26px;line-height:1.35;color:#E6E3F5">A person who owns cards. Each owner has one secret key.</p>
+<p style="font-size:22px;color:#BDB9D8">tables: users, api keys</p>
+</div>
+<p style="font-size:60px;color:#FF5C8A;font-weight:800">&rarr;</p>
+<div style="flex:1;background:#7B5BE8;color:#FFF7EC;padding:34px;border-radius:26px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Fredoka', Verdana, sans-serif;font-size:40px;font-weight:600;color:#FFF7EC">Card shapes</h3>
+<p style="font-size:26px;line-height:1.35;color:#F3F0FF">The blank forms: what blanks a card must fill in.</p>
+<p style="font-size:22px;color:#E0D9FF">table: entry_types</p>
+</div>
+<p style="font-size:60px;color:#FF5C8A;font-weight:800">&rarr;</p>
+<div style="flex:1;background:#1FC8B0;color:#17183B;padding:34px;border-radius:26px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Fredoka', Verdana, sans-serif;font-size:40px;font-weight:600">Filled cards</h3>
+<p style="font-size:26px;line-height:1.35;color:#0F3B35">The real filled-in cards. Their answers sit in one roomy pocket.</p>
+<p style="font-size:22px;color:#0F3B35">table: entries (content)</p>
+</div>
+</div>
+<p style="font-size:28px;line-height:1.4;color:#55527A;margin-top:8px">The roomy pocket (programmers call it a JSON column) is why one card can hold a whole colour palette without spilling. Where this stops being like a spreadsheet: a pocket can hold a list inside a list, which a flat cell cannot.</p>
+<aside>This is the shape of the data (an ERD) drawn as three linked boxes. Owners own cards; every card follows a shape. Ask Nami: in a spreadsheet, how would you link a "pets" tab to an "owners" tab so you know whose pet is whose?</aside>
+</section>

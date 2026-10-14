@@ -1,0 +1,18 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-14T12:00:00Z"},
+  "lists": "css",
+  "title": "VAMS for Nami",
+  "order": ["cover", "why", "feel", "shapes", "holds", "journey", "key", "saved", "oops", "hacked", "roadmap", "turn"],
+  "sections": {
+    "s1": {"description": "What VAMS is and how it feels: one box behind many websites", "start": "cover"},
+    "s2": {"description": "Inside: card shapes, what it really holds, and one request's trip", "start": "shapes"},
+    "s3": {"description": "The key, where things are kept, a real mistake, and a real hack", "start": "key"},
+    "s4": {"description": "The road ahead and a game", "start": "roadmap"}
+  },
+  "faces": {
+    "fredoka": {"family": "Fredoka", "href": "https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400;600;800&display=swap"},
+    "nunito": {"family": "Nunito", "href": "https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400;600;800&display=swap"}
+  },
+  "designSystems": []
+}
