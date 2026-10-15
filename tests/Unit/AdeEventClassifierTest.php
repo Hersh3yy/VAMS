@@ -76,3 +76,19 @@ it('keeps concerts as parties now live performances are their own kind', functio
         ->and(AdeEventClassifier::classify([...$base, 'program' => 'pro', 'title' => 'Demolition XXIX', 'eventTypes' => ['Live Performances'], 'genres' => []]))
         ->toMatchArray(['kinds' => ['performances'], 'intent' => 'listen', 'isParty' => false]);
 });
+
+it('tells laid-back parties (concert hall, church, listening) from club nights', function () use ($base): void {
+    $night = ['startsAt' => '2026-10-23T20:00:00+02:00', 'endsAt' => '2026-10-23T22:00:00+02:00'];
+    expect(AdeEventClassifier::classify([...$base, ...$night, 'title' => 'Sonic Journey', 'venue' => 'Concertgebouw', 'eventTypes' => ['Nighttime events'], 'genres' => ['House']])['vibe'])->toBe('laid-back')
+        ->and(AdeEventClassifier::classify([...$base, ...$night, 'title' => 'GLASS & Beyond', 'venue' => 'Zuiderkerk', 'genres' => ['Beyond the Dancefloor', 'Classic']])['vibe'])->toBe('laid-back')
+        ->and(AdeEventClassifier::classify([...$base, ...$night, 'title' => 'Techno night', 'venue' => 'Shelter', 'eventTypes' => ['Club nights'], 'genres' => ['Techno']])['vibe'])->toBe('club')
+        // A church rave that runs until 05:00 is still a club night.
+        ->and(AdeEventClassifier::classify([...$base, 'startsAt' => '2026-10-23T23:00:00+02:00', 'endsAt' => '2026-10-24T05:00:00+02:00', 'title' => 'Church rave', 'venue' => 'Westerkerk', 'genres' => ['Techno']])['vibe'])->toBe('club')
+        ->and(AdeEventClassifier::classify([...$base, 'program' => 'pro', 'title' => 'A talk', 'venue' => 'Felix Meritis', 'eventTypes' => ['Keynotes, Talks & Panels']])['vibe'])->toBeNull();
+});
+
+it('reads venue size from ADE labels', function () use ($base): void {
+    expect(AdeEventClassifier::classify([...$base, 'title' => 'X', 'eventTypes' => ['Nighttime events', 'Intimate venues'], 'genres' => ['House']])['size'])->toBe('intimate')
+        ->and(AdeEventClassifier::size(['eventTypes' => ['Warehouses']]))->toBe('large')
+        ->and(AdeEventClassifier::size(['eventTypes' => ['Club nights']]))->toBeNull();
+});

@@ -146,6 +146,7 @@ class AdeSync extends Command
         ])->sortBy('content.startsAt')->values();
 
         $items = $this->withSeries($items);
+        $items = $this->withVenueSizes($items);
 
         // The lineup comes from the artist pass; keep it when only events are refreshed.
         // Favorites are counted by ADE Planner (AdePlannerStatsController), not by ADE.
@@ -162,6 +163,26 @@ class AdeSync extends Command
      * @param  Collection<int, array{title: string, content: array<string, mixed>}>  $items
      * @return Collection<int, array{title: string, content: array<string, mixed>}>
      */
+    /**
+     * ADE labels a venue's size on some events only: give the others at the same venue
+     * the size it is labelled with most.
+     */
+    private function withVenueSizes(Collection $items): Collection
+    {
+        $sizes = $items->filter(fn (array $item): bool => filled($item['content']['size'] ?? null) && filled($item['content']['venue'] ?? null))
+            ->groupBy(fn (array $item): string => mb_strtolower($item['content']['venue']))
+            ->map(fn (Collection $group): string => $group->countBy('content.size')->sortDesc()->keys()->first());
+
+        return $items->map(function (array $item) use ($sizes): array {
+            $venue = mb_strtolower((string) ($item['content']['venue'] ?? ''));
+            if (blank($item['content']['size'] ?? null) && $sizes->has($venue)) {
+                $item['content']['size'] = $sizes[$venue];
+            }
+
+            return $item;
+        });
+    }
+
     private function withSeries(Collection $items): Collection
     {
         $keyOf = fn (array $item): string => AdeEventClassifier::seriesKey($item['title'], $item['content']['venue'] ?? null);

@@ -52,12 +52,30 @@ final class AdeEventClassifier
         'recharge' => ['wellbeing'],
     ];
 
+    /** ADE's venue-size labels; a warehouse rave counts as large. */
+    private const SIZES = ['Intimate venues' => 'intimate', 'Mid-size venues' => 'mid-size', 'Large venues' => 'large', 'Warehouses' => 'large'];
+
+    /**
+     * A party that's more concert, museum or church than club: for people who want the
+     * music without the rave. ADE's "Beyond the Dancefloor" and arts labels, listening
+     * genres, or a cultural venue; unless ADE calls it a club night or it runs past 03:00.
+     */
+    private const LAID_BACK_TYPES = ['Live Performances', 'Dance & Theatre', 'Audiovisual & Immersive Arts', 'Exhibitions'];
+
+    private const LAID_BACK_TAGS = ['Deep Listening & Spatial Sound', 'Recommended Arts & Culture Events', 'New Arts & Culture Venues'];
+
+    private const LAID_BACK_GENRES = ['Beyond the Dancefloor', 'Ambient', 'Ambient & Listening', 'Classic', 'Contemporary', 'Jazz', 'Experimental'];
+
+    private const LAID_BACK_VENUE = "/concertgebouw|muziekgebouw|carr[eé]|bimhuis|\\beye\\b|stedelijk|rijksmuseum|van gogh|museum|kerk\\b|church|theat|schouwburg|orgelpark|splendor|hermitage|planetarium|bibliotheek|gallery|galerie|felix meritis|de duif|joel\\b/iu";
+
+    private const CLUB_TYPES = ['Club nights', 'All night long', 'Warehouses'];
+
     /** Longer than this, you drop in rather than arrive on time. */
     private const DROP_IN_MINUTES = 240;
 
     /**
      * @param  array{title: string, program?: ?string, eventTypes?: list<string>, tags?: list<string>, genres?: list<string>, startsAt?: ?string, endsAt?: ?string, ticketStatus?: ?string}  $event
-     * @return array{kinds: list<string>, intent: string, timeOfDay: string, isParty: bool, access: string, format: string, durationMinutes: ?int}
+     * @return array{kinds: list<string>, intent: string, timeOfDay: string, isParty: bool, access: string, format: string, durationMinutes: ?int, vibe: ?string, size: ?string}
      */
     public static function classify(array $event): array
     {
@@ -83,7 +101,47 @@ final class AdeEventClassifier
                 default => 'session',
             },
             'durationMinutes' => $duration,
+            'vibe' => $isParty ? self::vibe($event) : null,
+            'size' => self::size($event),
         ];
+    }
+
+    /** 'laid-back' (concert, museum, church, listening) or 'club' (a regular party). */
+    public static function vibe(array $event): string
+    {
+        $types = $event['eventTypes'] ?? [];
+        if (array_intersect(self::CLUB_TYPES, $types) !== [] || self::endsLate($event['endsAt'] ?? null)) {
+            return 'club';
+        }
+        $calm = array_intersect(self::LAID_BACK_TYPES, $types) !== []
+            || array_intersect(self::LAID_BACK_TAGS, $event['tags'] ?? []) !== []
+            || array_intersect(self::LAID_BACK_GENRES, $event['genres'] ?? []) !== []
+            || preg_match(self::LAID_BACK_VENUE, (string) ($event['venue'] ?? ''));
+
+        return $calm ? 'laid-back' : 'club';
+    }
+
+    /** 'intimate', 'mid-size' or 'large' from ADE's venue labels; null when ADE gives none. */
+    public static function size(array $event): ?string
+    {
+        foreach ($event['eventTypes'] ?? [] as $type) {
+            if (isset(self::SIZES[$type])) {
+                return self::SIZES[$type];
+            }
+        }
+
+        return null;
+    }
+
+    /** Ends between 03:00 and noon: an all-nighter. */
+    private static function endsLate(?string $endsAt): bool
+    {
+        if (! $endsAt) {
+            return false;
+        }
+        $hour = (int) CarbonImmutable::parse($endsAt)->setTimezone('Europe/Amsterdam')->format('G');
+
+        return $hour >= 3 && $hour < 12;
     }
 
     /** @return list<string> */

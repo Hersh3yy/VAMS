@@ -58,7 +58,7 @@ class AdeExport extends Command
             'address' => $entry->content['address'] ?? null,
             'tags' => $entry->content['tags'] ?? null,
             ...array_intersect_key($entry->content, array_flip([
-                'kinds', 'topics', 'intent', 'timeOfDay', 'isParty', 'access', 'format', 'durationMinutes', 'series', 'seriesDates', 'priceFrom', 'priceSource',
+                'kinds', 'topics', 'intent', 'timeOfDay', 'isParty', 'access', 'format', 'durationMinutes', 'series', 'seriesDates', 'priceFrom', 'priceSource', 'vibe', 'size',
             ])),
         ]);
 
